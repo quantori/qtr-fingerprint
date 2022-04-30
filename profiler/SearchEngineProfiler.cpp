@@ -15,7 +15,7 @@ void SearchEngineProfiler::buildSearchEngine() {
     lastDuration = endTime - startTime;
 }
 
-std::vector<IndigoMolecule> SearchEngineProfiler::profile(IndigoQueryMolecule query) {
+std::vector<IndigoMolecule> SearchEngineProfiler::profile(const IndigoQueryMolecule &query) {
     auto startTime = std::chrono::high_resolution_clock::now();
 
     auto result = searchEngine.findOverMolecules(query);

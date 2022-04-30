@@ -18,7 +18,7 @@ namespace CompleteSearchEngineProfiler {
      * @param searchEngine Implementation of SearchEngineInterface, not built yet
      * @param queries Vector of queries
      */
-    void profile(std::string path,
-                        SearchEngineInterface &searchEngine,
-                        std::vector<indigo_cpp::IndigoQueryMolecule> queries);
+    void profile(const std::string &path,
+                 SearchEngineInterface &searchEngine,
+                 const std::vector<indigo_cpp::IndigoQueryMolecule> &queries);
 };

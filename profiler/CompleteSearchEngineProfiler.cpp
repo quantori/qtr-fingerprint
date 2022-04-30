@@ -2,9 +2,9 @@
 
 using namespace indigo_cpp;
 
-void CompleteSearchEngineProfiler::profile(std::string path,
+void CompleteSearchEngineProfiler::profile(const std::string &path,
                                            SearchEngineInterface &searchEngine,
-                                           std::vector<IndigoQueryMolecule> queries) {
+                                           const std::vector<IndigoQueryMolecule> &queries) {
     SearchEngineProfiler profiler(path, searchEngine);
     std::cout << std::setprecision(9) << std::fixed;
 

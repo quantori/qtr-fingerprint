@@ -15,7 +15,7 @@ public:
      *
      * @param path Path to the file with .sdf.gz extension
      */
-    SearchEngineProfiler(const std::string& path, SearchEngineInterface& searchEngine);
+    SearchEngineProfiler(const std::string &path, SearchEngineInterface &searchEngine);
 
     ~SearchEngineProfiler() = default;
 
@@ -32,7 +32,7 @@ public:
      * @param query Query indigo molecule
      * @return Vector of parent molecules, to get time of operation call getLastDuration
      */
-    std::vector<indigo_cpp::IndigoMolecule> profile(indigo_cpp::IndigoQueryMolecule query);
+    std::vector<indigo_cpp::IndigoMolecule> profile(const indigo_cpp::IndigoQueryMolecule &query);
 
     /**
      * @return last profile duration
@@ -47,7 +47,7 @@ public:
 private:
 
     std::string path;
-    SearchEngineInterface& searchEngine;
+    SearchEngineInterface &searchEngine;
     std::chrono::duration<long double> lastDuration;
     std::chrono::duration<long double> totalDuration = std::chrono::duration<long double>::zero();
 };

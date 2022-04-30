@@ -23,7 +23,7 @@ public:
      * @param mol Indigo molecule
      * @return
      */
-    virtual std::vector<indigo_cpp::IndigoMolecule> findOverMolecules(indigo_cpp::IndigoQueryMolecule mol) = 0;
+    virtual std::vector<indigo_cpp::IndigoMolecule> findOverMolecules(const indigo_cpp::IndigoQueryMolecule &mol) = 0;
 
     virtual ~SearchEngineInterface() = default;
 };
