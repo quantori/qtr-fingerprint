@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IndigoMolecule.h"
+#include "IndigoQueryMolecule.h"
 
 #include "SearchEngineInterface.h"
 
@@ -31,7 +32,7 @@ public:
      * @param query Query indigo molecule
      * @return Vector of parent molecules, to get time of operation call getLastDuration
      */
-    std::vector<indigo_cpp::IndigoMolecule> profile(indigo_cpp::IndigoMolecule query);
+    std::vector<indigo_cpp::IndigoMolecule> profile(indigo_cpp::IndigoQueryMolecule query);
 
     /**
      * @return last profile duration

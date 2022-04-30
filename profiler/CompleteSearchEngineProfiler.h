@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IndigoMolecule.h"
+#include "IndigoQueryMolecule.h"
 
 #include "SearchEngineInterface.h"
 #include "SearchEngineProfiler.h"
@@ -20,5 +20,5 @@ namespace CompleteSearchEngineProfiler {
      */
     void profile(std::string path,
                         SearchEngineInterface &searchEngine,
-                        std::vector<indigo_cpp::IndigoMolecule> queries);
+                        std::vector<indigo_cpp::IndigoQueryMolecule> queries);
 };

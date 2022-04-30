@@ -4,7 +4,7 @@ using namespace indigo_cpp;
 
 void CompleteSearchEngineProfiler::profile(std::string path,
                                            SearchEngineInterface &searchEngine,
-                                           std::vector<IndigoMolecule> queries) {
+                                           std::vector<IndigoQueryMolecule> queries) {
     SearchEngineProfiler profiler(path, searchEngine);
     std::cout << std::setprecision(9) << std::fixed;
 

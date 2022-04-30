@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IndigoMolecule.h"
+#include "IndigoQueryMolecule.h"
 
 #include <string>
 #include <vector>
@@ -22,7 +23,7 @@ public:
      * @param mol Indigo molecule
      * @return
      */
-    virtual std::vector<indigo_cpp::IndigoMolecule> findOverMolecules(indigo_cpp::IndigoMolecule mol) = 0;
+    virtual std::vector<indigo_cpp::IndigoMolecule> findOverMolecules(indigo_cpp::IndigoQueryMolecule mol) = 0;
 
     virtual ~SearchEngineInterface() = default;
 };
