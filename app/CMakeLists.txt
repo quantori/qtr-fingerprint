@@ -19,24 +19,17 @@ if (CMAKE_SYSTEM_NAME_LOWER STREQUAL "msys")
 endif()
 ###############################################################################
 
-file(GLOB Headers
-        "*.h")
-
-file(GLOB Sources
-        "*.cpp")
-
-message("Headers = ${Headers}")
-message("Sources = ${Sources}")
-
-add_executable(app main.cpp ${Headers} ${Sources})
+add_executable(app main.cpp)
 
 target_include_directories(app
     PUBLIC .
     PUBLIC ../third_party/Indigo/api/cpp/src
+    PUBLIC ../profiler
+    PUBLIC ../search_engine
 )
 
 target_link_directories(app PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../build/lib)
-target_link_libraries(app indigo-cpp)
+target_link_libraries(app profiler search_engine indigo-cpp)
 
 set(APP_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../dist/lib/${CMAKE_SYSTEM_NAME_LOWER}-${CMAKE_SYSTEM_PROCESSOR_LOWER})
 

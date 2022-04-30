@@ -19,7 +19,7 @@ void CompleteSearchEngineProfiler::profile(std::string path,
     std::cout << "Build completed" << std::endl;
     std::cout << "Build time: " << buildDuration.count() << std::endl;
     if (!queries.empty()) {
-        int maxW = std::to_string(queries.size() - 1).size();
+        size_t maxW = std::to_string(queries.size() - 1).size();
         for (size_t i = 0; i < queries.size(); ++i) {
             try {
                 profiler.profile(queries[i]);
