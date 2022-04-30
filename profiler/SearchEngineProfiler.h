@@ -46,8 +46,8 @@ public:
 
 private:
 
-    std::string path;
-    SearchEngineInterface &searchEngine;
-    std::chrono::duration<long double> lastDuration;
-    std::chrono::duration<long double> totalDuration = std::chrono::duration<long double>::zero();
+    std::string _path;
+    SearchEngineInterface &_searchEngine;
+    std::chrono::duration<long double> _lastDuration;
+    std::chrono::duration<long double> _totalDuration = std::chrono::duration<long double>::zero();
 };
