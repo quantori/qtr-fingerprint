@@ -1,21 +1,18 @@
-#include "IndigoException.h"
-#include "IndigoMolecule.h"
-#include "IndigoSession.h"
-
-#include <iostream>
+#include "CompleteSearchEngineProfiler.h"
+#include "MockSearchEngine.h"
 
 using namespace indigo_cpp;
 
-
 int main(void) {
-
     IndigoSessionPtr indigoSessionPtr = IndigoSession::create();
-    try {
-        IndigoMolecule molecule = indigoSessionPtr->loadMoleculeFromFile("query.mol");
-        std::cout << molecule.canonicalSmiles() << std::endl;
-    } catch(IndigoException &ie) {
-        std::cout << ie.what() << std::endl;
+    auto queryMolecule = indigoSessionPtr->loadMoleculeFromFile("query.mol");
+    std::string pathToFile = "1.sdf.gz";
+    MockSearchEngine searchEngine;
+    std::vector<IndigoMolecule> queries;
+    for (size_t i = 0; i < 100; ++i) {
+        queries.emplace_back(queryMolecule);
     }
-
+    SearchEngineProfiler p(pathToFile, searchEngine);
+    CompleteSearchEngineProfiler::profile(pathToFile, searchEngine,queries);
     return 0;
 }

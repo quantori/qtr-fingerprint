@@ -19,7 +19,16 @@ if (CMAKE_SYSTEM_NAME_LOWER STREQUAL "msys")
 endif()
 ###############################################################################
 
-add_executable(app main.cpp)
+file(GLOB Headers
+        "*.h")
+
+file(GLOB Sources
+        "*.cpp")
+
+message("Headers = ${Headers}")
+message("Sources = ${Sources}")
+
+add_executable(app main.cpp ${Headers} ${Sources})
 
 target_include_directories(app
     PUBLIC .
