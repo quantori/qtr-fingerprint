@@ -14,6 +14,7 @@ public:
      * Build search engine profiler from path and implementation of SearchEngineInterface
      *
      * @param path Path to the file with .sdf.gz extension
+     * @param searchEngine SearchEngineInterface implementation
      */
     SearchEngineProfiler(const std::string &path, SearchEngineInterface &searchEngine);
 
@@ -22,7 +23,7 @@ public:
     /**
      * Build search engine with the path given in constructor
      *
-     * Duration of build also calculated, but wont be counted in total time
+     * @see getBuildDuration
      */
     void buildSearchEngine();
 
@@ -30,16 +31,24 @@ public:
      * Profile search engine on query
      *
      * @param query Query indigo molecule
-     * @return Vector of parent molecules, to get time of operation call getLastDuration
+     * @return Vector of parent molecules
+     * @see getLastProfileDuration
      */
     std::vector<indigo_cpp::IndigoMolecule> profile(const indigo_cpp::IndigoQueryMolecule &query);
 
     /**
-     * @return last profile duration
+     * @return build engine duration
      */
-    [[nodiscard]] std::chrono::duration<long double> getLastDuration() const noexcept;
+    [[nodiscard]] const std::chrono::duration<long double> &getBuildDuration() const;
 
     /**
+     * @return last profile duration
+     */
+    [[nodiscard]] std::chrono::duration<long double> getLastProfileDuration() const noexcept;
+
+    /**
+     * Total duration is a sum of build duration and all profile queries duration
+     *
      * @return total profile duration
      */
     [[nodiscard]] std::chrono::duration<long double> getTotalDuration() const noexcept;
@@ -48,6 +57,7 @@ private:
 
     std::string _path;
     SearchEngineInterface &_searchEngine;
-    std::chrono::duration<long double> _lastDuration;
+    std::chrono::duration<long double> _buildDuration;
+    std::chrono::duration<long double> _lastProfileDuration;
     std::chrono::duration<long double> _totalDuration = std::chrono::duration<long double>::zero();
 };

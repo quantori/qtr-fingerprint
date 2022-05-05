@@ -15,7 +15,7 @@ void CompleteSearchEngineProfiler::profile(const std::string &path,
         std::cerr << "Build failed!" << std::endl;
         throw;
     }
-    auto buildDuration = profiler.getLastDuration();
+    auto buildDuration = profiler.getBuildDuration();
     std::cout << "Build completed" << std::endl;
     std::cout << "Build time: " << buildDuration.count() << std::endl;
     if (!queries.empty()) {
@@ -28,11 +28,11 @@ void CompleteSearchEngineProfiler::profile(const std::string &path,
                 throw;
             }
             std::cout << "Query " << std::setw(maxW) << i << " completed with time: "
-                      << profiler.getLastDuration().count() << std::endl;
+                      << profiler.getLastProfileDuration().count() << std::endl;
         }
     }
 
     std::cout << "Profiling is completed" << std::endl;
-    std::cout << "Total time(without build): " << profiler.getTotalDuration().count() << std::endl;
-    std::cout << "Total time(with build):    " << (profiler.getTotalDuration() + buildDuration).count() << std::endl;
+    std::cout << "Total time(without build): " << (profiler.getTotalDuration() - buildDuration).count() << std::endl;
+    std::cout << "Total time(with build):    " << profiler.getTotalDuration().count() << std::endl;
 }

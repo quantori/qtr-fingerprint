@@ -12,7 +12,8 @@ void SearchEngineProfiler::buildSearchEngine() {
     _searchEngine.build(_path);
 
     auto endTime = std::chrono::high_resolution_clock::now();
-    _lastDuration = endTime - startTime;
+    _buildDuration = endTime - startTime;
+    _totalDuration += _buildDuration;
 }
 
 std::vector<IndigoMolecule> SearchEngineProfiler::profile(const IndigoQueryMolecule &query) {
@@ -21,14 +22,18 @@ std::vector<IndigoMolecule> SearchEngineProfiler::profile(const IndigoQueryMolec
     auto result = _searchEngine.findOverMolecules(query);
 
     auto endTime = std::chrono::high_resolution_clock::now();
-    _lastDuration = endTime - startTime;
-    _totalDuration += _lastDuration;
+    _lastProfileDuration = endTime - startTime;
+    _totalDuration += _lastProfileDuration;
 
     return result;
 }
 
-std::chrono::duration<long double> SearchEngineProfiler::getLastDuration() const noexcept {
-    return _lastDuration;
+const std::chrono::duration<long double> &SearchEngineProfiler::getBuildDuration() const {
+    return _buildDuration;
+}
+
+std::chrono::duration<long double> SearchEngineProfiler::getLastProfileDuration() const noexcept {
+    return _lastProfileDuration;
 }
 
 std::chrono::duration<long double> SearchEngineProfiler::getTotalDuration() const noexcept {
