@@ -9,3 +9,6 @@
 ## Run
 1. cd qtr-fingerprint/dist/lib/windows-x86_64
 2. app.exe
+
+## App Data
+App data can be found on [google drive](https://drive.google.com/drive/u/3/folders/1VrQjWSKFtYdBeHLVDyrCrQFrxso3j45w)
