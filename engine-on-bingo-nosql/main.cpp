@@ -11,6 +11,8 @@
 #include <iostream>
 #include <cstring>
 #include <cassert>
+#include <memory>
+#include <vector>
 
 using namespace indigo_cpp;
 using namespace std;
@@ -41,8 +43,13 @@ int main(int argc, char **argv) {
         auto query = indigoSessionPtr->loadQueryMolecule(queryMolBase.canonicalSmiles());
         cout << queryMolBase.canonicalSmiles() << '\n';
         cout << "result:\n";
-        for (auto& u : db.searchSub(query)) {
-            cout << u.getId() << '\n';
+
+        int i = 0;
+        std::unique_ptr<IndigoMolecule> molPtr;
+
+        for (BingoResult<IndigoMolecule> &u : db.searchSub(query)) {
+            if (!molPtr) molPtr = make_unique<IndigoMolecule>(u.getTarget());
+            cout << i++ << ") " << u.getId() << " " << molPtr->canonicalSmiles() << endl;
         }
     } catch(exception &e) {
         cout << "Error!\n" << e.what() << endl;
