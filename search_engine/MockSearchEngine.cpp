@@ -1,6 +1,6 @@
 #include "MockSearchEngine.h"
 
-void MockSearchEngine::build(std::string path) {
+void MockSearchEngine::build(const std::string& path) {
     std::this_thread::sleep_for(std::chrono::seconds(2));
 }
 
