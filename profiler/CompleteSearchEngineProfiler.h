@@ -9,6 +9,9 @@
 #include <iostream>
 #include <iomanip>
 #include <vector>
+#include <cassert>
+#include <cmath>
+#include <algorithm>
 
 namespace CompleteSearchEngineProfiler {
     /**
