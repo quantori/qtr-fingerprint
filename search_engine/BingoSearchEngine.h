@@ -14,6 +14,13 @@
 #include "SearchEngineInterface.h"
 
 #include <cstring>
+#include <exception>
+
+enum BingoDatabaseState{
+    LOADED,
+    CLOSED,
+    NOT_CREATED
+};
 
 class BingoSearchEngine : public SearchEngineInterface {
 public:
@@ -31,6 +38,7 @@ public:
     std::vector<indigo_cpp::IndigoMolecule> findOverMolecules(const indigo_cpp::IndigoQueryMolecule &mol) override;
 
 private:
-    int _db = -1;
+    BingoDatabaseState currentDatabaseState = BingoDatabaseState::NOT_CREATED;
+    int _db;
     indigo_cpp::IndigoSessionPtr _indigoSessionPtr;
 };

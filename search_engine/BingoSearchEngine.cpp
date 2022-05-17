@@ -5,8 +5,10 @@ using namespace indigo_cpp;
 BingoSearchEngine::BingoSearchEngine(const IndigoSessionPtr &indigoSessionPtr) : _indigoSessionPtr(indigoSessionPtr) {}
 
 BingoSearchEngine::~BingoSearchEngine() {
-    if (_db != -1)
+    if (currentDatabaseState != NOT_CREATED && currentDatabaseState != CLOSED) {
         bingoCloseDatabase(_db);
+        currentDatabaseState = CLOSED;
+    }
 }
 
 bool static endsWith(const std::string &a, const std::string &b) {
@@ -23,10 +25,13 @@ void BingoSearchEngine::build(const std::string &path) {
     } else {
         _db = bingoLoadDatabaseFile(path.c_str(), "");
     }
+    currentDatabaseState = LOADED;
 }
 
 std::vector<indigo_cpp::IndigoMolecule>
 BingoSearchEngine::findOverMolecules(const indigo_cpp::IndigoQueryMolecule &mol) {
+    if (currentDatabaseState != LOADED)
+        throw std::runtime_error("Database is not loaded");
     std::vector<IndigoMolecule> result;
     int resultIterator = _indigoSessionPtr->_checkResult(bingoSearchSub(_db, mol.id(), ""));
     int currentId = bingoGetObject(resultIterator);
