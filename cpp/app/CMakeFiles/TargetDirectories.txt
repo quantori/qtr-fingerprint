@@ -1,3 +1,0 @@
-/home/buyolitsez/CLionProjects/qtr-fingerprint/app/CMakeFiles/app.dir
-/home/buyolitsez/CLionProjects/qtr-fingerprint/app/CMakeFiles/edit_cache.dir
-/home/buyolitsez/CLionProjects/qtr-fingerprint/app/CMakeFiles/rebuild_cache.dir
