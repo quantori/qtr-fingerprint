@@ -13,7 +13,7 @@ public:
      *
      * @param path Path to the file with .sdf.gz extension
      */
-    virtual void build(std::string path) = 0;
+    virtual void build(const std::string& path) = 0;
 
     /**
      * Find all "parent" molecules. Given molecule should be sub molecule for parent.
@@ -27,4 +27,6 @@ public:
 
     virtual ~SearchEngineInterface() = default;
 };
+
+
 

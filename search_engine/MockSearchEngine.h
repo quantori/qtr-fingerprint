@@ -10,7 +10,7 @@ public:
 
     inline ~MockSearchEngine() final = default;
 
-    void build(std::string path) override;
+    void build(const std::string& path) override;
 
     std::vector<indigo_cpp::IndigoMolecule> findOverMolecules(const indigo_cpp::IndigoQueryMolecule &mol) override;
 };
