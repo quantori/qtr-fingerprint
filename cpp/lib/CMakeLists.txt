@@ -1,3 +1,21 @@
-add_subdirectory(search_engine)
-add_subdirectory(profiler)
-add_subdirectory(utils)
+set(This qtr-libs)
+
+file(GLOB_RECURSE ${This}-sources
+        "*.h"
+        "*.c"
+        "*.hpp"
+        "*.cpp"
+        )
+
+add_library(${This} STATIC ${${This}-sources})
+
+target_include_directories(${This}
+        PUBLIC .
+        PUBLIC ../third_party/Indigo/api/cpp/src
+        PUBLIC ../third_party/Indigo/api/c/bingo-nosql
+        PUBLIC ../third_party/Indigo/api/c/indigo
+
+        PUBLIC profiler
+        PUBLIC search_engine
+        PUBLIC utils
+        )
