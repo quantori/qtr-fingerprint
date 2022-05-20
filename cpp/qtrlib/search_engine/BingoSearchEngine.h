@@ -12,7 +12,7 @@
 #include "BingoResultIterator.h"
 
 #include "SearchEngineInterface.h"
-#include "qtr-utils.h"
+#include "Utils.h"
 
 #include <cstring>
 #include <exception>

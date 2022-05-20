@@ -1,4 +1,4 @@
-set(This qtr-libs)
+set(This qtrlib)
 
 file(GLOB_RECURSE ${This}-sources
         "*.h"
