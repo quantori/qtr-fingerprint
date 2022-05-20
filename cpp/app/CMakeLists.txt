@@ -6,11 +6,11 @@ target_include_directories(app
         PUBLIC ../third_party/Indigo/api/c/indigo
         PUBLIC ../third_party/Indigo/api/c/bingo-nosql
         PUBLIC ../profiler
-        PUBLIC ../search_engine
+        PUBLIC ../lib
         )
 
 target_link_directories(app PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../build/lib)
-target_link_libraries(app profiler search_engine indigo-cpp)
+target_link_libraries(app indigo-cpp qtrlib)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/SetOutputDirectory.cmake)
 set_output_directory(app)

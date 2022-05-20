@@ -11,11 +11,6 @@ BingoSearchEngine::~BingoSearchEngine() {
     }
 }
 
-bool static endsWith(const std::string &a, const std::string &b) {
-    return a.size() >= b.size() &&
-           (0 == a.compare(a.size() - b.size(), b.size(), b));
-}
-
 void BingoSearchEngine::build(const std::string &path) {
     if (endsWith(path, ".sdf")) {
         std::string dbName = path.substr(0, path.size() - strlen(".sdf"));

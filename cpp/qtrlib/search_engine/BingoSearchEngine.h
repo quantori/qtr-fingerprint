@@ -12,6 +12,7 @@
 #include "BingoResultIterator.h"
 
 #include "SearchEngineInterface.h"
+#include "Utils.h"
 
 #include <cstring>
 #include <exception>
