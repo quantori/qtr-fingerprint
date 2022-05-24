@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.13)
 
 project(QtrFingerprint LANGUAGES CXX)
 
+find_package (glog 0.6.0 REQUIRED)
 
 SET(BUILD_BINGO OFF CACHE BOOL "BUILD_BINGO Indigo option")
 SET(BUILD_BINGO_ELASTIC OFF CACHE BOOL "BUILD_BINGO_ELASTIC Indigo option")
