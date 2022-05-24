@@ -6,10 +6,13 @@ target_include_directories(app
         PUBLIC ../third_party/Indigo/api/c/indigo
         PUBLIC ../third_party/Indigo/api/c/bingo-nosql
         PUBLIC ../profiler
+        PUBLIC ../lib
+        PUBLIC ../third_party/abseil-cpp
         )
 
 target_link_directories(app PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../build/lib)
 target_link_libraries(app indigo-cpp qtrlib glog::glog)
+target_link_libraries(app absl::flags absl::flags_parse)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/SetOutputDirectory.cmake)
 set_output_directory(app)
