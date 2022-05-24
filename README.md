@@ -12,3 +12,12 @@
 
 ## App Data
 App data can be found on [google drive](https://drive.google.com/drive/u/3/folders/1VrQjWSKFtYdBeHLVDyrCrQFrxso3j45w)
+
+## Log configuration
+
+In order to configure logger, you should add environment variables, 
+most common with their default values are listed below:
+1. `GLOG_log_dir=`
+2. `GLOG_alsologtostderr=false`
+3. `GLOG_logtostdout=false`
+4. `GLOG_minloglevel=0`, order of levels are: `INFO, WARNING, ERROR, FATAL`
