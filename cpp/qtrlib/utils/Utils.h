@@ -3,6 +3,8 @@
 #include <string>
 #include <iostream>
 
+#include <glog/logging.h>
+
 /**
  * Check, if string a ends with string b.
  * @param a
@@ -13,7 +15,7 @@ bool endsWith(const std::string &a, const std::string &b);
 
 
 /**
- * Print message if argument is empty and finish program
+ * Print message if argument is empty and finish program in that case
  * @param argument
  * @param message
  */

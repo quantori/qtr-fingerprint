@@ -18,6 +18,8 @@
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 
+#include "Utils.h"
+
 using namespace indigo_cpp;
 using namespace std;
 
@@ -73,20 +75,23 @@ void createFingerprintCSVFromFile(const string &sdfFile) {
         }
     }
 }
+
 ABSL_FLAG(std::string, path_to_dir, "",
           "Path to dir with sdf files");
-int main(int argc, char* argv[]) {
+
+int main(int argc, char *argv[]) {
     google::InitGoogleLogging(argv[0]);
     absl::ParseCommandLine(argc, argv);
-//    std::string pathToDir = absl::GetFlag(FLAGS_path_to_dir);
-//    vector<string> sdfFiles = findFiles(pathToDir, ".sdf");
-//    auto startTime = std::chrono::high_resolution_clock::now();
-//#pragma omp parallel for
-//    for (int i = 0; i < sdfFiles.size(); ++i) {
-//        createFingerprintCSVFromFile(sdfFiles[i]);
-//    }
-//    auto endTime = std::chrono::high_resolution_clock::now();
-//    std::chrono::duration<double> elapsed_seconds = endTime - startTime;
-//    std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
+    std::string pathToDir = absl::GetFlag(FLAGS_path_to_dir);
+    emptyArgument(pathToDir, "Please specify path_to_dir option");
+    vector<string> sdfFiles = findFiles(pathToDir, ".sdf");
+    auto startTime = std::chrono::high_resolution_clock::now();
+#pragma omp parallel for
+    for (int i = 0; i < sdfFiles.size(); ++i) {
+        createFingerprintCSVFromFile(sdfFiles[i]);
+    }
+    auto endTime = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed_seconds = endTime - startTime;
+    std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
     return 0;
 }

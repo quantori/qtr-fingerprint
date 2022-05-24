@@ -6,7 +6,6 @@ target_include_directories(app
         PUBLIC ../third_party/Indigo/api/c/indigo
         PUBLIC ../third_party/Indigo/api/c/bingo-nosql
         PUBLIC ../profiler
-        PUBLIC ../lib
         PUBLIC ../third_party/abseil-cpp
         )
 

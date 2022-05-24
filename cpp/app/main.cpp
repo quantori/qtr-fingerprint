@@ -13,13 +13,13 @@ ABSL_FLAG(std::string, path_to_query, "",
 ABSL_FLAG(std::string, database_path, "",
           "Path to molecular database");
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     google::InitGoogleLogging(argv[0]);
     absl::ParseCommandLine(argc, argv);
     std::string pathToQuery = absl::GetFlag(FLAGS_path_to_query);
-    std::string pathToFile = absl::GetFlag(FLAGS_database_path);
-    emptyArgument(pathToQuery, "Please add pathToQuery");
-    emptyArgument(pathToFile, "Please add pathToFile");
+    std::string databasePath = absl::GetFlag(FLAGS_database_path);
+    emptyArgument(pathToQuery, "Please specify path_to_query option");
+    emptyArgument(databasePath, "Please specify database_path option");
     IndigoSessionPtr indigoSessionPtr = IndigoSession::create();
     int queryMoleculeId = indigoLoadQueryMoleculeFromFile(pathToQuery.c_str());
     auto queryMolecule = IndigoQueryMolecule(queryMoleculeId, indigoSessionPtr);
@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
     for (size_t i = 0; i < 10; ++i) {
         queries.emplace_back(queryMolecule);
     }
-    SearchEngineProfiler p(pathToFile, *searchEngine);
-    CompleteSearchEngineProfiler::profile(pathToFile, *searchEngine, queries);
+    SearchEngineProfiler p(databasePath, *searchEngine);
+    CompleteSearchEngineProfiler::profile(databasePath, *searchEngine, queries);
     return 0;
 }
