@@ -17,6 +17,18 @@
 1. cd ./qtr-fingerprint/cpp
 2. ./dist/lib/linux-x86_64/tests
 
+## Program arguments
+
+You can get help information about your executable just by running 
+
+`./program --help`
+
+You will see the list of available arguments and their descriptions.
+
+And then you can specify each option as following:
+
+`./app --path_to_query=query.mol --database_path=data/119697.sdf`
+
 ## Log configuration
 
 In order to configure logger, you should add environment variables, 
