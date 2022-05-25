@@ -13,6 +13,18 @@
 ## App Data
 App data can be found on [google drive](https://drive.google.com/drive/u/3/folders/1VrQjWSKFtYdBeHLVDyrCrQFrxso3j45w)
 
+## Program arguments
+
+You can get --help information about your executable just by running 
+
+`./program --helpfull`
+
+You will see the list of available arguments and their descriptions.
+
+And then you can specify each option as following:
+
+`./app --path_to_query=query.mol --database_path=data/119697.sdf`
+
 ## Log configuration
 
 In order to configure logger, you should add environment variables, 
