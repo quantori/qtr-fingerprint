@@ -10,7 +10,7 @@ target_include_directories(fingerprints
 )
 
 target_link_directories(fingerprints PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../build/lib)
-target_link_libraries(fingerprints indigo indigo-cpp OpenMP::OpenMP_CXX)
+target_link_libraries(fingerprints indigo indigo-cpp OpenMP::OpenMP_CXX glog::glog)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/SetOutputDirectory.cmake)
 set_output_directory(fingerprints)
