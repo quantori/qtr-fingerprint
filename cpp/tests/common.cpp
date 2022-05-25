@@ -10,56 +10,78 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <string>
 #include <vector>
 
 using namespace indigo_cpp;
+using namespace std;
 
-void testSearchEngine(SearchEnginePtr searchEngine, IndigoSessionPtr indigoSession)
+static pair<string, vector<string>> parseLine(const string &line)
 {
-    const std::string databaseName = "119697";
-    if (std::filesystem::exists(databaseName))
-        searchEngine->build(databaseName);
-    else
-        searchEngine->build(databaseName + ".sdf");
+    istringstream iss(line);
 
-    const std::string queriesFile = "119697_queries.txt";
-    std::ifstream fin(queriesFile);
+    string smiles;
+    iss >> smiles;
 
+    vector<string> inchiKeys;
+
+    while(true) {
+        string inchiKey;
+        iss >> inchiKey;
+        if (!iss) break;
+        inchiKeys.push_back(inchiKey);
+    }
+
+    return {smiles, inchiKeys};
+}
+
+static vector<string> parseResult(const vector<IndigoMolecule> &result, IndigoInChI &indigoInChi)
+{
+    vector<string> inchiKeys;
+
+    for(const IndigoMolecule &molecule : result) {
+        std::string inchi = indigoInChi.getInChI(molecule);
+        std::string inchiKey = indigoInchiGetInchiKey(inchi.c_str());
+        inchiKeys.push_back(inchiKey);
+    }
+
+    sort(inchiKeys.begin(), inchiKeys.end());
+
+    return inchiKeys;
+}
+
+void testSearchEngine(
+    SearchEnginePtr searchEngine,
+    IndigoSessionPtr indigoSession,
+    const std::string &fileSdf,
+    const std::string &fileQueries)
+{
     IndigoInChI indigoInChi(indigoSession);
+
+    searchEngine->build(fileSdf);
+
+    std::ifstream fin(fileQueries);
 
     std::string line;
     while (std::getline(fin, line))
     {
-        std::istringstream iss(line);
-
-        std::string smiles;
-        iss >> smiles;
-
-        std::vector<std::string> inchiKeys;
-
-        while(true) {
-            std::string inchiKey;
-            iss >> inchiKey;
-            if (!iss) break;
-            inchiKeys.push_back(inchiKey);
-        }
+        auto [smiles, inchiKeys] = parseLine(line);
 
         int mol = indigoLoadQueryMoleculeFromString(smiles.c_str());
         auto queryMolecule = IndigoQueryMolecule(mol, indigoSession);
    
         std::vector<IndigoMolecule> result = searchEngine->findOverMolecules(queryMolecule);
 
-        std::vector<std::string> inchiKeysResult;
-        for(const IndigoMolecule &molecule : result) {
-            //std::string smilesResult = molecule.canonicalSmiles();
-            std::string inchi = indigoInChi.getInChI(molecule);
-            std::string inchiKey = indigoInchiGetInchiKey(inchi.c_str());
-            inchiKeysResult.push_back(inchiKey);
-        }
-
-        std::sort(inchiKeysResult.begin(), inchiKeysResult.end());
+        auto inchiKeysResult = parseResult(result, indigoInChi);
 
         compareTwoVectors(inchiKeys, inchiKeysResult);
-   }
+   }    
+}
 
+std::filesystem::path getDataDir()
+{
+    using namespace std::filesystem;
+    const path currentDir = testing::UnitTest::GetInstance()->original_working_dir();
+    const path dataDir = currentDir / path("./data");
+    return dataDir;
 }

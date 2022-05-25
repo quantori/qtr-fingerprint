@@ -3,12 +3,51 @@
 
 #include <gtest/gtest.h>
 
+#include <filesystem>
+
 using namespace indigo_cpp;
+using namespace std::filesystem;
 
-TEST(BingoSearchEngineTest, Basic) 
+
+class BingoSearchEngineTestFixture : public ::testing::Test {
+protected:
+    BingoSearchEngineTestFixture()
+        : _indigoSessionPtr(IndigoSession::create())
+        , _searchEnginePtr(SearchEngineFactory::create(_indigoSessionPtr))
+        , _dataDir(getDataDir())
+    { }
+
+    IndigoSessionPtr _indigoSessionPtr;
+    SearchEnginePtr _searchEnginePtr;
+    path _dataDir;
+};
+
+TEST_F(BingoSearchEngineTestFixture, BINGO_PUBCHEM_10) 
 {
-    IndigoSessionPtr indigoSessionPtr = IndigoSession::create();
-    SearchEnginePtr searchEnginePtr = SearchEngineFactory::create(indigoSessionPtr);
+    testSearchEngine(
+        _searchEnginePtr,
+        _indigoSessionPtr,
+        _dataDir / path("pubchem_10.sdf"),
+        _dataDir / path("pubchem_10_queries.txt")
+    );
+}
 
-    testSearchEngine(searchEnginePtr, indigoSessionPtr);
+TEST_F(BingoSearchEngineTestFixture, BINGO_PUBCHEM_100) 
+{
+    testSearchEngine(
+        _searchEnginePtr,
+        _indigoSessionPtr,
+        _dataDir / path("pubchem_100.sdf"),
+        _dataDir / path("pubchem_100_queries.txt")
+    );
+}
+
+TEST_F(BingoSearchEngineTestFixture, BINGO_PUBCHEM_994) 
+{
+    testSearchEngine(
+        _searchEnginePtr,
+        _indigoSessionPtr,
+        _dataDir / path("pubchem_994.sdf"),
+        _dataDir / path("pubchem_994_queries.txt")
+    );
 }
