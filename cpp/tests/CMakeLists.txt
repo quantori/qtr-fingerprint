@@ -1,10 +1,8 @@
 enable_testing()
 
-add_executable(tests 
-    "main.cpp"
-    "common.cpp"
-    "BingoSearchEngineTests.cpp"
-)
+file(GLOB_RECURSE sources CONFIGURE_DEPENDS "*.cpp")
+
+add_executable(tests ${sources})
 
 target_include_directories(tests
     PUBLIC ../third_party/Indigo/api/c/indigo-inchi

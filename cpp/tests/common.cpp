@@ -16,7 +16,7 @@
 using namespace indigo_cpp;
 using namespace std;
 
-static pair<string, vector<string>> parseLine(const string &line)
+static pair<string, vector<string>> parseQueryLine(const string &line)
 {
     istringstream iss(line);
 
@@ -65,7 +65,7 @@ void testSearchEngine(
     std::string line;
     while (std::getline(fin, line))
     {
-        auto [smiles, inchiKeys] = parseLine(line);
+        auto [smiles, inchiKeys] = parseQueryLine(line);
 
         int mol = indigoLoadQueryMoleculeFromString(smiles.c_str());
         auto queryMolecule = IndigoQueryMolecule(mol, indigoSession);
@@ -82,6 +82,6 @@ std::filesystem::path getDataDir()
 {
     using namespace std::filesystem;
     const path currentDir = testing::UnitTest::GetInstance()->original_working_dir();
-    const path dataDir = currentDir / path("./data");
+    const path dataDir = currentDir / path("../data");
     return dataDir;
 }
