@@ -1,3 +1,0 @@
-add_subdirectory(search_engine)
-add_subdirectory(profiler)
-add_subdirectory(utils)

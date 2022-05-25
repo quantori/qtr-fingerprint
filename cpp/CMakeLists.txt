@@ -14,6 +14,6 @@ SET(WITH_STATIC ON CACHE BOOL "WITH_STATIC Indigo option")
 
 add_subdirectory(app)
 add_subdirectory(fingerprints)
-add_subdirectory(lib)
+add_subdirectory(qtrlib)
 add_subdirectory(third_party/Indigo)
 add_subdirectory(tests)
