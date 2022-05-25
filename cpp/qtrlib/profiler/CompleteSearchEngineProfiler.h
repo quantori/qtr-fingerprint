@@ -5,6 +5,8 @@
 #include "SearchEngineInterface.h"
 #include "SearchEngineProfiler.h"
 
+#include <glog/logging.h>
+
 #include <string>
 #include <iostream>
 #include <iomanip>

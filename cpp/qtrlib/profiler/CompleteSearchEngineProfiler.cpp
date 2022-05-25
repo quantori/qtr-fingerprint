@@ -11,50 +11,49 @@ static long double percentHigh(std::vector<long double> durations, long double p
     for (size_t i = 0; i < count; ++i) {
         sum += durations[i];
     }
-    return sum / (long double)count;
+    return sum / (long double) count;
 }
 
 void CompleteSearchEngineProfiler::profile(const std::string &path,
                                            SearchEngineInterface &searchEngine,
                                            const std::vector<IndigoQueryMolecule> &queries) {
+    LOG(INFO) << "Start profiling " << queries.size() << " molecules on search engine with path=" << path
+              << std::setprecision(9) << std::fixed;
     SearchEngineProfiler profiler(path, searchEngine);
-    std::cout << std::setprecision(9) << std::fixed;
 
-    std::cout << "Building search engine..." << std::endl;
     try {
         profiler.buildSearchEngine();
-    } catch (...) {
-        std::cerr << "Build failed!" << std::endl;
+    } catch (const std::exception &e) {
+        LOG(ERROR) << "Build search engine is failed with message: " << e.what();
         throw;
     }
     auto buildDuration = profiler.getBuildDuration();
-    std::cout << "Build completed" << std::endl;
     std::vector<long double> queryDurations(queries.size());
     if (!queries.empty()) {
         size_t maxW = std::to_string(queries.size() - 1).size();
         for (size_t i = 0; i < queries.size(); ++i) {
             try {
                 profiler.profile(queries[i]);
-            } catch (...) {
-                std::cerr << "Query " << i << " failed!" << std::endl;
+            } catch (const std::exception &e) {
+                LOG(ERROR) << "Query #" << i << " failed with message: " << e.what();
                 throw;
             }
-            std::cout << "Query " << std::setw(maxW) << i << " completed with time: "
-                      << profiler.getLastProfileDuration().count() << std::endl;
+            LOG(INFO) << "Query " << std::setw(maxW) << i << " completed with time: "
+                      << profiler.getLastProfileDuration().count() << "s";
             queryDurations[i] = profiler.getLastProfileDuration().count();
         }
     }
     auto durationWithoutBuild = profiler.getTotalDuration() - buildDuration;
 
-    std::cout << "Profiling is completed" << std::endl;
-    std::cout << "Build time:                " << buildDuration.count() << std::endl;
+    LOG(INFO) << "Profiling is completed";
+    LOG(INFO) << "Build time:                " << buildDuration.count() << "s";
     if (!queries.empty()) {
-        std::cout << "Average query time:        " << durationWithoutBuild.count() / double(queries.size())
-                  << std::endl;
-        std::cout << "10% high query time:       " << percentHigh(queryDurations, 0.1) << std::endl;
-        std::cout << "1% high query time:        " << percentHigh(queryDurations, 0.01) << std::endl;
-        std::cout << "0.1% high query time:      " << percentHigh(queryDurations, 0.001) << std::endl;
+        LOG(INFO) << "Average query time:        " << durationWithoutBuild.count() / double(queries.size())
+                  << "s";
+        LOG(INFO) << "10% high query time:       " << percentHigh(queryDurations, 0.1) << "s";
+        LOG(INFO) << "1% high query time:        " << percentHigh(queryDurations, 0.01) << "s";
+        LOG(INFO) << "0.1% high query time:      " << percentHigh(queryDurations, 0.001) << "s";
     }
-    std::cout << "Total time(without build): " << durationWithoutBuild.count() << std::endl;
-    std::cout << "Total time(with build):    " << profiler.getTotalDuration().count() << std::endl;
+    LOG(INFO) << "Total time(without build): " << durationWithoutBuild.count() << "s";
+    LOG(INFO) << "Total time(with build):    " << profiler.getTotalDuration().count() << "s";
 }

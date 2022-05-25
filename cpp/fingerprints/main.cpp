@@ -5,6 +5,8 @@
 #include "IndigoWriteBuffer.h"
 #include "IndigoSDFileIterator.h"
 
+#include <glog/logging.h>
+
 #include <chrono>
 #include <unordered_map>
 #include <filesystem>
@@ -65,8 +67,9 @@ void createFingerprintCSVFromFile(const string& sdfFile)
     }
 }
 
-int main()
+int main(int argc, char* argv[])
 {
+    google::InitGoogleLogging(argv[0]);
     //TODO to args
     vector<string> sdfFiles = findFiles("../data/sdf/pubchem/", ".sdf");
     auto startTime = std::chrono::high_resolution_clock::now();
