@@ -8,11 +8,6 @@
    - configure project
    - build project
 
-## Run app
-1. cd ./qtr-fingerprint/cpp
-2. Copy data from [google drive](https://drive.google.com/drive/u/3/folders/1VrQjWSKFtYdBeHLVDyrCrQFrxso3j45w) to current dir
-3. ./dist/lib/linux-x86_64/app
-
 ## Run tests
 1. cd ./qtr-fingerprint/cpp
 2. ./dist/lib/linux-x86_64/tests
@@ -27,7 +22,7 @@ You will see the list of available arguments and their descriptions.
 
 And then you can specify each option as following:
 
-`./app --path_to_query=query.mol --database_path=data/119697.sdf`
+`./app --path_to_query=data/query.mol --database_path=data/119697.sdf`
 
 ## Log configuration
 
