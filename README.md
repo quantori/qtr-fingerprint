@@ -15,9 +15,9 @@ App data can be found on [google drive](https://drive.google.com/drive/u/3/folde
 
 ## Program arguments
 
-You can get --help information about your executable just by running 
+You can get help information about your executable just by running 
 
-`./program --helpfull`
+`./program --help`
 
 You will see the list of available arguments and their descriptions.
 
