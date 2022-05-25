@@ -10,7 +10,7 @@
 
 ## Run tests
 1. cd ./qtr-fingerprint/cpp
-2. ./dist/lib/linux-x86_64/tests
+2. ./dist/lib/< platform >/tests
 
 ## Program arguments
 
