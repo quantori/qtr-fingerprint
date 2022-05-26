@@ -19,3 +19,5 @@ target_include_directories(${This}
         PUBLIC search_engine
         PUBLIC utils
         )
+
+target_link_libraries(${This} glog::glog)

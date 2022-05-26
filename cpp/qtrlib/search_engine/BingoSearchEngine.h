@@ -14,6 +14,8 @@
 #include "SearchEngineInterface.h"
 #include "Utils.h"
 
+#include <glog/logging.h>
+
 #include <cstring>
 #include <exception>
 

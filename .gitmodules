@@ -1,3 +1,9 @@
 [submodule "cpp/third_party/Indigo"]
 	path = cpp/third_party/Indigo
 	url = https://github.com/epam/Indigo.git
+[submodule "cpp/third_party/glog"]
+	path = cpp/third_party/glog
+	url = https://github.com/google/glog.git
+[submodule "cpp/third_party/abseil-cpp"]
+	path = cpp/third_party/abseil-cpp
+	url = https://github.com/abseil/abseil-cpp.git
