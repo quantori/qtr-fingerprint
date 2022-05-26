@@ -36,10 +36,11 @@ BingoSearchEngine::findOverMolecules(const indigo_cpp::IndigoQueryMolecule &mol)
     std::vector<IndigoMolecule> result;
     int resultIterator = _indigoSessionPtr->_checkResult(bingoSearchSub(_db, mol.id(), ""));
     int currentId = bingoGetObject(resultIterator);
-    do {
-        IndigoMolecule curr = _indigoSessionPtr->loadMolecule(indigoCanonicalSmiles(currentId));
+    while (bingoNext(resultIterator)) {
+        const std::string &smiles = indigoCanonicalSmiles(currentId);
+        IndigoMolecule curr = _indigoSessionPtr->loadMolecule(smiles);
         result.emplace_back(curr);
-    } while (bingoNext(resultIterator));
+    }
     bingoEndSearch(resultIterator);
     return result;
 }

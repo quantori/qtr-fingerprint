@@ -28,5 +28,7 @@ public:
     virtual ~SearchEngineInterface() = default;
 };
 
+typedef std::shared_ptr<SearchEngineInterface> SearchEnginePtr;
+
 
 

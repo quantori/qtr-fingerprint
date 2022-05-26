@@ -1,17 +1,16 @@
 # qtr-fingerprint
+
 ## Build
 1. git clone https://github.com/quantori/qtr-fingerprint.git
-2. cd qtr-fingerprint
+2. cd ./qtr-fingerprint/cpp
 3. git submodule update --init --recursive
 4. Open qtr-fingerprint in VS Code:
    - configure project
    - build project
-## Run
-1. cd qtr-fingerprint/dist/lib/windows-x86_64
-2. app.exe
 
-## App Data
-App data can be found on [google drive](https://drive.google.com/drive/u/3/folders/1VrQjWSKFtYdBeHLVDyrCrQFrxso3j45w)
+## Run tests
+1. cd ./qtr-fingerprint/cpp
+2. ./dist/lib/< platform >/tests
 
 ## Program arguments
 
@@ -23,7 +22,7 @@ You will see the list of available arguments and their descriptions.
 
 And then you can specify each option as following:
 
-`./app --path_to_query=query.mol --database_path=data/119697.sdf`
+`./app --path_to_query=data/query.mol --database_path=data/119697.sdf`
 
 ## Log configuration
 
