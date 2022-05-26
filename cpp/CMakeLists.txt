@@ -4,6 +4,8 @@ project(QtrFingerprint LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized") # Disable -Werror=maybe-uninitialized flag,
+                                                                   # needed to compile gtest on new gcc compilers
 
 SET(BUILD_BINGO OFF CACHE BOOL "BUILD_BINGO Indigo option")
 SET(BUILD_BINGO_ELASTIC OFF CACHE BOOL "BUILD_BINGO_ELASTIC Indigo option")
@@ -11,7 +13,6 @@ SET(BUILD_INDIGO_WRAPPERS OFF CACHE BOOL "BUILD_INDIGO_WRAPPERS Indigo option")
 SET(BUILD_INDIGO_UTILS OFF CACHE BOOL "BUILD_INDIGO_UTILS Indigo option")
 SET(WITH_STATIC ON CACHE BOOL "WITH_STATIC Indigo option")
 SET(ABSL_PROPAGATE_CXX_STD ON)
-
 
 
 add_subdirectory(app)
