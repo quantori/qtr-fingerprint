@@ -18,6 +18,7 @@ target_include_directories(${This}
         PUBLIC profiler
         PUBLIC search_engine
         PUBLIC utils
+        PUBLIC fingerprints
         )
 
 target_link_libraries(${This} glog::glog)
