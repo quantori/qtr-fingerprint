@@ -4,6 +4,8 @@
 
 #include <cstdint>
 
+class FingerprintTableTestFixture;
+
 /**
  * @tparam FINGERPRINT_SIZE fingerprint size in bits
  */
@@ -44,13 +46,13 @@ public:
 
         Iterator& operator++() {
             ++_data;
-            return _data;
+            return *this;
         }
 
         Iterator operator++(int) {
             Iterator tmp = _data;
             ++_data;
-            return std::move(tmp);
+            return tmp;
         }
 
         friend bool operator==(const Iterator& a, const Iterator& b) {
@@ -61,10 +63,20 @@ public:
             return a._data != b._data;
         }
     private:
-        Fingerprint<FINGERPRINT_SIZE> *_data = nullptr;
+        Fingerprint<FINGERPRINT_SIZE> *_data;
     };
+
+    Iterator begin() {
+        return Iterator(_data);
+    }
+
+    Iterator end() {
+        return Iterator(_data + _size);
+    }
 
 private:
     Fingerprint<FINGERPRINT_SIZE> *_data = nullptr;
     const std::size_t _size;
+
+    friend FingerprintTableTestFixture;
 };

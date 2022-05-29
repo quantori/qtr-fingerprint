@@ -11,6 +11,7 @@ const inline int CNT_BIT_HEX = 4; // cnt bits in one hex number
 template<std::size_t FINGERPRINT_SIZE>
 class FingerprintTest;
 
+template<std::size_t FINGERPRINT_SIZE>
 class FingerprintTableTest;
 
 /**
@@ -55,7 +56,7 @@ private:
     void buildFromIndigoFingerprint(const char *fp);
 
     friend FingerprintTest<FINGERPRINT_SIZE>;
-    friend FingerprintTableTest;
+    friend FingerprintTableTest<FINGERPRINT_SIZE>;
 };
 
 #include "Fingerprints.hpp"
