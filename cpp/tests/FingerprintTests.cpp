@@ -30,13 +30,27 @@ TEST(Fingerprint, NO_ALIGN) {
 template<std::size_t FINGERPRINT_SIZE>
 class FingerprintTest {
 public:
-    static void testBuildFromIndigo(std::vector<typename Fingerprint<FINGERPRINT_SIZE>::BlockType> expectedFingerprint,
+    static void testBuildFromIndigo(const std::vector<typename Fingerprint<FINGERPRINT_SIZE>::BlockType>& expectedFingerprint,
                                     const char *fingerprint) {
         Fingerprint<FINGERPRINT_SIZE> f;
         f.buildFromIndigoFingerprint(fingerprint);
         EXPECT_EQ(expectedFingerprint.size(), Fingerprint<FINGERPRINT_SIZE>::countOfBlocks);
         for (int i = 0; i < expectedFingerprint.size(); ++i) {
             EXPECT_EQ(expectedFingerprint[i], f._data[i]);
+        }
+    }
+
+    static void testGet(const std::string& fingerprint) {
+        Fingerprint<FINGERPRINT_SIZE> f;
+        f.buildFromIndigoFingerprint(fingerprint.c_str());
+        for (size_t j = 0; j < fingerprint.size(); ++j) {
+            size_t current = (fingerprint[j] >= 'a') ?
+                             (fingerprint[j] - 'a' + 10) : (fingerprint[j] - '0');
+
+            EXPECT_EQ(f.get(j * 4), getBit(current, 3));
+            EXPECT_EQ(f.get(j * 4 + 1), getBit(current, 2));
+            EXPECT_EQ(f.get(j * 4 + 2), getBit(current, 1));
+            EXPECT_EQ(f.get(j * 4 + 3), getBit(current, 0));
         }
     }
 };
@@ -61,4 +75,13 @@ TEST(buildFromIndigoFingerprint, BUILD_INDIGO_FINGERPRINT) {
     FingerprintTest<48 * 4>::testBuildFromIndigo(
             {1771275926324586302ull, 17682369433868156708ull, 15214827881143040204ull},
             "1894d61203c7273ef56465509cefbf24d325ed58a63d78cc");
+}
+
+TEST(FingerprintGet, COMMON) {
+    FingerprintTest<16 * 4>::testGet("f79bd5571c488178");
+    FingerprintTest<16 * 4>::testGet("06ebefc68f856039");
+    FingerprintTest<32 * 4>::testGet("e3a551013fc2c16e3e4c65329b2f163d");
+    FingerprintTest<32 * 4>::testGet("d7b4b75bd79faee3ba2a0d93f6c545f8");
+    FingerprintTest<48 * 4>::testGet("68a1252b85d6cf6a40fea7d17856fa100cf981e7a3172af7");
+    FingerprintTest<48 * 4>::testGet("1894d61203c7273ef56465509cefbf24d325ed58a63d78cc");
 }

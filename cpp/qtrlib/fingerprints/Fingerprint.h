@@ -11,13 +11,14 @@ const inline int CNT_BIT_HEX = 4; // cnt bits in one hex number
 template<std::size_t FINGERPRINT_SIZE>
 class FingerprintTest;
 
+class FingerprintTableTest;
+
 /**
  * @tparam FINGERPRINT_SIZE fingerprint size in bits
  */
 template<std::size_t FINGERPRINT_SIZE>
 class __attribute__ ((__packed__)) Fingerprint {
 public:
-
     typedef uint64_t BlockType;
     const inline static std::size_t blockTypeBits = fromBytesToBits(sizeof(BlockType));
     const inline static std::size_t countOfBlocks = divideIntegersCeil(FINGERPRINT_SIZE, blockTypeBits);
@@ -37,7 +38,7 @@ public:
 
     [[nodiscard]] bool get(std::size_t index) const {
         return getBit(_data[index / blockTypeBits],
-                      index % blockTypeBits);
+                      (blockTypeBits - 1 - index) % blockTypeBits);
     }
 
     int lenInBinary(const int &indexHex) {
@@ -54,6 +55,7 @@ private:
     void buildFromIndigoFingerprint(const char *fp);
 
     friend FingerprintTest<FINGERPRINT_SIZE>;
+    friend FingerprintTableTest;
 };
 
 #include "Fingerprints.hpp"
