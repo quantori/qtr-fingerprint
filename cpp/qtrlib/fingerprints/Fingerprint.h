@@ -50,6 +50,47 @@ public:
         return lenInBinary(indexHex) / blockTypeBits;
     }
 
+    struct Iterator {
+        Iterator(BlockType *data) : _data(data) {}
+
+        BlockType &operator*() const {
+            return *_data;
+        }
+
+        BlockType *operator->() {
+            return _data;
+        }
+
+        Iterator& operator++() {
+            ++_data;
+            return *this;
+        }
+
+        Iterator operator++(int) {
+            Iterator tmp = _data;
+            ++_data;
+            return tmp;
+        }
+
+        friend bool operator==(const Iterator& a, const Iterator& b) {
+            return a._data == b._data;
+        }
+
+        friend bool operator!=(const Iterator& a, const Iterator& b) {
+            return a._data != b._data;
+        }
+    private:
+        BlockType *_data;
+    };
+
+    Iterator begin() {
+        return Iterator(_data);
+    }
+
+    Iterator end() {
+        return Iterator(_data + countOfBlocks);
+    }
+
 private:
     BlockType _data[countOfBlocks];
 

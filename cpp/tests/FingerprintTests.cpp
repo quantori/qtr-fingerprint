@@ -53,6 +53,16 @@ public:
             EXPECT_EQ(f.get(j * 4 + 3), getBit(current, 0));
         }
     }
+
+    static void testBlockIterator(const std::string &fingerprint) {
+        Fingerprint<FINGERPRINT_SIZE> f;
+        f.buildFromIndigoFingerprint(fingerprint.c_str());
+        std::size_t index = 0;
+        for (const auto &block: f) {
+            EXPECT_TRUE(block == f._data[index]);
+            index++;
+        }
+    }
 };
 
 /**
@@ -77,11 +87,32 @@ TEST(buildFromIndigoFingerprint, BUILD_INDIGO_FINGERPRINT) {
             "1894d61203c7273ef56465509cefbf24d325ed58a63d78cc");
 }
 
-TEST(FingerprintGet, COMMON) {
+TEST(FingerprintGet, HEX_SIZE_16) {
     FingerprintTest<16 * 4>::testGet("f79bd5571c488178");
     FingerprintTest<16 * 4>::testGet("06ebefc68f856039");
+}
+
+TEST(FingerprintGet, HEX_SIZE_32) {
     FingerprintTest<32 * 4>::testGet("e3a551013fc2c16e3e4c65329b2f163d");
     FingerprintTest<32 * 4>::testGet("d7b4b75bd79faee3ba2a0d93f6c545f8");
+}
+
+TEST(FingerprintGet, HEX_SIZE_48) {
     FingerprintTest<48 * 4>::testGet("68a1252b85d6cf6a40fea7d17856fa100cf981e7a3172af7");
     FingerprintTest<48 * 4>::testGet("1894d61203c7273ef56465509cefbf24d325ed58a63d78cc");
+}
+
+TEST(FingerprintBlockIterator, HEX_SIZE_16) {
+    FingerprintTest<16 * 4>::testBlockIterator("f79bd5571c488178");
+    FingerprintTest<16 * 4>::testBlockIterator("06ebefc68f856039");
+}
+
+TEST(FingerprintBlockIterator, HEX_SIZE_32) {
+    FingerprintTest<32 * 4>::testBlockIterator("e3a551013fc2c16e3e4c65329b2f163d");
+    FingerprintTest<32 * 4>::testBlockIterator("d7b4b75bd79faee3ba2a0d93f6c545f8");
+}
+
+TEST(FingerprintBlockIterator, HEX_SIZE_48) {
+    FingerprintTest<48 * 4>::testBlockIterator("68a1252b85d6cf6a40fea7d17856fa100cf981e7a3172af7");
+    FingerprintTest<48 * 4>::testBlockIterator("1894d61203c7273ef56465509cefbf24d325ed58a63d78cc");
 }
