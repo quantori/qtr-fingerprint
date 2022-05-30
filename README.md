@@ -1,16 +1,16 @@
 # qtr-fingerprint
 
 ## Build
-1. git clone https://github.com/quantori/qtr-fingerprint.git
-2. cd ./qtr-fingerprint/cpp
-3. git submodule update --init --recursive
-4. Open qtr-fingerprint in VS Code:
-   - configure project
-   - build project
+1. `git clone https://github.com/quantori/qtr-fingerprint.git`
+2. `cd ./qtr-fingerprint/cpp`
+3. `git submodule update --init --recursive`
+4. `mkdir build && cd build`
+5. `cmake ..`
+6. `cmake --build .` or `cmake --build . --target tests` to specify build target
 
 ## Run tests
-1. cd ./qtr-fingerprint/cpp
-2. ./build/bin/tests
+1. `cd ./qtr-fingerprint/cpp/build`
+2. `./bin/tests`
 
 ## Program arguments
 
