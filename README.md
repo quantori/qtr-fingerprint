@@ -1,5 +1,11 @@
 # qtr-fingerprint
 
+## Requirements
+
+* `CMake 3.13 or higher`
+* `libfreetype6-dev` and `libfontconfig1-dev` libs
+* `g++ 9.4 or higher`
+
 ## Build
 1. `git clone https://github.com/quantori/qtr-fingerprint.git`
 2. `cd ./qtr-fingerprint/cpp`
