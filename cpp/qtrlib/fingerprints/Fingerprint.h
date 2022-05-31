@@ -6,6 +6,8 @@
 #include "Utils.h"
 #include "indigo.h"
 
+const inline int CNT_BIT_HEX = 4; // cnt bits in one hex number
+
 template<std::size_t FINGERPRINT_SIZE>
 class FingerprintTest;
 
@@ -15,7 +17,10 @@ class FingerprintTest;
 template<std::size_t FINGERPRINT_SIZE>
 class __attribute__ ((__packed__)) Fingerprint {
 public:
+
     typedef uint64_t BlockType;
+    const inline static std::size_t blockTypeBits = fromBytesToBits(sizeof(BlockType));
+    const inline static std::size_t countOfBlocks = divideIntegersCeil(FINGERPRINT_SIZE, blockTypeBits);
 
     /**
      * Create fingerprint, data is full with zero
@@ -24,13 +29,7 @@ public:
         memset(_data, 0, countOfBlocks * sizeof(BlockType));
     }
 
-    Fingerprint(indigo_cpp::IndigoMolecule &mol) {
-        mol.aromatize();
-        int fingerprint = indigoFingerprint(mol.id(), "sub");
-        const char *fp = indigoToString(fingerprint);
-        buildFromIndigoFingerprint(fp);
-
-    }
+    Fingerprint(indigo_cpp::IndigoMolecule &mol);
 
     ~Fingerprint() = default;
 
@@ -41,18 +40,20 @@ public:
                       index % blockTypeBits);
     }
 
+    int lenInBinary(const int &indexHex) {
+        return CNT_BIT_HEX * indexHex;
+    }
+
+    int getBlockNumber(const int &indexHex) {
+        return lenInBinary(indexHex) / blockTypeBits;
+    }
+
 private:
-    const inline static std::size_t blockTypeBits = fromBytesToBits(sizeof(BlockType));
-    const inline static std::size_t countOfBlocks = divideIntegersCeil(FINGERPRINT_SIZE, blockTypeBits);
     BlockType _data[countOfBlocks];
 
-    void buildFromIndigoFingerprint(const char *fp) {
-        const int CNT_BIT_HEX = 4;
-        for (int i = 0; fp[i] != '\0'; ++i) {
-            BlockType intNumber = (fp[i] >= 'a') ? (fp[i] - 'a' + 10) : (fp[i] - '0');
-            _data[(CNT_BIT_HEX * i) / blockTypeBits] += intNumber << (blockTypeBits - CNT_BIT_HEX * (i + 1));
-        }
-    }
+    void buildFromIndigoFingerprint(const char *fp);
 
     friend FingerprintTest<FINGERPRINT_SIZE>;
 };
+
+#include "Fingerprints.hpp"

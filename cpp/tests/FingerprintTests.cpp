@@ -47,10 +47,14 @@ public:
 TEST(buildFromIndigoFingerprint, BUILD_INDIGO_FINGERPRINT) {
     FingerprintTest<16 * 4>::testBuildFromIndigo({17842088918871736696ull}, "f79bd5571c488178");
     FingerprintTest<16 * 4>::testBuildFromIndigo({498755819845017657ull}, "06ebefc68f856039");
+
+
     FingerprintTest<32 * 4>::testBuildFromIndigo({16403606283573444974ull, 4489074196607866429ull},
                                                  "e3a551013fc2c16e3e4c65329b2f163d");
     FingerprintTest<32 * 4>::testBuildFromIndigo({15543249819049897699ull, 13414549369227920888ull},
                                                  "d7b4b75bd79faee3ba2a0d93f6c545f8");
+
+
     FingerprintTest<48 * 4>::testBuildFromIndigo(
             {7539348120054189930ull, 4683365180620864016ull, 934921229529721591ull},
             "68a1252b85d6cf6a40fea7d17856fa100cf981e7a3172af7");
