@@ -1,0 +1,26 @@
+pipeline {
+  environment {}
+  agent {
+    docker { image 'rikorose/gcc-cmake:10' }
+  }
+  options {}
+  stages {
+    stage('build') {
+      steps {
+        sh 'mkdir build && cd build'
+        sh 'cmake ..'
+        sh 'cmake --build .'
+      }
+    }
+    stage('test') {
+      steps {
+        sh './bin/tests'
+      }
+    }
+  }
+  post {
+    always {
+      cleanWs()
+    }
+  }
+}
