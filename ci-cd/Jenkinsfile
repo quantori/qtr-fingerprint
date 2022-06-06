@@ -19,7 +19,6 @@ pipeline {
     stage('test') {
       steps {
         sh '''
-          pwd
           cd cpp/build
           ./bin/tests
         '''
