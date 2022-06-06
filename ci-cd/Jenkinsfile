@@ -1,7 +1,9 @@
 pipeline {
-  node { label 'qtr' }
   agent {
-    docker { image 'rikorose/gcc-cmake:10' }
+    docker {
+      image 'rikorose/gcc-cmake:10'
+      label 'qtr'
+    }
   }
   stages {
     stage('build') {
