@@ -8,17 +8,21 @@ pipeline {
   stages {
     stage('build') {
       steps {
-        sh 'cd cpp'
-        sh 'mkdir build && cd build'
-        sh 'cmake ..'
-        sh 'cmake --build .'
+        sh '''
+          cd cpp
+          mkdir build && cd build
+          cmake ..
+          cmake --build .
+        '''
       }
     }
     stage('test') {
       steps {
-        sh 'pwd'
-        sh 'cd cpp/build'
-        sh './bin/tests'
+        sh '''
+          pwd
+          cd cpp/build
+          ./bin/tests
+        '''
       }
     }
   }
