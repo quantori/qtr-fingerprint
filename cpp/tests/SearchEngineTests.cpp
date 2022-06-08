@@ -1,4 +1,5 @@
-#include "common.h"
+#include "SearchEngineTests.h"
+#include "Common.h"
 
 #include "IndigoInChI.h"
 #include "IndigoQueryMolecule.h"
@@ -15,6 +16,8 @@
 
 using namespace indigo_cpp;
 using namespace std;
+using namespace std::filesystem;
+
 
 static pair<string, vector<string>> parseQueryLine(const string &line)
 {
@@ -50,7 +53,7 @@ static vector<string> parseResult(const vector<IndigoMolecule> &result, IndigoIn
     return inchiKeys;
 }
 
-void testSearchEngine(
+static void testSearchEngine(
     SearchEnginePtr searchEngine,
     IndigoSessionPtr indigoSession,
     const std::string &fileSdf,
@@ -78,10 +81,33 @@ void testSearchEngine(
    }    
 }
 
-std::filesystem::path getDataDir()
+void SearchEngineTests::testPubchem10()
 {
-    using namespace std::filesystem;
-    const path currentDir = testing::UnitTest::GetInstance()->original_working_dir();
-    const path dataDir = currentDir / path("../data");
-    return dataDir;
+    testSearchEngine(
+        _searchEnginePtr,
+        _indigoSessionPtr,
+        _dataDir / path("pubchem_10.sdf"),
+        _dataDir / path("pubchem_10_queries.txt")
+    );
 }
+
+void SearchEngineTests::testPubchem100()
+{
+    testSearchEngine(
+        _searchEnginePtr,
+        _indigoSessionPtr,
+        _dataDir / path("pubchem_100.sdf"),
+        _dataDir / path("pubchem_100_queries.txt")
+    );
+}
+
+void SearchEngineTests::testPubchem994()
+{
+    testSearchEngine(
+        _searchEnginePtr,
+        _indigoSessionPtr,
+        _dataDir / path("pubchem_994.sdf"),
+        _dataDir / path("pubchem_994_queries.txt")
+    );
+}
+
