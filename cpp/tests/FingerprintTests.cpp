@@ -25,11 +25,11 @@ protected:
 };
 
 TEST_F(FingerprintTestFixture, SIZE) {
-    EXPECT_EQ(_data.size(), fingerprintSizeInBytes);
+    EXPECT_EQ(_data.size(), FingerprintForIndigo::sizeInBytes);
 }
 
 TEST_F(FingerprintTestFixture, CONVERSION) {
-    auto fingerprint = std::make_unique<Fingerprint>();
+    auto fingerprint = std::make_unique<FingerprintForIndigo>();
     fingerprint->setBytes(_data);
     std::vector<std::byte> data = fingerprint->getBytes();
     compareTwoVectors(data, _data);
