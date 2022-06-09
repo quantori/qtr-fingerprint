@@ -2,8 +2,10 @@
 
 #include "IndigoBaseMolecule.h"
 
+#include <cstddef>
 #include <memory>
 #include <string>
+#include <vector>
 
 class QtrIndigoFingerprint : public indigo_cpp::IndigoObject {
 public:
@@ -17,6 +19,8 @@ public:
     QtrIndigoFingerprint& operator=(QtrIndigoFingerprint&&) = default;
 
     int countBits() const;
+    std::vector<std::byte> data() const;
+
     static int commonBits(const QtrIndigoFingerprint &f1, const QtrIndigoFingerprint &f2);
 };
 
