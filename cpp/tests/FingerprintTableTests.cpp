@@ -3,5 +3,5 @@
 #include <gtest/gtest.h>
 
 TEST(FingerprintTable, BUILD) {
-    FingerprintTableForIndigo table;
+    qtr::IndigoFingerprintTable table;
 }

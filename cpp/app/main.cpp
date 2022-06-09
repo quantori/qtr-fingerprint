@@ -11,6 +11,7 @@
 #include <glog/logging.h>
 
 using namespace indigo_cpp;
+using namespace qtr;
 
 ABSL_FLAG(std::string, path_to_query, "",
           "Path to molecular file to search in database");

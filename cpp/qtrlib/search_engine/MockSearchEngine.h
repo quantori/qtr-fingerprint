@@ -4,6 +4,8 @@
 
 #include <thread>
 
+namespace qtr {
+
 class MockSearchEngine final : public SearchEngineInterface {
 public:
     inline MockSearchEngine() = default;
@@ -14,3 +16,5 @@ public:
 
     std::vector<indigo_cpp::IndigoMolecule> findOverMolecules(const indigo_cpp::IndigoQueryMolecule &mol) override;
 };
+
+} // namespace qtr

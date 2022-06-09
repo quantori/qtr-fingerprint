@@ -4,6 +4,7 @@
 
 #include <bitset>
 
+using namespace qtr;
 using namespace std;
 
 static const int VALUE_SIZE_BITS = fromBytesToBits(sizeof(uint64_t));

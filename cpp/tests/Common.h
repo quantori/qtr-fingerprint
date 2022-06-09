@@ -5,6 +5,8 @@
 #include <filesystem>
 #include <vector>
 
+namespace qtr {
+
 template<typename T>
 void compareTwoVectors(const std::vector<T> &v1, const std::vector<T> &v2)
 {
@@ -14,3 +16,5 @@ void compareTwoVectors(const std::vector<T> &v1, const std::vector<T> &v2)
 }
 
 std::filesystem::path getDataDir();
+
+} // namespace qtr

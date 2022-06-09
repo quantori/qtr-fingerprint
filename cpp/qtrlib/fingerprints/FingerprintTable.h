@@ -4,7 +4,11 @@
 
 #include <vector>
 
+namespace qtr {
+
 template<size_t fingerprintSizeInBytes>
 using FingerprintTable = std::vector<Fingerprint<fingerprintSizeInBytes>>;
 
-using FingerprintTableForIndigo = FingerprintTable<FingerprintForIndigo::sizeInBytes>;
+using IndigoFingerprintTable = FingerprintTable<IndigoFingerprint::sizeInBytes>;
+
+} // namespace qtr

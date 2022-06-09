@@ -3,6 +3,7 @@
 
 #include <gtest/gtest.h>
 
+using namespace qtr;
 
 class BingoSearchEngineTestFixture : public ::testing::Test {
 protected:

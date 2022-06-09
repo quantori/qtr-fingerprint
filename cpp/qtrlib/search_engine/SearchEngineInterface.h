@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+namespace qtr {
+
 class SearchEngineInterface {
 public:
     /**
@@ -30,5 +32,5 @@ public:
 
 typedef std::shared_ptr<SearchEngineInterface> SearchEnginePtr;
 
-
+} // namespace qtr
 

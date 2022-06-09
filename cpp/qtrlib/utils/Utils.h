@@ -5,6 +5,8 @@
 
 #include <glog/logging.h>
 
+namespace qtr {
+
 /**
  * Check, if string a ends with string b.
  * @param a
@@ -51,3 +53,5 @@ constexpr inline std::size_t fromBytesToBits(std::size_t bytes) {
 constexpr inline std::size_t divideIntegersCeil(std::size_t a, std::size_t b) {
     return (a + b - 1) / b;
 }
+
+} // namespace qtr

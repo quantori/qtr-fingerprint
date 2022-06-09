@@ -11,6 +11,7 @@
 #include <memory>
 
 using namespace indigo_cpp;
+using namespace qtr;
 
 class FingerprintTestFixture : public ::testing::Test {
 protected:
@@ -25,11 +26,11 @@ protected:
 };
 
 TEST_F(FingerprintTestFixture, SIZE) {
-    EXPECT_EQ(_data.size(), FingerprintForIndigo::sizeInBytes);
+    EXPECT_EQ(_data.size(), qtr::IndigoFingerprint::sizeInBytes);
 }
 
 TEST_F(FingerprintTestFixture, CONVERSION) {
-    auto fingerprint = std::make_unique<FingerprintForIndigo>();
+    auto fingerprint = std::make_unique<qtr::IndigoFingerprint>();
     fingerprint->setBytes(_data);
     std::vector<std::byte> data = fingerprint->getBytes();
     compareTwoVectors(data, _data);

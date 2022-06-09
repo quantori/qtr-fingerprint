@@ -14,7 +14,7 @@
 #include <vector>
 
 
-std::filesystem::path getDataDir()
+std::filesystem::path qtr::getDataDir()
 {
     using namespace std::filesystem;
     const path currentDir = testing::UnitTest::GetInstance()->original_working_dir();

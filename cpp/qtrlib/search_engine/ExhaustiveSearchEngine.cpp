@@ -10,11 +10,11 @@
 
 using namespace indigo_cpp;
 
-ExhaustiveSearchEngine::ExhaustiveSearchEngine(const IndigoSessionPtr &indigoSessionPtr)
+qtr::ExhaustiveSearchEngine::ExhaustiveSearchEngine(const IndigoSessionPtr &indigoSessionPtr)
     : _indigoSessionPtr(indigoSessionPtr)
 {}
 
-void ExhaustiveSearchEngine::build(const std::string &path)
+void qtr::ExhaustiveSearchEngine::build(const std::string &path)
 {
     _moleculesInfo.clear();
 
@@ -35,7 +35,7 @@ void ExhaustiveSearchEngine::build(const std::string &path)
     }
 }
 
-std::vector<indigo_cpp::IndigoMolecule> ExhaustiveSearchEngine::findOverMolecules(const indigo_cpp::IndigoQueryMolecule &mol)
+std::vector<indigo_cpp::IndigoMolecule> qtr::ExhaustiveSearchEngine::findOverMolecules(const indigo_cpp::IndigoQueryMolecule &mol)
 {
     std::vector<indigo_cpp::IndigoMolecule> result;
 
@@ -60,6 +60,6 @@ std::vector<indigo_cpp::IndigoMolecule> ExhaustiveSearchEngine::findOverMolecule
     return result;
 }
 
-ExhaustiveSearchEngine::~ExhaustiveSearchEngine()
+qtr::ExhaustiveSearchEngine::~ExhaustiveSearchEngine()
 {
 }
