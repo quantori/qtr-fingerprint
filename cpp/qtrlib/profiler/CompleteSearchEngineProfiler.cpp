@@ -14,7 +14,9 @@ static long double percentHigh(std::vector<long double> durations, long double p
     return sum / (long double) count;
 }
 
-void qtr::CompleteSearchEngineProfiler::profile(const std::string &path,
+namespace qtr {
+
+void CompleteSearchEngineProfiler::profile(const std::string &path,
                                            SearchEngineInterface &searchEngine,
                                            const std::vector<IndigoQueryMolecule> &queries) {
     LOG(INFO) << "Start profiling " << queries.size() << " molecules on search engine with path=" << path
@@ -57,3 +59,5 @@ void qtr::CompleteSearchEngineProfiler::profile(const std::string &path,
     LOG(INFO) << "Total time(without build): " << durationWithoutBuild.count() << "s";
     LOG(INFO) << "Total time(with build):    " << profiler.getTotalDuration().count() << "s";
 }
+
+} // namespace qtr

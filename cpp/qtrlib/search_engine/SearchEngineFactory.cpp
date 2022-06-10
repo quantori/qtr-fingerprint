@@ -5,7 +5,9 @@
 
 #include <exception>
 
-qtr::SearchEnginePtr qtr::SearchEngineFactory::create(SearchEngineType searchEngineType, indigo_cpp::IndigoSessionPtr indigoSessionPtr) {
+namespace qtr {
+
+SearchEnginePtr SearchEngineFactory::create(SearchEngineType searchEngineType, indigo_cpp::IndigoSessionPtr indigoSessionPtr) {
     if (searchEngineType == SearchEngineType::BINGO)    
         return std::make_shared<BingoSearchEngine>(indigoSessionPtr);
     else if (searchEngineType == SearchEngineType::EXHAUSTIVE)
@@ -15,3 +17,5 @@ qtr::SearchEnginePtr qtr::SearchEngineFactory::create(SearchEngineType searchEng
         return nullptr;
     }
 }
+
+} // namespace qtr
