@@ -19,6 +19,8 @@
 #include <cstring>
 #include <exception>
 
+namespace qtr {
+
 enum BingoDatabaseState{
     LOADED,
     CLOSED,
@@ -45,3 +47,5 @@ private:
     int _db;
     indigo_cpp::IndigoSessionPtr _indigoSessionPtr;
 };
+
+} // namespace qtr

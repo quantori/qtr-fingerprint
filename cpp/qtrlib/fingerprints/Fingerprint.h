@@ -5,6 +5,8 @@
 #include <cstddef>
 #include <vector>
 
+namespace qtr {
+
 template<size_t fingerprintSizeInBytes>
 class Fingerprint : public std::bitset<CHAR_BIT*fingerprintSizeInBytes>
 {
@@ -31,4 +33,6 @@ public:
     }
 };
 
-using FingerprintForIndigo = Fingerprint<467>;
+using IndigoFingerprint = Fingerprint<467>;
+
+} // namespace qtr

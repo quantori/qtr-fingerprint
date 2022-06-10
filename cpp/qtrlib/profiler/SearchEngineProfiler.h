@@ -8,6 +8,8 @@
 #include <chrono>
 #include <vector>
 
+namespace qtr {
+
 class SearchEngineProfiler {
 public:
     /**
@@ -61,3 +63,5 @@ private:
     std::chrono::duration<long double> _lastProfileDuration;
     std::chrono::duration<long double> _totalDuration = std::chrono::duration<long double>::zero();
 };
+
+} // namespace qtr

@@ -3,6 +3,7 @@
 
 #include <gtest/gtest.h>
 
+using namespace qtr;
 
 class ExhastiveSearchEngineTestFixture : public ::testing::Test {
 protected:

@@ -5,6 +5,8 @@
 #include "QtrIndigoFingerprint.h"
 #include "IndigoMolecule.h"
 
+namespace qtr {
+
 class ExhaustiveSearchEngine : public SearchEngineInterface {
 public:
     ExhaustiveSearchEngine() = delete;
@@ -26,3 +28,5 @@ private:
     std::vector<MoleculeInfo> _moleculesInfo;
     indigo_cpp::IndigoSessionPtr _indigoSessionPtr;
 };
+
+} // namespace qtr

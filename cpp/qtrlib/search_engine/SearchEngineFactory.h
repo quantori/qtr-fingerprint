@@ -4,6 +4,8 @@
 
 #include <memory>
 
+namespace qtr {
+
 struct SearchEngineFactory {
     
     enum SearchEngineType {
@@ -13,3 +15,5 @@ struct SearchEngineFactory {
 
     static SearchEnginePtr create(SearchEngineType searchEngineType, indigo_cpp::IndigoSessionPtr indigoSessionPtr);
 };
+
+} // namespace qtr

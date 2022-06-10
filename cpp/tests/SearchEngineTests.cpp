@@ -15,6 +15,7 @@
 #include <vector>
 
 using namespace indigo_cpp;
+using namespace qtr;
 using namespace std;
 using namespace std::filesystem;
 

@@ -8,6 +8,8 @@
 
 #include <filesystem>
 
+namespace qtr {
+
 class SearchEngineTests {
 public:
     SearchEngineTests(SearchEngineFactory::SearchEngineType searchEngineType)
@@ -25,3 +27,5 @@ private:
     SearchEnginePtr _searchEnginePtr;
     std::filesystem::path _dataDir;
 };
+
+} // namespace qtr

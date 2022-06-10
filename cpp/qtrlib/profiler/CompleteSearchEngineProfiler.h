@@ -15,6 +15,8 @@
 #include <cmath>
 #include <algorithm>
 
+namespace qtr {
+
 namespace CompleteSearchEngineProfiler {
     /**
      * Output's profiling to std::out
@@ -26,4 +28,6 @@ namespace CompleteSearchEngineProfiler {
     void profile(const std::string &path,
                  SearchEngineInterface &searchEngine,
                  const std::vector<indigo_cpp::IndigoQueryMolecule> &queries);
-};
+} // namespace CompleteSearchEngineProfiler
+
+} // namespace qtr

@@ -21,6 +21,7 @@
 #include "Utils.h"
 
 using namespace indigo_cpp;
+using namespace qtr;
 using namespace std;
 
 static void hexToBin(const char *hexdec, ostringstream &out) {
