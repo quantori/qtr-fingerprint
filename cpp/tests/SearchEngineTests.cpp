@@ -82,6 +82,8 @@ static void testSearchEngine(
    }    
 }
 
+namespace qtr {
+
 void SearchEngineTests::testPubchem10()
 {
     testSearchEngine(
@@ -112,3 +114,4 @@ void SearchEngineTests::testPubchem994()
     );
 }
 
+} // namespace qtr

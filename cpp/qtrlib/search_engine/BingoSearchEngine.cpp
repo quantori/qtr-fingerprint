@@ -2,9 +2,11 @@
 
 using namespace indigo_cpp;
 
-qtr::BingoSearchEngine::BingoSearchEngine(const IndigoSessionPtr &indigoSessionPtr) : _indigoSessionPtr(indigoSessionPtr) {}
+namespace qtr {
 
-qtr::BingoSearchEngine::~BingoSearchEngine() {
+BingoSearchEngine::BingoSearchEngine(const IndigoSessionPtr &indigoSessionPtr) : _indigoSessionPtr(indigoSessionPtr) {}
+
+BingoSearchEngine::~BingoSearchEngine() {
     LOG(INFO) << "Bingo search engine destructor";
     if (currentDatabaseState != NOT_CREATED && currentDatabaseState != CLOSED) {
         bingoCloseDatabase(_db);
@@ -12,7 +14,7 @@ qtr::BingoSearchEngine::~BingoSearchEngine() {
     }
 }
 
-void qtr::BingoSearchEngine::build(const std::string &path) {
+void BingoSearchEngine::build(const std::string &path) {
     if (endsWith(path, ".sdf")) {
         LOG(INFO) << "Loading database from " << path << " file";
         std::string dbName = path.substr(0, path.size() - strlen(".sdf"));
@@ -28,7 +30,7 @@ void qtr::BingoSearchEngine::build(const std::string &path) {
 }
 
 std::vector<indigo_cpp::IndigoMolecule>
-qtr::BingoSearchEngine::findOverMolecules(const indigo_cpp::IndigoQueryMolecule &mol) {
+BingoSearchEngine::findOverMolecules(const indigo_cpp::IndigoQueryMolecule &mol) {
     if (currentDatabaseState != LOADED) {
         LOG(WARNING) << "FindOverMolecules called before build, database is not loaded";
         throw std::runtime_error("Database is not loaded");
@@ -44,3 +46,5 @@ qtr::BingoSearchEngine::findOverMolecules(const indigo_cpp::IndigoQueryMolecule 
     bingoEndSearch(resultIterator);
     return result;
 }
+
+} // namespace qtr

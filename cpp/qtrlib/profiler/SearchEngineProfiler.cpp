@@ -2,11 +2,13 @@
 
 using namespace indigo_cpp;
 
-qtr::SearchEngineProfiler::SearchEngineProfiler(const std::string &path, SearchEngineInterface &searchEngine)
+namespace qtr {
+
+SearchEngineProfiler::SearchEngineProfiler(const std::string &path, SearchEngineInterface &searchEngine)
         : _path(path), _searchEngine(searchEngine) {}
 
 
-void qtr::SearchEngineProfiler::buildSearchEngine() {
+void SearchEngineProfiler::buildSearchEngine() {
     auto startTime = std::chrono::high_resolution_clock::now();
 
     _searchEngine.build(_path);
@@ -16,7 +18,7 @@ void qtr::SearchEngineProfiler::buildSearchEngine() {
     _totalDuration += _buildDuration;
 }
 
-std::vector<IndigoMolecule> qtr::SearchEngineProfiler::profile(const IndigoQueryMolecule &query) {
+std::vector<IndigoMolecule> SearchEngineProfiler::profile(const IndigoQueryMolecule &query) {
     auto startTime = std::chrono::high_resolution_clock::now();
 
     auto result = _searchEngine.findOverMolecules(query);
@@ -28,14 +30,16 @@ std::vector<IndigoMolecule> qtr::SearchEngineProfiler::profile(const IndigoQuery
     return result;
 }
 
-const std::chrono::duration<long double> &qtr::SearchEngineProfiler::getBuildDuration() const {
+const std::chrono::duration<long double> &SearchEngineProfiler::getBuildDuration() const {
     return _buildDuration;
 }
 
-std::chrono::duration<long double> qtr::SearchEngineProfiler::getLastProfileDuration() const noexcept {
+std::chrono::duration<long double> SearchEngineProfiler::getLastProfileDuration() const noexcept {
     return _lastProfileDuration;
 }
 
-std::chrono::duration<long double> qtr::SearchEngineProfiler::getTotalDuration() const noexcept {
+std::chrono::duration<long double> SearchEngineProfiler::getTotalDuration() const noexcept {
     return _totalDuration;
 }
+
+} // namespace qtr
