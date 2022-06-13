@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <map>
 #include <vector>
 
 namespace qtr {
@@ -37,17 +38,17 @@ public:
     }
 
     template<class Splitter>
-    std::vector<TableView<Table>> split(const Splitter &splitter, size_t partsCount) const {
+    std::map<size_t, TableView<Table>> split(const Splitter &splitter) const {
         
-        std::vector<TableView<Table>> result(partsCount);
-
-        for(TableView<Table> &view : result) {
-            view._table = _table;
-        }
+        std::map<size_t, TableView<Table>> result;
 
         for(IndexType index : _indices) {
             size_t part = splitter(_table->at(index));
-            result.at(part)._indices.push_back(index);
+            result[part]._indices.push_back(index);
+        }
+
+        for(std::pair<const size_t, TableView<Table>> &pair: result) {
+            pair.second._table = _table;
         }
 
         return result;
