@@ -19,7 +19,7 @@ std::filesystem::path getDataDir()
 {
     using namespace std::filesystem;
     const path currentDir = testing::UnitTest::GetInstance()->original_working_dir();
-    const path dataDir = currentDir / path("../data");
+    const path dataDir = currentDir / path("../../data");
     return dataDir;
 }
 
