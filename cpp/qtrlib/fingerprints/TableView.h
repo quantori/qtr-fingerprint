@@ -38,16 +38,16 @@ public:
     }
 
     template<class Splitter>
-    std::map<size_t, TableView<Table>> split(const Splitter &splitter) const {
+    std::map<std::size_t, TableView<Table>> split(const Splitter &splitter) const {
         
-        std::map<size_t, TableView<Table>> result;
+        std::map<std::size_t, TableView<Table>> result;
 
         for(IndexType index : _indices) {
-            size_t part = splitter(_table->at(index));
+            std::size_t part = splitter(_table->at(index));
             result[part]._indices.push_back(index);
         }
 
-        for(std::pair<const size_t, TableView<Table>> &pair: result) {
+        for(std::pair<const std::size_t, TableView<Table>> &pair: result) {
             pair.second._table = _table;
         }
 
