@@ -10,7 +10,7 @@ pipeline {
       steps {
         sh '''
           cd cpp
-          mkdir build && cd build
+          mkdir -p build && cd build
           cmake ..
           cmake --build . -j10
         '''
