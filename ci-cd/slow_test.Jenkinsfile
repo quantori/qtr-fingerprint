@@ -22,6 +22,14 @@ pipeline {
           cd cpp/build
           ./bin/tests --gtest_output="xml:./report.xml"
         '''
+        publishHTML target: [
+            allowMissing: false,
+            alwaysLinkToLastBuild: false,
+            keepAll: true,
+            reportDir: 'bin',
+            reportFiles: 'report.html',
+            reportName: 'Slow test report'
+          ]
       }
     }
   }
