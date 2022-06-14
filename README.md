@@ -12,7 +12,7 @@
 3. `git submodule update --init --recursive`
 4. `mkdir build && cd build`
 5. `cmake ..`
-6. `cmake --build .` or `cmake --build . --target tests` to specify build target
+6. `cmake --build . -j10` or `cmake --build . --target tests` to specify build target
 
 ## Run tests
 1. `cd ./qtr-fingerprint/cpp/build`
