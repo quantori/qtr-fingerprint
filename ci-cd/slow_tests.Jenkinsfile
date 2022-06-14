@@ -26,7 +26,7 @@ pipeline {
             allowMissing: false,
             alwaysLinkToLastBuild: false,
             keepAll: true,
-            reportDir: 'bin',
+            reportDir: 'cpp/build',
             reportFiles: 'report.html',
             reportName: 'Slow test report'
           ]
