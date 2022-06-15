@@ -10,6 +10,7 @@ pipeline {
     stage('build') {
       steps {
         sh '''
+          pwd
           ls -lha
           ls -lha /root/SFO/
           cd cpp
