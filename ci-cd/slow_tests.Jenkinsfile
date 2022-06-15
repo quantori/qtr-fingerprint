@@ -10,7 +10,6 @@ pipeline {
     stage('build') {
       steps {
         sh '''
-          whoami
           pwd
           ls -lha
           ls -lha ./SFO/
