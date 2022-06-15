@@ -2,7 +2,7 @@ pipeline {
   agent {
     docker {
       image 'rikorose/gcc-cmake:latest'
-      args '-v /home/centos/SFO:/root/SFO'
+      args '-v /home/centos/SFO:/home/centos/workspace/QTR/slow-tests/SFO'
       label 'qtr'
     }
   }
@@ -10,9 +10,10 @@ pipeline {
     stage('build') {
       steps {
         sh '''
+          whoami
           pwd
           ls -lha
-          ls -lha /root/SFO/
+          ls -lha ./SFO/
           cd cpp
           mkdir -p build && cd build
           cmake ..
@@ -24,7 +25,7 @@ pipeline {
       steps {
         sh '''
           cd cpp/build
-          ./bin/tests --gtest_output="xml:./report.xml" --big_data_dir_path=/root/SFO --gtest_filter='SlowTest*'
+          ./bin/tests --gtest_output="xml:./report.xml" --big_data_dir_path=/home/centos/workspace/QTR/slow-tests/SFO --gtest_filter='SlowTest*'
         '''
         // publishHTML target: [
         //     allowMissing: false,
