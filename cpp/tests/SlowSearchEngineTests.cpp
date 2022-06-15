@@ -20,3 +20,9 @@ TEST_F(SlowTestFixture, EXHAUSTIVE_PUBCHEM_119697)
     SearchEngineTests searchEngineTests(SearchEngineFactory::EXHAUSTIVE);
     searchEngineTests.testPubchem119697();
 }
+
+TEST_F(SlowTestFixture, EXHAUSTIVE_PUBCHEM_119697)
+{
+    SearchEngineTests searchEngineTests(SearchEngineFactory::BINGO);
+    searchEngineTests.testPubchem119697();
+}
