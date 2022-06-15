@@ -10,6 +10,7 @@ target_include_directories(tests
 )
 
 target_link_libraries(tests qtrlib indigo-cpp gtest  glog::glog)
+target_link_libraries(tests absl::flags absl::flags_parse)
 
 include(GoogleTest)
 gtest_discover_tests(tests)
