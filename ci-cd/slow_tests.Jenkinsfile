@@ -2,6 +2,7 @@ pipeline {
   agent {
     docker {
       image 'rikorose/gcc-cmake:latest'
+      args '-v /home/centos/SFO:/root/SFO'
       label 'qtr'
     }
   }
@@ -20,7 +21,7 @@ pipeline {
       steps {
         sh '''
           cd cpp/build
-          ./bin/tests --gtest_output="xml:./report.xml" --big_data_dir_path=/home/centos/SFO --gtest_filter='SlowTest*'
+          ./bin/tests --gtest_output="xml:./report.xml" --big_data_dir_path=/root/SFO --gtest_filter='SlowTest*'
         '''
         // publishHTML target: [
         //     allowMissing: false,
