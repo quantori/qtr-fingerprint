@@ -68,11 +68,10 @@ public:
 
     template<class Query>
     const Info &search(const Query &query) const {
-        const Node *curr = &_root;
-        const Node *next = nullptr;
-        while(next = curr->next(query))
-            curr = next;
-        return curr->getInfo();
+        const Node *node = &_root;
+        while(!node->isLeaf())
+            node = node->next(query);
+        return node->getInfo();
     }
 
 private:  

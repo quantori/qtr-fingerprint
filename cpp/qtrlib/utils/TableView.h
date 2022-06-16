@@ -57,6 +57,7 @@ public:
     std::vector<IndexType>::const_iterator begin() const { return _indices.cbegin(); }
     std::vector<IndexType>::const_iterator end() const { return _indices.cend(); }
 
+    std::size_t size() const { return _indices.size(); }
 
 private:
     std::vector<IndexType> _indices;

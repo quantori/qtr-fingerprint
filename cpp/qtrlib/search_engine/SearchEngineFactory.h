@@ -10,7 +10,8 @@ struct SearchEngineFactory {
     
     enum SearchEngineType {
         BINGO,
-        EXHAUSTIVE
+        EXHAUSTIVE,
+        DECISION_TREE
     };
 
     static SearchEnginePtr create(SearchEngineType searchEngineType, indigo_cpp::IndigoSessionPtr indigoSessionPtr);

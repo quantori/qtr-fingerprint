@@ -18,7 +18,7 @@ ABSL_FLAG(std::string, path_to_query, "",
 ABSL_FLAG(std::string, database_path, "",
           "Path to molecular database");
 ABSL_FLAG(std::string, search_engine_type, "bingo",
-          "Search engine type");
+          "Search engine type: \"bingo\", \"exhaustive\" or \"decision_tree\"");
 
 int main(int argc, char *argv[]) {
     
@@ -37,9 +37,11 @@ int main(int argc, char *argv[]) {
     int queryMoleculeId = indigoLoadQueryMoleculeFromFile(pathToQuery.c_str());
     auto queryMolecule = IndigoQueryMolecule(queryMoleculeId, indigoSessionPtr);
 
-    SearchEngineFactory::SearchEngineType seType = SearchEngineFactory::EXHAUSTIVE;
+    SearchEngineFactory::SearchEngineType seType = SearchEngineFactory::DECISION_TREE;
     if (searchEngineType == "bingo")
         seType = SearchEngineFactory::BINGO;
+    if (searchEngineType == "exhaustive")
+        seType = SearchEngineFactory::EXHAUSTIVE;
     std::shared_ptr<SearchEngineInterface> searchEngine = SearchEngineFactory::create(seType, indigoSessionPtr);
 
     std::vector<IndigoQueryMolecule> queries;
