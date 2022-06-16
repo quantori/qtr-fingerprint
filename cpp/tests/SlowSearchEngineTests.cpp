@@ -37,6 +37,6 @@ TEST_F(SlowTestFixture, BINGO_BUILD_PUBCHEM_119697)
 TEST_F(SlowTestFixture, BINGO_PUBCHEM_119697)
 {
     SearchEngineTests searchEngineTests(SearchEngineFactory::BINGO);
-    searchEngineTests.testPubchem994();
+    searchEngineTests.testPubchem119697();
 }
 
