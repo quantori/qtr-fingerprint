@@ -18,6 +18,9 @@
 1. `cd ./qtr-fingerprint/cpp/build`
 2. `./bin/tests`
 
+If you want to run slow tests (tests on big data) ypu should specify big_data_dir_path. You could find big data files on s3 https://s3.console.aws.amazon.com/s3/buckets/sfo-general?region=us-east-2&tab=objects
+
+`./bin/tests --big_data_dir_path=<path to dir with big data>`
 ## Program arguments
 
 You can get help information about your executable just by running 
