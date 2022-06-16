@@ -1,7 +1,7 @@
 #pragma once
 
 #include "SearchEngineFactory.h"
-
+#include "utils/DataPathManager.h"
 #include "Common.h"
 
 #include "IndigoSession.h"
@@ -15,7 +15,8 @@ namespace qtr
     {
     public:
         SearchEngineTests(SearchEngineFactory::SearchEngineType searchEngineType)
-            : _indigoSessionPtr(indigo_cpp::IndigoSession::create()), _searchEnginePtr(SearchEngineFactory::create(searchEngineType, _indigoSessionPtr)), _dataDir(getDataDir())
+            : _indigoSessionPtr(indigo_cpp::IndigoSession::create()), _searchEnginePtr(SearchEngineFactory::create(searchEngineType, _indigoSessionPtr)), 
+            _dataDir(DataPathManager::getDataDir())
         {
         }
 
