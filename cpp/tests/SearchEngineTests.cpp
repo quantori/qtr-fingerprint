@@ -64,13 +64,16 @@ static void testSearchEngine(
     const std::string &fileSdf,
     const std::string &fileQueries)
 {
+    using namespace chrono;
+
     IndigoInChI indigoInChi(indigoSession);
 
     auto startBuildTime = std::chrono::high_resolution_clock::now();
     searchEngine->build(fileSdf);
     auto endBuildTime = std::chrono::high_resolution_clock::now();
-    ::testing::Test::RecordProperty("BuildTime (s)", std::chrono::duration_cast<std::chrono::seconds>(endBuildTime - startBuildTime).count());
+    ::testing::Test::RecordProperty("BuildTime (s)", duration_cast<seconds>(endBuildTime - startBuildTime).count());
 
+    std::vector<long double> queryDurations;
     std::ifstream fin(fileQueries);
 
     std::string line;
@@ -81,8 +84,11 @@ static void testSearchEngine(
         int mol = indigoLoadQueryMoleculeFromString(smiles.c_str());
         auto queryMolecule = IndigoQueryMolecule(mol, indigoSession);
 
+        auto startSearchTime = high_resolution_clock::now();
         std::vector<IndigoMolecule> result = searchEngine->findOverMolecules(queryMolecule);
-
+        auto endSearchTime = high_resolution_clock::now();
+        queryDurations.push_back((endSearchTime - startSearchTime).count());
+        
         auto inchiKeysResult = parseResult(result, indigoInChi);
 
         compareTwoVectors(inchiKeys, inchiKeysResult);
