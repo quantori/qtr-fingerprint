@@ -1,5 +1,6 @@
 #include "SearchEngineTests.h"
 #include "Common.h"
+#include "utils/DataPathManager.h"
 
 #include "IndigoInChI.h"
 #include "IndigoQueryMolecule.h"
@@ -19,7 +20,6 @@ using namespace qtr;
 using namespace std;
 using namespace std::filesystem;
 
-
 static pair<string, vector<string>> parseQueryLine(const string &line)
 {
     istringstream iss(line);
@@ -29,10 +29,12 @@ static pair<string, vector<string>> parseQueryLine(const string &line)
 
     vector<string> inchiKeys;
 
-    while(true) {
+    while (true)
+    {
         string inchiKey;
         iss >> inchiKey;
-        if (!iss) break;
+        if (!iss)
+            break;
         inchiKeys.push_back(inchiKey);
     }
 
@@ -43,7 +45,8 @@ static vector<string> parseResult(const vector<IndigoMolecule> &result, IndigoIn
 {
     vector<string> inchiKeys;
 
-    for(const IndigoMolecule &molecule : result) {
+    for (const IndigoMolecule &molecule : result)
+    {
         std::string inchi = indigoInChi.getInChI(molecule);
         std::string inchiKey = indigoInchiGetInchiKey(inchi.c_str());
         inchiKeys.push_back(inchiKey);
@@ -73,45 +76,66 @@ static void testSearchEngine(
 
         int mol = indigoLoadQueryMoleculeFromString(smiles.c_str());
         auto queryMolecule = IndigoQueryMolecule(mol, indigoSession);
-   
+
         std::vector<IndigoMolecule> result = searchEngine->findOverMolecules(queryMolecule);
 
         auto inchiKeysResult = parseResult(result, indigoInChi);
 
         compareTwoVectors(inchiKeys, inchiKeysResult);
-   }    
+    }
 }
 
-namespace qtr {
-
-void SearchEngineTests::testPubchem10()
+static void tesBuildSearchEngine(
+    SearchEnginePtr searchEngine,
+    const std::string &fileSdf)
 {
-    testSearchEngine(
-        _searchEnginePtr,
-        _indigoSessionPtr,
-        _dataDir / path("pubchem_10.sdf"),
-        _dataDir / path("pubchem_10_queries.txt")
-    );
+    searchEngine->build(fileSdf);
 }
 
-void SearchEngineTests::testPubchem100()
+namespace qtr
 {
-    testSearchEngine(
-        _searchEnginePtr,
-        _indigoSessionPtr,
-        _dataDir / path("pubchem_100.sdf"),
-        _dataDir / path("pubchem_100_queries.txt")
-    );
-}
 
-void SearchEngineTests::testPubchem994()
-{
-    testSearchEngine(
-        _searchEnginePtr,
-        _indigoSessionPtr,
-        _dataDir / path("pubchem_994.sdf"),
-        _dataDir / path("pubchem_994_queries.txt")
-    );
-}
+    void SearchEngineTests::testPubchem10()
+    {
+        testSearchEngine(
+            _searchEnginePtr,
+            _indigoSessionPtr,
+            _dataDir / path("pubchem_10.sdf"),
+            _dataDir / path("pubchem_10_queries.txt"));
+    }
+
+    void SearchEngineTests::testPubchem100()
+    {
+        testSearchEngine(
+            _searchEnginePtr,
+            _indigoSessionPtr,
+            _dataDir / path("pubchem_100.sdf"),
+            _dataDir / path("pubchem_100_queries.txt"));
+    }
+
+    void SearchEngineTests::testPubchem994()
+    {
+        testSearchEngine(
+            _searchEnginePtr,
+            _indigoSessionPtr,
+            _dataDir / path("pubchem_994.sdf"),
+            _dataDir / path("pubchem_994_queries.txt"));
+    }
+
+    void SearchEngineTests::testPubchem119697()
+    {
+        testSearchEngine(
+            _searchEnginePtr,
+            _indigoSessionPtr,
+            DataPathManager::getBigDataDir() / path("pubchem_119697.sdf"),
+            DataPathManager::getBigDataDir() / path("pubchem_119697_queries.txt"));
+    }
+
+    void SearchEngineTests::testBuildPubchem119697()
+    {
+        tesBuildSearchEngine(
+            _searchEnginePtr,
+            DataPathManager::getBigDataDir() / path("pubchem_119697.sdf"));
+    }
 
 } // namespace qtr

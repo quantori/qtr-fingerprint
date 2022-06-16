@@ -1,3 +1,7 @@
 build/*
 dist/*
 .vscode/*
+cpp/build/*
+cpp/dist/*
+
+*.DS_Store
