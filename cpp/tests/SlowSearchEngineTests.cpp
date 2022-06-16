@@ -21,8 +21,21 @@ TEST_F(SlowTestFixture, EXHAUSTIVE_PUBCHEM_119697)
     searchEngineTests.testPubchem119697();
 }
 
+TEST_F(SlowTestFixture, EXHAUSTIVE_BUILD_PUBCHEM_119697)
+{
+    SearchEngineTests searchEngineTests(SearchEngineFactory::EXHAUSTIVE);
+    searchEngineTests.testBuildPubchem119697();
+}
+
+
 TEST_F(SlowTestFixture, BINGO_PUBCHEM_119697)
 {
     SearchEngineTests searchEngineTests(SearchEngineFactory::BINGO);
     searchEngineTests.testPubchem119697();
+}
+
+TEST_F(SlowTestFixture, BINGO_BUILD_PUBCHEM_119697)
+{
+    SearchEngineTests searchEngineTests(SearchEngineFactory::BINGO);
+    searchEngineTests.testBuildPubchem119697();
 }

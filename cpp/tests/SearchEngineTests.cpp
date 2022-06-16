@@ -85,6 +85,13 @@ static void testSearchEngine(
     }
 }
 
+static void tesBuildSearchEngine(
+    SearchEnginePtr searchEngine,
+    const std::string &fileSdf)
+{
+    searchEngine->build(fileSdf);
+}
+
 namespace qtr
 {
 
@@ -122,6 +129,13 @@ namespace qtr
             _indigoSessionPtr,
             DataPathManager::getBigDataDir() / path("pubchem_119697.sdf"),
             DataPathManager::getBigDataDir() / path("pubchem_119697_queries.txt"));
+    }
+
+    void SearchEngineTests::testBuildPubchem119697()
+    {
+        tesBuildSearchEngine(
+            _searchEnginePtr,
+            DataPathManager::getBigDataDir() / path("pubchem_119697.sdf"));
     }
 
 } // namespace qtr

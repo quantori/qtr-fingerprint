@@ -15,8 +15,8 @@ namespace qtr
     {
     public:
         SearchEngineTests(SearchEngineFactory::SearchEngineType searchEngineType)
-            : _indigoSessionPtr(indigo_cpp::IndigoSession::create()), _searchEnginePtr(SearchEngineFactory::create(searchEngineType, _indigoSessionPtr)), 
-            _dataDir(DataPathManager::getDataDir())
+            : _indigoSessionPtr(indigo_cpp::IndigoSession::create()), _searchEnginePtr(SearchEngineFactory::create(searchEngineType, _indigoSessionPtr)),
+              _dataDir(DataPathManager::getDataDir())
         {
         }
 
@@ -24,6 +24,8 @@ namespace qtr
         void testPubchem100();
         void testPubchem994();
         void testPubchem119697();
+
+        void testBuildPubchem119697();
 
     private:
         indigo_cpp::IndigoSessionPtr _indigoSessionPtr;
