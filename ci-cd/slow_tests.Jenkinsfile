@@ -10,9 +10,6 @@ pipeline {
     stage('build') {
       steps {
         sh '''
-          pwd
-          ls -lha
-          ls -lha ./SFO/
           cd cpp
           mkdir -p build && cd build
           cmake ..
