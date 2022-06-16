@@ -14,6 +14,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <chrono>
 
 using namespace indigo_cpp;
 using namespace qtr;
@@ -65,7 +66,10 @@ static void testSearchEngine(
 {
     IndigoInChI indigoInChi(indigoSession);
 
+    auto startBuildTime = std::chrono::high_resolution_clock::now();
     searchEngine->build(fileSdf);
+    auto endBuildTime = std::chrono::high_resolution_clock::now();
+    ::testing::Test::RecordProperty("BuildTime (s)", std::chrono::duration_cast<std::chrono::seconds>(endBuildTime - startBuildTime).count());
 
     std::ifstream fin(fileQueries);
 
