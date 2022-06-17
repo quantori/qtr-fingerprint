@@ -22,7 +22,6 @@ public:
             _indices[i] = i;
     }
 
-
     template<class Filter>
     TableView<Table> filter(const Filter &filter) const {
         
@@ -54,10 +53,30 @@ public:
         return result;
     }
 
+    template<class Splitter>
+    std::pair<TableView<Table>, TableView<Table>> split2(const Splitter &splitter) const {
+        
+        std::pair<TableView<Table>, TableView<Table>> result;
+        
+        result.first._table = _table;
+        result.second._table = _table;
+
+        for(IndexType index : _indices) {
+            if (splitter(_table->at(index)))
+                result.first._indices.push_back(index);
+            else
+                result.second._indices.push_back(index);
+        }
+
+        return result;
+    }
+
+
     std::vector<IndexType>::const_iterator begin() const { return _indices.cbegin(); }
     std::vector<IndexType>::const_iterator end() const { return _indices.cend(); }
 
     std::size_t size() const { return _indices.size(); }
+    const Table *table() const { return _table; }
 
 private:
     std::vector<IndexType> _indices;

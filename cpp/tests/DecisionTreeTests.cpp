@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <queue>
 #include <vector>
 #include <utility>
@@ -13,49 +14,59 @@ using namespace qtr;
 
 namespace {
 
-class Less {
+class BitSet {
 public:
-    Less() : _n(0) {}
-    Less(int n) : _n(n) {}
-    bool operator()(int i) const { return i < _n; }
+    BitSet() : _pos(std::size_t(-1)) {}
+    BitSet(std::size_t pos) : _pos(pos) {}
+    bool operator()(uint8_t i) const { return (i >> _pos) & uint8_t(1); }
 private:
-    int _n;
+    std::size_t _pos;
 };
+
+bool find(const std::vector<const std::vector<uint8_t> *> &infos, uint8_t query) {
+    for(const std::vector<uint8_t> *info : infos) {
+        if (std::find(info->begin(), info->end(), query) != info->end())
+            return true;
+    }
+    return false;
+}
 
 } // anonymous namespace
 
 TEST(DecisionTree, MAIN) {
     
-    std::vector<int> data(10);
-    for(int i = 0; i < data.size(); i++)
-        data.at(i) = i;
+    std::vector<uint8_t> data = {
+        0b00001111, 0b00110011, 0b01010101, 0b10101010,
+        0b11110000, 0b11001100, 0b10101010, 0b11100011,
+        0b00011100, 0b11010101
+    };
 
-    DecisionTree<::Less, std::vector<int>> tree;
-    using Node = DecisionNode<::Less, std::vector<int>>;
+    DecisionTree<::BitSet, std::vector<uint8_t>> tree;
+    using Node = DecisionNode<::BitSet, std::vector<uint8_t>>;
 
-    std::queue<Node *> nodes;
+    std::queue<std::pair<std::size_t, Node *>> nodes;
 
     tree.getRoot().setInfo(data);
-    nodes.push(&tree.getRoot());
+    nodes.push({0, &tree.getRoot()});
 
     while (!nodes.empty()) {
 
-        Node *node = nodes.front();
-        std::vector<int> &info = node->getInfo();
+        size_t bit = nodes.front().first;
+        Node *node = nodes.front().second;
+        std::vector<uint8_t> &info = node->getInfo();
 
-        if (info.size() >= 3) {
+        if (bit < CHAR_BIT && info.size() >= 3) {
 
-            std::size_t medianIdx = info.size() / 2;
-            Node::Children children = node->setPred(::Less(info.at(medianIdx)));
+            ::BitSet pred(bit);
+            
+            Node::Children children = node->setPred(pred);
+            auto it = std::partition(info.begin(), info.end(), pred);
 
-            std::vector<int> infoTrue(info.begin(), info.begin() + medianIdx);
-            children._true->setInfo(std::move(infoTrue));
+            children._next->setInfo(std::vector<uint8_t>(info.begin(), it));
+            children._false->setInfo(std::vector<uint8_t>(it, info.end()));
 
-            std::vector<int> infoFalse(info.begin() + medianIdx, info.end());
-            children._false->setInfo(std::move(infoFalse));
-
-            nodes.push({children._true});
-            nodes.push({children._false});
+            nodes.push({bit + 1, children._next});
+            nodes.push({bit + 1, children._false});
 
             info.clear();
         }
@@ -63,9 +74,8 @@ TEST(DecisionTree, MAIN) {
         nodes.pop();
     }
 
-    for(int i = 0; i < data.size(); i++) {
-        const std::vector<int> &info = tree.search(i);
-        auto it = std::find(info.begin(), info.end(), i);
-        EXPECT_NE(it, info.end());
+    for(uint8_t query : data) {
+        auto infos = tree.search(query);
+        EXPECT_TRUE(::find(infos, query));
     }
 }

@@ -3,6 +3,7 @@
 #include "FingerprintTableView.h"
 
 #include <memory>
+#include <stack>
 #include <utility>
 
 namespace qtr {
@@ -13,15 +14,15 @@ public:
     using Node = DecisionNode<Pred, Info>;
 
     struct Children {
-        Node *_true;
+        Node *_next;
         Node *_false;
     };
 
     Children setPred(const Pred &pred) {
         _pred = pred;
-        _true = std::make_unique<Node>();
+        _next = std::make_unique<Node>();
         _false = std::make_unique<Node>();
-        return {_true.get(), _false.get()};
+        return {_next.get(), _false.get()};
     }
 
     void setInfo(Info &&info) {
@@ -33,7 +34,7 @@ public:
     }
 
     bool isLeaf() const {
-        return !_true;
+        return !_next;
     }
 
     Info &getInfo() {
@@ -45,17 +46,15 @@ public:
     }
 
     template<class Query>
-    const Node *next(const Query &query) const {
-        if (_pred(query))
-            return _true.get();
-        return _false.get();
+    std::pair<const Node *, const Node *> next(const Query &query) const {
+        return {(_pred(query) ? nullptr : _false.get()), _next.get()};
     }
 
 private:
     Pred _pred;
     Info _info;
 
-    std::unique_ptr<Node> _true;
+    std::unique_ptr<Node> _next;
     std::unique_ptr<Node> _false;
 };
 
@@ -67,11 +66,28 @@ public:
     Node &getRoot() { return _root; }
 
     template<class Query>
-    const Info &search(const Query &query) const {
-        const Node *node = &_root;
-        while(!node->isLeaf())
-            node = node->next(query);
-        return node->getInfo();
+    std::vector<const Info *> search(const Query &query) const {
+
+        std::vector<const Info *> result;
+        
+        std::stack<const Node *> stack;
+        stack.push(&_root);
+
+        while (!stack.empty()) {
+            const Node *node = stack.top();
+            stack.pop();
+
+            if (node->isLeaf()) {
+                result.push_back(&(node->getInfo()));
+            }
+            else {
+                std::pair<const Node *, const Node *> next = node->next(query);
+                if (next.first) stack.push(next.first);
+                if (next.second) stack.push(next.second);
+            }
+        }
+
+        return result;
     }
 
 private:  

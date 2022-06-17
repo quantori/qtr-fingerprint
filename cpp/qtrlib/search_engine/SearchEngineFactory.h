@@ -11,10 +11,14 @@ struct SearchEngineFactory {
     enum SearchEngineType {
         BINGO,
         EXHAUSTIVE,
-        DECISION_TREE
+        DECISION_TREE_TRIVIAL,
+        DECISION_TREE_OPTIMAL
     };
 
-    static SearchEnginePtr create(SearchEngineType searchEngineType, indigo_cpp::IndigoSessionPtr indigoSessionPtr);
+    static SearchEnginePtr create(
+        SearchEngineType searchEngineType,
+        indigo_cpp::IndigoSessionPtr indigoSessionPtr,
+        size_t decisionTreeMaxLeafSize = 100);
 };
 
 } // namespace qtr

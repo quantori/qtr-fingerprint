@@ -18,14 +18,19 @@ using namespace indigo_cpp;
 
 namespace qtr{
 
-DecisionTreeSearchEngine::DecisionTreeSearchEngine(const IndigoSessionPtr &indigoSessionPtr)
+template<class SplittingStrategy>
+DecisionTreeSearchEngine<SplittingStrategy>::DecisionTreeSearchEngine(
+    const IndigoSessionPtr &indigoSessionPtr, size_t maxLeafSize)
     : _indigoSessionPtr(indigoSessionPtr)
+    , _maxLeafSize(maxLeafSize)
 {}
 
-DecisionTreeSearchEngine::~DecisionTreeSearchEngine()
+template<class SplittingStrategy>
+DecisionTreeSearchEngine<SplittingStrategy>::~DecisionTreeSearchEngine()
 {}
 
-void DecisionTreeSearchEngine::build(const std::string &path)
+template<class SplittingStrategy>
+void DecisionTreeSearchEngine<SplittingStrategy>::build(const std::string &path)
 {
     _molecules.clear();
     _fingerprintTable.clear();
@@ -49,24 +54,24 @@ void DecisionTreeSearchEngine::build(const std::string &path)
 
     ////////////////////////
 
-    Histogram histogram(CHAR_BIT*qtr::IndigoFingerprint::sizeInBytes);
-    for(const qtr::IndigoFingerprint &fp : _fingerprintTable) {
-        for(size_t bit = 0; bit < fp.size(); bit++)
-            histogram.add(bit, Histogram::CounterType(fp.test(bit)));
-    }
+    // Histogram histogram(CHAR_BIT*qtr::IndigoFingerprint::sizeInBytes);
+    // for(const qtr::IndigoFingerprint &fp : _fingerprintTable) {
+    //     for(size_t bit = 0; bit < fp.size(); bit++)
+    //         histogram.add(bit, Histogram::CounterType(fp.test(bit)));
+    // }
 
-    std::vector<size_t> bitsPerm(CHAR_BIT*qtr::IndigoFingerprint::sizeInBytes);
-    for(size_t i = 0; i < bitsPerm.size(); i++)
-        bitsPerm.at(i) = i;
+    // std::vector<size_t> bitsPerm(CHAR_BIT*qtr::IndigoFingerprint::sizeInBytes);
+    // for(size_t i = 0; i < bitsPerm.size(); i++)
+    //     bitsPerm.at(i) = i;
 
-    std::sort(bitsPerm.begin(), bitsPerm.end(), [&histogram](size_t left, size_t right) {
-        return histogram.bins().at(left) < histogram.bins().at(right);
-    });
+    // std::sort(bitsPerm.begin(), bitsPerm.end(), [&histogram](size_t left, size_t right) {
+    //     return histogram.bins().at(left) < histogram.bins().at(right);
+    // });
 
-    for(size_t i = 0; i < bitsPerm.size(); i++) {
-        size_t bit = bitsPerm.at(i);
-        LOG(INFO) << i << ") " << bit << " : " << histogram.bins().at(bit);
-    }
+    // for(size_t i = 0; i < bitsPerm.size(); i++) {
+    //     size_t bit = bitsPerm.at(i);
+    //     LOG(INFO) << i << ") " << bit << " : " << histogram.bins().at(bit);
+    // }
 
     ////////////////////////
 
@@ -90,17 +95,18 @@ void DecisionTreeSearchEngine::build(const std::string &path)
 
         LOG(INFO) << "Bit: " << bit << ", size: " << view.size();
 
-        if (bit < CHAR_BIT*qtr::IndigoFingerprint::sizeInBytes && view.size() > maxLeafSize) {
+        if (bit < CHAR_BIT*qtr::IndigoFingerprint::sizeInBytes && view.size() > _maxLeafSize) {
 
-            BitSet pred(bitsPerm.at(bit));
-            Node::Children children = node->setPred(pred);
+            BitSet pred(_splittingStrategy(bit, view));
+            typename Node::Children children = node->setPred(pred);
 
-            IndigoFingerprintTableView viewTrue = view.filter(pred);
-            children._true->setInfo(std::move(viewTrue));
+            auto viewPair = view.split2(pred);
+            view = IndigoFingerprintTableView();
 
-            children._false->setInfo(std::move(view));
+            children._next->setInfo(std::move(viewPair.first));
+            children._false->setInfo(std::move(viewPair.second));
 
-            nodes.push({bit + 1, children._true});
+            nodes.push({bit + 1, children._next});
             nodes.push({bit + 1, children._false});
         }
         
@@ -109,7 +115,8 @@ void DecisionTreeSearchEngine::build(const std::string &path)
 
 }
 
-std::vector<IndigoMolecule> DecisionTreeSearchEngine::findOverMolecules(const IndigoQueryMolecule &mol)
+template<class SplittingStrategy>
+std::vector<IndigoMolecule> DecisionTreeSearchEngine<SplittingStrategy>::findOverMolecules(const IndigoQueryMolecule &mol)
 {
     std::vector<IndigoMolecule> result;
 
@@ -121,26 +128,59 @@ std::vector<IndigoMolecule> DecisionTreeSearchEngine::findOverMolecules(const In
     qtr::IndigoFingerprint fp;
     fp.setBytes(fingerprint.data());
 
-    const IndigoFingerprintTableView &view = _decisionTree.search(fp);
+    std::vector<const IndigoFingerprintTableView *> views = _decisionTree.search(fp);
 
-    for (IndigoFingerprintTableView::IndexType idx : view) {
+    for(const IndigoFingerprintTableView *view : views) {
+        for (IndigoFingerprintTableView::IndexType idx : *view) {
+            
+            qtr::IndigoFingerprint f = _fingerprintTable.at(idx);
+            f &= fp;
+            
+            if (f.count() != bitsCount)
+                continue;
+            
+            const IndigoMolecule &molecule = _molecules.at(idx);
+            IndigoSubstructureMatcher matcher = _indigoSessionPtr->substructureMatcher(molecule);
         
-        qtr::IndigoFingerprint f = _fingerprintTable.at(idx);
-        f &= fp;
-        
-        if (f.count() != bitsCount)
-            continue;
-        
-        const IndigoMolecule &molecule = _molecules.at(idx);
-        IndigoSubstructureMatcher matcher = _indigoSessionPtr->substructureMatcher(molecule);
-    
-        if (!matcher.match(mol))
-            continue;
+            if (!matcher.match(mol))
+                continue;
 
-        result.push_back(molecule);
+            result.push_back(molecule);
+        }
     }
 
     return result;
 }
+
+std::size_t SplittingStrategyOptimal::operator()(std::size_t bitIndex, const IndigoFingerprintTableView &view)
+{
+    Histogram histogram(CHAR_BIT*qtr::IndigoFingerprint::sizeInBytes);
+    
+    for(IndigoFingerprintTableView::IndexType index : view) {
+        const qtr::IndigoFingerprint &fp = view.table()->at(index);
+        for(size_t bit = 0; bit < fp.size(); bit++)
+            histogram.add(bit, Histogram::CounterType(fp.test(bit)));
+    }
+
+    std::size_t result = std::size_t(-1);
+    Histogram::CounterType half = Histogram::CounterType(view.size() / 2);
+    Histogram::CounterType deviation = half;
+
+    for(std::size_t bin = 0; bin < histogram.bins().size(); bin++) {
+        
+        Histogram::CounterType num = histogram.bins().at(bin);
+        Histogram::CounterType dev = (num > half ? num - half : half - num);
+        
+        if (dev < deviation) {
+            deviation = dev;
+            result = bin;
+        }
+    }
+
+    return result;
+}
+
+template class DecisionTreeSearchEngine<SplittingStrategyTrivial>;
+template class DecisionTreeSearchEngine<SplittingStrategyOptimal>;
 
 } // namespace qtr
