@@ -14,8 +14,8 @@ public:
     using Node = DecisionNode<Pred, Info>;
 
     struct Children {
-        Node *_next;
-        Node *_false;
+        Node *_next;  // always go
+        Node *_false; // go only if _pred(query) is false
     };
 
     Children setPred(const Pred &pred) {
@@ -46,16 +46,16 @@ public:
     }
 
     template<class Query>
-    std::pair<const Node *, const Node *> next(const Query &query) const {
-        return {(_pred(query) ? nullptr : _false.get()), _next.get()};
+    Children next(const Query &query) const {
+        return {_next.get(), (_pred(query) ? nullptr : _false.get()) };
     }
 
 private:
     Pred _pred;
     Info _info;
 
-    std::unique_ptr<Node> _next;
-    std::unique_ptr<Node> _false;
+    std::unique_ptr<Node> _next;  // always go
+    std::unique_ptr<Node> _false; // go only if _pred(query) is false
 };
 
 template<class Pred, class Info>
@@ -81,9 +81,9 @@ public:
                 result.push_back(&(node->getInfo()));
             }
             else {
-                std::pair<const Node *, const Node *> next = node->next(query);
-                if (next.first) stack.push(next.first);
-                if (next.second) stack.push(next.second);
+                typename Node::Children children = node->next(query);
+                if (children._next) stack.push(children._next);
+                if (children._false) stack.push(children._false);
             }
         }
 
