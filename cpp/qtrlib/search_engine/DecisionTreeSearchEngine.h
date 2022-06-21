@@ -2,7 +2,7 @@
 
 #include "DecisionTree.h"
 #include "FingerprintTable.h"
-#include "SearchEngineInterface.h"
+#include "FingerprintTableSearchEngine.h"
 
 #include "IndigoMolecule.h"
 
@@ -11,21 +11,17 @@
 namespace qtr {
 
 template<class SplittingStrategy>
-class DecisionTreeSearchEngine : public SearchEngineInterface {
+class DecisionTreeSearchEngine : public FingerprintTableSearchEngine {
 public:
-    DecisionTreeSearchEngine() = delete;
-    
-    explicit DecisionTreeSearchEngine(
+    DecisionTreeSearchEngine(
         const indigo_cpp::IndigoSessionPtr &indigoSessionPtr,
         size_t maxLeafSize = 100);
 
-    ~DecisionTreeSearchEngine() override;
-
     void build(const std::string &path) override;
 
-    std::vector<indigo_cpp::IndigoMolecule> findOverMolecules(const indigo_cpp::IndigoQueryMolecule &mol) override;
-
 private:
+    std::vector<const IndigoFingerprintTableView *> findTableViews(const qtr::IndigoFingerprint &fp) const override;
+
     class BitSet {
     public:
         BitSet() : _pos(std::size_t(-1)) {}
@@ -39,11 +35,8 @@ private:
     };
 
     const size_t _maxLeafSize;
-    DecisionTree<BitSet, IndigoFingerprintTableView> _decisionTree;
-    IndigoFingerprintTable _fingerprintTable;
-    std::vector<indigo_cpp::IndigoMolecule> _molecules;
-    indigo_cpp::IndigoSessionPtr _indigoSessionPtr;
     SplittingStrategy _splittingStrategy;
+    DecisionTree<BitSet, IndigoFingerprintTableView> _decisionTree;
 };
 
 class SplittingStrategyTrivial {

@@ -21,59 +21,14 @@ namespace qtr{
 template<class SplittingStrategy>
 DecisionTreeSearchEngine<SplittingStrategy>::DecisionTreeSearchEngine(
     const IndigoSessionPtr &indigoSessionPtr, size_t maxLeafSize)
-    : _indigoSessionPtr(indigoSessionPtr)
+    : FingerprintTableSearchEngine(indigoSessionPtr)
     , _maxLeafSize(maxLeafSize)
-{}
-
-template<class SplittingStrategy>
-DecisionTreeSearchEngine<SplittingStrategy>::~DecisionTreeSearchEngine()
 {}
 
 template<class SplittingStrategy>
 void DecisionTreeSearchEngine<SplittingStrategy>::build(const std::string &path)
 {
-    _molecules.clear();
-    _fingerprintTable.clear();
-
-    size_t moleculesNumber = 0;
-    IndigoSDFileIterator iterator = _indigoSessionPtr->iterateSDFile(path);
-
-    for(IndigoMoleculeSPtr &molecule : iterator) {
-        
-        molecule->aromatize();
-        _molecules.push_back(std::move(*molecule));
-
-        QtrIndigoFingerprint fingerprint(_molecules.back(), "sub");
-        _fingerprintTable.push_back(qtr::IndigoFingerprint());
-        _fingerprintTable.back().setBytes(fingerprint.data());
-
-        moleculesNumber++;
-        if (moleculesNumber % 1000 == 0)
-            LOG(INFO) << "Processed " << moleculesNumber << " molecules...";
-    }
-
-    ////////////////////////
-
-    // Histogram histogram(CHAR_BIT*qtr::IndigoFingerprint::sizeInBytes);
-    // for(const qtr::IndigoFingerprint &fp : _fingerprintTable) {
-    //     for(size_t bit = 0; bit < fp.size(); bit++)
-    //         histogram.add(bit, Histogram::CounterType(fp.test(bit)));
-    // }
-
-    // std::vector<size_t> bitsPerm(CHAR_BIT*qtr::IndigoFingerprint::sizeInBytes);
-    // for(size_t i = 0; i < bitsPerm.size(); i++)
-    //     bitsPerm.at(i) = i;
-
-    // std::sort(bitsPerm.begin(), bitsPerm.end(), [&histogram](size_t left, size_t right) {
-    //     return histogram.bins().at(left) < histogram.bins().at(right);
-    // });
-
-    // for(size_t i = 0; i < bitsPerm.size(); i++) {
-    //     size_t bit = bitsPerm.at(i);
-    //     LOG(INFO) << i << ") " << bit << " : " << histogram.bins().at(bit);
-    // }
-
-    ////////////////////////
+    FingerprintTableSearchEngine::build(path);
 
     using Node = DecisionNode<BitSet, IndigoFingerprintTableView>;
     using Pair = std::pair<std::size_t, Node *>;
@@ -112,44 +67,13 @@ void DecisionTreeSearchEngine<SplittingStrategy>::build(const std::string &path)
         
         nodes.pop();
     }
-
 }
 
 template<class SplittingStrategy>
-std::vector<IndigoMolecule> DecisionTreeSearchEngine<SplittingStrategy>::findOverMolecules(const IndigoQueryMolecule &mol)
+std::vector<const IndigoFingerprintTableView *> 
+DecisionTreeSearchEngine<SplittingStrategy>::findTableViews(const qtr::IndigoFingerprint &fp) const
 {
-    std::vector<IndigoMolecule> result;
-
-    indigoAromatize(mol.id());
-
-    QtrIndigoFingerprint fingerprint(mol, "sub");
-    int bitsCount = fingerprint.countBits();
-
-    qtr::IndigoFingerprint fp;
-    fp.setBytes(fingerprint.data());
-
-    std::vector<const IndigoFingerprintTableView *> views = _decisionTree.search(fp);
-
-    for(const IndigoFingerprintTableView *view : views) {
-        for (IndigoFingerprintTableView::IndexType idx : *view) {
-            
-            qtr::IndigoFingerprint f = _fingerprintTable.at(idx);
-            f &= fp;
-            
-            if (f.count() != bitsCount)
-                continue;
-            
-            const IndigoMolecule &molecule = _molecules.at(idx);
-            IndigoSubstructureMatcher matcher = _indigoSessionPtr->substructureMatcher(molecule);
-        
-            if (!matcher.match(mol))
-                continue;
-
-            result.push_back(molecule);
-        }
-    }
-
-    return result;
+    return _decisionTree.search(fp);
 }
 
 std::size_t SplittingStrategyOptimal::operator()(std::size_t bitIndex, const IndigoFingerprintTableView &view)

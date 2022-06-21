@@ -1,32 +1,19 @@
 #pragma once
 
-#include "SearchEngineInterface.h"
-
-#include "QtrIndigoFingerprint.h"
-#include "IndigoMolecule.h"
+#include "FingerprintTableSearchEngine.h"
 
 namespace qtr {
 
-class ExhaustiveSearchEngine : public SearchEngineInterface {
+class ExhaustiveSearchEngine : public FingerprintTableSearchEngine {
 public:
-    ExhaustiveSearchEngine() = delete;
-    explicit ExhaustiveSearchEngine(const indigo_cpp::IndigoSessionPtr &indigoSessionPtr);
-
-    ~ExhaustiveSearchEngine() override;
+    using FingerprintTableSearchEngine::FingerprintTableSearchEngine;
 
     void build(const std::string &path) override;
 
-    std::vector<indigo_cpp::IndigoMolecule> findOverMolecules(const indigo_cpp::IndigoQueryMolecule &mol) override;
-
 private:
+    std::vector<const IndigoFingerprintTableView *> findTableViews(const qtr::IndigoFingerprint &fp) const override;
 
-    struct MoleculeInfo {
-        indigo_cpp::IndigoMolecule molecule;
-        QtrIndigoFingerprint fingerprint;
-    };
-
-    std::vector<MoleculeInfo> _moleculesInfo;
-    indigo_cpp::IndigoSessionPtr _indigoSessionPtr;
+    IndigoFingerprintTableView _tableView;
 };
 
 } // namespace qtr
