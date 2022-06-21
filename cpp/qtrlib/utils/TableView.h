@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <vector>
 
@@ -36,41 +37,22 @@ public:
         return result;
     }
 
-    template<class Splitter>
-    std::map<std::size_t, TableView<Table>> split(const Splitter &splitter) const {
+    template<typename Key, class TableElem>
+    std::map<Key, TableView<Table>> split(const std::function<Key (const TableElem &)> &splitter) const {
         
-        std::map<std::size_t, TableView<Table>> result;
+        std::map<Key, TableView<Table>> result;
 
         for(IndexType index : _indices) {
-            std::size_t part = splitter(_table->at(index));
+            Key part = splitter(_table->at(index));
             result[part]._indices.push_back(index);
         }
 
-        for(std::pair<const std::size_t, TableView<Table>> &pair: result) {
+        for(std::pair<const Key, TableView<Table>> &pair: result) {
             pair.second._table = _table;
         }
 
         return result;
     }
-
-    template<class Splitter>
-    std::pair<TableView<Table>, TableView<Table>> split2(const Splitter &splitter) const {
-        
-        std::pair<TableView<Table>, TableView<Table>> result;
-        
-        result.first._table = _table;
-        result.second._table = _table;
-
-        for(IndexType index : _indices) {
-            if (splitter(_table->at(index)))
-                result.first._indices.push_back(index);
-            else
-                result.second._indices.push_back(index);
-        }
-
-        return result;
-    }
-
 
     std::vector<IndexType>::const_iterator begin() const { return _indices.cbegin(); }
     std::vector<IndexType>::const_iterator end() const { return _indices.cend(); }

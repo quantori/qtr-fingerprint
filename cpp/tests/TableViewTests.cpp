@@ -43,7 +43,7 @@ TEST(TableView, SIMPLE_TABLE) {
 
     compareTwoVectors(oddIndices, oddIndicesTest);
 
-    std::map<std::size_t, TableView<TestTable>> views = view.split([](int i) -> std::size_t { return i % 2; });
+    std::map<std::size_t, TableView<TestTable>> views = view.split<std::size_t, int>([](const int &i) -> std::size_t { return i % 2; });
     EXPECT_EQ(views.size(), 2);
 
     oddIndices.clear();

@@ -55,11 +55,11 @@ void DecisionTreeSearchEngine<SplittingStrategy>::build(const std::string &path)
             BitSet pred(_splittingStrategy(bit, view));
             typename Node::Children children = node->setPred(pred);
 
-            auto viewPair = view.split2(pred);
+            auto viewMap = view.split<bool, qtr::IndigoFingerprint>(pred);
             view = IndigoFingerprintTableView();
 
-            children._next->setInfo(std::move(viewPair.first));
-            children._false->setInfo(std::move(viewPair.second));
+            children._next->setInfo(std::move(viewMap.at(true)));
+            children._false->setInfo(std::move(viewMap.at(false)));
 
             nodes.push({bit + 1, children._next});
             nodes.push({bit + 1, children._false});
