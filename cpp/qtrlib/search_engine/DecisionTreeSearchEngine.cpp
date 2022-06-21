@@ -58,8 +58,8 @@ void DecisionTreeSearchEngine<SplittingStrategy>::build(const std::string &path)
             auto viewMap = view.split<bool, qtr::IndigoFingerprint>(pred);
             view = IndigoFingerprintTableView();
 
-            children._next->setInfo(std::move(viewMap.at(true)));
-            children._false->setInfo(std::move(viewMap.at(false)));
+            children._next->setInfo(std::move(viewMap[true]));
+            children._false->setInfo(std::move(viewMap[false]));
 
             nodes.push({bit + 1, children._next});
             nodes.push({bit + 1, children._false});
