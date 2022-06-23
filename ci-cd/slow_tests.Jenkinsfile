@@ -2,17 +2,17 @@ pipeline {
   agent {
     docker {
       image 'rikorose/gcc-cmake:latest'
-      args '-v /home/centos/SFO:/home/centos/workspace/QTR/slow-tests/SFO'
+      args '-v /home/centos/SFO:/home/centos/workspace/SFO/slow-tests/SFO'
       label 'qtr'
     }
+  }
+  options {
+    buildDiscarder(logRotator(numToKeepStr: '60', daysToKeepStr: '60',  artifactNumToKeepStr: '60', artifactDaysToKeepStr: '60'))
   }
   stages {
     stage('build') {
       steps {
         sh '''
-          pwd
-          ls -lha
-          ls -lha ./SFO/
           cd cpp
           mkdir -p build && cd build
           cmake ..
@@ -24,7 +24,7 @@ pipeline {
       steps {
         sh '''
           cd cpp/build
-          ./bin/tests --gtest_output="xml:./report.xml" --big_data_dir_path=/home/centos/workspace/QTR/slow-tests/SFO --gtest_filter='SlowTest*'
+          ./bin/tests --gtest_output="xml:./report.xml" --big_data_dir_path=/home/centos/workspace/SFO/slow-tests/SFO --gtest_filter='SlowTest*'
         '''
         // publishHTML target: [
         //     allowMissing: false,
@@ -40,6 +40,7 @@ pipeline {
   post {
       always {
         junit 'cpp/build/report.xml'
+        cleanWs()
       }
   } 
   // post {
@@ -47,6 +48,7 @@ pipeline {
   //     xunit (
   //       tools: [ GoogleTest(pattern: 'cpp/build/report.xml') ]
   //     )
+  //     cleanWs()
   //   }
   // }
 }
