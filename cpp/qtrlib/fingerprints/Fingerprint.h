@@ -33,6 +33,6 @@ public:
     }
 };
 
-using IndigoFingerprint = Fingerprint<467>;
+using IndigoFingerprint = Fingerprint<323>;
 
 } // namespace qtr

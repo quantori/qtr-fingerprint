@@ -94,6 +94,10 @@ std::size_t SplittingStrategyOptimal::operator()(std::size_t bitIndex, const Ind
         
         Histogram::CounterType num = histogram.bins().at(bin);
         Histogram::CounterType dev = (num > half ? num - half : half - num);
+
+        if (bitIndex == 0) {
+            LOG(INFO) << "[" << bin << "] : " << num;
+        }
         
         if (dev < deviation) {
             deviation = dev;
