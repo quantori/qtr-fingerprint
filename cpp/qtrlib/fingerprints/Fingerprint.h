@@ -1,5 +1,7 @@
 #pragma once
 
+#include "indigo.h"
+#include "Utils.h"
 #include <bitset>
 #include <climits>
 #include <cstddef>
@@ -12,6 +14,19 @@ class Fingerprint : public std::bitset<CHAR_BIT*fingerprintSizeInBytes>
 {
 public:
     static constexpr size_t sizeInBytes = fingerprintSizeInBytes;
+
+    Fingerprint() = default;
+
+    Fingerprint(int indigoId) {
+        const char* indigoFingerprint = indigoToString(indigoId);
+        for (size_t i = 0; indigoFingerprint[i] != '\0'; i++) {
+            int decimal = chexToInt(indigoFingerprint[i]);
+            for (size_t j = 0; j < 4; j++) {
+                if ((decimal >> j) & 1)
+                    this->set(i * 4 + j);
+            }
+        }
+    }
 
     void setBytes(const std::vector<std::byte> &bytes) {
         this->reset();

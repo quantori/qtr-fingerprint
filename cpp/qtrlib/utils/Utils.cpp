@@ -14,4 +14,8 @@ void emptyArgument(const std::string &argument, const std::string &message) {
     }
 }
 
+int chexToInt(char letter) {
+    return letter >= '0' && letter <= '9' ? letter - '0' : letter - 'a' + 10;
+}
+
 } // namespace qtr
