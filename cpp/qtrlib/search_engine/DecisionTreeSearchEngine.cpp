@@ -86,26 +86,7 @@ std::size_t SplittingStrategyOptimal::operator()(std::size_t bitIndex, const Ind
             histogram.add(bit, Histogram::CounterType(fp.test(bit)));
     }
 
-    std::size_t result = std::size_t(-1);
-    Histogram::CounterType half = Histogram::CounterType(view.size() / 2);
-    Histogram::CounterType deviation = half;
-
-    for(std::size_t bin = 0; bin < histogram.bins().size(); bin++) {
-        
-        Histogram::CounterType num = histogram.bins().at(bin);
-        Histogram::CounterType dev = (num > half ? num - half : half - num);
-
-        if (bitIndex == 0) {
-            LOG(INFO) << "[" << bin << "] : " << num;
-        }
-        
-        if (dev < deviation) {
-            deviation = dev;
-            result = bin;
-        }
-    }
-
-    return result;
+    return histogram.findClosestBin(Histogram::CounterType(view.size() / 2));
 }
 
 template class DecisionTreeSearchEngine<SplittingStrategyTrivial>;
