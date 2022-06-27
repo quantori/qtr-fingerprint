@@ -6,13 +6,13 @@ pipeline {
       label 'qtr'
     }
   }
+  options {
+    buildDiscarder(logRotator(numToKeepStr: '60', daysToKeepStr: '60',  artifactNumToKeepStr: '60', artifactDaysToKeepStr: '60'))
+  }
   stages {
     stage('build') {
       steps {
         sh '''
-          pwd
-          ls -lha
-          ls -lha ./SFO/
           cd cpp
           mkdir -p build && cd build
           cmake ..
@@ -33,6 +33,7 @@ pipeline {
   post {
       always {
         junit 'cpp/build/report.xml'
+        cleanWs()
       }
   } 
 }
