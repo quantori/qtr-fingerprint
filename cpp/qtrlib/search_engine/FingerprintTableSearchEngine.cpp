@@ -56,6 +56,7 @@ std::vector<indigo_cpp::IndigoMolecule> FingerprintTableSearchEngine::findOverMo
     fp.setBytes(fingerprint.data());
 
     std::vector<const IndigoFingerprintTableView *> views = findTableViews(fp);
+    LOG(INFO) << "Views for brute force: " << views.size();
 
     for(const IndigoFingerprintTableView *view : views) {
         for (IndigoFingerprintTableView::IndexType idx : *view) {
