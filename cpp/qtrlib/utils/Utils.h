@@ -24,6 +24,11 @@ bool endsWith(const std::string &a, const std::string &b);
 void emptyArgument(const std::string &argument, const std::string &message);
 
 /**
+ * Return converted hex char to decimal
+ */
+int chexToInt(char letter);
+
+/**
  * returns pos bit of a value, makes no checks for faster performance
  * @param value
  * @param pos
