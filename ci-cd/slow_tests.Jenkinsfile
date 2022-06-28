@@ -24,16 +24,9 @@ pipeline {
       steps {
         sh '''
           cd cpp/build
+          export GLOG_logtostdout=true
           ./bin/tests --gtest_output="xml:./report.xml" --big_data_dir_path=/home/centos/workspace/SFO/slow-tests/SFO --gtest_filter='SlowTest*'
         '''
-        // publishHTML target: [
-        //     allowMissing: false,
-        //     alwaysLinkToLastBuild: false,
-        //     keepAll: true,
-        //     reportDir: 'cpp/build',
-        //     reportFiles: 'report.xml',
-        //     reportName: 'Slow test report'
-        //   ]
       }
     }
   }
@@ -43,12 +36,4 @@ pipeline {
         cleanWs()
       }
   } 
-  // post {
-  //   always{
-  //     xunit (
-  //       tools: [ GoogleTest(pattern: 'cpp/build/report.xml') ]
-  //     )
-  //     cleanWs()
-  //   }
-  // }
 }

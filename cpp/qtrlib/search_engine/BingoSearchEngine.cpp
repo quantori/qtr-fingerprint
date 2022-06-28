@@ -15,13 +15,27 @@ BingoSearchEngine::~BingoSearchEngine() {
 }
 
 void BingoSearchEngine::build(const std::string &path) {
+    
     if (endsWith(path, ".sdf")) {
+        
         LOG(INFO) << "Loading database from " << path << " file";
+        
         std::string dbName = path.substr(0, path.size() - strlen(".sdf"));
         _db = bingoCreateDatabaseFile(dbName.c_str(), "molecule", "");
-        int iterator = indigoIterateSDFile(path.c_str());
-        bingoInsertIteratorObj(_db, iterator);
-    } else {
+        
+        size_t moleculesNumber = 0;
+        IndigoSDFileIterator iterator = _indigoSessionPtr->iterateSDFile(path);
+        
+        for(IndigoMoleculeSPtr &molecule : iterator) {       
+            molecule->aromatize();
+            bingoInsertRecordObj(_db, molecule->id());
+
+            moleculesNumber++;
+            if (moleculesNumber % 1000 == 0)
+                LOG(INFO) << "Processed " << moleculesNumber << " molecules...";
+        }
+    }
+    else {
         LOG(INFO) << "Loading database from dir=" << path;
         _db = bingoLoadDatabaseFile(path.c_str(), "");
     }

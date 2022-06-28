@@ -1,11 +1,17 @@
 #include "FingerprintTable.h"
 
+#include "utils/DataPathManager.h"
+
 #include <gtest/gtest.h>
+
+#include <filesystem>
 
 TEST(FingerprintTable, BUILD) {
     qtr::IndigoFingerprintTable table;
 }
 
 TEST(FingerprintTable, BuildFromSdf) {
-    qtr::IndigoFingerprintTable table = qtr::buildFingerprintTableFromSDFFile<467>("../../../data/pubchem_10.sdf");
+    using namespace std::filesystem;
+    std::string sdf = qtr::DataPathManager::getDataDir() / path("pubchem_10.sdf");
+    qtr::IndigoFingerprintTable table(sdf);
 }

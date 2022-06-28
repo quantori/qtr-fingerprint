@@ -22,8 +22,12 @@ std::vector<std::byte> QtrIndigoFingerprint::data() const
 
     session()->_checkResult(indigoToBuffer(id(), &data, &size));
 
-    std::vector<std::byte> result(size);
-    memcpy(result.data(), data, size);
+    const int zeroesBeg = std::min(size, 203);
+    const int zeroesEnd = std::min(size, 347);;
+
+    std::vector<std::byte> result(size - zeroesEnd + zeroesBeg);
+    memcpy(result.data(), data, zeroesBeg);
+    memcpy(result.data() + zeroesBeg, data + zeroesEnd, size - zeroesEnd);
 
     return result;
 }

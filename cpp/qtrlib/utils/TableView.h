@@ -1,6 +1,9 @@
 #pragma once
 
+#include "Histogram.h"
+
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <vector>
 
@@ -22,7 +25,6 @@ public:
             _indices[i] = i;
     }
 
-
     template<class Filter>
     TableView<Table> filter(const Filter &filter) const {
         
@@ -37,17 +39,17 @@ public:
         return result;
     }
 
-    template<class Splitter>
-    std::map<std::size_t, TableView<Table>> split(const Splitter &splitter) const {
+    template<typename Key, class TableElem>
+    std::map<Key, TableView<Table>> split(const std::function<Key (const TableElem &)> &splitter) const {
         
-        std::map<std::size_t, TableView<Table>> result;
+        std::map<Key, TableView<Table>> result;
 
         for(IndexType index : _indices) {
-            std::size_t part = splitter(_table->at(index));
+            Key part = splitter(_table->at(index));
             result[part]._indices.push_back(index);
         }
 
-        for(std::pair<const std::size_t, TableView<Table>> &pair: result) {
+        for(std::pair<const Key, TableView<Table>> &pair: result) {
             pair.second._table = _table;
         }
 
@@ -57,6 +59,10 @@ public:
     std::vector<IndexType>::const_iterator begin() const { return _indices.cbegin(); }
     std::vector<IndexType>::const_iterator end() const { return _indices.cend(); }
 
+    std::size_t size() const { return _indices.size(); }
+    const Table *table() const { return _table; }
+
+    Histogram histogram() const;
 
 private:
     std::vector<IndexType> _indices;

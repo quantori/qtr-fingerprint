@@ -15,7 +15,6 @@ protected:
     }
 };
 
-
 TEST_F(SlowTestFixture, EXHAUSTIVE_BUILD_PUBCHEM_119697)
 {
     SearchEngineTests searchEngineTests(SearchEngineFactory::EXHAUSTIVE);
@@ -37,6 +36,29 @@ TEST_F(SlowTestFixture, BINGO_BUILD_PUBCHEM_119697)
 TEST_F(SlowTestFixture, BINGO_PUBCHEM_119697)
 {
     SearchEngineTests searchEngineTests(SearchEngineFactory::BINGO);
-    searchEngineTests.testPubchem994();
+    searchEngineTests.testPubchem119697();
 }
 
+TEST_F(SlowTestFixture, DECISION_TREE_TRIVIAL_BUILD_PUBCHEM_119697)
+{
+    SearchEngineTests searchEngineTests(SearchEngineFactory::DECISION_TREE_TRIVIAL);
+    searchEngineTests.testBuildPubchem119697();
+}
+
+TEST_F(SlowTestFixture, DECISION_TREE_TRIVIAL_PUBCHEM_119697)
+{
+    SearchEngineTests searchEngineTests(SearchEngineFactory::DECISION_TREE_TRIVIAL);
+    searchEngineTests.testPubchem119697();
+}
+
+TEST_F(SlowTestFixture, DECISION_TREE_OPTIMAL_BUILD_PUBCHEM_119697)
+{
+    SearchEngineTests searchEngineTests(SearchEngineFactory::DECISION_TREE_OPTIMAL);
+    searchEngineTests.testBuildPubchem119697();
+}
+
+TEST_F(SlowTestFixture, DECISION_TREE_OPTIMAL_PUBCHEM_119697)
+{
+    SearchEngineTests searchEngineTests(SearchEngineFactory::DECISION_TREE_OPTIMAL);
+    searchEngineTests.testPubchem119697();
+}
