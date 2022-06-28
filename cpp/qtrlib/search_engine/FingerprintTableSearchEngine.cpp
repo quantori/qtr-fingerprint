@@ -34,8 +34,7 @@ void FingerprintTableSearchEngine::build(const std::string &path)
         _molecules.push_back(std::move(*molecule));
 
         QtrIndigoFingerprint fingerprint(_molecules.back(), "sub");
-        _fingerprintTable.push_back(qtr::IndigoFingerprint());
-        _fingerprintTable.back().setBytes(fingerprint.data());
+        _fingerprintTable.emplace_back(fingerprint);
 
         moleculesNumber++;
         if (moleculesNumber % 1000 == 0)

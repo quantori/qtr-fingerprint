@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Histogram.h"
+
 #include <cstdint>
 #include <functional>
 #include <map>
@@ -59,6 +61,8 @@ public:
 
     std::size_t size() const { return _indices.size(); }
     const Table *table() const { return _table; }
+
+    Histogram histogram() const;
 
 private:
     std::vector<IndexType> _indices;

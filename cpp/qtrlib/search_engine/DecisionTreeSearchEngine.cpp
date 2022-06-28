@@ -78,14 +78,7 @@ DecisionTreeSearchEngine<SplittingStrategy>::findTableViews(const qtr::IndigoFin
 
 std::size_t SplittingStrategyOptimal::operator()(std::size_t bitIndex, const IndigoFingerprintTableView &view)
 {
-    Histogram histogram(CHAR_BIT*qtr::IndigoFingerprint::sizeInBytes);
-    
-    for(IndigoFingerprintTableView::IndexType index : view) {
-        const qtr::IndigoFingerprint &fp = view.table()->at(index);
-        for(size_t bit = 0; bit < fp.size(); bit++)
-            histogram.add(bit, Histogram::CounterType(fp.test(bit)));
-    }
-
+    Histogram histogram = view.histogram();
     return histogram.findClosestBin(Histogram::CounterType(view.size() / 2));
 }
 
