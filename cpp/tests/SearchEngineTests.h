@@ -24,8 +24,10 @@ namespace qtr
         void testPubchem100();
         void testPubchem994();
         void testPubchem119697();
+        void testPubchem300000();
 
         void testBuildPubchem119697();
+        void testBuildPubchem300000();
 
     private:
         indigo_cpp::IndigoSessionPtr _indigoSessionPtr;

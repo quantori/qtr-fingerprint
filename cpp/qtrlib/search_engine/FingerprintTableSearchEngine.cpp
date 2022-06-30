@@ -2,6 +2,7 @@
 
 #include "QtrIndigoFingerprint.h"
 
+#include "IndigoException.h"
 #include "IndigoSDFileIterator.h"
 #include "IndigoSubstructureMatcher.h"
 
@@ -26,20 +27,27 @@ void FingerprintTableSearchEngine::build(const std::string &path)
     _fingerprintTable.clear();
 
     size_t moleculesNumber = 0;
+    size_t failuresNumber = 0;
     IndigoSDFileIterator iterator = _indigoSessionPtr->iterateSDFile(path);
 
     for(IndigoMoleculeSPtr &molecule : iterator) {
         
-        molecule->aromatize();
-        _molecules.push_back(std::move(*molecule));
+        try {
+            molecule->aromatize();
+            _molecules.push_back(std::move(*molecule));
 
-        QtrIndigoFingerprint fingerprint(_molecules.back(), "sub");
-        _fingerprintTable.emplace_back(fingerprint);
+            QtrIndigoFingerprint fingerprint(_molecules.back(), "sub");
+            _fingerprintTable.emplace_back(fingerprint);
+        }
+        catch(const IndigoException &) {
+            failuresNumber++;
+        }
 
         moleculesNumber++;
         if (moleculesNumber % 1000 == 0)
             LOG(INFO) << "Processed " << moleculesNumber << " molecules...";
     }
+    LOG(INFO) << "Processed " << moleculesNumber << " molecules (including " << failuresNumber << " failures)";
 }
 
 std::vector<indigo_cpp::IndigoMolecule> FingerprintTableSearchEngine::findOverMolecules(const indigo_cpp::IndigoQueryMolecule &mol)

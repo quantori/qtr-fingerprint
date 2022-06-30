@@ -1,5 +1,7 @@
 #include "BingoSearchEngine.h"
 
+#include "IndigoException.h"
+
 using namespace indigo_cpp;
 
 namespace qtr {
@@ -24,16 +26,23 @@ void BingoSearchEngine::build(const std::string &path) {
         _db = bingoCreateDatabaseFile(dbName.c_str(), "molecule", "");
         
         size_t moleculesNumber = 0;
+        size_t failuresNumber = 0;
         IndigoSDFileIterator iterator = _indigoSessionPtr->iterateSDFile(path);
         
-        for(IndigoMoleculeSPtr &molecule : iterator) {       
-            molecule->aromatize();
-            bingoInsertRecordObj(_db, molecule->id());
+        for(IndigoMoleculeSPtr &molecule : iterator) {
+            try {       
+                molecule->aromatize();
+                bingoInsertRecordObj(_db, molecule->id());
+            } 
+            catch(const IndigoException &) {
+                failuresNumber++;
+            }
 
             moleculesNumber++;
             if (moleculesNumber % 1000 == 0)
                 LOG(INFO) << "Processed " << moleculesNumber << " molecules...";
         }
+        LOG(INFO) << "Processed " << moleculesNumber << " molecules (including " << failuresNumber << " failures)";
     }
     else {
         LOG(INFO) << "Loading database from dir=" << path;
@@ -53,9 +62,8 @@ BingoSearchEngine::findOverMolecules(const indigo_cpp::IndigoQueryMolecule &mol)
     int resultIterator = _indigoSessionPtr->_checkResult(bingoSearchSub(_db, mol.id(), ""));
     int currentId = bingoGetObject(resultIterator);
     while (bingoNext(resultIterator)) {
-        const std::string &smiles = indigoCanonicalSmiles(currentId);
-        IndigoMolecule curr = _indigoSessionPtr->loadMolecule(smiles);
-        result.emplace_back(curr);
+        int clone = indigoClone(currentId);
+        result.emplace_back(clone, _indigoSessionPtr);
     }
     bingoEndSearch(resultIterator);
     return result;
