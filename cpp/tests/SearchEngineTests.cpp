@@ -125,22 +125,6 @@ namespace qtr
             _dataDir / path("pubchem_994_queries.txt"));
     }
 
-    void SearchEngineTests::testPubchem119697()
-    {
-        testSearchEngine(
-            _searchEnginePtr,
-            _indigoSessionPtr,
-            DataPathManager::getBigDataDir() / path("pubchem_119697.sdf"),
-            DataPathManager::getBigDataDir() / path("pubchem_119697_queries.txt"));
-    }
-
-    void SearchEngineTests::testBuildPubchem119697()
-    {
-        tesBuildSearchEngine(
-            _searchEnginePtr,
-            DataPathManager::getBigDataDir() / path("pubchem_119697.sdf"));
-    }
-
     void SearchEngineTests::testPubchem300000()
     {
         testSearchEngine(
