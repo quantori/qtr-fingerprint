@@ -4,6 +4,8 @@
 #include "FingerprintTableView.h"
 #include "SearchEngineInterface.h"
 
+#include "indigo.h"
+
 namespace qtr {
 
 class FingerprintTableSearchEngine : public SearchEngineInterface {
@@ -21,7 +23,7 @@ protected:
     virtual std::vector<const IndigoFingerprintTableView *> findTableViews(const qtr::IndigoFingerprint &fp) const = 0;
 
     IndigoFingerprintTable _fingerprintTable;
-    std::vector<indigo_cpp::IndigoMolecule> _molecules;
+    std::vector<std::vector<byte>> _serializedMolecules;
     indigo_cpp::IndigoSessionPtr _indigoSessionPtr;
 };
 

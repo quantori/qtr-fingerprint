@@ -23,7 +23,7 @@ FingerprintTableSearchEngine::~FingerprintTableSearchEngine()
 
 void FingerprintTableSearchEngine::build(const std::string &path)
 {
-    _molecules.clear();
+    _serializedMolecules.clear();
     _fingerprintTable.clear();
 
     size_t moleculesNumber = 0;
@@ -34,9 +34,14 @@ void FingerprintTableSearchEngine::build(const std::string &path)
         
         try {
             molecule->aromatize();
-            _molecules.push_back(std::move(*molecule));
 
-            QtrIndigoFingerprint fingerprint(_molecules.back(), "sub");
+            byte *buf = nullptr; int size = 0;
+            int result = indigoSerialize(molecule->id(), &buf, &size);
+            
+            _indigoSessionPtr->_checkResult(result);
+            _serializedMolecules.emplace_back(buf, buf + size);
+
+            QtrIndigoFingerprint fingerprint(*molecule, "sub");
             _fingerprintTable.emplace_back(fingerprint);
         }
         catch(const IndigoException &) {
@@ -73,8 +78,13 @@ std::vector<indigo_cpp::IndigoMolecule> FingerprintTableSearchEngine::findOverMo
             
             if (f.count() != bitsCount)
                 continue;
-            
-            const IndigoMolecule &molecule = _molecules.at(idx);
+
+            const std::vector<byte> &buf = _serializedMolecules.at(idx);
+            const int moleculeId = indigoUnserialize(buf.data(), buf.size());
+
+            _indigoSessionPtr->_checkResult(moleculeId);
+            IndigoMolecule molecule(moleculeId, _indigoSessionPtr);
+
             IndigoSubstructureMatcher matcher = _indigoSessionPtr->substructureMatcher(molecule);
         
             if (!matcher.match(mol))
