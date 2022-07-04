@@ -2,6 +2,7 @@
 
 #include "QtrIndigoFingerprint.h"
 
+#include "IndigoException.h"
 #include "IndigoSDFileIterator.h"
 #include "IndigoSubstructureMatcher.h"
 
@@ -22,24 +23,36 @@ FingerprintTableSearchEngine::~FingerprintTableSearchEngine()
 
 void FingerprintTableSearchEngine::build(const std::string &path)
 {
-    _molecules.clear();
+    _serializedMolecules.clear();
     _fingerprintTable.clear();
 
     size_t moleculesNumber = 0;
+    size_t failuresNumber = 0;
     IndigoSDFileIterator iterator = _indigoSessionPtr->iterateSDFile(path);
 
     for(IndigoMoleculeSPtr &molecule : iterator) {
         
-        molecule->aromatize();
-        _molecules.push_back(std::move(*molecule));
+        try {
+            molecule->aromatize();
 
-        QtrIndigoFingerprint fingerprint(_molecules.back(), "sub");
-        _fingerprintTable.emplace_back(fingerprint);
+            byte *buf = nullptr; int size = 0;
+            int result = indigoSerialize(molecule->id(), &buf, &size);
+            
+            _indigoSessionPtr->_checkResult(result);
+            _serializedMolecules.emplace_back(buf, buf + size);
+
+            QtrIndigoFingerprint fingerprint(*molecule, "sub");
+            _fingerprintTable.emplace_back(fingerprint);
+        }
+        catch(const IndigoException &) {
+            failuresNumber++;
+        }
 
         moleculesNumber++;
         if (moleculesNumber % 1000 == 0)
             LOG(INFO) << "Processed " << moleculesNumber << " molecules...";
     }
+    LOG(INFO) << "Processed " << moleculesNumber << " molecules (including " << failuresNumber << " failures)";
 }
 
 std::vector<indigo_cpp::IndigoMolecule> FingerprintTableSearchEngine::findOverMolecules(const indigo_cpp::IndigoQueryMolecule &mol)
@@ -65,8 +78,13 @@ std::vector<indigo_cpp::IndigoMolecule> FingerprintTableSearchEngine::findOverMo
             
             if (f.count() != bitsCount)
                 continue;
-            
-            const IndigoMolecule &molecule = _molecules.at(idx);
+
+            const std::vector<byte> &buf = _serializedMolecules.at(idx);
+            const int moleculeId = indigoUnserialize(buf.data(), buf.size());
+
+            _indigoSessionPtr->_checkResult(moleculeId);
+            IndigoMolecule molecule(moleculeId, _indigoSessionPtr);
+
             IndigoSubstructureMatcher matcher = _indigoSessionPtr->substructureMatcher(molecule);
         
             if (!matcher.match(mol))

@@ -7,6 +7,8 @@
 #include "indigo.h"
 #include "indigo-inchi.h"
 
+#include <glog/logging.h>
+
 #include <gtest/gtest.h>
 
 #include <algorithm>
@@ -73,6 +75,7 @@ static void testSearchEngine(
     while (std::getline(fin, line))
     {
         auto [smiles, inchiKeys] = parseQueryLine(line);
+        LOG(INFO) << smiles;
 
         int mol = indigoLoadQueryMoleculeFromString(smiles.c_str());
         auto queryMolecule = IndigoQueryMolecule(mol, indigoSession);
@@ -122,20 +125,20 @@ namespace qtr
             _dataDir / path("pubchem_994_queries.txt"));
     }
 
-    void SearchEngineTests::testPubchem119697()
+    void SearchEngineTests::testPubchem300000()
     {
         testSearchEngine(
             _searchEnginePtr,
             _indigoSessionPtr,
-            DataPathManager::getBigDataDir() / path("pubchem_119697.sdf"),
-            DataPathManager::getBigDataDir() / path("pubchem_119697_queries.txt"));
+            DataPathManager::getBigDataDir() / path("pubchem_300000.sdf"),
+            DataPathManager::getBigDataDir() / path("pubchem_300000_queries.txt"));
     }
 
-    void SearchEngineTests::testBuildPubchem119697()
+    void SearchEngineTests::testBuildPubchem300000()
     {
         tesBuildSearchEngine(
             _searchEnginePtr,
-            DataPathManager::getBigDataDir() / path("pubchem_119697.sdf"));
+            DataPathManager::getBigDataDir() / path("pubchem_300000.sdf"));
     }
 
 } // namespace qtr
