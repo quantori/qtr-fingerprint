@@ -13,9 +13,8 @@ class BFPDriveFinder(DriveFinder):
         return "df.pickle"
 
     def __init__(self, df: pd.DataFrame, directory: PathType):
-        Path(directory).mkdir(parents=True, exist_ok=True)
         self.df_path = Path(directory) / self.df_name
-        self._pack(df, self.df_path)
+        self._pack(df, self.df_8path)
 
     def _find(self, fingerprint: pd.Series) -> Iterable[str]:
         df = self._unpack(self.df_path)

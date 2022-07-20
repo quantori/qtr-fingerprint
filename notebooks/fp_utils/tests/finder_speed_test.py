@@ -32,7 +32,7 @@ class FinderSpeedTester:
         stat = SpeedTestStat()
         Logger.log('-----', verbose)
         for i, fingerprint in enumerate(fingerprints):
-            Logger.log(f'Test #{i + 1:03d}', verbose)
+            Logger.log(f'Test #{i:03d}', verbose)
             local_measurements = self.test_one(fingerprint, ans_count, verbose)
             stat += local_measurements
             Logger.log('-----', verbose)

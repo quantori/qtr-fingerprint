@@ -26,7 +26,7 @@ class CatchTime:
 
     def __str__(self):
         if self.state == CatchTimeState.FINISHED:
-            return f'{self.time:.3f} -- {self.text}'
+            return f'{self.time:.3f}s -- {self.text}'
         else:
             return f'{self.state.name} -- {self.text}'
 

@@ -13,7 +13,6 @@ class BFDriveFinder(DriveFinder):
         return "df.pickle"
 
     def __init__(self, df: pd.DataFrame, directory: PathType):
-        Path(directory).mkdir(parents=True, exist_ok=True)
         self.df_path = Path(directory) / self.df_name
         self._pack(df, self.df_path)
 

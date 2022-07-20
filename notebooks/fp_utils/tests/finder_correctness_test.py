@@ -31,7 +31,7 @@ class FinderCorrectnessTester:
         answers = np.array([True] * len(self.finders))
         Logger.log('-----', verbose)
         for i, fingerprint in enumerate(fingerprints):
-            Logger.log(f'Test #{i + 1:03d}', verbose)
+            Logger.log(f'Test #{i:03d}', verbose)
             answers &= self.test_one(fingerprint, verbose)
             Logger.log('-----', verbose)
         return answers

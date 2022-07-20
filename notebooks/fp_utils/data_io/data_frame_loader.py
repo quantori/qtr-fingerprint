@@ -7,8 +7,8 @@ from fp_utils.consts import PathType
 
 class DataFrameLoader:
     @staticmethod
-    def pickle(df_path: str, columns: Union[np.ndarray, PathType, None] = None) -> pd.DataFrame:
-        df = pd.read_pickle(df_path)
+    def pickle(df_path: PathType, columns: Union[np.ndarray, PathType, None] = None) -> pd.DataFrame:
+        df = pd.read_pickle(str(df_path))
         return df if columns is None else DataFrameLoader.__pick_columns(df, columns)
 
     @staticmethod
