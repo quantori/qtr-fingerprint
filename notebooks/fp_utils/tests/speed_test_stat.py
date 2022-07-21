@@ -74,6 +74,7 @@ class SpeedTestStat:
         for finder in finders:
             if isinstance(finder, Finder):
                 finder = finder.__class__
+            assert issubclass(finder, Finder)
             new_stat.measurements.pop(finder, None)
         return new_stat
 
@@ -82,5 +83,6 @@ class SpeedTestStat:
         for finder in finders:
             if isinstance(finder, Finder):
                 finder = finder.__class__
+            assert issubclass(finder, Finder)
             new_stat.measurements[finder] = self.measurements[finder]
         return new_stat

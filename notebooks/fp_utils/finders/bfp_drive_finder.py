@@ -14,7 +14,7 @@ class BFPDriveFinder(DriveFinder):
 
     def __init__(self, df: pd.DataFrame, directory: PathType):
         self.df_path = Path(directory) / self.df_name
-        self._pack(df, self.df_8path)
+        self._pack(df, self.df_path)
 
     def _find(self, fingerprint: pd.Series) -> Iterable[str]:
         df = self._unpack(self.df_path)
