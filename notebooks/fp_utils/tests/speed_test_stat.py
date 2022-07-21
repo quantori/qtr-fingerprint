@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from fp_utils.catch_time import CatchTime
-
-from typing import List, Dict, Optional, Tuple
+from fp_utils.finders.finder import Finder
+from typing import List, Dict, Optional, Tuple, Type, Union
 import numpy as np
 import matplotlib.pyplot as plt
+from copy import deepcopy
 
 
 class SpeedTestStat:
@@ -12,13 +13,13 @@ class SpeedTestStat:
     def measured_parameters(self) -> List[str]:
         return ['min', 'max', 'mean', 'median']
 
-    def __init__(self, measurements: Optional[Dict[type, List[CatchTime]]] = None):
-        self.measurements: Dict[type, List[CatchTime]] = measurements or dict()
+    def __init__(self, measurements: Optional[Dict[Type[Finder], List[CatchTime]]] = None):
+        self.measurements: Dict[Type[Finder], List[CatchTime]] = measurements or dict()
 
-    def __get_times(self, finder_class: type) -> List[float]:
+    def __get_times(self, finder_class: Type[Finder]) -> List[float]:
         return list(map(lambda x: x.time, self.measurements[finder_class]))
 
-    def __collect_stat(self) -> Dict[type, Dict[str, CatchTime]]:
+    def __collect_stat(self) -> Dict[Type[Finder], Dict[str, CatchTime]]:
         stat = dict()
         for finder_class in self.measurements:
             times = np.array(self.__get_times(finder_class))
@@ -41,7 +42,6 @@ class SpeedTestStat:
         return str(self)
 
     def __iadd__(self, other: SpeedTestStat) -> SpeedTestStat:
-        assert not self.measurements or set(self.measurements.keys()) == set(other.measurements.keys())
         for key in other.measurements:
             self.measurements.setdefault(key, [])
             self.measurements[key] += other.measurements[key]
@@ -68,3 +68,19 @@ class SpeedTestStat:
         labels = [key.__name__ for key in self.measurements]
         ax.boxplot(data, vert=True, patch_artist=True, labels=labels)
         plt.show()
+
+    def drop(self, finders: List[Union[Finder, Type[Finder]]]) -> SpeedTestStat:
+        new_stat = deepcopy(self)
+        for finder in finders:
+            if isinstance(finder, Finder):
+                finder = finder.__class__
+            new_stat.measurements.pop(finder, None)
+        return new_stat
+
+    def take(self, finders: List[Union[Finder, Type[Finder]]]) -> SpeedTestStat:
+        new_stat = SpeedTestStat()
+        for finder in finders:
+            if isinstance(finder, Finder):
+                finder = finder.__class__
+            new_stat.measurements[finder] = self.measurements[finder]
+        return new_stat

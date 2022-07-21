@@ -6,6 +6,7 @@ from fp_utils.finders.bf_ram_finder import BFRamFinder
 
 # other finders
 from fp_utils.finders.splitter_tree_finder import SplitterTreeFinder
+from fp_utils.finders.subcols_finder import SubColsFinder
 
 # abstract finders
 from fp_utils.finders.finder import Finder

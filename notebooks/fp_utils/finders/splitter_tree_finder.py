@@ -16,7 +16,7 @@ from fp_utils.catch_time import CatchTime
 class SplitterTreeFinder(DriveFinder):
     SPLIT_VALUE = 0.5
     MAX_DEPTH = 100
-    BUCKET_SIZE = 15000
+    BUCKET_SIZE = 1000
     LEAF_ID = -1
     R_EPS = 1e-5
     FILE_EXTENSION = '.pickle'
