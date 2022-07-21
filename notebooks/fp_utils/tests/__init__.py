@@ -1,0 +1,3 @@
+from fp_utils.tests.finder_speed_test import FinderSpeedTester
+from fp_utils.tests.finder_correctness_test import FinderCorrectnessTester
+from fp_utils.tests.speed_test_stat import SpeedTestStat
