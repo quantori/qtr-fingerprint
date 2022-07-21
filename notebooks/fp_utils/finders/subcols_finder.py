@@ -2,20 +2,18 @@ from __future__ import annotations
 
 import pandas as pd
 import numpy as np
-from typing import Iterable, Type, List
+from typing import Iterable, Type
 from abc import ABC, abstractmethod
 
 from fp_utils.finders.finder import Finder
 
 
 class SubColsFinder(Finder, ABC):
-    COLUMNS = None
 
     @property
-    def columns(self):
-        if self.COLUMNS is None:
-            raise NotImplementedError
-        return self.COLUMNS
+    @abstractmethod
+    def columns(self) -> Iterable[int]:
+        raise NotImplementedError
 
     def __init__(self, df: pd.DataFrame, base_finder: Type[Finder], *args, **kwargs) -> None:
         self.df = df
