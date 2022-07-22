@@ -19,6 +19,7 @@
 #include "absl/flags/parse.h"
 
 #include "Utils.h"
+#include "Fingerprint.h"
 
 using namespace indigo_cpp;
 using namespace qtr;
@@ -46,6 +47,25 @@ static void hexToBin(const char *hexdec, ostringstream &out) {
     };
     for (int i = 0; hexdec[i]; ++i)
         out << HEX_TO_DEC.at(hexdec[i]);
+}
+
+IndigoFingerprint cutZeroColumns(Fingerprint<467> fingerprint) {
+    IndigoFingerprint cutFingerprint;
+    std::vector<int> zeroColumns = {};
+    ifstream fin("zero_columns");
+    int number;
+    while (fin >> number) {
+        zeroColumns.push_back(number);
+    }
+    int currentZero = 0;
+    for (int i = 0; i < 467 * CHAR_BIT; ++i) {
+        if (currentZero < zeroColumns.size() && i == zeroColumns[currentZero]) {
+            currentZero++;
+            continue;
+        }
+        cutFingerprint[i - currentZero] = fingerprint[i];
+    }
+    return cutFingerprint;
 }
 
 vector<string> findFiles(const string &pathToDir, const string &extension) {
