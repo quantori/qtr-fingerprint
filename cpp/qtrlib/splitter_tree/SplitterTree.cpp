@@ -75,7 +75,7 @@ vector<string> SplitterTree::split(size_t maxDepth, uint64_t minCountInNode) {
         }
         return {bestBitSplit, bestBitSplitDeviation};
     };
-    if (_depth < COUNT_THREADS_POW) { // Async calculate in each range
+    if (_depth < COUNT_THREADS_POW) { // Async calculate in each range // TODO extract to func
         size_t availableThreadsCount = (1ull << (COUNT_THREADS_POW - _depth));
         vector<future<pair<uint64_t, uint64_t>>> answers(availableThreadsCount);
         size_t lengthForThread = countOfBitsInFP / availableThreadsCount; // Length of each range
@@ -146,7 +146,7 @@ uint64_t SplitterTree::getNum(SplitterTree *node) {
 
 void SplitterTree::saveTo(std::ostream &out) {
     out.write((char *) &_nodeNumber, sizeof(_nodeNumber));
-    out.write((char *) &_splitBit, sizeof(_splitBit));
+    out.write((char *) &_splitBit, sizeof(_splitBit)); // TODO set it to -1 in a leaf?
     uint64_t idLeft = getNum(_leftChild);
     uint64_t idRight = getNum(_rightChild);
     out.write((char *) &idLeft, sizeof(idLeft));
@@ -157,4 +157,59 @@ void SplitterTree::saveTo(std::ostream &out) {
         _leftChild->saveTo(out);
     if (_rightChild != nullptr)
         _rightChild->saveTo(out);
+}
+
+std::vector<int> SplitterTree::getNonCorrelatingColumns() {
+    const size_t countOfColumns = fromBytesToBits(IndigoFingerprint::sizeInBytes);
+    double expectedValue[countOfColumns];
+    forEachLine(_filename, false, [&expectedValue](const IndigoFingerprint &fp, const string &_) {
+        for (size_t i = 0; i < countOfColumns; ++i)
+            expectedValue[i] += fp[i];
+    });
+    for (size_t i = 0; i < countOfColumns; ++i)
+        expectedValue[i] /= countOfColumns;
+
+    double correlation[countOfColumns][countOfColumns];
+    for (size_t i = 0; i < countOfColumns; ++i) { // TODO parallelize? maybe if we have small amount of leaves [1]
+        for (size_t j = i + 1; j < countOfColumns; ++j) {
+            correlation[i][j] =
+                    abs(1.0 - 2.0 * expectedValue[j] - 2.0 * expectedValue[i] +
+                        4.0 * expectedValue[i] * expectedValue[j]); // TODO fix formula
+            correlation[j][i] = correlation[i][j];
+        }
+        correlation[i][i] = 0;
+    }
+    vector<pair<double, int>> result(countOfColumns); // Correlation coefficient and it's column number
+    for (size_t i = 0; i < countOfColumns; ++i) // TODO see [1]
+        result[i] = {*max_element(correlation[i], correlation[i] + countOfColumns), i};
+    sort(result.begin(), result.end());
+    vector<int> numbers(countOfColumns);
+    for (size_t i = 0; i < countOfColumns; ++i)
+        numbers[i] = result[i].second;
+    return numbers;
+}
+
+void SplitterTree::saveNonCorrelatingColumnInEachBucket() {
+    if (_leftChild == nullptr && _rightChild == nullptr) { // it's a leaf
+        ofstream out(_filename + "OrderColumns");
+        auto columnOrder = getNonCorrelatingColumns();
+        for (auto &column: columnOrder)
+            out << column << ' ';
+    } else {
+        if (_depth < COUNT_THREADS_POW) { // we have free threads
+            future<void> waitLeft;
+            future<void> waitRight;
+            if (_leftChild != nullptr)
+                waitLeft = async(launch::async, &SplitterTree::saveNonCorrelatingColumnInEachBucket, _leftChild);
+            if (_rightChild != nullptr)
+                waitRight = async(launch::async, &SplitterTree::saveNonCorrelatingColumnInEachBucket, _rightChild);
+            waitLeft.get();
+            waitRight.get();
+        } else {
+            if (_leftChild != nullptr)
+                _leftChild->saveNonCorrelatingColumnInEachBucket();
+            if (_rightChild != nullptr)
+                _rightChild->saveNonCorrelatingColumnInEachBucket();
+        }
+    }
 }
