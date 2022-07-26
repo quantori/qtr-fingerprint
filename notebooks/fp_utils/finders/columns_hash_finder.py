@@ -1,39 +1,37 @@
-import pickle
-from typing import Any, BinaryIO, Iterable, Generator, List
-from pathlib import Path
+from typing import Iterable, Generator, List, Type
 from abc import ABC, abstractmethod
 import pandas as pd
-from sklearn.neighbors import BallTree
-from pandarallel import pandarallel
+from pathlib import Path
 
 from fp_utils.consts import PathType
-from fp_utils.finders.drive_finder import DriveFinder
+from fp_utils.finders.finder import Finder
 
 
-class ColumnsHashFinder(DriveFinder, ABC):
-    FILE_EXTENSION = '.pickle'
-    R_EPS = 1e-5
+class ColumnsHashFinder(Finder, ABC):
+    @property
+    @abstractmethod
+    def inner_finder_class(self) -> Type[Finder]:
+        raise NotImplementedError
 
     @property
     @abstractmethod
     def columns(self) -> List[int]:
         raise NotImplementedError
 
-    def __init__(self, df: pd.DataFrame, directory: PathType) -> None:
-        self.directory = Path(directory)
+    def __init__(self, df: pd.DataFrame, directory: PathType, finder_name: str, *args, **kwargs) -> None:
+        self.finder_path = Path(directory) / finder_name
+        self.finder_path.mkdir(parents=True, exist_ok=True)
         hashes = pd.DataFrame(df.apply(self.__get_hash, axis=1), columns=['hash'])
         buckets = hashes.groupby('hash')
-        hash_values = buckets.apply(lambda bucket: self.__save_func(bucket, df)).values
+        self.inner_finders = dict()
+        hash_values = buckets.apply(
+            lambda bucket: self.__save_func(df.loc[bucket.index], bucket.iloc[0]['hash'], *args, **kwargs)).values
         self.hash_values = set(hash_values)
 
-    def __get_bucket_path(self, bucket_hash: int) -> Path:
-        return self.directory / (str(bucket_hash) + self.FILE_EXTENSION)
-
-    def __save_func(self, bucket: pd.DataFrame, df: pd.DataFrame) -> int:
-        index = bucket.index, BallTree(df.loc[bucket.index].values, leaf_size=2, metric='russellrao')
-        bucket_hash = bucket.iloc[0]['hash']
-        path = self.__get_bucket_path(bucket_hash)
-        self._pack(index, path)
+    def __save_func(self, bucket: pd.DataFrame, bucket_hash: int, *args, **kwargs) -> int:
+        inner_finder = self.inner_finder_class(bucket, directory=self.finder_path, finder_name=str(bucket_hash), *args,
+                                               **kwargs)
+        self.inner_finders[bucket_hash] = inner_finder
         return bucket_hash
 
     def __get_hash(self, fingerprint: pd.Series) -> int:
@@ -52,22 +50,10 @@ class ColumnsHashFinder(DriveFinder, ABC):
                 break
             t = (t - 1) & (mask ^ x)
 
-    def _find(self, fingerprint: pd.Series) -> Iterable[str]:
+    def find_all(self, fingerprint: pd.Series) -> Iterable[str]:
         query_mask = self.__get_hash(fingerprint)
-        r = 1 - sum(fingerprint) / len(fingerprint) + self.R_EPS
-
         for bucket_mask in self.__get_meta_masks(query_mask):
             if bucket_mask not in self.hash_values:
                 continue
-
-            path = self.__get_bucket_path(bucket_mask)
-            bucket_index, tree = self._unpack(path)
-            ind = tree.query_radius([fingerprint], r)
-            for pos in ind[0]:
-                yield bucket_index[pos]
-
-    def _load(self, file: BinaryIO) -> Any:
-        return pickle.load(file)
-
-    def _dump(self, obj: Any, file: BinaryIO) -> None:
-        pickle.dump(obj, file)
+            inner_finder = self.inner_finders[bucket_mask]
+            yield from inner_finder.find_all(fingerprint)

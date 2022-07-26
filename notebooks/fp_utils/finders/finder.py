@@ -19,9 +19,9 @@ class Finder(ABC):
 
     def find(self, fingerprint: pd.Series, ans_count: Optional[int] = None) -> Generator[str, None, None]:
         if ans_count is None:
-            yield from self._find(fingerprint)
+            yield from self.find_all(fingerprint)
         else:
-            answer_generator = iter(self._find(fingerprint))
+            answer_generator = iter(self.find_all(fingerprint))
             for i in range(ans_count):
                 nxt = next(answer_generator, None)
                 if nxt is None:
@@ -29,5 +29,5 @@ class Finder(ABC):
                 yield nxt
 
     @abstractmethod
-    def _find(self, fingerprint: pd.Series) -> Iterable[str]:
+    def find_all(self, fingerprint: pd.Series) -> Iterable[str]:
         raise NotImplementedError
