@@ -9,7 +9,6 @@
 
 #include <chrono>
 #include <unordered_map>
-#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -49,7 +48,7 @@ static void hexToBin(const char *hexdec, ostringstream &out) {
         out << HEX_TO_DEC.at(hexdec[i]);
 }
 
-IndigoFingerprint cutZeroColumns(Fingerprint<467> fingerprint) {
+IndigoFingerprint cutZeroColumns(FullIndigoFingerprint fingerprint) {
     IndigoFingerprint cutFingerprint;
     std::vector<int> zeroColumns = {};
     ifstream fin("zero_columns");
@@ -58,7 +57,7 @@ IndigoFingerprint cutZeroColumns(Fingerprint<467> fingerprint) {
         zeroColumns.push_back(number);
     }
     int currentZero = 0;
-    for (int i = 0; i < 467 * CHAR_BIT; ++i) {
+    for (int i = 0; i < fromBytesToBits(fingerprint.sizeInBytes); ++i) {
         if (currentZero < zeroColumns.size() && i == zeroColumns[currentZero]) {
             currentZero++;
             continue;
@@ -66,17 +65,6 @@ IndigoFingerprint cutZeroColumns(Fingerprint<467> fingerprint) {
         cutFingerprint[i - currentZero] = fingerprint[i];
     }
     return cutFingerprint;
-}
-
-vector<string> findFiles(const string &pathToDir, const string &extension) {
-    vector<string> sdfFiles;
-    for (const auto &entry: std::filesystem::recursive_directory_iterator(pathToDir)) {
-        if (entry.path().extension() == extension) {
-            cout << entry.path().string() << endl;
-            sdfFiles.push_back(entry.path().string());
-        }
-    }
-    return sdfFiles;
 }
 
 void createFingerprintCSVFromFile(const string &sdfFile) {
@@ -95,6 +83,41 @@ void createFingerprintCSVFromFile(const string &sdfFile) {
             cerr << e.what();
         }
     }
+}
+
+/**
+ * Merges many sdf files into one, named "0". Suitable for Splitter Tree.
+ * @param dir -- directory with sdf files
+ */
+void prepareSDFsForSplitterTree(const string &dir) {
+    auto indigoSessionPtr = IndigoSession::create();
+    string filename = dir + "/0";
+    if (dir.back() == '/')
+        filename = dir + "0";
+    ofstream fout(filename);
+    uint64_t cntMols = 0;
+    uint64_t cntSkipped = 0;
+    fout.write((char*)(&cntMols), sizeof(cntMols)); // Reserve space for bucket size
+    for (auto &sdfFile : findFiles(dir, ".sdf")) {
+        for (auto &mol: indigoSessionPtr->iterateSDFile(sdfFile)) {
+            try {
+                mol->aromatize();
+                int fingerprint = indigoFingerprint(mol->id(), "sub");
+                FullIndigoFingerprint fp(indigoToString(fingerprint));
+                IndigoFingerprint cutFP = cutZeroColumns(fp);
+                cutFP.saveBytes(fout);
+                fout << mol->smiles() << '\n';
+                ++cntMols;
+            }
+            catch (...) {
+                cntSkipped++;
+            }
+        }
+    }
+    fout.seekp(0, ios::beg); // Seek to the beginning of file
+    fout.write((char*)(&cntMols), sizeof(cntMols));
+    if (cntSkipped)
+        std::cerr << "Skipped " << cntSkipped << " molecules\n";
 }
 
 ABSL_FLAG(std::string, path_to_dir, "",
