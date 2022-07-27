@@ -3,5 +3,9 @@ dist/*
 .vscode/*
 cpp/build/*
 cpp/dist/*
-
+cpp/cmake-build-debug
+cpp/cmake-build-release
+cpp/third_party
 *.DS_Store
+data/*
+.idea
