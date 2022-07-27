@@ -5,6 +5,8 @@
 #include <cstddef>
 #include <vector>
 
+#include "Utils.h"
+
 class QtrIndigoFingerprint;
 
 namespace qtr {
@@ -26,7 +28,7 @@ public:
     explicit Fingerprint(const std::string &s) {
         for (size_t i = 0; i < s.size(); ++i) {
             size_t j = i * 4ull;
-            int currentSym = (s[i] >= 'a' && s[i] <= 'z') ? (s[i] - 'a' + 10) : (s[i] - '0');
+            int currentSym = chexToInt(s[i]);
             this->operator[](j) = currentSym & 1;
             this->operator[](j + 1) = currentSym & 2;
             this->operator[](j + 2) = currentSym & 4;
@@ -56,6 +58,15 @@ public:
     void saveBytes(std::ostream& out) const {
         auto toWrite = getBytes();
         out.write((char*)toWrite.data(), toWrite.size());
+    }
+
+    void readFrom(std::istream& in) {
+        for (uint64_t i = 0, j = 0;
+             i < sizeInBytes; ++i, j += BIT_IN_BYTE) { // TODO Read fingerprint with one read
+            auto curr = in.get();
+            for (uint64_t k = 0; k < BIT_IN_BYTE; ++k)
+                this->operator[](j + k) = (curr & (1ull << k));
+        }
     }
 };
 
