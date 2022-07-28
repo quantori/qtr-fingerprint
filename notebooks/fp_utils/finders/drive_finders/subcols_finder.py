@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import pandas as pd
-from typing import Iterable, Type
+from typing import Iterable, Type, Optional
 from abc import ABC, abstractmethod
-from pathlib import Path
 
 from fp_utils.finders.drive_finders.drive_finder import DriveFinder
 from fp_utils.finders.finder import Finder
@@ -23,21 +22,15 @@ class SubColsFinder(DriveFinder, ABC):
     def columns(self) -> Iterable[int]:
         raise NotImplementedError
 
-    @property
-    def df_path(self) -> Path:
-        return self.finder_path / ('df' + self.file_extension)
-
-    def __init__(self, df: pd.DataFrame, directory: PathType, finder_name: str, *args, **kwargs) -> None:
-        self.finder_path = Path(directory) / finder_name
-        self.finder_path.mkdir(parents=True, exist_ok=True)
-        self._pack(df, self.df_path)
+    def __init__(self, df: pd.DataFrame, directory: PathType, unique_id: Optional[str] = None, *args, **kwargs) -> None:
+        self.make_data_directory()
+        self._pack(df, self.data_directory)
         sub_df = df.loc[df.index, df.columns.isin(self.columns)]
         sub_df = sub_df[self.columns]
-        self.inner_finder = self.inner_finder_class(sub_df, self.finder_path, self.inner_finder_class.__name__, *args,
-                                                    **kwargs)
+        self.inner_finder = self.inner_finder_class(sub_df, self.data_directory, unique_id=None, *args, **kwargs)
 
     def find_all(self, fingerprint: pd.Series) -> Iterable[str]:
-        df = self._unpack(self.df_path)
+        df = self._unpack(self.data_directory)
         for answer in self.inner_finder.find_all(fingerprint[self.columns]):
             if is_sub_fingerprint(fingerprint, df.loc[answer]):
                 yield answer
