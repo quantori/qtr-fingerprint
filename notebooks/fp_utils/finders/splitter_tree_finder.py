@@ -3,15 +3,13 @@ from __future__ import annotations
 import pandas as pd
 from pathlib import Path
 from typing import List, Iterable, Optional, Tuple, Generator, Type
-from sklearn.neighbors import BallTree
 from abc import abstractmethod
 from fp_utils.consts import PathType
-from fp_utils.finders.drive_finder import DriveFinder
 from fp_utils.finders.finder import Finder
 from fp_utils.logger import Logger
 
 
-class SplitterTreeFinder(DriveFinder):
+class SplitterTreeFinder(Finder):
     split_value = 0.5
     leaf_id = -1
 
@@ -35,9 +33,9 @@ class SplitterTreeFinder(DriveFinder):
         self.finder_path.mkdir(parents=True, exist_ok=True)
         self.__tree = self.__build_tree(df, list(), self.max_depth, '', *args, **kwargs)
 
-    class Tree:
-        def __init__(self, base: SplitterTreeFinder, col_id: int, left: Optional[SplitterTreeFinder.Tree],
-                     right: Optional[SplitterTreeFinder.Tree], df: pd.DataFrame,
+    class Node:
+        def __init__(self, base: SplitterTreeFinder, col_id: int, left: Optional[SplitterTreeFinder.Node],
+                     right: Optional[SplitterTreeFinder.Node], df: pd.DataFrame,
                      tree_path: str, *args, **kwargs) -> None:
             self.base = base
             self.col_id = col_id
@@ -69,14 +67,14 @@ class SplitterTreeFinder(DriveFinder):
         return df_index_0, df_index_1, split_id
 
     def __build_tree(self, df: pd.DataFrame, used_cols: List[int], depth: int,
-                     node_path: str, *args, **kwargs) -> SplitterTreeFinder.Tree:
+                     node_path: str, *args, **kwargs) -> SplitterTreeFinder.Node:
         if len(df) < self.bucket_size or depth == 0:
             if len(df) == 0:
                 Logger.log("WARNING: empty bucket")
-            return self.Tree(base=self, col_id=self.leaf_id, left=None, right=None, df=df, tree_path=node_path)
+            return self.Node(base=self, col_id=self.leaf_id, left=None, right=None, df=df, tree_path=node_path)
 
         df_index_0, df_index_1, split_id = self.__split_df(df, used_cols)
         used_cols.append(split_id)
         left = self.__build_tree(df.loc[df_index_0], used_cols, depth - 1, node_path + '0', *args, **kwargs)
         right = self.__build_tree(df.loc[df_index_1], used_cols, depth - 1, node_path + '1', *args, **kwargs)
-        return self.Tree(self, split_id, left, right, df, node_path, *args, **kwargs)
+        return self.Node(self, split_id, left, right, df, node_path, *args, **kwargs)

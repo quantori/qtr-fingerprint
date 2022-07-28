@@ -3,7 +3,7 @@ import pandas as pd
 from typing import Iterable
 
 from fp_utils.consts import PathType
-from fp_utils.finders.subcols_finder import SubColsFinder
+from fp_utils.finders.drive_finders.subcols_finder import SubColsFinder
 
 
 class AdaptiveSubColsFinder(SubColsFinder, ABC):

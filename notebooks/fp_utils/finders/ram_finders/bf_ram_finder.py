@@ -1,7 +1,7 @@
 import pandas as pd
-import numpy as np
 from typing import Iterable
-from fp_utils.finders.ram_finder import RamFinder
+from fp_utils.finders.ram_finders.ram_finder import RamFinder
+from fp_utils.settings import is_sub_fingerprint
 
 
 class BFRamFinder(RamFinder):
@@ -10,5 +10,5 @@ class BFRamFinder(RamFinder):
 
     def find_all(self, fingerprint: pd.Series) -> Iterable[str]:
         for i, fp in enumerate(self.df.values):
-            if np.all(fingerprint.values <= fp):
+            if is_sub_fingerprint(fingerprint, fp):
                 yield self.df.index[i]

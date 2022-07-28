@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 import pandas as pd
-import numpy as np
 from typing import Iterable, Type
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-from fp_utils.finders.drive_finder import DriveFinder
+from fp_utils.finders.drive_finders.drive_finder import DriveFinder
 from fp_utils.finders.finder import Finder
 from fp_utils.consts import PathType
+from fp_utils.settings import is_sub_fingerprint
 
 
 class SubColsFinder(DriveFinder, ABC):
@@ -39,5 +39,5 @@ class SubColsFinder(DriveFinder, ABC):
     def find_all(self, fingerprint: pd.Series) -> Iterable[str]:
         df = self._unpack(self.df_path)
         for answer in self.inner_finder.find_all(fingerprint[self.columns]):
-            if np.all(fingerprint.values <= df.loc[answer].values):
+            if is_sub_fingerprint(fingerprint, df.loc[answer]):
                 yield answer

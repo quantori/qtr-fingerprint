@@ -1,9 +1,9 @@
 import pandas as pd
-import numpy as np
 from typing import Iterable
 from pathlib import Path
-from fp_utils.finders.drive_finder import DriveFinder
+from fp_utils.finders.drive_finders.drive_finder import DriveFinder
 from fp_utils.consts import PathType
+from fp_utils.settings import is_sub_fingerprint
 
 
 class BFDriveFinder(DriveFinder):
@@ -14,5 +14,5 @@ class BFDriveFinder(DriveFinder):
     def find_all(self, fingerprint: pd.Series) -> Iterable[str]:
         df = self._unpack(self.finder_path)
         for i, fp in enumerate(df.values):
-            if np.all(fingerprint.values <= fp):
+            if is_sub_fingerprint(fingerprint, fp):
                 yield df.index[i]

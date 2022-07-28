@@ -4,7 +4,7 @@ from sklearn.neighbors import BallTree
 from typing import Iterable
 
 from fp_utils.consts import PathType
-from fp_utils.finders.drive_finder import DriveFinder
+from fp_utils.finders.drive_finders.drive_finder import DriveFinder
 import pickle
 
 
