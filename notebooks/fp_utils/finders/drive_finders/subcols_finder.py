@@ -24,13 +24,13 @@ class SubColsFinder(DriveFinder, ABC):
 
     def __init__(self, df: pd.DataFrame, directory: PathType, unique_id: Optional[str] = None, *args, **kwargs) -> None:
         self.make_data_directory()
-        self._pack(df, self.data_directory)
+        self.packer.pack(df, self.index_file)
         sub_df = df.loc[df.index, df.columns.isin(self.columns)]
         sub_df = sub_df[self.columns]
         self.inner_finder = self.inner_finder_class(sub_df, self.data_directory, unique_id=None, *args, **kwargs)
 
     def find_all(self, fingerprint: pd.Series) -> Iterable[str]:
-        df = self._unpack(self.data_directory)
+        df = self.packer.unpack(self.index_file)
         for answer in self.inner_finder.find_all(fingerprint[self.columns]):
-            if is_sub_fingerprint(fingerprint, df.loc[answer]):
+            if is_sub_fingerprint(fingerprint.values, df.loc[answer]):
                 yield answer

@@ -9,10 +9,9 @@ from fp_utils.settings import is_sub_fingerprint
 
 class BFPDriveFinder(DriveFinder, ABC):
     def __init__(self, df: pd.DataFrame, directory: PathType, unique_id: Optional[str] = None, *args, **kwargs):
-        self.make_data_directory()
-        self._pack(df, self.index_file)
+        self.packer.pack(df, self.index_file)
 
     def find_all(self, fingerprint: pd.Series) -> Iterable[str]:
-        df = self._unpack(self.index_file)
-        d = df.parallel_apply(lambda row: is_sub_fingerprint(fingerprint, row), axis=1)
+        df = self.packer.unpack(self.index_file)
+        d = df.parallel_apply(lambda row: is_sub_fingerprint(fingerprint.values, row), axis=1)
         return d[d].index

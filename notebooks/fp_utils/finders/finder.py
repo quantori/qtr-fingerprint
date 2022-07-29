@@ -31,3 +31,7 @@ class Finder(ABC):
     @abstractmethod
     def find_all(self, fingerprint: pd.Series) -> Iterable[str]:
         raise NotImplementedError
+
+    def __hash__(self):
+        """Assume every finder is unique even if parameters are the same => hash == id"""
+        return id(self)

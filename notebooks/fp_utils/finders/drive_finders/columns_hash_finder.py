@@ -1,13 +1,13 @@
-from typing import Iterable, Generator, List, Type
+from typing import Iterable, Generator, List, Type, Optional
 from abc import ABC, abstractmethod
 import pandas as pd
-from pathlib import Path
 
 from fp_utils.consts import PathType
 from fp_utils.finders.finder import Finder
+from fp_utils.finders.drive_finders.drive_finder import DriveFinder
 
 
-class ColumnsHashFinder(Finder, ABC):
+class ColumnsHashFinder(DriveFinder, ABC):
     @property
     @abstractmethod
     def inner_finder_class(self) -> Type[Finder]:
@@ -18,9 +18,8 @@ class ColumnsHashFinder(Finder, ABC):
     def columns(self) -> List[int]:
         raise NotImplementedError
 
-    def __init__(self, df: pd.DataFrame, directory: PathType, finder_name: str, *args, **kwargs) -> None:
-        self.finder_path = Path(directory) / finder_name
-        self.finder_path.mkdir(parents=True, exist_ok=True)
+    def __init__(self, df: pd.DataFrame, directory: PathType, unique_id: Optional[str] = None, *args, **kwargs) -> None:
+        self.make_data_directory()
         hashes = pd.DataFrame(df.apply(self.__get_hash, axis=1), columns=['hash'])
         buckets = hashes.groupby('hash')
         self.inner_finders = dict()
@@ -29,8 +28,8 @@ class ColumnsHashFinder(Finder, ABC):
         self.hash_values = set(hash_values)
 
     def __save_func(self, bucket: pd.DataFrame, bucket_hash: int, *args, **kwargs) -> int:
-        inner_finder = self.inner_finder_class(bucket, directory=self.finder_path, finder_name=str(bucket_hash), *args,
-                                               **kwargs)
+        inner_finder = self.inner_finder_class(bucket, directory=self.data_directory, unique_id=str(bucket_hash),
+                                               *args, **kwargs)
         self.inner_finders[bucket_hash] = inner_finder
         return bucket_hash
 

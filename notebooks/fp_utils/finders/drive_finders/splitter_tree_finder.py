@@ -1,18 +1,17 @@
 from __future__ import annotations
 
 import pandas as pd
-from pathlib import Path
 from typing import List, Iterable, Optional, Tuple, Generator, Type
 from abc import abstractmethod
 from fp_utils.consts import PathType
+from fp_utils.finders.drive_finders.drive_finder import DriveFinder
 from fp_utils.finders.finder import Finder
 from fp_utils.logger import Logger
 
 
-class SplitterTreeFinder(Finder):
+class SplitterTreeFinder(DriveFinder):
     split_value = 0.5
     leaf_id = -1
-
     max_depth = 100
 
     @property
@@ -28,9 +27,8 @@ class SplitterTreeFinder(Finder):
     def find_all(self, fingerprint: pd.Series) -> Iterable[str]:
         return self.__tree.find(fingerprint, '')
 
-    def __init__(self, df: pd.DataFrame, directory: PathType, finder_name: str, *args, **kwargs) -> None:
-        self.finder_path = Path(directory) / finder_name
-        self.finder_path.mkdir(parents=True, exist_ok=True)
+    def __init__(self, df: pd.DataFrame, directory: PathType, unique_id: Optional[str] = None, *args, **kwargs) -> None:
+        self.make_data_directory()
         self.__tree = self.__build_tree(df, list(), self.max_depth, '', *args, **kwargs)
 
     class Node:
@@ -42,8 +40,8 @@ class SplitterTreeFinder(Finder):
             self.left = left
             self.right = right
             if self.is_leaf:
-                self.inner_finder = self.base.inner_finder_class(df=df, directory=self.base.finder_path,
-                                                                 finder_name=tree_path, *args, **kwargs)
+                self.inner_finder = self.base.inner_finder_class(df=df, directory=self.base.data_directory,
+                                                                 unique_id=tree_path, *args, **kwargs)
 
         @property
         def is_leaf(self) -> bool:

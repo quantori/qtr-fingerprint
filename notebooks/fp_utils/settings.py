@@ -27,8 +27,5 @@ def init_fp_utils() -> None:
     set_progress_bar(consts.pandarallel_progress_bar)
 
 
-def is_sub_fingerprint(sub_fingerprint: FingerprintType, meta_fingerprint: FingerprintType) -> bool:
-    sub_fingerprint = fingerprint_to_series(sub_fingerprint)
-    meta_fingerprint = fingerprint_to_series(meta_fingerprint)
-    return np.all(sub_fingerprint.values <= meta_fingerprint.values)
-
+def is_sub_fingerprint(sub_fingerprint: np.ndarray, meta_fingerprint: np.ndarray) -> bool:
+    return np.all(sub_fingerprint <= meta_fingerprint)

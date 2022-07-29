@@ -4,15 +4,15 @@ from typing import Any
 from fp_utils.consts import PathType
 
 
-class PackingMixin(ABC):
+class Packer(ABC):
     @staticmethod
     @abstractmethod
-    def _pack(obj: object, file_path: PathType) -> None:
+    def pack(obj: object, file_path: PathType) -> None:
         raise NotImplementedError
 
     @staticmethod
     @abstractmethod
-    def _unpack(file_path: PathType) -> Any:
+    def unpack(file_path: PathType) -> Any:
         raise NotImplementedError
 
     @property

@@ -9,5 +9,5 @@ class BFPRamFinder(RamFinder):
         self.df = df
 
     def find_all(self, fingerprint: pd.Series) -> Iterable[str]:
-        d = self.df.parallel_apply(lambda row: is_sub_fingerprint(fingerprint, row), axis=1)
+        d = self.df.parallel_apply(lambda row: is_sub_fingerprint(fingerprint.values, row), axis=1)
         return d[d].index

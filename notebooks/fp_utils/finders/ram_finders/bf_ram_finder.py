@@ -10,5 +10,5 @@ class BFRamFinder(RamFinder):
 
     def find_all(self, fingerprint: pd.Series) -> Iterable[str]:
         for i, fp in enumerate(self.df.values):
-            if is_sub_fingerprint(fingerprint, fp):
+            if is_sub_fingerprint(fingerprint.values, fp):
                 yield self.df.index[i]

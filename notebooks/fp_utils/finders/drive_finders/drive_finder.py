@@ -7,10 +7,10 @@ from typing import Optional
 
 from fp_utils.finders.finder import Finder
 from fp_utils.consts import PathType
-from fp_utils.packing_mixins.packing_mixin import PackingMixin
+from fp_utils.packers import Packer
 
 
-class DriveFinder(Finder, PackingMixin, ABC):
+class DriveFinder(Finder, ABC):
     """Keeps data on hard drive"""
 
     def __new__(cls, df: pd.DataFrame, directory: PathType, unique_id: Optional[str] = None, *args,
@@ -30,12 +30,17 @@ class DriveFinder(Finder, PackingMixin, ABC):
         raise NotImplementedError
 
     @property
+    @abstractmethod
+    def packer(self) -> Packer:
+        raise NotImplementedError
+
+    @property
     def data_directory(self) -> Path:
         return self._directory / self._unique_id
 
     @property
     def index_file(self) -> Path:
-        return self._directory / (self._unique_id + self.file_extension)
+        return self._directory / (self._unique_id + self.packer.file_extension)
 
     def make_data_directory(self) -> None:
         self.data_directory.mkdir(parents=True, exist_ok=True)
