@@ -12,19 +12,19 @@ from fp_utils import settings
 
 class FinderSpeedTester:
     def __init__(self, finders: Iterable[Finder]) -> None:
-        self.finders = finders
+        self.finders = list(finders)
 
     def test_one(self, fingerprint: FingerprintType, ans_count: Optional[int] = None,
                  verbose: bool = False) -> SpeedTestStat:
         fingerprint = settings.fingerprint_to_series(fingerprint)
-        measurements = dict()
+        stat = SpeedTestStat(dict((finder, list()) for finder in self.finders))
         for finder in self.finders:
-            catch_time = CatchTime(finder.__class__.__name__)
+            catch_time = CatchTime()
             with catch_time:
                 list(finder.find(fingerprint, ans_count))
-            measurements[finder.__class__] = [catch_time]
-            Logger.log(catch_time, verbose)
-        return SpeedTestStat(measurements)
+            stat += SpeedTestStat({finder: [catch_time.time]})
+            Logger.log(f'{catch_time.time:.3f} -- {stat.get_name(finder)}', verbose)
+        return stat
 
     def test_all(self, fingerprints: FingerprintsArrayType, ans_count: Optional[int] = None,
                  verbose: bool = False) -> SpeedTestStat:
@@ -32,7 +32,7 @@ class FinderSpeedTester:
         stat = SpeedTestStat()
         Logger.log('-----', verbose)
         for i, fingerprint in enumerate(fingerprints):
-            Logger.log(f'Test #{i + 1:03d}', verbose)
+            Logger.log(f'Test #{i:03d}', verbose)
             local_measurements = self.test_one(fingerprint, ans_count, verbose)
             stat += local_measurements
             Logger.log('-----', verbose)
