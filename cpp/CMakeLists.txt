@@ -19,6 +19,7 @@ SET(ABSL_PROPAGATE_CXX_STD ON)
 
 add_subdirectory(app)
 add_subdirectory(fingerprints)
+add_subdirectory(splitter_tree)
 add_subdirectory(qtrlib)
 add_subdirectory(third_party/Indigo)
 add_subdirectory(third_party/glog)

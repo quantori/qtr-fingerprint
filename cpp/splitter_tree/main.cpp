@@ -8,45 +8,19 @@
 #include <glog/logging.h>
 
 #include <chrono>
-#include <unordered_map>
-#include <fstream>
 #include <iostream>
-#include <sstream>
 
-#include <omp.h>
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 
 #include "Utils.h"
 #include "Fingerprint.h"
+#include "SplitterTree.h"
+#include "ColumnsChooser.h"
 
 using namespace indigo_cpp;
 using namespace qtr;
 using namespace std;
-
-static void hexToBin(const char *hexdec, ostringstream &out) {
-    const static std::unordered_map<char, std::string> HEX_TO_DEC = {
-            {'0', "0000"},
-            {'1', "0001"},
-            {'2', "0010"},
-            {'3', "0011"},
-            {'4', "0100"},
-            {'5', "0101"},
-            {'6', "0110"},
-            {'7', "0111"},
-            {'7', "0111"},
-            {'8', "1000"},
-            {'9', "1001"},
-            {'a', "1010"},
-            {'b', "1011"},
-            {'c', "1100"},
-            {'d', "1101"},
-            {'e', "1110"},
-            {'f', "1111"}
-    };
-    for (int i = 0; hexdec[i]; ++i)
-        out << HEX_TO_DEC.at(hexdec[i]);
-}
 
 IndigoFingerprint cutZeroColumns(FullIndigoFingerprint fingerprint) {
     IndigoFingerprint cutFingerprint;
@@ -67,38 +41,20 @@ IndigoFingerprint cutZeroColumns(FullIndigoFingerprint fingerprint) {
     return cutFingerprint;
 }
 
-void createFingerprintCSVFromFile(const string &sdfFile) {
-    auto indigoSessionPtr = IndigoSession::create();
-    ofstream fout(sdfFile + ".csv");
-    for (auto &mol: indigoSessionPtr->iterateSDFile(sdfFile)) {
-        try {
-            ostringstream fingerprint_line;
-            mol->aromatize();
-            fingerprint_line << mol->smiles() << " ";
-            int fingerprint = indigoFingerprint(mol->id(), "sub");
-            hexToBin(indigoToString(fingerprint), fingerprint_line);
-            fout << fingerprint_line.str() << endl;
-        }
-        catch (const exception &e) {
-            cerr << e.what();
-        }
-    }
-}
-
 /**
  * Merges many sdf files into one, named "0". Suitable for Splitter Tree.
  * @param dir -- directory with sdf files
  */
 void prepareSDFsForSplitterTree(const string &dir) {
     auto indigoSessionPtr = IndigoSession::create();
-    string filename = dir + "/0";
+    string filename = dir + "/buckets/0";
     if (dir.back() == '/')
-        filename = dir + "0";
+        filename = dir + "buckets/0";
     ofstream fout(filename);
     uint64_t cntMols = 0;
     uint64_t cntSkipped = 0;
-    fout.write((char*)(&cntMols), sizeof(cntMols)); // Reserve space for bucket size
-    for (auto &sdfFile : findFiles(dir, ".sdf")) {
+    fout.write((char *) (&cntMols), sizeof(cntMols)); // Reserve space for bucket size
+    for (auto &sdfFile: findFiles(dir, ".sdf")) {
         for (auto &mol: indigoSessionPtr->iterateSDFile(sdfFile)) {
             try {
                 mol->aromatize();
@@ -115,7 +71,7 @@ void prepareSDFsForSplitterTree(const string &dir) {
         }
     }
     fout.seekp(0, ios::beg); // Seek to the beginning of file
-    fout.write((char*)(&cntMols), sizeof(cntMols));
+    fout.write((char *) (&cntMols), sizeof(cntMols));
     if (cntSkipped)
         std::cerr << "Skipped " << cntSkipped << " molecules\n";
 }
@@ -128,12 +84,16 @@ int main(int argc, char *argv[]) {
     absl::ParseCommandLine(argc, argv);
     std::string pathToDir = absl::GetFlag(FLAGS_path_to_dir);
     emptyArgument(pathToDir, "Please specify path_to_dir option");
-    vector<string> sdfFiles = findFiles(pathToDir, ".sdf");
     auto startTime = std::chrono::high_resolution_clock::now();
-#pragma omp parallel for
-    for (int i = 0; i < sdfFiles.size(); ++i) {
-        createFingerprintCSVFromFile(sdfFiles[i]);
-    }
+    prepareSDFsForSplitterTree(pathToDir);
+    std::chrono::duration<double> mediumSec = std::chrono::high_resolution_clock::now() - startTime;
+    std::cout << "Done preparing in time: " << mediumSec.count() << "s\n";
+    SplitterTree tree("/home/Vsevolod.Vaskin/qtr-fingerprint/data/buckets/", "0");
+    tree.split(30, 100);
+    ofstream fout("/home/Vsevolod.Vaskin/qtr-fingerprint/data/tree");
+    tree.saveTo(fout);
+    auto chooser = qtr::ColumnsChooser("/home/Vsevolod.Vaskin/qtr-fingerprint/data/buckets/", qtr::correlationColumnsChoose);
+    chooser.choose();
     auto endTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_seconds = endTime - startTime;
     std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
