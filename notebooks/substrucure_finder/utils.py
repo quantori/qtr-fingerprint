@@ -24,16 +24,21 @@ def is_sub_fingerprint(sub_fingerprint: Fingerprint, meta_fingerprint: Fingerpri
 
 
 def bucket_path(data_path: Path, bucket: int) -> Path:
-    return data_path / (str(bucket) + '.pickle')
+    return data_path / 'buckets' / (str(bucket) + '.pickle')
 
 
 def raw_bucket_path(data_path: Path, bucket: int) -> Path:
-    return data_path / str(bucket)
+    return data_path / 'raw_buckets' / str(bucket)
 
 
 def splitter_tree_path(data_path: Path) -> Path:
-    raise data_path / 'tree'
+    return data_path / 'tree'
 
 
 def columns_path(data_path: Path, bucket: int) -> Path:
-    return data_path / (str(bucket) + 'OrderColumns')
+    return data_path / 'raw_buckets' / (str(bucket) + 'OrderColumns.txt')
+
+
+def byte_to_bits(byte: int) -> str:
+    assert 0 <= byte < 256
+    return bin(byte)[2::].rjust(8, '0')[::-1]

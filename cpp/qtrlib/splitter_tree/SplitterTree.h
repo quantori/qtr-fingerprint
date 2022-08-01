@@ -23,8 +23,8 @@ namespace qtr {
         static std::atomic_uint64_t _countOfNodes; // default set to zero, increases after each constructor call
         uint64_t _nodeNumber;
         std::string _filename;
+        std::filesystem::path _dir; // location dir
         size_t _depth;
-        std::string _dir; // location dir
 
         uint64_t _splitBit = -1;
         SplitterTree *_leftChild = nullptr; // go left if bit is zero
@@ -37,11 +37,11 @@ namespace qtr {
 
         /**
          * Not building tree, just save data for future splitting.
-         * @param dir directory, so all file names will be "dir + filename"
+         * @param dir directory, so all file names will be "dir / filename"
          * @param filename name of file with data
          * @param depth depth of node
          */
-        inline SplitterTree(const std::string &dir, const std::string &filename, size_t depth = 0) :
+        inline SplitterTree(const std::filesystem::path &dir, const std::string &filename, size_t depth = 0) :
                 _dir(dir), _filename(filename), _depth(depth) {
             _nodeNumber = _countOfNodes++;
         }
@@ -68,11 +68,7 @@ namespace qtr {
          */
         void saveTo(std::ostream &out, bool writeSize = true);
 
-        /**
-         * Node should be a leaf
-         * @return vector of column ids, take X from the beginning, to get mostly not correlating
-         */
-        std::vector<int> getNonCorrelatingColumns(); // TODO probably not working
+        // TODO delete unused functions connected with correlated columns
 
         /**
          * Saves mostly non correlating order of columns for each leaf, file format:

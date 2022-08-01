@@ -7,14 +7,17 @@ from substrucure_finder.splitter_tree import SplitterTree
 from substrucure_finder import consts
 from substrucure_finder.bucket_search_engine import BucketSearchEngine
 from substrucure_finder.consts import Fingerprint
+from substrucure_finder import utils
 
 
 class Loader:
-    def __init__(self, file: Path) -> None:
+    def __init__(self, file: Path):
+        assert file.exists()
         self.file = file
 
     def __enter__(self):
         self.stream = self.file.open('rb')
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.stream.close()
@@ -41,20 +44,22 @@ class Loader:
 
     def fingerprint(self) -> Fingerprint:
         fingerprint_bytes = self.stream.read(consts.fingerprint_size_in_bytes)
-        fingerprint_bin_str = bin(int.from_bytes(fingerprint_bytes, byteorder=consts.byteorder, signed=False))[
-                              2:2 + consts.fingerprint_size]
+        assert len(fingerprint_bytes) == consts.fingerprint_size_in_bytes
+        fingerprint_bin_str = ''.join(map(utils.byte_to_bits, fingerprint_bytes))
+        assert len(fingerprint_bin_str) == consts.fingerprint_size
         # TODO check byteorder and correctness of transformation above
         fingerprint = Fingerprint(np.array(list(map(int, fingerprint_bin_str))))
+        assert len(fingerprint) == consts.fingerprint_size
         return fingerprint
 
     def smiles(self) -> str:
         symbols = []
         while True:
             symbol = self.stream.read(1)
-            if symbol == '\n' or not symbol:
+            if len(symbol) == 0 or symbol[0] == ord('\n'):
                 break
-            symbols.append(symbol)
-        return ''.join(str(symbols))
+            symbols.append(symbol[0])
+        return ''.join(map(lambda x: chr(x), symbols))
 
     def raw_bucket(self) -> Mapping[str, Fingerprint]:
         molecules_number = int.from_bytes(self.stream.read(8), byteorder=consts.byteorder, signed=False)
@@ -62,8 +67,9 @@ class Loader:
         for _ in range(molecules_number):
             fingerprint = self.fingerprint()
             smiles = self.smiles()
+            assert len(fingerprint) == consts.fingerprint_size
             result[smiles] = fingerprint
         return result
 
     def columns(self) -> List[int]:
-        return list(map(int, str(self.stream.read()).split()))
+        return list(map(int, str(self.stream.read().decode('utf-8')).split()))

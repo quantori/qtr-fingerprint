@@ -18,7 +18,7 @@ int chexToInt(char letter) {
     return letter >= '0' && letter <= '9' ? letter - '0' : letter - 'a' + 10;
 }
 
-std::vector<std::string> findFiles(const std::string &pathToDir, const std::string &extension) {
+std::vector<std::string> findFiles(const std::filesystem::path &pathToDir, const std::string &extension) {
     std::vector<std::string> sdfFiles;
     for (const auto &entry: std::filesystem::recursive_directory_iterator(pathToDir)) {
         if (entry.path().extension() == extension) {

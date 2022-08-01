@@ -13,10 +13,10 @@ std::atomic_uint64_t qtr::SplitterTree::_countOfNodes = 0;
  * @param func
  */
 template<typename Functor>
-void forEachLine(const string &filename, bool readSmiles, Functor &&func) {
-    ifstream input(filename);
+void forEachLine(const filesystem::path &filePath, bool readSmiles, Functor &&func) {
+    ifstream input(filePath);
     if (input.bad()) {
-        std::cerr << "smth with " << filename << " file\n";
+        std::cerr << "smth with " << filePath.string() << " file\n";
         return;
     }
     uint64_t cntRecords;
@@ -44,7 +44,7 @@ uint64_t SplitterTree::findBestBitToSplit() {
     size_t countOfBitsInFP = fromBytesToBits(IndigoFingerprint::sizeInBytes);
     uint64_t onesInColumn[countOfBitsInFP];
     memset(onesInColumn, 0, sizeof(onesInColumn));
-    forEachLine(_dir + _filename, false,
+    forEachLine(_dir / _filename, false,
                 [&countOfRecords, &countOfBitsInFP, &onesInColumn](const IndigoFingerprint &fp, const string &_) {
                     ++countOfRecords;
                     for (size_t i = 0; i < countOfBitsInFP; ++i)
@@ -94,11 +94,11 @@ uint64_t SplitterTree::findBestBitToSplit() {
 std::pair<uint64_t, uint64_t> SplitterTree::prepareFilesForChildren(uint64_t bitSplit) {
     uint64_t sizeLeft = 0;
     uint64_t sizeRight = 0;
-    ofstream outLeft(_dir + _leftChild->_filename);
-    ofstream outRight(_dir + _rightChild->_filename);
+    ofstream outLeft(_dir / _leftChild->_filename);
+    ofstream outRight(_dir / _rightChild->_filename);
     outLeft.write((char *) (&sizeLeft), sizeof(sizeLeft));
     outRight.write((char *) (&sizeRight), sizeof(sizeRight));
-    forEachLine(_dir + _filename, true,
+    forEachLine(_dir / _filename, true,
                 [&outLeft, &outRight, &bitSplit, &sizeLeft, &sizeRight](const IndigoFingerprint &fp,
                                                                         const string &smiles) {
                     ofstream *writeTo = &outLeft;
@@ -115,7 +115,7 @@ std::pair<uint64_t, uint64_t> SplitterTree::prepareFilesForChildren(uint64_t bit
     outRight.seekp(0, ios::beg);
     outRight.write((char *) (&sizeRight), sizeof(sizeRight));
 
-    remove((_dir + _filename).c_str()); // Delete current file
+    remove((_dir / _filename).c_str()); // Delete current file
     return {sizeLeft, sizeRight};
 }
 
