@@ -8,7 +8,6 @@
 #include <glog/logging.h>
 
 #include <chrono>
-#include <unordered_map>
 #include <iostream>
 
 #include "absl/flags/flag.h"
@@ -17,6 +16,7 @@
 #include "Utils.h"
 #include "Fingerprint.h"
 #include "SplitterTree.h"
+#include "ColumnsChooser.h"
 
 using namespace indigo_cpp;
 using namespace qtr;
@@ -47,9 +47,9 @@ IndigoFingerprint cutZeroColumns(FullIndigoFingerprint fingerprint) {
  */
 void prepareSDFsForSplitterTree(const string &dir) {
     auto indigoSessionPtr = IndigoSession::create();
-    string filename = dir + "/0";
+    string filename = dir + "/buckets/0";
     if (dir.back() == '/')
-        filename = dir + "0";
+        filename = dir + "buckets/0";
     ofstream fout(filename);
     uint64_t cntMols = 0;
     uint64_t cntSkipped = 0;
@@ -88,11 +88,12 @@ int main(int argc, char *argv[]) {
     prepareSDFsForSplitterTree(pathToDir);
     std::chrono::duration<double> mediumSec = std::chrono::high_resolution_clock::now() - startTime;
     std::cout << "Done preparing in time: " << mediumSec.count() << "s\n";
-    SplitterTree tree("/home/buyolitsez/CLionProjects/qtr-fingerprint/data/", "0");
+    SplitterTree tree("/home/Vsevolod.Vaskin/qtr-fingerprint/data/buckets/", "0");
     tree.split(30, 100);
-    ofstream fout("/home/buyolitsez/CLionProjects/qtr-fingerprint/data/tree");
+    ofstream fout("/home/Vsevolod.Vaskin/qtr-fingerprint/data/tree");
     tree.saveTo(fout);
-//    tree.saveNonCorrelatingColumnInEachBucket();
+    auto chooser = qtr::ColumnsChooser("/home/Vsevolod.Vaskin/qtr-fingerprint/data/buckets/", qtr::correlationColumnsChoose);
+    chooser.choose();
     auto endTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_seconds = endTime - startTime;
     std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";

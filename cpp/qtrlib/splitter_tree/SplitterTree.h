@@ -31,10 +31,8 @@ namespace qtr {
         SplitterTree *_rightChild = nullptr; // go right if bit is one
     public:
         inline ~SplitterTree() {
-            if (_leftChild != nullptr)
-                delete _leftChild;
-            if (_rightChild != nullptr)
-                delete _rightChild;
+            delete _leftChild;
+            delete _rightChild;
         }
 
         /**
@@ -63,7 +61,7 @@ namespace qtr {
          * count of nodes in tree, and then each node like 4 unsigned integral types in a row, without "|",
          * _nodeNumber|_splitBit|_leftChild->number|_rightChild->number
          *
-         * if _leftChild is null,
+         * if _leftChild is null,x`
          * than we take it's number as (uint64_t)-1
          * @param out
          * @param writeSize if false, than count of nodes, wont be wrote
