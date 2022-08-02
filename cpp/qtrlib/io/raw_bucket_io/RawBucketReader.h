@@ -16,7 +16,7 @@ namespace qtr {
         explicit RawBucketReader(std::istream *inStream);
 
         explicit RawBucketReader(const std::filesystem::path &fileName) :
-                RawBucketReader(new std::ifstream(fileName.c_str())) {};
+                RawBucketReader(new std::ifstream(fileName)) {};
 
         RawBucketReader(const RawBucketReader &bucketLoader) = delete;
 
