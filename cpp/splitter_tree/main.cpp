@@ -17,7 +17,7 @@
 #include "Utils.h"
 #include "Fingerprint.h"
 #include "SplitterTree.h"
-#include "ColumnsChooser.h"
+#include "ColumnsChoice.h"
 
 using namespace indigo_cpp;
 using namespace qtr;
@@ -118,8 +118,8 @@ int main(int argc, char *argv[]) {
     std::cout << "Splitter tree is built in time: " << buildSplitterTreeTime.count() << '\n';
 
     // Choose minimum correlated columns
-    auto columnsChooser = ColumnsChooser(rawBucketsDir,qtr::correlationColumnsChoose);
-    columnsChooser.choose();
+    ColumnsChooser<qtr::PearsonCorrelationChoiceFunc> columnsChooser(rawBucketsDir, qtr::PearsonCorrelationChoiceFunc());
+    columnsChooser.handleRawBuckets();
     auto timePoint3 = now();
     duration chooseMinCorrColsTime = timePoint3 - timePoint2;
     std::cout << "Columns are chosen in time: " << chooseMinCorrColsTime.count() << '\n';
