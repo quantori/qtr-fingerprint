@@ -32,12 +32,11 @@ namespace qtr {
         delete _inStream;
     }
 
-    std::vector<bucket_value_t> RawBucketReader::readAll() {
-        std::vector<bucket_value_t> rawBucket;
+    std::vector<raw_bucket_value_t> RawBucketReader::readAll() {
+        std::vector<raw_bucket_value_t> rawBucket;
         std::copy(this->begin(), this->end(), std::back_inserter(rawBucket));
         return rawBucket;
     }
-
 
     bool RawBucketReader::Iterator::isEnd() const {
         return _reader == nullptr || _reader->_bucketsInStream == 0;

@@ -1,15 +1,5 @@
 #pragma once
 
-#include <utility>
-#include <string>
-
-#include "Fingerprint.h"
-
-namespace qtr {
-
-    using bucket_value_t = typename std::pair<std::string, qtr::IndigoFingerprint>;
-
-} // namespace qtr
-
-#include "RawBucketReader.h"
-#include "RawBucketWriter.h"
+#include "io/raw_bucket_io/RawBucketIOConsts.h"
+#include "io/raw_bucket_io/RawBucketReader.h"
+#include "io/raw_bucket_io/RawBucketWriter.h"

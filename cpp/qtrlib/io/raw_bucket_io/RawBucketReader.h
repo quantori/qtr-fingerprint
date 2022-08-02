@@ -26,7 +26,7 @@ namespace qtr {
         public:
             using iterator_category = std::input_iterator_tag;
             using difference_type = void;
-            using value_type = qtr::bucket_value_t;
+            using value_type = qtr::raw_bucket_value_t;
             using pointer = value_type *;
             using reference = value_type &;
 
@@ -51,9 +51,9 @@ namespace qtr {
             bool _isRead;
         };
 
-        bucket_value_t readOne();
+        raw_bucket_value_t readOne();
 
-        std::vector<bucket_value_t> readAll();
+        std::vector<raw_bucket_value_t> readAll();
 
         Iterator begin();
 

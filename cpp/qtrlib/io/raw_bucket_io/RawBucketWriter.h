@@ -13,7 +13,7 @@ namespace qtr {
         explicit RawBucketWriter(std::ostream *outStream);
 
         explicit RawBucketWriter(const std::filesystem::path &fileName) :
-                RawBucketWriter(new std::ofstream(fileName.c_str())) {};
+                RawBucketWriter(new std::ofstream(fileName)) {};
 
         RawBucketWriter(const RawBucketWriter &bucketWriter) = delete;
 
@@ -24,7 +24,7 @@ namespace qtr {
             struct Proxy {
                 Proxy(RawBucketWriter::Iterator &it) : _iterator(it) {};
 
-                Proxy &operator=(const bucket_value_t &value);
+                Proxy &operator=(const raw_bucket_value_t &value);
 
                 RawBucketWriter::Iterator &_iterator;
             };
@@ -35,7 +35,7 @@ namespace qtr {
         public:
             using iterator_category = std::output_iterator_tag;
             using difference_type = void;
-            using value_type = bucket_value_t;
+            using value_type = raw_bucket_value_t;
             using pointer = value_type *;
             using reference = value_type &;
 
@@ -56,9 +56,9 @@ namespace qtr {
             bool isEnd() const;
         };
 
-        void write(const bucket_value_t &value);
+        void write(const raw_bucket_value_t &value);
 
-        void write(const std::vector<bucket_value_t> &values);
+        void write(const std::vector<raw_bucket_value_t> &values);
 
         Iterator begin();
 

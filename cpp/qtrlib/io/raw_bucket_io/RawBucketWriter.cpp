@@ -11,7 +11,7 @@ namespace qtr {
         delete _outStream;
     }
 
-    void RawBucketWriter::write(const bucket_value_t &value) {
+    void RawBucketWriter::write(const raw_bucket_value_t &value) {
         _writtenNumber++;
         auto &[smiles, fingerprint] = value;
         fingerprint.saveBytes(*_outStream);
@@ -26,11 +26,11 @@ namespace qtr {
         return {};
     }
 
-    void RawBucketWriter::write(const std::vector<bucket_value_t> &values) {
+    void RawBucketWriter::write(const std::vector<raw_bucket_value_t> &values) {
         std::copy(values.begin(), values.end(), this->begin());
     }
 
-    RawBucketWriter::Iterator::Proxy &RawBucketWriter::Iterator::Proxy::operator=(const bucket_value_t &value) {
+    RawBucketWriter::Iterator::Proxy &RawBucketWriter::Iterator::Proxy::operator=(const raw_bucket_value_t &value) {
         _iterator._writer->write(value);
         return *this;
     }
