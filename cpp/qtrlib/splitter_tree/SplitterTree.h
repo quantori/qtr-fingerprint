@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include <string>
+#include <utility>
 #include <vector>
 #include <fstream>
 #include <cstdio>
@@ -41,8 +42,8 @@ namespace qtr {
          * @param filename name of file with data
          * @param depth depth of node
          */
-        inline SplitterTree(const std::filesystem::path &dir, const std::string &filename, size_t depth = 0) :
-                _dir(dir), _filename(filename), _depth(depth) {
+        inline SplitterTree(std::filesystem::path dir, std::string filename, size_t depth = 0) :
+                _dir(std::move(dir)), _filename(std::move(filename)), _depth(depth) {
             _nodeNumber = _countOfNodes++;
         }
 
@@ -67,16 +68,6 @@ namespace qtr {
          * @param writeSize if false, than count of nodes, wont be wrote
          */
         void saveTo(std::ostream &out, bool writeSize = true);
-
-        // TODO delete unused functions connected with correlated columns
-
-        /**
-         * Saves mostly non correlating order of columns for each leaf, file format:
-         * filename: leaf->_filenameOrderColumns, for example: "1OrderColumns"
-         * and inside each file we have an order of columns, size_t numbers split with a space
-         * Example: "5 2 3 1 4 0"
-         */
-        void saveNonCorrelatingColumnInEachBucket();
 
         /**
          * @return count of nodes in a tree
@@ -114,8 +105,6 @@ namespace qtr {
          */
         std::vector<std::string>
         splitInChildren(uint64_t sizeLeft, uint64_t sizeRight, size_t maxDepth, uint64_t minCountInNode);
-
-        std::vector<int> getNonCorrelatingColumns();
     };
 
 }

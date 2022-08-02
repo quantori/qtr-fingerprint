@@ -130,10 +130,10 @@ SplitterTree::splitInChildren(uint64_t sizeLeft, uint64_t sizeRight, size_t maxD
     };
     if (sizeLeft != 0 && sizeRight != 0) {
         if (_depth < COUNT_THREADS_POW) { // Run splitting in children async
-            auto futureLeftSplitted = async(launch::async, launch, _leftChild, sizeLeft);
-            auto futureRightSplitted = async(launch::async, launch, _rightChild, sizeRight);
-            leftSplitted = std::move(futureLeftSplitted.get());
-            rightSplited = std::move(futureRightSplitted.get());
+            auto futureLeftSplit = async(launch::async, launch, _leftChild, sizeLeft);
+            auto futureRightSplit = async(launch::async, launch, _rightChild, sizeRight);
+            leftSplitted = std::move(futureLeftSplit.get());
+            rightSplited = std::move(futureRightSplit.get());
         } else { // Not async
             leftSplitted = std::move(launch(_leftChild, sizeLeft));
             rightSplited = std::move(launch(_rightChild, sizeRight));
@@ -180,77 +180,6 @@ void SplitterTree::saveTo(std::ostream &out, bool writeSize) {
         _leftChild->saveTo(out, false);
     if (_rightChild != nullptr)
         _rightChild->saveTo(out, false);
-}
-
-vector<int> SplitterTree::getNonCorrelatingColumns() {
-    const size_t countOfColumns = fromBytesToBits(IndigoFingerprint::sizeInBytes);
-    double expectedValue[countOfColumns];
-    vector<IndigoFingerprint> prints;
-    prints.reserve(5000); // somehow get count of records from file
-    forEachLine(_dir / _filename, false, [&expectedValue, &prints](const IndigoFingerprint &fp, const string &_) {
-        for (size_t i = 0; i < countOfColumns; ++i)
-            expectedValue[i] += fp[i];
-        prints.emplace_back(fp);
-    });
-    for (size_t i = 0; i < countOfColumns; ++i)
-        expectedValue[i] /= (double) prints.size();
-
-    double *correlation = new double[countOfColumns * countOfColumns];
-    auto getCorrelation = [&correlation](size_t i, size_t j) -> double & {
-        return correlation[i * countOfColumns + j];
-    };
-    for (size_t i = 0; i < countOfColumns; ++i) { // TODO parallelize? maybe if we have small amount of leaves [1]
-        for (size_t j = i + 1; j < countOfColumns; ++j) {
-            double diffPairMul = 0;
-            double diffXSquared = 0;
-            double diffYSquared = 0;
-            for (const auto &fp: prints) { // TODO save in different way and vectorize
-                double diffX = double(fp[i]) - expectedValue[i];
-                double diffY = double(fp[j]) - expectedValue[j];
-                diffPairMul += diffX * diffY;
-                diffXSquared += diffX * diffX;
-                diffYSquared += diffY * diffY;
-            }
-            getCorrelation(i, j) = fabs(diffPairMul) / sqrt(fabs(diffXSquared * diffYSquared));
-            getCorrelation(j, i) = getCorrelation(i, j);
-        }
-        getCorrelation(i, i) = 0;
-    }
-    vector<pair<double, int>> result(countOfColumns); // Correlation coefficient and it's column number
-    for (size_t i = 0; i < countOfColumns; ++i) // TODO see [1]
-        result[i] = {*max_element(correlation + i * countOfColumns, correlation + (i + 1) * countOfColumns),
-                     i};
-    sort(result.begin(), result.end());
-    vector<int> numbers(countOfColumns);
-    for (size_t i = 0; i < countOfColumns; ++i)
-        numbers[i] = result[i].second;
-    delete[] correlation;
-    return numbers;
-}
-
-void SplitterTree::saveNonCorrelatingColumnInEachBucket() {
-    if (_leftChild == nullptr && _rightChild == nullptr) { // it's a leaf
-        ofstream out(_dir / _filename / "OrderColumns");
-        auto columnOrder = getNonCorrelatingColumns();
-        for (auto &column: columnOrder)
-            out << column << ' ';
-    } else {
-        if (_depth < COUNT_THREADS_POW) { // we have free threads
-            future<void> waitLeft = async([]() {}); // just fill with nothing
-            future<void> waitRight = async([]() {});
-            if (_leftChild != nullptr)
-                waitLeft = async(launch::async, &SplitterTree::saveNonCorrelatingColumnInEachBucket, _leftChild);
-            if (_rightChild != nullptr)
-                waitRight = async(launch::async, &SplitterTree::saveNonCorrelatingColumnInEachBucket, _rightChild);
-            waitLeft.get();
-            waitRight.get();
-        } else {
-            if (_leftChild != nullptr)
-                _leftChild->saveNonCorrelatingColumnInEachBucket();
-            if (_rightChild != nullptr)
-                _rightChild->saveNonCorrelatingColumnInEachBucket();
-        }
-    }
 }
 
 uint64_t SplitterTree::size() const {
