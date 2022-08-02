@@ -21,6 +21,7 @@ target_include_directories(${This}
         PUBLIC fingerprints
         PUBLIC splitter_tree
         PUBLIC columns_choosing
+        PUBLIC io
         )
 
 target_link_libraries(${This} glog::glog)

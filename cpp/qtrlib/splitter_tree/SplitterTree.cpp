@@ -148,7 +148,7 @@ SplitterTree::splitInChildren(uint64_t sizeLeft, uint64_t sizeRight, size_t maxD
 
 vector<string> SplitterTree::split(size_t maxDepth, uint64_t minCountInNode) {
     if (_depth >= maxDepth)
-        return {_dir + _filename};
+        return {_dir / _filename};
 
     uint64_t bestBitSplit = findBestBitToSplit();
     _splitBit = bestBitSplit;
@@ -187,7 +187,7 @@ vector<int> SplitterTree::getNonCorrelatingColumns() {
     double expectedValue[countOfColumns];
     vector<IndigoFingerprint> prints;
     prints.reserve(5000); // somehow get count of records from file
-    forEachLine(_dir + _filename, false, [&expectedValue, &prints](const IndigoFingerprint &fp, const string &_) {
+    forEachLine(_dir / _filename, false, [&expectedValue, &prints](const IndigoFingerprint &fp, const string &_) {
         for (size_t i = 0; i < countOfColumns; ++i)
             expectedValue[i] += fp[i];
         prints.emplace_back(fp);
@@ -230,7 +230,7 @@ vector<int> SplitterTree::getNonCorrelatingColumns() {
 
 void SplitterTree::saveNonCorrelatingColumnInEachBucket() {
     if (_leftChild == nullptr && _rightChild == nullptr) { // it's a leaf
-        ofstream out(_dir + _filename + "OrderColumns");
+        ofstream out(_dir / _filename / "OrderColumns");
         auto columnOrder = getNonCorrelatingColumns();
         for (auto &column: columnOrder)
             out << column << ' ';

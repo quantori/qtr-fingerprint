@@ -114,6 +114,8 @@ namespace qtr {
          */
         std::vector<std::string>
         splitInChildren(uint64_t sizeLeft, uint64_t sizeRight, size_t maxDepth, uint64_t minCountInNode);
+
+        std::vector<int> getNonCorrelatingColumns();
     };
 
 }
