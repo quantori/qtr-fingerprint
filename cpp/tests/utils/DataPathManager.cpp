@@ -8,9 +8,7 @@ namespace qtr
 {
     path DataPathManager::getDataDir()
     {
-        const path currentDir = testing::UnitTest::GetInstance()->original_working_dir();
-        const path dataDir = currentDir / path("../../../data");
-        return dataDir;
+        return _dataDirPath;
     }
 
     path DataPathManager::getBigDataDir()
@@ -18,8 +16,9 @@ namespace qtr
         return _bigDataDirPath;
     }
 
-    void DataPathManager::init(const path &bigDataDirPath)
+    void DataPathManager::init(const path &dataDirPath, const path &bigDataDirPath)
     {
+        _dataDirPath = dataDirPath;
         _bigDataDirPath = bigDataDirPath;
     }
 }

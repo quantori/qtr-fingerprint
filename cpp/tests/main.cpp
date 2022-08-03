@@ -6,6 +6,9 @@
 
 #include "utils/GTestEnvironment.h"
 
+ABSL_FLAG(std::string, data_dir_path, "",
+          "Path to data dir");
+
 ABSL_FLAG(std::string, big_data_dir_path, "",
           "Path to big data dir");
 
@@ -16,7 +19,8 @@ int main(int argc, char **argv)
 
     absl::ParseCommandLine(argc, argv);
     std::string bigDataDirPath = absl::GetFlag(FLAGS_big_data_dir_path);
+    std::string dataDirPath = absl::GetFlag(FLAGS_data_dir_path);
 
-    ::testing::AddGlobalTestEnvironment(new qtr::GTestEnvironment(bigDataDirPath));
+    ::testing::AddGlobalTestEnvironment(new qtr::GTestEnvironment(dataDirPath, bigDataDirPath));
     return RUN_ALL_TESTS();
 }

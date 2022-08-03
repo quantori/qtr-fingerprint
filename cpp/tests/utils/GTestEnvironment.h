@@ -9,10 +9,11 @@ namespace qtr
     class GTestEnvironment final : public testing::Environment
     {
     public:
-        GTestEnvironment(const std::filesystem::path &bigDataDirPath);
+        GTestEnvironment(std::filesystem::path dataDirPath, std::filesystem::path bigDataDirPath);
         void SetUp() override;
 
     private:
         std::filesystem::path _bigDataDirPath;
+        std::filesystem::path _dataDirPath;
     };
 }
