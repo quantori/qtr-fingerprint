@@ -41,7 +41,7 @@ namespace qtr {
         return bucket;
     }
 
-    static void saveColumns(const std::vector<column_t>& columns, const std::filesystem::path& rawBucketPath) {
+    static void saveColumns(const std::vector<column_t> &columns, const std::filesystem::path &rawBucketPath) {
         std::filesystem::path columnsPath = rawBucketPath;
         columnsPath.replace_extension(columnsExtension);
         ColumnsWriter(columnsPath).write(columns);
