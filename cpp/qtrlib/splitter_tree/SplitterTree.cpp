@@ -1,55 +1,21 @@
 #include "SplitterTree.h"
+#include "RawBucketsIO.h"
 
 using namespace std;
 using namespace qtr;
 
 std::atomic_uint64_t qtr::SplitterTree::_countOfNodes = 0;
 
-/**
- * Call func for each record in data file
- * @tparam Functor call functor on IndigoFingerprint and string that represent smiles
- * @param filename
- * @param readSmiles if false than smiles equals to an empty string
- * @param func
- */
-template<typename Functor>
-void forEachLine(const filesystem::path &filePath, bool readSmiles, Functor &&func) {
-    ifstream input(filePath);
-    if (input.bad()) {
-        std::cerr << "smth with " << filePath.string() << " file\n";
-        return;
-    }
-    uint64_t cntRecords;
-    input.read((char *) (&cntRecords), sizeof(cntRecords));
-    for (uint64_t record = 0; record < cntRecords; ++record) { //TODO parallelize reading?
-        IndigoFingerprint currFP;
-        // Read fingerprint
-        currFP.readFrom(input);
-        // Read smiles
-        if (readSmiles) { // TODO buffer reading?
-            string smiles = "";
-            char c;
-            while ((c = input.get()) != '\n')
-                smiles += c;
-            func(currFP, smiles);
-        } else {
-            while (input.get() != '\n') {}
-            func(currFP, "");
-        }
-    }
-}
-
 uint64_t SplitterTree::findBestBitToSplit() {
     uint64_t countOfRecords = 0;
     size_t countOfBitsInFP = fromBytesToBits(IndigoFingerprint::sizeInBytes);
     uint64_t onesInColumn[countOfBitsInFP];
     memset(onesInColumn, 0, sizeof(onesInColumn));
-    forEachLine(_dir / _filename, false,
-                [&countOfRecords, &countOfBitsInFP, &onesInColumn](const IndigoFingerprint &fp, const string &_) {
-                    ++countOfRecords;
-                    for (size_t i = 0; i < countOfBitsInFP; ++i)
-                        onesInColumn[i] += fp[i];
-                });
+    for (const auto& [_, fingerprint] : RawBucketReader(_dir / _filename)) {
+        ++countOfRecords;
+        for (size_t i = 0; i < countOfBitsInFP; ++i)
+            onesInColumn[i] += fingerprint[i];
+    }
 
     auto countInARangeOfColumns = [&onesInColumn, &countOfRecords](size_t left, size_t right)
             -> pair<uint64_t, uint64_t> {
@@ -92,31 +58,22 @@ uint64_t SplitterTree::findBestBitToSplit() {
 }
 
 std::pair<uint64_t, uint64_t> SplitterTree::prepareFilesForChildren(uint64_t bitSplit) {
-    uint64_t sizeLeft = 0;
-    uint64_t sizeRight = 0;
-    ofstream outLeft(_dir / _leftChild->_filename);
-    ofstream outRight(_dir / _rightChild->_filename);
-    outLeft.write((char *) (&sizeLeft), sizeof(sizeLeft));
-    outRight.write((char *) (&sizeRight), sizeof(sizeRight));
-    forEachLine(_dir / _filename, true,
-                [&outLeft, &outRight, &bitSplit, &sizeLeft, &sizeRight](const IndigoFingerprint &fp,
-                                                                        const string &smiles) {
-                    ofstream *writeTo = &outLeft;
-                    if (fp[bitSplit]) {
-                        writeTo = &outRight;
-                        sizeRight++;
-                    } else
-                        sizeLeft++;
-                    fp.saveBytes(*writeTo);
-                    (*writeTo) << smiles << '\n';
-                });
-    outLeft.seekp(0, ios::beg);
-    outLeft.write((char *) (&sizeLeft), sizeof(sizeLeft));
-    outRight.seekp(0, ios::beg);
-    outRight.write((char *) (&sizeRight), sizeof(sizeRight));
-
+    uint64_t leftSize = 0;
+    uint64_t rightSize = 0;
+    RawBucketWriter leftWriter(_dir / _leftChild->_filename);
+    RawBucketWriter rightWriter(_dir / _leftChild->_filename);
+    for (const auto&[smiles, fp] : RawBucketReader(_dir / _filename)) {
+        if (fp[bitSplit]) {
+            rightWriter.write(make_pair(smiles, fp));
+            leftSize++;
+        }
+        else {
+            leftWriter.write(make_pair(smiles, fp));
+            rightSize++;
+        }
+    }
     remove((_dir / _filename).c_str()); // Delete current file
-    return {sizeLeft, sizeRight};
+    return {leftSize, rightSize};
 }
 
 std::vector<std::string>
