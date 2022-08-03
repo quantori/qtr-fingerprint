@@ -42,12 +42,9 @@ TEST(RAwBucketIOTest, DefaultValues) {
 }
 
 TEST(RAwBucketIOTest, RealValue) {
-    // TODO tests with real values
-    auto value = std::make_pair(std::string(), qtr::IndigoFingerprint());
-    std::vector<qtr::raw_bucket_value_t> expected = {value};
-    writeTmpBucket(expected);
-    auto actual = readTmpBucket();
-    EXPECT_EQ(expected, actual);
+    // TODO test with real value
 }
 
-
+TEST(RAwBucketIOTest, RealValues) {
+    // TODO test with real values
+}

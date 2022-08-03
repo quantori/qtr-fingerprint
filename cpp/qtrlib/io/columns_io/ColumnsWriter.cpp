@@ -13,10 +13,4 @@ namespace qtr {
     ColumnsWriter::~ColumnsWriter() {
         delete _outStream;
     }
-
-    ColumnsWriter::ColumnsWriter(std::filesystem::path fileName) {
-        fileName.replace_extension(columnsExtension);
-        _outStream = new std::ofstream(fileName);
-    }
-
 } // namespace qtr

@@ -13,7 +13,7 @@ namespace qtr {
     public:
         explicit ColumnsWriter(std::ostream *outStream) : _outStream(outStream) {};
 
-        explicit ColumnsWriter(std::filesystem::path fileName);
+        explicit ColumnsWriter(const std::filesystem::path& fileName) : _outStream(new std::ofstream(fileName)) {};
 
         ColumnsWriter(const ColumnsWriter &) = default;
 

@@ -2,7 +2,7 @@
 
 namespace qtr {
 
-    std::vector<column_t> qtr::ColumnsReader::read() {
+    std::vector<column_t> qtr::ColumnsReader::readAll() {
         std::vector<column_t> columns;
         column_t col;
         while (*_inStream >> col) {
