@@ -6,7 +6,7 @@
 namespace qtr {
     std::vector<std::vector<bool>> fingerprintsToColumns(const IndigoFingerprintTable &fingerprints) {
         size_t columnsNumber = fingerprints[0].size();
-        std::vector<std::vector<bool>> columns(fingerprints.size());
+        std::vector<std::vector<bool>> columns(columnsNumber);
         for (auto &fp: fingerprints) {
             for (size_t col = 0; col < columnsNumber; col++) {
                 columns[col].emplace_back(fp[col]);
