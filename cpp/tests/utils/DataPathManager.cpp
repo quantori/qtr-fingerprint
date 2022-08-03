@@ -9,7 +9,7 @@ namespace qtr
     path DataPathManager::getDataDir()
     {
         const path currentDir = testing::UnitTest::GetInstance()->original_working_dir();
-        const path dataDir = currentDir / path("../../data");
+        const path dataDir = currentDir / path("../../../data");
         return dataDir;
     }
 

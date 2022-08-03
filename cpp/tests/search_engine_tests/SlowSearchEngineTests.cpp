@@ -1,5 +1,5 @@
 #include "SearchEngineTests.h"
-#include "utils/DataPathManager.h"
+#include "../utils/DataPathManager.h"
 
 #include <gtest/gtest.h>
 
