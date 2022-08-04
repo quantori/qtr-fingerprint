@@ -1,39 +1,50 @@
 #include <filesystem>
 
 #include "gtest/gtest.h"
+#include "../utils/DataPathManager.h"
 
 #include "ColumnsIO.h"
 
-//static const std::filesystem::path tmpColumns = std::filesystem::temp_directory_path() / "columnsTmp";
-static const std::filesystem::path tmpColumns = "/home/Vsevolod.Vaskin/qtr-fingerprint/data/tests/columnsTmp";
 
-static void writeTmpColumns(const std::vector<qtr::column_t> &values) {
-    qtr::ColumnsWriter writer(tmpColumns);
-    writer.write(values);
-}
+class ColumnsIOTests : public ::testing::Test {
+protected:
+    void writeTmpColumns(const std::vector<qtr::column_t> &values) {
+        qtr::ColumnsWriter writer(_tmpColumnsFilePath);
+        writer.write(values);
+    }
 
-static std::vector<qtr::column_t> readTmpColumns() {
-    qtr::ColumnsReader reader(tmpColumns);
-    return reader.readAll();
-}
+    std::vector<qtr::column_t> readTmpColumns() {
+        qtr::ColumnsReader reader(_tmpColumnsFilePath);
+        return reader.readAll();
+    }
 
-TEST(ColumnsIOTest, EmptyFile) {
-    std::vector<qtr::column_t> expected;
+    void SetUp() override {
+        _tmpColumnsFilePath = qtr::DataPathManager::getTmpDataDir() / "ColumnsTmp";
+    }
+
+    void TearDown() override {
+        EXPECT_EQ(expected, actual);
+    }
+
+    std::filesystem::path _tmpColumnsFilePath;
+    std::vector<qtr::column_t> expected, actual;
+};
+
+
+
+TEST_F(ColumnsIOTests, EmptyFile) {
     writeTmpColumns(expected);
-    auto actual = readTmpColumns();
-    EXPECT_EQ(expected, actual);
+    actual = readTmpColumns();
 }
 
-TEST(ColumnsIOTest, Value) {
-    std::vector<qtr::column_t> expected = {1};
+TEST_F(ColumnsIOTests, Value) {
+    expected = {1};
     writeTmpColumns(expected);
-    auto actual = readTmpColumns();
-    EXPECT_EQ(expected, actual);
+    actual = readTmpColumns();
 }
 
-TEST(ColumnsIOTest, Values) {
-    std::vector<qtr::column_t> expected = {5, 6, 4, 1, 3, 0, 2};
+TEST_F(ColumnsIOTests, Values) {
+    expected = {5, 6, 4, 1, 3, 0, 2};
     writeTmpColumns(expected);
-    auto actual = readTmpColumns();
-    EXPECT_EQ(expected, actual);
+    actual = readTmpColumns();
 }
