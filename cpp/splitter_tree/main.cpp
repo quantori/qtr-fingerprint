@@ -110,9 +110,9 @@ int main(int argc, char *argv[]) {
 
     // Build splitter tree
     SplitterTree tree(rawBucketsDir, firstBucketName);
-    tree.split(30, 100);
+    tree.build(30, 100);
     ofstream treeFileOut(splitterTreePath);
-    tree.saveTo(treeFileOut);
+    tree.dump(treeFileOut);
     auto timePoint2 = now();
     duration buildSplitterTreeTime = timePoint2 - timePoint1;
     std::cout << "Splitter tree is built in time: " << buildSplitterTreeTime.count() << '\n';
