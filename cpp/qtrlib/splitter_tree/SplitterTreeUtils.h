@@ -23,7 +23,6 @@ namespace qtr {
                                                       const std::filesystem::path &onesFilePath);
 
 
-
     /**
      * Finds column, that is the best to split with.
      * Criteria: absolute difference between records with ones in that column and records with zeroes, is minimum.
@@ -31,4 +30,6 @@ namespace qtr {
      */
     uint64_t findBestBitToSplit(const std::filesystem::path &rawBucketPath);
 
+
+    std::vector<std::filesystem::path> nodesToFilePaths(const std::vector<SplitterTree::Node *> &nodes);
 }

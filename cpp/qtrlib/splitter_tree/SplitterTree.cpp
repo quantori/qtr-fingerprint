@@ -16,44 +16,66 @@ namespace qtr {
         std::vector<int> a;
     }
 
-    SplitterTree::Node::Node(SplitterTree *tree, size_t depth) : _tree(tree), _depth(depth), _splitBit(-1),
-                                                                 _leftChild(nullptr), _rightChild(nullptr) {
-        _id = _tree->_countOfNodes;
+    SplitterTree::Node::Node(SplitterTree *tree, uint64_t depth) : _tree(tree), _depth(depth), _splitBit(-1),
+                                                                   _leftChild(nullptr), _rightChild(nullptr) {
+        _id = _tree->_countOfNodes++;
     }
 
+    std::vector<std::filesystem::path>
+    SplitterTree::buildNotParallel(uint64_t maxDepth, uint64_t maxBucketSize) const {
+        auto leafs = _root->buildSubTree(maxDepth, maxBucketSize);
+        return nodesToFilePaths(leafs);
+    }
 
-    std::vector<std::filesystem::path> SplitterTree::build(size_t maxDepth, uint64_t maxBucketSize) const {
-        auto nodesToRunTasks = _root->buildSubTree(PARALLELIZE_DEBT, maxBucketSize);
+    std::vector<std::filesystem::path>
+    SplitterTree::buildParallel(uint64_t maxDepth, uint64_t maxBucketSize, uint64_t parallelize_depth) const {
+        assert(parallelize_depth < maxDepth);
+        auto nodesToRunTasks = _root->buildSubTree(parallelize_depth, maxBucketSize);
         using future_t = decltype(std::async(std::launch::async, &SplitterTree::Node::buildSubTree, _root, maxDepth,
                                              maxBucketSize));
         std::vector<future_t> tasks;
         tasks.reserve(nodesToRunTasks.size());
         for (auto leaf: nodesToRunTasks) {
             tasks.emplace_back(
-                    std::async(std::launch::async, &SplitterTree::Node::buildSubTree, leaf, maxDepth - PARALLELIZE_DEBT,
+                    std::async(std::launch::async, &SplitterTree::Node::buildSubTree, leaf,
+                               maxDepth - parallelize_depth,
                                maxBucketSize)
             );
         }
         std::vector<std::filesystem::path> bucketPaths;
         for (auto &task: tasks) {
             auto leafs = task.get();
-            for (auto &leaf: leafs)
-                bucketPaths.emplace_back(leaf->getFilePath());
+            auto filePaths = nodesToFilePaths(leafs);
+            bucketPaths.insert(bucketPaths.end(), std::make_move_iterator(filePaths.begin()),
+                               std::make_move_iterator(filePaths.end()));
         }
         return bucketPaths;
     }
 
+    std::vector<std::filesystem::path>
+    SplitterTree::build(uint64_t maxDepth, uint64_t maxBucketSize, uint64_t parallelize_depth) const {
+        if (maxDepth <= parallelize_depth) {
+            return buildNotParallel(maxDepth, maxBucketSize);
+        } else {
+            return buildParallel(maxDepth, maxBucketSize, parallelize_depth);
+        }
+    }
+
     void SplitterTree::dump(std::ostream &out) const {
-        size_t treeSize = size();
+        uint64_t treeSize = size();
         out.write((char *) &treeSize, sizeof treeSize);
         _root->dumpSubTree(out);
     }
 
-    SplitterTree::SplitterTree(std::filesystem::path directory) : _directory(std::move(directory)),
-                                                                  _root(new Node(this, 0)), _countOfNodes(0) {}
+    SplitterTree::SplitterTree(std::filesystem::path directory) : _directory(std::move(directory)), _countOfNodes(0),
+                                                                  _root(new Node(this, 0)) {}
+
+    uint64_t SplitterTree::size() const {
+        return _countOfNodes;
+    }
 
     std::vector<SplitterTree::Node *>
-    SplitterTree::Node::buildSubTree(size_t maxDepth, uint64_t maxSizeOfBucket) {
+    SplitterTree::Node::buildSubTree(uint64_t maxDepth, uint64_t maxSizeOfBucket) {
         if (_depth >= maxDepth)
             return {this};
 

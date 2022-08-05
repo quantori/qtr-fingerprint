@@ -48,7 +48,7 @@ IndigoFingerprint cutZeroColumns(FullIndigoFingerprint fingerprint, const vector
     IndigoFingerprint cutFingerprint;
     int j = 0;
     int currentZeroPos = 0;
-    for (int i = 0; i < fromBytesToBits(fingerprint.sizeInBytes); ++i) {
+    for (int i = 0; i < fromBytesToBits(qtr::FullIndigoFingerprint::sizeInBytes); ++i) {
         if (currentZeroPos < zeroColumns.size() && i == zeroColumns[currentZeroPos]) {
             currentZeroPos++;
             continue;
@@ -109,8 +109,8 @@ int main(int argc, char *argv[]) {
     std::cout << "SDF files are parsed in time: " << parseSdfTime.count() << "s\n";
 
     // Build splitter tree
-    SplitterTree tree(rawBucketsDir, firstBucketName);
-    tree.build(30, 100);
+    SplitterTree tree(rawBucketsDir);
+    tree.build(30, 100, 3);
     ofstream treeFileOut(splitterTreePath);
     tree.dump(treeFileOut);
     auto timePoint2 = now();

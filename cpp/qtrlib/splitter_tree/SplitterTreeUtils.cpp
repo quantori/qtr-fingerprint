@@ -33,8 +33,17 @@ namespace qtr {
                 columnsSum[i] += fingerprint[i];
         }
         uint64_t bestBit = std::min_element(columnsSum.begin(), columnsSum.end(), [bucketSize](int64_t a, int64_t b) {
-            return std::abs(a - (int64_t) bucketSize) < std::abs(b - (int64_t) bucketSize);
+            return std::abs(2 * a - (int64_t) bucketSize) < std::abs(2 * b - (int64_t) bucketSize);
         }) - columnsSum.begin();
         return bestBit;
+    }
+
+    std::vector<std::filesystem::path> nodesToFilePaths(const std::vector<SplitterTree::Node *> &nodes) {
+        std::vector<std::filesystem::path> paths;
+        paths.reserve(nodes.size());
+        for (SplitterTree::Node * node : nodes) {
+            paths.emplace_back(node->getFilePath());
+        }
+        return paths;
     }
 }
