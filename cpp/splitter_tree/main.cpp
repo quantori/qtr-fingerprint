@@ -25,14 +25,6 @@ using namespace std;
 
 using std::filesystem::path;
 
-const path baseDataDir = "/home/Vsevolod.Vaskin/qtr-fingerprint/data";
-const path rawBucketsDir = baseDataDir / "raw_buckets";
-const path sdfFilesDir = baseDataDir / "sdf";
-const path zeroColumnsPath = baseDataDir / "zero_columns";
-const path splitterTreePath = baseDataDir / "tree";
-const string firstBucketName = "0";
-
-
 vector<int> readColumns(const path &pathToColumns) {
     ifstream fin(pathToColumns.string());
     std::vector<int> zeroColumns;
@@ -44,7 +36,7 @@ vector<int> readColumns(const path &pathToColumns) {
     return zeroColumns;
 }
 
-IndigoFingerprint cutZeroColumns(FullIndigoFingerprint fingerprint, const vector<int>& zeroColumns) {
+IndigoFingerprint cutZeroColumns(FullIndigoFingerprint fingerprint, const vector<int> &zeroColumns) {
     IndigoFingerprint cutFingerprint;
     int j = 0;
     int currentZeroPos = 0;
@@ -62,17 +54,16 @@ IndigoFingerprint cutZeroColumns(FullIndigoFingerprint fingerprint, const vector
 
 /**
  * Merges many sdf files into one, named "0". Suitable for Splitter Tree.
- * @param dir -- directory with sdf files
+ * @param sdfDir -- directory with sdf files
  */
-void prepareSDFsForSplitterTree(const path &dir, const path& columnsPath) {
+void prepareSDFsForSplitterTree(const path &sdfDir, const path &columnsPath, const path& outFilePath) {
     auto indigoSessionPtr = IndigoSession::create();
-    path filePath = dir / firstBucketName;
-    ofstream out(filePath);
+    ofstream out(outFilePath);
     auto zeroColumns = readColumns(columnsPath);
     uint64_t cntMols = 0;
     uint64_t cntSkipped = 0;
     out.write((char *) (&cntMols), sizeof(cntMols)); // Reserve space for bucket size
-    for (auto &sdfFile: findFiles(dir, ".sdf")) {
+    for (auto &sdfFile: findFiles(sdfDir, ".sdf")) {
         for (auto &mol: indigoSessionPtr->iterateSDFile(sdfFile)) {
             try {
                 mol->aromatize();
@@ -94,6 +85,8 @@ void prepareSDFsForSplitterTree(const path &dir, const path& columnsPath) {
         std::cerr << "Skipped " << cntSkipped << " molecules\n";
 }
 
+ABSL_FLAG(std::string, data_dir_path, "", "Path to data dir");
+
 int main(int argc, char *argv[]) {
     google::InitGoogleLogging(argv[0]);
     absl::ParseCommandLine(argc, argv);
@@ -101,24 +94,33 @@ int main(int argc, char *argv[]) {
     auto now = std::chrono::high_resolution_clock::now;
     using duration = std::chrono::duration<double>;
 
+    path dataDirPath = absl::GetFlag(FLAGS_data_dir_path);
+    path sdfFilesPath = dataDirPath / "sdf";
+    path zeroColumnsPath = dataDirPath / "zero_columns";
+    path rawBucketsDirPath = dataDirPath / "raw_buckets";
+    path splitterTreeFilePath = dataDirPath / "tree";
+
+    filesystem::create_directory(rawBucketsDirPath);
+
     auto startTime = now();
     // Parse sdf files
-    prepareSDFsForSplitterTree(sdfFilesDir, zeroColumnsPath);
+    prepareSDFsForSplitterTree(sdfFilesPath, zeroColumnsPath, rawBucketsDirPath / "0");
     auto timePoint1 = std::chrono::high_resolution_clock::now();
     duration parseSdfTime = timePoint1 - startTime;
     std::cout << "SDF files are parsed in time: " << parseSdfTime.count() << "s\n";
 
     // Build splitter tree
-    SplitterTree tree(rawBucketsDir);
-    tree.build(30, 100, 3);
-    ofstream treeFileOut(splitterTreePath);
+    SplitterTree tree(rawBucketsDirPath);
+    tree.build(30, 100, 2);
+    ofstream treeFileOut(splitterTreeFilePath);
     tree.dump(treeFileOut);
     auto timePoint2 = now();
     duration buildSplitterTreeTime = timePoint2 - timePoint1;
     std::cout << "Splitter tree is built in time: " << buildSplitterTreeTime.count() << '\n';
 
     // Choose minimum correlated columns
-    ColumnsChooser<qtr::PearsonCorrelationChoiceFunc> columnsChooser(rawBucketsDir, qtr::PearsonCorrelationChoiceFunc());
+    ColumnsChooser<qtr::PearsonCorrelationChoiceFunc> columnsChooser(rawBucketsDirPath,
+                                                                     qtr::PearsonCorrelationChoiceFunc());
     columnsChooser.handleRawBuckets();
     auto timePoint3 = now();
     duration chooseMinCorrColsTime = timePoint3 - timePoint2;
