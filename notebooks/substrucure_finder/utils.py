@@ -36,7 +36,7 @@ def splitter_tree_path(data_path: Path) -> Path:
 
 
 def columns_path(data_path: Path, bucket: int) -> Path:
-    return data_path / 'raw_buckets' / (str(bucket) + 'OrderColumns.txt')
+    return data_path / 'raw_buckets' / (str(bucket) + '.col')
 
 
 def byte_to_bits(byte: int) -> str:

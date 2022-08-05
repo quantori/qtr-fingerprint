@@ -12,7 +12,7 @@ from substrucure_finder import utils
 
 class Loader:
     def __init__(self, file: Path):
-        assert file.exists()
+        assert (file.exists(), str(file))
         self.file = file
 
     def __enter__(self):
