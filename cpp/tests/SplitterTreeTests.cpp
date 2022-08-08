@@ -112,7 +112,7 @@ TEST_F(SplitterTreeTests, SplitRawBucketByBitTest) {
     for (size_t i = 0; i < 3; i++) {
         auto zerosBucketPath = rawBucketsDirPath / "zerosBucketTmp";
         auto onesBucketPath = rawBucketsDirPath / "onesBucketTmp";
-        splitRawBucketByBit(rawBucketPath(i), splitBits[i], zerosBucketPath, onesBucketPath);
+        splitRawBucketByBit(rawBucketPath(i), splitBits[i], zerosBucketPath, onesBucketPath, false);
         auto actualZerosBucket = loadBucket(zerosBucketPath);
         auto actualOnesBucket = loadBucket(onesBucketPath);
         auto expectedZerosBucket = rawBuckets[i * 2 + 1];

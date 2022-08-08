@@ -14,13 +14,14 @@ namespace qtr {
      * @param fileToSplitPath path to file which must be split
      * @b Note: this file is deleted after function execution
      * @param splitBit index of the column by the values in which bucket must be split
-     * @param zeroFilePath path to file where to store bucket with zeros on @c splitBit column
-     * @param onesFilePath path to file where to store bucket with ones on @c splitBit column
+     * @param zeroDirPath path to file where to store bucket with zeros on @c splitBit column
+     * @param onesDirPath path to file where to store bucket with ones on @c splitBit column
      * @return <count of records in bucket with zeros, count of records in bucket with ones>
      */
     std::pair<uint64_t, uint64_t> splitRawBucketByBit(const std::filesystem::path &fileToSplitPath, uint64_t splitBit,
-                                                      const std::filesystem::path &zeroFilePath,
-                                                      const std::filesystem::path &onesFilePath);
+                                                      const std::filesystem::path &zeroDirPath,
+                                                      const std::filesystem::path &onesDirPath,
+                                                      bool parallelizeByFiles);
 
 
     /**

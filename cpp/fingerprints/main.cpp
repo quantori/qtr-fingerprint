@@ -81,35 +81,37 @@ void createFingerprintCSVFromFile(const string &sdfFile) {
             fout << fingerprint_line.str() << endl;
         }
         catch (const exception &e) {
-            cerr << e.what();
+            cerr << e.what() << endl;
         }
     }
 }
 
 void createRBFromSDF(const filesystem::path &sdfFilePath, const filesystem::path &rbFilePath) {
+    if (filesystem::exists(rbFilePath)) {
+        cerr << "skip: " << sdfFilePath << endl;
+        return;
+    }
     auto indigoSessionPtr = IndigoSession::create();
     RawBucketWriter writer(rbFilePath);
     uint64_t skipped = 0;
+    uint64_t written = 0;
     for (auto &mol: indigoSessionPtr->iterateSDFile(sdfFilePath)) {
         try {
             mol->aromatize();
-        }
-        catch (const exception &e) {
-            cerr << "Aromatize error: " << e.what() << endl;
-            skipped++;
-        }
-        try {
             int fingerprint = indigoFingerprint(mol->id(), "sub");
             FullIndigoFingerprint fullFingerprints(indigoToString(fingerprint));
             IndigoFingerprint cutFingerprint = cutZeroColumns(fullFingerprints);
             writer.write({mol->smiles(), cutFingerprint});
+            written++;
         }
         catch (const exception &e) {
-            cerr << "Other error" << e.what() << endl;
+            cerr << e.what() << endl;
             skipped++;
         }
     }
-    cerr << "skipped: " << skipped << endl;
+    cerr << sdfFilePath << endl;
+    cerr << "\tskipped: " << skipped << endl;
+    cerr << "\twritten: " << written << endl;
 }
 
 ABSL_FLAG(std::string, path_to_sdf_dir, "",
@@ -119,6 +121,13 @@ ABSL_FLAG(std::string, path_to_rb_dir, "",
           "Path to dir with rb (raw bucket) files");
 
 int main(int argc, char *argv[]) {
+
+//    ifstream fin("/home/Vsevolod.Vaskin/qtr-fingerprint/data/pubchem/rbs/Compound_041500001_042000000.rb");
+//    uint64_t num;
+//    fin.read((char*)&num, sizeof num);
+//    cout << num << endl;
+//    return 0;
+
     google::InitGoogleLogging(argv[0]);
     absl::ParseCommandLine(argc, argv);
     filesystem::path pathToSdfDir = absl::GetFlag(FLAGS_path_to_sdf_dir);
@@ -127,11 +136,12 @@ int main(int argc, char *argv[]) {
     emptyArgument(pathToRbDir, "Please specify path_to_rb_dir option");
     vector<filesystem::path> sdfFiles = findFiles(pathToSdfDir, ".sdf");
     auto startTime = std::chrono::high_resolution_clock::now();
-    #pragma omp parallel for
+#pragma omp parallel for
     for (int i = 0; i < sdfFiles.size(); ++i) {
         auto &sdfFilePath = sdfFiles[i];
         auto rbFilePath = pathToRbDir / (string(sdfFilePath.stem()) + ".rb");
-        createRBFromSDF(sdfFiles[i], rbFilePath);
+//        createRBFromSDF(sdfFiles[i], rbFilePath);
+        createFingerprintCSVFromFile(sdfFiles[i]);
     }
     auto endTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_seconds = endTime - startTime;

@@ -27,10 +27,10 @@ namespace qtr {
         std::atomic_uint64_t _countOfNodes;
         Node *_root;
 
-        std::vector<std::filesystem::path> buildNotParallel(uint64_t maxDepth, uint64_t maxBucketSize) const;
+        std::vector<std::filesystem::path> buildWithoutSubTreeParallelize(uint64_t maxDepth, uint64_t maxBucketSize) const;
 
         std::vector<std::filesystem::path>
-        buildParallel(uint64_t maxDepth, uint64_t maxBucketSize, uint64_t parallelize_depth) const;
+        buildWithSubTreeParallelize(uint64_t maxDepth, uint64_t maxBucketSize, uint64_t parallelize_depth) const;
 
     public:
         /**
@@ -46,6 +46,7 @@ namespace qtr {
          * If call this function more than once, you get UB
          * @param maxDepth max depth of tree
          * @param maxBucketSize max number of elements in a leaf
+         * @param parallelize_debt debt of tree on which subtree parallelization starts
          * @return vector of buckets' filenames
          */
         std::vector<std::filesystem::path>
@@ -84,7 +85,9 @@ namespace qtr {
         /**
          * @return path to file to save node's data
          */
-        [[nodiscard]] std::filesystem::path getFilePath() const;
+        [[nodiscard]] std::filesystem::path getDirPath() const;
+
+        std::vector<std::filesystem::path> getFilesPaths() const;
 
         /**
          * @param node
@@ -92,7 +95,8 @@ namespace qtr {
          */
         static uint64_t getId(Node *node);
 
-        std::vector<SplitterTree::Node *> buildSubTree(uint64_t maxDepth, uint64_t maxSizeOfBucket);
+        std::vector<SplitterTree::Node *>
+        buildSubTree(uint64_t maxDepth, uint64_t maxSizeOfBucket, bool nodeBuildParallelize);
 
         void dumpSubTree(std::ostream &out);
 

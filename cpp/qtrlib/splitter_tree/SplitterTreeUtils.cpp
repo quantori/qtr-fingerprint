@@ -3,13 +3,15 @@
 namespace qtr {
 
 
+    // todo refactor all usage
     std::pair<uint64_t, uint64_t> splitRawBucketByBit(const std::filesystem::path &fileToSplitPath, uint64_t splitBit,
-                                                      const std::filesystem::path &zeroFilePath,
-                                                      const std::filesystem::path &onesFilePath) {
+                                                      const std::filesystem::path &zeroDirPath,
+                                                      const std::filesystem::path &onesDirPath,
+                                                      bool parallelizeByFiles) {
         uint64_t leftSize = 0;
         uint64_t rightSize = 0;
-        RawBucketWriter zerosWriter(zeroFilePath);
-        RawBucketWriter onesWriter(onesFilePath);
+        RawBucketWriter zerosWriter(zeroDirPath);
+        RawBucketWriter onesWriter(onesDirPath);
         for (const auto &[smiles, fp]: RawBucketReader(fileToSplitPath)) {
             if (fp[splitBit]) {
                 onesWriter.write(make_pair(smiles, fp));
@@ -42,7 +44,7 @@ namespace qtr {
         std::vector<std::filesystem::path> paths;
         paths.reserve(nodes.size());
         for (SplitterTree::Node * node : nodes) {
-            paths.emplace_back(node->getFilePath());
+            paths.emplace_back(node->getDirPath());
         }
         return paths;
     }
