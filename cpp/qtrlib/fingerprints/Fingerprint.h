@@ -29,10 +29,10 @@ public:
         for (size_t i = 0; i < s.size(); ++i) {
             size_t j = i * 4ull;
             int currentSym = chexToInt(s[i]);
-            this->operator[](j) = currentSym & 1;
-            this->operator[](j + 1) = currentSym & 2;
-            this->operator[](j + 2) = currentSym & 4;
-            this->operator[](j + 3) = currentSym & 8;
+            this->operator[](j + 3) = currentSym & 1;
+            this->operator[](j + 2) = currentSym & 2;
+            this->operator[](j + 1) = currentSym & 4;
+            this->operator[](j + 0) = currentSym & 8;
         }
     }
 
