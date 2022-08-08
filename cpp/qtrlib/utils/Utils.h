@@ -67,6 +67,6 @@ constexpr inline std::size_t divideIntegersCeil(std::size_t a, std::size_t b) {
  * @param extension
  * @return vector of filenames
  */
-std::vector<std::string> findFiles(const std::string &pathToDir, const std::string &extension);
+std::vector<std::filesystem::path> findFiles(const std::filesystem::path &pathToDir, const std::string &extension);
 
 } // namespace qtr
