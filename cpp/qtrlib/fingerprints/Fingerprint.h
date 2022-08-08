@@ -16,6 +16,7 @@ class Fingerprint : public std::bitset<CHAR_BIT*fingerprintSizeInBytes>
 {
 public:
     static constexpr size_t sizeInBytes = fingerprintSizeInBytes;
+    static constexpr size_t sizeInBits = fromBytesToBits(fingerprintSizeInBytes);
 
     Fingerprint() = default;
 

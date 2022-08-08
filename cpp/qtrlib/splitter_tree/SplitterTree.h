@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
 
 #include "Fingerprint.h"
 #include "Utils.h"
@@ -83,10 +84,13 @@ namespace qtr {
         ~Node();
 
         /**
-         * @return path to file to save node's data
+         * @return path to directory to save node's data
          */
         [[nodiscard]] std::filesystem::path getDirPath() const;
 
+        /**
+         * @return paths to files to save node's data
+         */
         std::vector<std::filesystem::path> getFilesPaths() const;
 
         /**
@@ -96,9 +100,11 @@ namespace qtr {
         static uint64_t getId(Node *node);
 
         std::vector<SplitterTree::Node *>
-        buildSubTree(uint64_t maxDepth, uint64_t maxSizeOfBucket, bool nodeBuildParallelize);
+        buildSubTree(uint64_t maxDepth, uint64_t maxSizeOfBucket, bool parallelize);
 
         void dumpSubTree(std::ostream &out);
+
+        void addBucketFiles(uint64_t count);
 
     private:
         SplitterTree *_tree;
@@ -107,6 +113,7 @@ namespace qtr {
         Node *_leftChild; // go left if bit is zero
         Node *_rightChild; // go right if bit is one
         uint64_t _id;
+        uint64_t _filesNumber; // number of files related to this node
     };
 
 } // namespace qtr
