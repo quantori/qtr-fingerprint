@@ -31,12 +31,12 @@ namespace qtr {
         Functor _choiceFunc;
     };
 
-    std::vector<int> correlationColumnsChoose(const std::string &bucketPath);
-
-    static IndigoFingerprintTable readRawBucket(const std::filesystem::path &rawBucketPath) {
+    static IndigoFingerprintTable readRawBucket(const std::filesystem::path &rawBucketDirPath) {
         IndigoFingerprintTable bucket;
-        for (const auto &[_, fp]: RawBucketReader(rawBucketPath)) {
-            bucket.emplace_back(fp);
+        for (const auto& rawBucketFilePath : findFiles(rawBucketDirPath, rawBucketExtension)) {
+            for (const auto &[_, fp]: RawBucketReader(rawBucketFilePath)) {
+                bucket.emplace_back(fp);
+            }
         }
         return bucket;
     }

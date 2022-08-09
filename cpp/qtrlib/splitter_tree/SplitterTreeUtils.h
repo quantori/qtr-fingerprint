@@ -13,7 +13,7 @@ namespace qtr {
      * Criteria: absolute difference between records with ones in that column and records with zeroes, is minimum.
      * @return column id
      */
-    uint64_t findBestBitToSplit(const std::filesystem::path &rawBucketPath, bool parallelize);
+    uint64_t findBestBitToSplit(const std::vector<std::filesystem::path> &rawBucketFiles, bool parallelize);
 
 
     std::pair<uint64_t, uint64_t>

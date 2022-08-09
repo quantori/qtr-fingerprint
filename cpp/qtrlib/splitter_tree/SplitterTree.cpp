@@ -83,24 +83,8 @@ namespace qtr {
         if (_depth >= maxDepth)
             return {this};
 
-        _splitBit = findBestBitToSplit(getDirPath(), parallelize);
-        _leftChild = new SplitterTree::Node(_tree, _depth + 1);
-        _rightChild = new SplitterTree::Node(_tree, _depth + 1);
-        uint64_t leftSize, rightSize;
-        if (parallelize) {
-            size_t bucketFilesCount = getFilesPaths().size();
-            _leftChild->addBucketFiles(bucketFilesCount);
-            _rightChild->addBucketFiles(bucketFilesCount);
-            std::tie(leftSize, rightSize) = splitRawBucketByBitParallel(getFilesPaths(), _splitBit,
-                                                                        _leftChild->getFilesPaths(),
-                                                                        _rightChild->getFilesPaths());
-        } else {
-            _leftChild->addBucketFiles(1);
-            _rightChild->addBucketFiles(1);
-            std::tie(leftSize, rightSize) = splitRawBucketByBitNotParallel(getFilesPaths(), _splitBit,
-                                                                           _leftChild->getFilesPaths()[0],
-                                                                           _rightChild->getFilesPaths()[0]);
-        }
+        _splitBit = findBestBitToSplit(getFilesPaths(), parallelize);
+        auto [leftSize, rightSize] = splitNode(parallelize);
         auto leftLeafs = leftSize <= maxSizeOfBucket ? std::vector{_leftChild} :
                          _leftChild->buildSubTree(maxDepth, maxSizeOfBucket, parallelize);
         auto rightLeafs = rightSize <= maxSizeOfBucket ? std::vector{_rightChild} :
@@ -148,6 +132,36 @@ namespace qtr {
             std::ofstream fileCreator(filePath);
             _filesNumber++;
         }
+    }
+
+    void SplitterTree::Node::clearData() {
+        std::filesystem::remove_all(getDirPath());
+        _filesNumber = 0;
+    }
+
+    std::pair<uint64_t, uint64_t> SplitterTree::Node::splitNode(bool parallelize) {
+        assert(_leftChild == nullptr && _rightChild == nullptr && "Node already have been split");
+        assert(_splitBit != -1 && "split bit was not defined");
+
+        _leftChild = new SplitterTree::Node(_tree, _depth + 1);
+        _rightChild = new SplitterTree::Node(_tree, _depth + 1);
+        uint64_t leftSize, rightSize;
+        if (parallelize) {
+            size_t bucketFilesCount = getFilesPaths().size();
+            _leftChild->addBucketFiles(bucketFilesCount);
+            _rightChild->addBucketFiles(bucketFilesCount);
+            std::tie(leftSize, rightSize) = splitRawBucketByBitParallel(getFilesPaths(), _splitBit,
+                                                                        _leftChild->getFilesPaths(),
+                                                                        _rightChild->getFilesPaths());
+        } else {
+            _leftChild->addBucketFiles(1);
+            _rightChild->addBucketFiles(1);
+            std::tie(leftSize, rightSize) = splitRawBucketByBitNotParallel(getFilesPaths(), _splitBit,
+                                                                           _leftChild->getFilesPaths()[0],
+                                                                           _rightChild->getFilesPaths()[0]);
+        }
+        clearData();
+        return {leftSize, rightSize};
     }
 
 } // namespace qtr

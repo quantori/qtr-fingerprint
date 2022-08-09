@@ -140,8 +140,8 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < sdfFiles.size(); ++i) {
         auto &sdfFilePath = sdfFiles[i];
         auto rbFilePath = pathToRbDir / (string(sdfFilePath.stem()) + ".rb");
-//        createRBFromSDF(sdfFiles[i], rbFilePath);
-        createFingerprintCSVFromFile(sdfFiles[i]);
+        createRBFromSDF(sdfFiles[i], rbFilePath);
+//        createFingerprintCSVFromFile(sdfFiles[i]);
     }
     auto endTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_seconds = endTime - startTime;

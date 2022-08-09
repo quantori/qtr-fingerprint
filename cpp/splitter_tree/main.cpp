@@ -23,6 +23,10 @@ using namespace indigo_cpp;
 using namespace qtr;
 using namespace std;
 
+//#pragma GCC target("sse,sse2,sse3,ssse3,sse4,popcnt,abm,mmx,avx,avx2,fma,tune=native")
+//#pragma GCC optimize("O3")
+//#pragma GCC optimize("unroll-loops")
+
 using std::filesystem::path;
 
 vector<int> readColumns(const path &pathToColumns) {
@@ -103,15 +107,15 @@ int main(int argc, char *argv[]) {
     filesystem::create_directory(rawBucketsDirPath);
 
     auto startTime = now();
-    // Parse sdf files
-    prepareSDFsForSplitterTree(sdfFilesPath, zeroColumnsPath, rawBucketsDirPath / "0");
+//     Parse sdf files
+//    prepareSDFsForSplitterTree(sdfFilesPath, zeroColumnsPath, rawBucketsDirPath / "0");
     auto timePoint1 = std::chrono::high_resolution_clock::now();
     duration parseSdfTime = timePoint1 - startTime;
-    std::cout << "SDF files are parsed in time: " << parseSdfTime.count() << "s\n";
+//    std::cout << "SDF files are parsed in time: " << parseSdfTime.count() << "s\n";
 
     // Build splitter tree
     SplitterTree tree(rawBucketsDirPath);
-    tree.build(30, 100, 2);
+    tree.build(11, 5000, 3);
     ofstream treeFileOut(splitterTreeFilePath);
     tree.dump(treeFileOut);
     auto timePoint2 = now();

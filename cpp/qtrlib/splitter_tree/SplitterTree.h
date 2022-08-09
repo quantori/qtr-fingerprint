@@ -106,6 +106,11 @@ namespace qtr {
 
         void addBucketFiles(uint64_t count);
 
+        void clearData();
+
+    private:
+        std::pair<uint64_t, uint64_t> splitNode(bool parallelize);
+
     private:
         SplitterTree *_tree;
         uint64_t _depth;

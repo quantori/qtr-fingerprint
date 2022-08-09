@@ -71,7 +71,7 @@ public:
     }
 };
 
-using IndigoFingerprint = Fingerprint<323>;
+using IndigoFingerprint = Fingerprint<323>; // todo set size of fingerprint by number of bits, not bytes
 using FullIndigoFingerprint = Fingerprint<467>;
 
 } // namespace qtr

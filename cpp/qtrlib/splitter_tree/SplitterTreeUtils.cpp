@@ -6,7 +6,6 @@ namespace qtr {
 
 
     namespace {
-
         /**
          * @return {sums for each column in file, number of molecules in file}
         **/
@@ -44,6 +43,7 @@ namespace qtr {
         std::pair<std::vector<uint64_t>, uint64_t>
         findColumnsSumInBucketParallel(const std::vector<std::filesystem::path> &bucketFiles) {
             std::vector<std::future<std::pair<std::vector<uint64_t>, uint64_t>>> tasks;
+            tasks.reserve(bucketFiles.size());
             for (const auto &filePath: bucketFiles) {
                 tasks.emplace_back(std::async(std::launch::async, findColumnsSumInFile, filePath));
             }
@@ -71,7 +71,6 @@ namespace qtr {
             }
             return {leftSize, rightSize};
         }
-
     } // namespace
 
     std::pair<uint64_t, uint64_t>
@@ -110,27 +109,13 @@ namespace qtr {
                 std::accumulate(rightSizes.begin(), rightSizes.end(), 0ull)};
     }
 
-    // todo move function to node's implementation
-//    // todo refactor all usage
-//    std::pair<uint64_t, uint64_t>
-//    splitRawBucketByBit(SplitterTree::Node* bucketNode, uint64_t splitBit, bool parallelizeByFiles) {
-//        assert(bucketNode != nullptr);
-//        if (parallelizeByFiles) {
-//
-//            return splitRawBucketByBitParallel(bucketNode->getFilesPaths(), splitBit, zeroFiles, onesFiles);
-//        } else {
-//            return splitRawBucketByBitNotParallel(bucketFiles, splitBit, zeroFiles, onesFiles);
-//        }
-//        // todo remove node's files in another function
-//    }
-
-    uint64_t findBestBitToSplit(const std::vector<std::filesystem::path>& bucketFiles, bool parallelize) {
+    uint64_t findBestBitToSplit(const std::vector<std::filesystem::path> &rawBucketFiles, bool parallelize) {
         uint64_t bucketSize;
         std::vector<uint64_t> columnsSum;
         if (parallelize) {
-            std::tie(columnsSum, bucketSize) = findColumnsSumInBucketParallel(bucketFiles);
+            std::tie(columnsSum, bucketSize) = findColumnsSumInBucketParallel(rawBucketFiles);
         } else {
-            std::tie(columnsSum, bucketSize) = findColumnsSumInBucketNotParallel(bucketFiles);
+            std::tie(columnsSum, bucketSize) = findColumnsSumInBucketNotParallel(rawBucketFiles);
         }
         uint64_t bestBit = std::min_element(columnsSum.begin(), columnsSum.end(), [bucketSize](uint64_t a, uint64_t b) {
             return std::abs(2 * (int64_t) a - (int64_t) bucketSize) < std::abs(2 * (int64_t) b - (int64_t) bucketSize);
@@ -139,7 +124,6 @@ namespace qtr {
     }
 
     std::vector<std::filesystem::path> nodesToDirPaths(const std::vector<SplitterTree::Node *> &nodes) {
-        // todo refactor all usage
         std::vector<std::filesystem::path> paths;
         paths.reserve(nodes.size());
         for (SplitterTree::Node *node: nodes) {
