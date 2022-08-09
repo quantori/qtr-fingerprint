@@ -20,6 +20,7 @@
 #include "Utils.h"
 #include "Fingerprint.h"
 #include "RawBucketsIO.h"
+#include "ColumnsIO.h"
 
 using namespace indigo_cpp;
 using namespace qtr;
@@ -49,14 +50,10 @@ static void hexToBin(const char *hexdec, ostringstream &out) {
         out << HEX_TO_DEC.at(hexdec[i]);
 }
 
+std::vector<int> zeroColumns;
+
 IndigoFingerprint cutZeroColumns(FullIndigoFingerprint fingerprint) {
     IndigoFingerprint cutFingerprint;
-    std::vector<int> zeroColumns = {};
-    ifstream fin("zero_columns");
-    int number;
-    while (fin >> number) {
-        zeroColumns.push_back(number);
-    }
     int currentZero = 0;
     for (int i = 0; i < fromBytesToBits(fingerprint.sizeInBytes); ++i) {
         if (currentZero < zeroColumns.size() && i == zeroColumns[currentZero]) {
@@ -120,20 +117,22 @@ ABSL_FLAG(std::string, path_to_sdf_dir, "",
 ABSL_FLAG(std::string, path_to_rb_dir, "",
           "Path to dir with rb (raw bucket) files");
 
+ABSL_FLAG(std::string, path_to_zero_columns, "",
+          "Path to file with empty columns");
+
 int main(int argc, char *argv[]) {
-
-//    ifstream fin("/home/Vsevolod.Vaskin/qtr-fingerprint/data/pubchem/rbs/Compound_041500001_042000000.rb");
-//    uint64_t num;
-//    fin.read((char*)&num, sizeof num);
-//    cout << num << endl;
-//    return 0;
-
     google::InitGoogleLogging(argv[0]);
     absl::ParseCommandLine(argc, argv);
     filesystem::path pathToSdfDir = absl::GetFlag(FLAGS_path_to_sdf_dir);
     filesystem::path pathToRbDir = absl::GetFlag(FLAGS_path_to_rb_dir);
+    filesystem::path pathToZeroColumns = absl::GetFlag(FLAGS_path_to_zero_columns);
     emptyArgument(pathToSdfDir, "Please specify path_to_sdf_dir option");
     emptyArgument(pathToRbDir, "Please specify path_to_rb_dir option");
+    emptyArgument(pathToZeroColumns, "Please specify pah_to_zero_columns option");
+
+    ColumnsReader columnsReader(pathToZeroColumns);
+    zeroColumns = columnsReader.readAll();
+
     vector<filesystem::path> sdfFiles = findFiles(pathToSdfDir, ".sdf");
     auto startTime = std::chrono::high_resolution_clock::now();
 #pragma omp parallel for
