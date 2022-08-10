@@ -103,13 +103,13 @@ void createRBFromSDF(const filesystem::path &sdfFilePath, const filesystem::path
             written++;
         }
         catch (const exception &e) {
-            LOG(ERROR) << "Fail to parse molecule from" << sdfFilePath << " -- " << e.what();
+            LOG(ERROR) << "Fail to parse molecule from " << sdfFilePath << " -- " << e.what();
             skipped++;
         }
         if ((written + skipped) % 100'000 == 0)
             LOG(INFO) << (written + skipped) << " molecules was processed from " << sdfFilePath;
     }
-    LOG(INFO) << "Finish" << sdfFilePath << " : skipped -- " << skipped << ", written -- " << written;
+    LOG(INFO) << "Finish creating " << rbFilePath << " : skipped -- " << skipped << ", written -- " << written;
 }
 
 ABSL_FLAG(std::string, path_to_sdf_dir, "",
