@@ -28,18 +28,20 @@ namespace qtr {
     }
 
     std::vector<std::filesystem::path>
-    SplitterTree::buildWithoutSubTreeParallelize(uint64_t maxDepth, uint64_t maxBucketSize) const {
+    SplitterTree::buildWithoutSubTreeParallelization(uint64_t maxDepth, uint64_t maxBucketSize) const {
         auto leafs = _root->buildSubTree(maxDepth, maxBucketSize, true);
         return nodesToDirPaths(leafs);
     }
 
     std::vector<std::filesystem::path>
-    SplitterTree::buildWithSubTreeParallelize(uint64_t maxDepth, uint64_t maxBucketSize,
-                                              uint64_t parallelize_depth) const {
+    SplitterTree::buildWithSubTreeParallelization(uint64_t maxDepth, uint64_t maxBucketSize,
+                                                  uint64_t parallelize_depth) const {
         assert(parallelize_depth < maxDepth);
+        LOG(INFO) << "Start creating first parallelize_depth(" << parallelize_depth << ") levels of tree";
         auto nodesToRunTasks = _root->buildSubTree(parallelize_depth, maxBucketSize, true);
         std::vector<std::future<std::vector<Node *>>> tasks;
         tasks.reserve(nodesToRunTasks.size());
+        LOG(INFO) << "Start sub trees parallelization";
         for (auto leaf: nodesToRunTasks) {
             tasks.emplace_back(
                     std::async(std::launch::async, &SplitterTree::Node::buildSubTree, leaf,
@@ -59,9 +61,11 @@ namespace qtr {
     std::vector<std::filesystem::path>
     SplitterTree::build(uint64_t maxDepth, uint64_t maxBucketSize, uint64_t parallelize_depth) const {
         if (maxDepth <= parallelize_depth) {
-            return buildWithoutSubTreeParallelize(maxDepth, maxBucketSize);
+            LOG(INFO) << "Start tree building with subtree parallelization";
+            return buildWithoutSubTreeParallelization(maxDepth, maxBucketSize);
         } else {
-            return buildWithSubTreeParallelize(maxDepth, maxBucketSize, parallelize_depth);
+            LOG(INFO) << "Start tree building without subtree parallelization";
+            return buildWithSubTreeParallelization(maxDepth, maxBucketSize, parallelize_depth);
         }
     }
 
@@ -148,6 +152,9 @@ namespace qtr {
         uint64_t leftSize, rightSize;
         if (parallelize) {
             size_t bucketFilesCount = getFilesPaths().size();
+            assert(bucketFilesCount != 0 && "Can not split bucket without files");
+            LOG(INFO) << "Start parallel splitting of node " << _id << " with " << bucketFilesCount
+                      << " files related to it";
             _leftChild->addBucketFiles(bucketFilesCount);
             _rightChild->addBucketFiles(bucketFilesCount);
             std::tie(leftSize, rightSize) = splitRawBucketByBitParallel(getFilesPaths(), _splitBit,

@@ -15,8 +15,7 @@ namespace qtr {
     public:
         explicit RawBucketReader(std::istream *inStream);
 
-        explicit RawBucketReader(const std::filesystem::path &fileName) :
-                RawBucketReader(new std::ifstream(fileName)) {};
+        explicit RawBucketReader(const std::filesystem::path &fileName);
 
         RawBucketReader(const RawBucketReader &bucketLoader) = delete;
 
@@ -60,7 +59,7 @@ namespace qtr {
         static Iterator end();
 
     private:
-        uint64_t _bucketsInStream;
+        uint64_t _moleculesInStream;
         std::istream *_inStream;
     };
 

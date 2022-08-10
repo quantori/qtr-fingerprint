@@ -8,6 +8,7 @@ namespace qtr {
     RawBucketWriter::~RawBucketWriter() {
         _outStream->seekp(0, std::ios::beg);
         _outStream->write((char *) &_writtenNumber, sizeof _writtenNumber); // write bucket size
+        LOG(INFO) << "Delete raw bucket writer with " << _writtenNumber << " molecules (" << _outStream << ")";
         delete _outStream;
     }
 
@@ -28,6 +29,11 @@ namespace qtr {
 
     void RawBucketWriter::write(const std::vector<raw_bucket_value_t> &values) {
         std::copy(values.begin(), values.end(), this->begin());
+    }
+
+    RawBucketWriter::RawBucketWriter(const std::filesystem::path &fileName) :
+            RawBucketWriter(new std::ofstream(fileName)) {
+        LOG(INFO) << "Create raw bucket writer to " << fileName << " (" << _outStream << ")";
     }
 
     RawBucketWriter::Iterator::Proxy &RawBucketWriter::Iterator::Proxy::operator=(const raw_bucket_value_t &value) {

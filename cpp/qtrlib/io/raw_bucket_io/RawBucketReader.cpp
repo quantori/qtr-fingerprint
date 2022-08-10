@@ -11,13 +11,13 @@ namespace qtr {
         return {};
     }
 
-    RawBucketReader::RawBucketReader(std::istream *inStream) : _inStream(inStream), _bucketsInStream(0) {
-        _inStream->read((char *) &_bucketsInStream, sizeof _bucketsInStream);
+    RawBucketReader::RawBucketReader(std::istream *inStream) : _inStream(inStream), _moleculesInStream(0) {
+        _inStream->read((char *) &_moleculesInStream, sizeof _moleculesInStream);
     }
 
     RawBucketReader::Iterator::value_type RawBucketReader::readOne() {
-        assert(_bucketsInStream != 0);
-        _bucketsInStream--;
+        assert(_moleculesInStream != 0);
+        _moleculesInStream--;
         IndigoFingerprint fingerprint;
         std::string smiles;
         fingerprint.readFrom(*_inStream);
@@ -29,6 +29,7 @@ namespace qtr {
     }
 
     RawBucketReader::~RawBucketReader() {
+        LOG(INFO) << "Delete raw bucket reader (" << _inStream << ")";
         delete _inStream;
     }
 
@@ -38,8 +39,14 @@ namespace qtr {
         return rawBucket;
     }
 
+    RawBucketReader::RawBucketReader(const std::filesystem::path &fileName) :
+            RawBucketReader(new std::ifstream(fileName)) {
+        LOG(INFO) << "Create raw bucket reader from " << fileName << " with " << _moleculesInStream
+                  << " molecules (" << _inStream << ")";
+    }
+
     bool RawBucketReader::Iterator::isEnd() const {
-        return _reader == nullptr || _reader->_bucketsInStream == 0;
+        return _reader == nullptr || _reader->_moleculesInStream == 0;
     }
 
     RawBucketReader::Iterator::Iterator(RawBucketReader *reader) : _reader(reader), _isRead(false) {

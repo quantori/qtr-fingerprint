@@ -78,16 +78,17 @@ void createFingerprintCSVFromFile(const string &sdfFile) {
             fout << fingerprint_line.str() << endl;
         }
         catch (const exception &e) {
-            cerr << e.what() << endl;
+            LOG(INFO) << e.what();
         }
     }
 }
 
 void createRBFromSDF(const filesystem::path &sdfFilePath, const filesystem::path &rbFilePath) {
-    if (filesystem::exists(rbFilePath)) {
-        cerr << "skip: " << sdfFilePath << endl;
-        return;
-    }
+//    if (filesystem::exists(rbFilePath)) {
+//        LOG(INFO) << sdfFilePath << " already exist. It was skipped";
+//        return;
+//    }
+    LOG(INFO) << "start creating " << rbFilePath << " from " << sdfFilePath;
     auto indigoSessionPtr = IndigoSession::create();
     RawBucketWriter writer(rbFilePath);
     uint64_t skipped = 0;
@@ -102,13 +103,13 @@ void createRBFromSDF(const filesystem::path &sdfFilePath, const filesystem::path
             written++;
         }
         catch (const exception &e) {
-            cerr << e.what() << endl;
+            LOG(ERROR) << "Fail to parse molecule from" << sdfFilePath << " -- " << e.what();
             skipped++;
         }
+        if ((written + skipped) % 100'000 == 0)
+            LOG(INFO) << (written + skipped) << " molecules was processed from " << sdfFilePath;
     }
-    cerr << sdfFilePath << endl;
-    cerr << "\tskipped: " << skipped << endl;
-    cerr << "\twritten: " << written << endl;
+    LOG(INFO) << "Finish" << sdfFilePath << " : skipped -- " << skipped << ", written -- " << written;
 }
 
 ABSL_FLAG(std::string, path_to_sdf_dir, "",
@@ -122,14 +123,14 @@ ABSL_FLAG(std::string, path_to_zero_columns, "",
 
 int main(int argc, char *argv[]) {
     google::InitGoogleLogging(argv[0]);
+    google::LogToStderr();
     absl::ParseCommandLine(argc, argv);
     filesystem::path pathToSdfDir = absl::GetFlag(FLAGS_path_to_sdf_dir);
     filesystem::path pathToRbDir = absl::GetFlag(FLAGS_path_to_rb_dir);
     filesystem::path pathToZeroColumns = absl::GetFlag(FLAGS_path_to_zero_columns);
     emptyArgument(pathToSdfDir, "Please specify path_to_sdf_dir option");
     emptyArgument(pathToRbDir, "Please specify path_to_rb_dir option");
-    emptyArgument(pathToZeroColumns, "Please specify pah_to_zero_columns option");
-
+    emptyArgument(pathToZeroColumns, "Please specify path_to_zero_columns option");
     ColumnsReader columnsReader(pathToZeroColumns);
     zeroColumns = columnsReader.readAll();
 

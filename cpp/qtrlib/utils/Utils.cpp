@@ -22,7 +22,7 @@ std::vector<std::filesystem::path> findFiles(const std::filesystem::path &pathTo
     std::vector<std::filesystem::path> sdfFiles;
     for (const auto &entry: std::filesystem::recursive_directory_iterator(pathToDir)) {
         if (entry.path().extension() == extension) {
-            LOG(INFO) << entry.path().string() << std::endl;
+//            LOG(INFO) << entry.path().string() << std::endl;
             sdfFiles.push_back(entry.path());
         }
     }

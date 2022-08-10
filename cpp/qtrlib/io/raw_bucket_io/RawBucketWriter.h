@@ -12,8 +12,7 @@ namespace qtr {
     public:
         explicit RawBucketWriter(std::ostream *outStream);
 
-        explicit RawBucketWriter(const std::filesystem::path &fileName) :
-                RawBucketWriter(new std::ofstream(fileName)) {};
+        explicit RawBucketWriter(const std::filesystem::path &fileName);
 
         RawBucketWriter(const RawBucketWriter &bucketWriter) = delete;
 

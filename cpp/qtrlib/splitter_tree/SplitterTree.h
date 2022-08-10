@@ -28,10 +28,10 @@ namespace qtr {
         std::atomic_uint64_t _countOfNodes;
         Node *_root;
 
-        std::vector<std::filesystem::path> buildWithoutSubTreeParallelize(uint64_t maxDepth, uint64_t maxBucketSize) const;
+        std::vector<std::filesystem::path> buildWithoutSubTreeParallelization(uint64_t maxDepth, uint64_t maxBucketSize) const;
 
         std::vector<std::filesystem::path>
-        buildWithSubTreeParallelize(uint64_t maxDepth, uint64_t maxBucketSize, uint64_t parallelize_depth) const;
+        buildWithSubTreeParallelization(uint64_t maxDepth, uint64_t maxBucketSize, uint64_t parallelize_depth) const;
 
     public:
         /**

@@ -1,9 +1,6 @@
 #include "indigo.h"
 
-#include "IndigoMolecule.h"
-#include "IndigoSession.h"
 #include "IndigoWriteBuffer.h"
-#include "IndigoSDFileIterator.h"
 
 #include <glog/logging.h>
 
@@ -14,8 +11,6 @@
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 
-#include "Utils.h"
-#include "Fingerprint.h"
 #include "SplitterTree.h"
 #include "ColumnsChoice.h"
 
@@ -27,111 +22,67 @@ using namespace std;
 //#pragma GCC optimize("O3")
 //#pragma GCC optimize("unroll-loops")
 
-using std::filesystem::path;
+ABSL_FLAG(std::string, path_to_store_dir, "", "Path to directory where data should be stored");
 
-vector<int> readColumns(const path &pathToColumns) {
-    ifstream fin(pathToColumns.string());
-    std::vector<int> zeroColumns;
-    int number;
-    while (fin >> number) {
-        zeroColumns.push_back(number);
-    }
-    assert(is_sorted(zeroColumns.begin(), zeroColumns.end()));
-    return zeroColumns;
-}
+ABSL_FLAG(std::string, path_to_rb_files_dir, "", "Path to directory where raw bucket files to build structure are stored");
 
-IndigoFingerprint cutZeroColumns(FullIndigoFingerprint fingerprint, const vector<int> &zeroColumns) {
-    IndigoFingerprint cutFingerprint;
-    int j = 0;
-    int currentZeroPos = 0;
-    for (int i = 0; i < fromBytesToBits(qtr::FullIndigoFingerprint::sizeInBytes); ++i) {
-        if (currentZeroPos < zeroColumns.size() && i == zeroColumns[currentZeroPos]) {
-            currentZeroPos++;
+filesystem::path getStoreDirPath(const filesystem::path& dataDir) {
+    for (size_t i = 0;;i++) {
+        auto path = dataDir / ("search_data_" + to_string(i));
+        if (filesystem::exists(path))
             continue;
-        }
-        assert(i - currentZeroPos == j);
-        cutFingerprint[j++] = fingerprint[i];
+        filesystem::create_directory(path);
+        LOG(INFO) << "Store data to " << path << endl;
+        return path;
     }
-    assert(j == fromBytesToBits(IndigoFingerprint::sizeInBytes));
-    return cutFingerprint;
 }
-
-/**
- * Merges many sdf files into one, named "0". Suitable for Splitter Tree.
- * @param sdfDir -- directory with sdf files
- */
-void prepareSDFsForSplitterTree(const path &sdfDir, const path &columnsPath, const path& outFilePath) {
-    auto indigoSessionPtr = IndigoSession::create();
-    ofstream out(outFilePath);
-    auto zeroColumns = readColumns(columnsPath);
-    uint64_t cntMols = 0;
-    uint64_t cntSkipped = 0;
-    out.write((char *) (&cntMols), sizeof(cntMols)); // Reserve space for bucket size
-    for (auto &sdfFile: findFiles(sdfDir, ".sdf")) {
-        for (auto &mol: indigoSessionPtr->iterateSDFile(sdfFile)) {
-            try {
-                mol->aromatize();
-                int fingerprint = indigoFingerprint(mol->id(), "sub");
-                FullIndigoFingerprint fp(indigoToString(fingerprint));
-                IndigoFingerprint cutFP = cutZeroColumns(fp, zeroColumns);
-                cutFP.saveBytes(out);
-                out << mol->smiles() << '\n';
-                ++cntMols;
-            }
-            catch (...) {
-                cntSkipped++;
-            }
-        }
-    }
-    out.seekp(0, ios::beg); // Seek to the beginning of file
-    out.write((char *) (&cntMols), sizeof(cntMols));
-    if (cntSkipped)
-        std::cerr << "Skipped " << cntSkipped << " molecules\n";
-}
-
-ABSL_FLAG(std::string, data_dir_path, "", "Path to data dir");
 
 int main(int argc, char *argv[]) {
     google::InitGoogleLogging(argv[0]);
+    google::LogToStderr();
     absl::ParseCommandLine(argc, argv);
 
-    auto now = std::chrono::high_resolution_clock::now;
-    using duration = std::chrono::duration<double>;
+    std::filesystem::path baseStoreDirPath = absl::GetFlag(FLAGS_path_to_store_dir);
+    std::filesystem::path rbFilesPath = absl::GetFlag(FLAGS_path_to_rb_files_dir);
 
-    path dataDirPath = absl::GetFlag(FLAGS_data_dir_path);
-    path sdfFilesPath = dataDirPath / "sdf";
-    path zeroColumnsPath = dataDirPath / "zero_columns";
-    path rawBucketsDirPath = dataDirPath / "raw_buckets";
-    path splitterTreeFilePath = dataDirPath / "tree";
+    emptyArgument(baseStoreDirPath, "Please specify path_to_store_dir option");
+    emptyArgument(rbFilesPath, "Please specify path_to_rb_files_dir option");
+
+    auto storeDirPath = getStoreDirPath(baseStoreDirPath);
+    auto rawBucketsDirPath = storeDirPath / "raw_buckets";
+    auto splitterTreeFilePath = storeDirPath / "tree";
+    auto treeRootNodeDirPath = rawBucketsDirPath / "0";
 
     filesystem::create_directory(rawBucketsDirPath);
+    filesystem::create_directory(treeRootNodeDirPath);
+    filesystem::copy(rbFilesPath, treeRootNodeDirPath);
 
-    auto startTime = now();
-//     Parse sdf files
-//    prepareSDFsForSplitterTree(sdfFilesPath, zeroColumnsPath, rawBucketsDirPath / "0");
-    auto timePoint1 = std::chrono::high_resolution_clock::now();
-    duration parseSdfTime = timePoint1 - startTime;
-//    std::cout << "SDF files are parsed in time: " << parseSdfTime.count() << "s\n";
+
+
+    auto timePoints = vector{chrono::high_resolution_clock::now()};
+
+    auto tickTimePoint = [&timePoints](const string &message) {
+        auto t1 = timePoints.back();
+        timePoints.emplace_back(chrono::high_resolution_clock::now());
+        auto t2 = timePoints.back();
+        chrono::duration<double> t = t2 - t1;
+        LOG(INFO) << message << " : " << t.count() << " sec" << endl;
+    };
 
     // Build splitter tree
     SplitterTree tree(rawBucketsDirPath);
     tree.build(11, 5000, 3);
     ofstream treeFileOut(splitterTreeFilePath);
     tree.dump(treeFileOut);
-    auto timePoint2 = now();
-    duration buildSplitterTreeTime = timePoint2 - timePoint1;
-    std::cout << "Splitter tree is built in time: " << buildSplitterTreeTime.count() << '\n';
+    tickTimePoint("Splitter tree is built");
 
     // Choose minimum correlated columns
     ColumnsChooser<qtr::PearsonCorrelationChoiceFunc> columnsChooser(rawBucketsDirPath,
                                                                      qtr::PearsonCorrelationChoiceFunc());
     columnsChooser.handleRawBuckets();
-    auto timePoint3 = now();
-    duration chooseMinCorrColsTime = timePoint3 - timePoint2;
-    std::cout << "Columns are chosen in time: " << chooseMinCorrColsTime.count() << '\n';
+    tickTimePoint("Columns are chosen");
 
-    auto endTime = now();
-    duration elapsed_seconds = endTime - startTime;
+    chrono::duration<double> elapsed_seconds = timePoints.back() - timePoints.front();
     std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
     return 0;
 }
