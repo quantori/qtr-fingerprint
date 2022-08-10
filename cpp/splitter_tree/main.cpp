@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
 
     // Build splitter tree
     SplitterTree tree(rawBucketsDirPath);
-    tree.build(11, 5000, 3);
+    tree.build(11, 10000, 3);
     ofstream treeFileOut(splitterTreeFilePath);
     tree.dump(treeFileOut);
     tickTimePoint("Splitter tree is built");

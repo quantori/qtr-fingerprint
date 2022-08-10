@@ -1,8 +1,9 @@
 from __future__ import annotations
-from typing import List, Generator
+from typing import List, Generator, BinaryIO
+from pathlib import Path
 
 from substrucure_finder import consts
-from substrucure_finder.consts import Fingerprint
+from substrucure_finder.fingerprint import Fingerprint
 
 
 class SplitterTree:
@@ -16,6 +17,16 @@ class SplitterTree:
         @property
         def is_leaf(self) -> bool:
             return self.split_bit == consts.uint64_minus_one
+
+        @classmethod
+        def load_from_stream(cls, stream: BinaryIO) -> SplitterTree.Node:
+            bytes_array = stream.read(32)
+            assert len(bytes_array) == 32
+            node_id = int.from_bytes(bytes_array[0:8], byteorder=consts.byteorder, signed=False)
+            split_bit = int.from_bytes(bytes_array[8:16], byteorder=consts.byteorder, signed=False)
+            left = int.from_bytes(bytes_array[16:24], byteorder=consts.byteorder, signed=False)
+            right = int.from_bytes(bytes_array[24:32], byteorder=consts.byteorder, signed=False)
+            return SplitterTree.Node(node_id, split_bit, left, right)
 
     def __init__(self, nodes: List[SplitterTree.Node]) -> None:
         self.nodes = nodes
@@ -50,3 +61,12 @@ class SplitterTree:
 
     def get_buckets(self, fingerprint: Fingerprint) -> Generator[int, None, None]:
         return self.__walk_tree(fingerprint, self.root)
+
+    @classmethod
+    def load(cls, file_path: Path) -> SplitterTree:
+        assert file_path.is_file(), "Path to load splitter tree from must be a file"
+        with file_path.open('rb') as stream:
+            nodes_count = int.from_bytes(stream.read(8), byteorder=consts.byteorder, signed=False)
+            nodes = [SplitterTree.Node.load_from_stream(stream) for _ in range(nodes_count)]
+            nodes.sort(key=lambda node: node.id)
+            return SplitterTree(nodes)

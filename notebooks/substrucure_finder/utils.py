@@ -2,7 +2,7 @@ from typing import List
 import numpy as np
 from pathlib import Path
 
-from substrucure_finder.consts import Fingerprint
+from substrucure_finder.fingerprint import Fingerprint
 from substrucure_finder import consts
 
 
@@ -42,3 +42,9 @@ def columns_path(data_path: Path, bucket: int) -> Path:
 def byte_to_bits(byte: int) -> str:
     assert 0 <= byte < 256
     return bin(byte)[2::].rjust(8, '0')[::-1]
+
+
+def load_columns_from_file(file_path: Path) -> List[int]:
+    assert file_path.is_file(), "Path to load columns from must be a file"
+    with file_path.open('rb') as f:
+        return list(map(int, f.read().split()))
