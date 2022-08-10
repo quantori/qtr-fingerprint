@@ -24,6 +24,5 @@ class BucketSearchEngine:
         ball_tree_answers = self.ball_tree.query_radius([sub_fingerprint], radius)[0]
         filtered_answers = [i for i in ball_tree_answers if
                             utils.is_sub_fingerprint(fingerprint, self.bucket_fingerprints[i])]
-        print(filtered_answers)
-        print(ball_tree_answers)
-        return [self.id_to_smiles[i] for i in filtered_answers]
+        answers = [self.id_to_smiles[i] for i in filtered_answers]
+        return answers
