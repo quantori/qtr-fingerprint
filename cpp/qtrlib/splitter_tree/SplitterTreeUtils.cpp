@@ -3,8 +3,6 @@
 #include <numeric>
 
 namespace qtr {
-
-
     namespace {
         /**
          * @return {sums for each column in file, number of molecules in file}
@@ -57,8 +55,8 @@ namespace qtr {
         }
 
         std::pair<uint64_t, uint64_t>
-        splitFileByBit(RawBucketReader &reader, uint64_t &splitBit, RawBucketWriter &zerosWriter,
-                       RawBucketWriter &onesWriter) {
+        splitRawBucketStreamByBit(RawBucketReader &reader, uint64_t &splitBit, RawBucketWriter &zerosWriter,
+                                  RawBucketWriter &onesWriter) {
             uint64_t leftSize = 0, rightSize = 0;
             for (const auto &[smiles, fp]: reader) {
                 if (fp[splitBit]) {
@@ -69,6 +67,16 @@ namespace qtr {
                     rightSize++;
                 }
             }
+            return {leftSize, rightSize};
+        }
+
+        std::pair<uint64_t, uint64_t>
+        splitFileByBit(const std::filesystem::path &bucketFile, uint64_t splitBit,
+                       const std::filesystem::path &zerosFile,
+                       const std::filesystem::path &onesFile) {
+            RawBucketReader reader(bucketFile);
+            RawBucketWriter zerosWriter(zerosFile), onesWriter(onesFile);
+            auto [leftSize, rightSize] = splitRawBucketStreamByBit(reader, splitBit, zerosWriter, onesWriter);
             return {leftSize, rightSize};
         }
     } // namespace
@@ -82,7 +90,7 @@ namespace qtr {
         RawBucketWriter onesWriter(onesFilePath);
         for (const auto &filePath: bucketFiles) {
             RawBucketReader reader(filePath);
-            auto [fileLeftSize, fileRightSize] = splitFileByBit(reader, splitBit, zerosWriter, onesWriter);
+            auto [fileLeftSize, fileRightSize] = splitRawBucketStreamByBit(reader, splitBit, zerosWriter, onesWriter);
             leftSize += fileLeftSize;
             rightSize += fileRightSize;
         }
@@ -94,19 +102,23 @@ namespace qtr {
                                 const std::vector<std::filesystem::path> &zerosFiles,
                                 const std::vector<std::filesystem::path> &onesFiles) {
         assert(bucketFiles.size() == zerosFiles.size() && bucketFiles.size() == onesFiles.size());
+        LOG(INFO) << "Start parallel splitting of " << bucketFiles[0] << " and other " << bucketFiles.size() - 1
+                  << " neighbor files";
         std::vector<std::future<std::pair<uint64_t, uint64_t>>> tasks;
-        std::vector<uint64_t> leftSizes(bucketFiles.size(), 0), rightSizes(bucketFiles.size(), 0);
-        // todo check that parallelization works correctly
-#pragma omp parallel for shared(leftSizes, rightSizes)
+        tasks.reserve(bucketFiles.size());
         for (size_t i = 0; i < bucketFiles.size(); i++) {
-            RawBucketReader reader(bucketFiles[i]);
-            RawBucketWriter zerosWriter(zerosFiles[i]), onesWriter(onesFiles[i]);
-            auto [leftSize, rightSize] = splitFileByBit(reader, splitBit, zerosWriter, onesWriter);
-            leftSizes[i] = leftSize;
-            rightSizes[i] = rightSize;
+            tasks.emplace_back(std::async(std::launch::async, splitFileByBit, bucketFiles[i], splitBit, zerosFiles[i],
+                                          onesFiles[i]));
         }
-        return {std::accumulate(leftSizes.begin(), leftSizes.end(), 0ull),
-                std::accumulate(rightSizes.begin(), rightSizes.end(), 0ull)};
+        uint64_t leftSize = 0, rightSize = 0;
+        for (auto &task: tasks) {
+            auto [fileLeftSize, fileRightSize] = task.get();
+            leftSize += fileLeftSize;
+            rightSize += fileRightSize;
+        }
+        LOG(INFO) << "Finish parallel splitting of " << bucketFiles[0] << " and other " << bucketFiles.size() - 1
+                  << " neighbor files";
+        return {leftSize, rightSize};
     }
 
     uint64_t findBestBitToSplit(const std::vector<std::filesystem::path> &rawBucketFiles, bool parallelize) {
@@ -131,4 +143,5 @@ namespace qtr {
         }
         return paths;
     }
+
 }
