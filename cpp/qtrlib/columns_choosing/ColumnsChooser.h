@@ -60,13 +60,14 @@ namespace qtr {
         std::vector<future_t> tasks;
         int started = 0;
         for (const auto &bucketPath: findFiles(_bucketsDir, "")) {
+            assert(std::filesystem::is_directory(bucketPath));
             tasks.emplace_back(std::async(std::launch::async, handleRawBucket<Functor>, bucketPath, _choiceFunc));
-            std::cerr << "start: " << ++started << std::endl;
+            LOG(INFO) << "Start choosing columns for " << bucketPath << " (" << ++started << ")";
         }
         int completed = 0;
         for (auto &task: tasks) {
             task.get();
-            std::cerr << "complete: " << ++completed << std::endl;
+            LOG(INFO) << "Complete choosing columns (" << ++completed << ")";
         }
     }
 

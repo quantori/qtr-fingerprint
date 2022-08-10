@@ -57,8 +57,6 @@ int main(int argc, char *argv[]) {
     filesystem::create_directory(treeRootNodeDirPath);
     filesystem::copy(rbFilesPath, treeRootNodeDirPath);
 
-
-
     auto timePoints = vector{chrono::high_resolution_clock::now()};
 
     auto tickTimePoint = [&timePoints](const string &message) {
