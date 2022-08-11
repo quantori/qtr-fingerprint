@@ -4,19 +4,25 @@
 #include <cstdint>
 #include <cmath>
 #include <algorithm>
+#include <numeric>
 #include <stdexcept>
+#include <random>
 
 namespace qtr {
 
+    namespace {
+        std::mt19937 colChoiceRandom(123);
+    }
+
     bool isConstColumn(const std::vector<bool> &x) {
-        return std::all_of(x.begin(), x.end(), [val=x[0]](bool a) {
+        return std::all_of(x.begin(), x.end(), [val = x[0]](bool a) {
             return a == val;
         });
     }
 
     double findPearsonCorrelation(const std::vector<bool> &x, const std::vector<bool> &y) {
         assert(x.size() == y.size());
-        int64_t n = (int32_t)x.size();
+        int64_t n = (int32_t) x.size();
         int64_t c[2][2] = {0, 0, 0, 0};
         int64_t xSum = 0, ySum = 0;
         for (size_t i = 0; i < x.size(); i++) {
@@ -35,7 +41,7 @@ namespace qtr {
             }
         }
         int64_t denominator = xSum * (n - xSum) * ySum * (n - ySum);
-        return double(numerator) / (double) n / sqrt((double)denominator);
+        return double(numerator) / (double) n / sqrt((double) denominator);
     }
 
     std::vector<double> findMaxAbsPearsonCorrelation(const std::vector<std::vector<bool>> &columns) {
@@ -54,6 +60,18 @@ namespace qtr {
             }
         }
         return maxCorrelation;
+    }
+
+    qtr::IndigoFingerprintTable chooseSubset(const IndigoFingerprintTable &fingerprints, size_t subsetSize) {
+        std::vector<size_t> indexes(fingerprints.size());
+        std::iota(indexes.begin(), indexes.end(), 0);
+        std::shuffle(indexes.begin(), indexes.end(), colChoiceRandom);
+        indexes.resize(std::min(subsetSize, indexes.size()));
+        IndigoFingerprintTable subset;
+        for (size_t index: indexes) {
+            subset.emplace_back(fingerprints[index]);
+        }
+        return subset;
     }
 
 } // namespace qtr

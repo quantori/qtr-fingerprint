@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include "FingerprintTable.h"
 
 namespace qtr {
 
@@ -11,5 +12,7 @@ namespace qtr {
     bool isConstColumn(const std::vector<bool> &x);
 
     std::vector<double> findMaxAbsPearsonCorrelation(const std::vector<std::vector<bool>> &columns);
+
+    qtr::IndigoFingerprintTable chooseSubset(const IndigoFingerprintTable& fingerprints, size_t subsetSize);
 
 } // namespace qtr
