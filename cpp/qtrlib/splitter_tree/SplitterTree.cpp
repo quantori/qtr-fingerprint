@@ -45,7 +45,7 @@ namespace qtr {
         for (auto leaf: nodesToRunTasks) {
             tasks.emplace_back(
                     std::async(std::launch::async, &SplitterTree::Node::buildSubTree, leaf,
-                               maxDepth - parallelize_depth, maxBucketSize, false)
+                               maxDepth, maxBucketSize, false)
             );
         }
         std::vector<std::filesystem::path> bucketPaths;
