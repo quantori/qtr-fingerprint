@@ -64,8 +64,8 @@ namespace qtr {
         static Iterator end();
 
     private:
-        uint64_t _writtenNumber;
         std::ostream *_outStream;
+        uint64_t _writtenNumber;
     };
 
 } // namespace qtr
