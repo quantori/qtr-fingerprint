@@ -15,7 +15,7 @@ class SearchEngine:
         self.splitter_tree = SplitterTree.load(utils.splitter_tree_path(self.data_path))
 
     def search(self, fingerprint: Fingerprint) -> Generator[str, None, None]:
-        assert len(fingerprint) == consts.fingerprint_size
+        assert len(fingerprint) == consts.fingerprint_size_in_bits
         for bucket in self.splitter_tree.get_buckets(fingerprint):
             # print(f'Look into bucket: {bucket}', file=sys.stderr)
             bucket_search_engine = BucketSearchEngine.load(utils.bucket_path(self.data_path, bucket))

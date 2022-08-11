@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import sys
 from typing import List, Iterable
+
+import pandas as pd
 from sklearn.neighbors import BallTree
 from pathlib import Path
 import joblib
@@ -15,16 +17,16 @@ from substrucure_finder.molecule import Molecule
 
 
 class BucketSearchEngine:
-    def __init__(self, molecules: List[Molecule], columns: List[int]) -> None:
-        assert all(map(lambda x: len(x.fingerprint) == consts.fingerprint_size, molecules))
+    def __init__(self, molecules: pd.DataFrame, columns: List[int]) -> None:
         self.columns = columns
         self.molecules = molecules
         sub_fingerprints = [utils.take_columns_from_fingerprint(self.columns, fp) for fp in
-                            map(lambda x: x.fingerprint, molecules)]
+                            map(lambda i: molecules.iloc[i].values, range(len(molecules)))]
         self.ball_tree = BallTree(sub_fingerprints, leaf_size=2, metric='russellrao')
 
     def search(self, fingerprint: Fingerprint, data_path: Path, bucket_id: int) -> Iterable[str]:
         # print('ball tree query', file=sys.stderr)
+        assert fingerprint.dtype == bool
         sub_fingerprint = utils.take_columns_from_fingerprint(self.columns, fingerprint)
         radius = utils.russelrao_radius(sub_fingerprint)
         ball_tree_answers = self.ball_tree.query_radius([sub_fingerprint], radius)[0]
@@ -33,8 +35,8 @@ class BucketSearchEngine:
             return list()
 
         filtered_answers = [i for i in ball_tree_answers if
-                            utils.is_sub_fingerprint(fingerprint, self.molecules[i].fingerprint)]
-        answers = [self.molecules[i].smiles for i in filtered_answers]
+                            utils.is_sub_fingerprint(fingerprint, self.molecules.iloc[i].values)]
+        answers = [self.molecules.iloc[i].name for i in filtered_answers]
         return answers
         # print('load more info', file=sys.stderr)
         # molecules = Molecule.load_list_from_dir(utils.raw_bucket_path(data_path, bucket_id))

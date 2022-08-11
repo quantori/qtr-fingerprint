@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import BinaryIO, List
 from pathlib import Path
 import numpy as np
+import pandas as pd
 
 from substrucure_finder.buffered_stream import BufferedStream
 from substrucure_finder import consts
@@ -19,37 +20,17 @@ class Molecule:
     fingerprint: Fingerprint
 
     @classmethod
-    def load_fingerprint_from_stream(cls, stream: BufferedStream) -> Fingerprint:
-        fingerprint_bytes = stream.read(consts.fingerprint_size_in_bytes)
-        assert len(fingerprint_bytes) == consts.fingerprint_size_in_bytes
-        fingerprint_bin_str = ''.join(map(byte_to_bits, fingerprint_bytes))
-        assert len(fingerprint_bin_str) == consts.fingerprint_size
-        fingerprint = Fingerprint(np.fromiter(list(map(int, fingerprint_bin_str)), dtype=bool))
-        assert len(fingerprint) == consts.fingerprint_size
-        return fingerprint
-
-    @classmethod
-    def load_smiles_from_stream(cls, stream: BufferedStream) -> str:
-        return stream.read_until('\n')
-
-    @classmethod
-    def load_list_from_stream(cls, stream: BufferedStream) -> List[Molecule]:
-        molecules_number = int.from_bytes(stream.read(8), byteorder=consts.byteorder, signed=False)
-        result = list()
-        for _ in range(molecules_number):
-            fingerprint = cls.load_fingerprint_from_stream(stream)
-            smiles = cls.load_smiles_from_stream(stream)
-            assert len(fingerprint) == consts.fingerprint_size
-            result.append(Molecule(smiles, fingerprint))
-        return result
-
-    @classmethod
-    def load_list_from_dir(cls, dir_path: Path) -> List[Molecule]:
+    def load_list_from_dir(cls, dir_path: Path) -> pd.DataFrame:
+        file_path = dir_path / "0.csv"
+        df = pd.read_csv(file_path, header=0, index_col=0, delimiter='~',
+                         dtype=dict((str(i), bool) for i in range(consts.fingerprint_size_in_bits)))
+        # result = [(Molecule(df.iloc[i].name, Fingerprint(df.iloc[i].values))) for i in range(len(df))]
+        return df
         # print("start info loading", file=sys.stderr)
-        stream = BufferedStream(dir_path / '0.rb')
-        res = cls.load_list_from_stream(stream)
+        # stream = BufferedStream(dir_path / '0.rb')
+        # res = cls.load_list_from_stream(stream)
         # print("finish info loading", file=sys.stderr)
-        return res
+        # return res
         # with (dir_path / '0.rb').open('rb') as stream:
         #     result += cls.load_list_from_stream(stream)
         # return result
