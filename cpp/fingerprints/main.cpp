@@ -65,10 +65,10 @@ IndigoFingerprint cutZeroColumns(FullIndigoFingerprint fingerprint) {
     return cutFingerprint;
 }
 
-void createFingerprintCSVFromFile(const string &sdfFile) {
+void createCSVFromSDF(const filesystem::path &sdfFilePath, const filesystem::path &csvFilePath) {
     auto indigoSessionPtr = IndigoSession::create();
-    ofstream fout(sdfFile + ".csv");
-    for (auto &mol: indigoSessionPtr->iterateSDFile(sdfFile)) {
+    ofstream fout(csvFilePath);
+    for (auto &mol: indigoSessionPtr->iterateSDFile(sdfFilePath)) {
         try {
             ostringstream fingerprint_line;
             mol->aromatize();
@@ -115,22 +115,31 @@ void createRBFromSDF(const filesystem::path &sdfFilePath, const filesystem::path
 ABSL_FLAG(std::string, path_to_sdf_dir, "",
           "Path to dir with sdf files");
 
-ABSL_FLAG(std::string, path_to_rb_dir, "",
+ABSL_FLAG(std::string, path_to_store_dir, "",
           "Path to dir with rb (raw bucket) files");
 
 ABSL_FLAG(std::string, path_to_zero_columns, "",
           "Path to file with empty columns");
+
+ABSL_FLAG(std::string, type_of_output, "",
+          "Type of output objects. Possible values: rb, csv");
 
 int main(int argc, char *argv[]) {
     google::InitGoogleLogging(argv[0]);
     google::LogToStderr();
     absl::ParseCommandLine(argc, argv);
     filesystem::path pathToSdfDir = absl::GetFlag(FLAGS_path_to_sdf_dir);
-    filesystem::path pathToRbDir = absl::GetFlag(FLAGS_path_to_rb_dir);
+    filesystem::path pathToStoreDir = absl::GetFlag(FLAGS_path_to_store_dir);
     filesystem::path pathToZeroColumns = absl::GetFlag(FLAGS_path_to_zero_columns);
+    std::string type_of_output = absl::GetFlag(FLAGS_type_of_output);
     emptyArgument(pathToSdfDir, "Please specify path_to_sdf_dir option");
-    emptyArgument(pathToRbDir, "Please specify path_to_rb_dir option");
+    emptyArgument(pathToStoreDir, "Please specify path_to_store_dir option");
     emptyArgument(pathToZeroColumns, "Please specify path_to_zero_columns option");
+    if (type_of_output != "csv" && type_of_output != "rb") {
+        LOG(ERROR) << "Please specify type_of_output option with value \"csv\" or \"rb\"";
+        exit(-1);
+    }
+
     ColumnsReader columnsReader(pathToZeroColumns);
     zeroColumns = columnsReader.readAll();
 
@@ -139,9 +148,12 @@ int main(int argc, char *argv[]) {
 #pragma omp parallel for
     for (int i = 0; i < sdfFiles.size(); ++i) {
         auto &sdfFilePath = sdfFiles[i];
-        auto rbFilePath = pathToRbDir / (string(sdfFilePath.stem()) + ".rb");
-        createRBFromSDF(sdfFiles[i], rbFilePath);
-//        createFingerprintCSVFromFile(sdfFiles[i]);
+        auto outFilePath = pathToStoreDir / (string(sdfFilePath.stem()) + "." + type_of_output);
+        if (type_of_output == "csv") {
+            createCSVFromSDF(sdfFiles[i], outFilePath);
+        } else if (type_of_output == "rb") {
+            createRBFromSDF(sdfFiles[i], outFilePath);
+        }
     }
     auto endTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_seconds = endTime - startTime;
