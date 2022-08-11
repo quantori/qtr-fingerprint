@@ -11,6 +11,8 @@
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 
+#include "RawBucketsIO.h"
+#include "CSVRawBucketIO.h"
 #include "SplitterTree.h"
 #include "ColumnsChoice.h"
 
@@ -24,10 +26,11 @@ using namespace std;
 
 ABSL_FLAG(std::string, path_to_store_dir, "", "Path to directory where data should be stored");
 
-ABSL_FLAG(std::string, path_to_rb_files_dir, "", "Path to directory where raw bucket files to build structure are stored");
+ABSL_FLAG(std::string, path_to_rb_files_dir, "",
+          "Path to directory where raw bucket files to build structure are stored");
 
-filesystem::path getStoreDirPath(const filesystem::path& dataDir) {
-    for (size_t i = 0;;i++) {
+filesystem::path getStoreDirPath(const filesystem::path &dataDir) {
+    for (size_t i = 0;; i++) {
         auto path = dataDir / ("search_data_" + to_string(i));
         if (filesystem::exists(path))
             continue;
@@ -79,6 +82,27 @@ int main(int argc, char *argv[]) {
                                                                      qtr::PearsonCorrelationChoiceFunc());
     columnsChooser.handleRawBuckets();
     tickTimePoint("Columns are chosen");
+#pragma omp parallel for
+    for (const auto &dirPath: findFiles(rawBucketsDirPath, "")) {
+        if (!filesystem::is_directory(dirPath))
+            continue;
+        LOG(INFO) << "Start creating CSV for " << dirPath;
+        for (const auto &filePath: findFiles(dirPath, rawBucketExtension)) {
+            {
+                RawBucketReader reader(filePath);
+                filesystem::path outFilePath = filePath;
+                outFilePath.replace_extension(csvFileExtension);
+                CSVRawBucketWriter writer(outFilePath);
+                for (const auto &value: reader) {
+                    writer.write(value);
+                }
+            }
+            filesystem::remove(filePath);
+        }
+        LOG(INFO) << "Finish creating CSV for " << dirPath;
+    }
+    // Convert rbs to csvs
+
 
     chrono::duration<double> elapsed_seconds = timePoints.back() - timePoints.front();
     std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";

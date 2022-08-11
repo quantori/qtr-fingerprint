@@ -11,6 +11,6 @@ namespace qtr {
 
     const std::string csvFileExtension = ".csv";
 
-    const char csvSplitSymbol = ',';
+    const char csvSplitSymbol = '~';
 
 } // namespace qtr

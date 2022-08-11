@@ -6,9 +6,9 @@ namespace qtr {
     CSVRawBucketWriter::CSVRawBucketWriter(std::ostream *outStream) : _outStream(outStream), _writtenNumber(0) {
         *_outStream << "SMILES" << csvSplitSymbol;
         for (size_t i = 0; i < IndigoFingerprint::sizeInBits; i++) {
-            *_outStream << i << csvSplitSymbol;
+            *_outStream << i;
+            *_outStream << (i + 1 == IndigoFingerprint::sizeInBits ? '\n' : csvSplitSymbol);
         }
-        *_outStream << '\n';
     }
 
     CSVRawBucketWriter::CSVRawBucketWriter(const std::filesystem::path &fileName) :
@@ -23,9 +23,9 @@ namespace qtr {
         const auto &[smiles, fingerprint] = value;
         *_outStream << smiles << csvSplitSymbol;
         for (size_t i = 0; i < IndigoFingerprint::sizeInBits; i++) {
-            *_outStream << fingerprint[i] << csvSplitSymbol;
+            *_outStream << fingerprint[i];
+            *_outStream << (i + 1 == IndigoFingerprint::sizeInBits ? '\n' : csvSplitSymbol);
         }
-        *_outStream << '\n';
     }
 
     void CSVRawBucketWriter::write(const std::vector<csv_raw_bucket_value_t> &values) {
