@@ -6,7 +6,6 @@ from substrucure_finder.bucket_search_engine import BucketSearchEngine
 from substrucure_finder.splitter_tree import SplitterTree
 from substrucure_finder.molecule import Molecule
 from substrucure_finder import utils
-from substrucure_finder import consts
 
 
 class BucketsInitializer:
@@ -28,8 +27,4 @@ class BucketsInitializer:
         assert len(columns) == self.columns_count
         bucket_search_engine = BucketSearchEngine(df, columns)
         bucket_search_engine.dump(utils.bucket_path(self.dir_path, bucket))
-        # smiles_list = list(map(lambda x: x.smiles, raw_bucket))
-        # fingerprints_list = list(map(lambda x: x.fingerprint, raw_bucket))
-        # Molecule.dump_smiles_list(smiles_list, self.dir_path / 'buckets' / (str(bucket) + '.smiles'))
-        # Molecule.dump_fingerprints_list(fingerprints_list, self.dir_path / 'buckets' / (str(bucket) + '.fp'))
         print(f"Finish init {bucket}")

@@ -103,7 +103,6 @@ int main(int argc, char *argv[]) {
     }
     // Convert rbs to csvs
 
-
     chrono::duration<double> elapsed_seconds = timePoints.back() - timePoints.front();
     std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
     return 0;
