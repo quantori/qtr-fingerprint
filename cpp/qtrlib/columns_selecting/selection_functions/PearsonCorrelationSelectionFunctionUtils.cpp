@@ -1,4 +1,5 @@
 #include "PearsonCorrelationSelectionFunctionUtils.h"
+#include "columns_io/ColumnsIOConsts.h"
 
 #include <cassert>
 #include <cstdint>
@@ -44,14 +45,24 @@ namespace qtr {
         return double(numerator) / (double) n / sqrt((double) denominator);
     }
 
-    std::vector<double> findMaxAbsPearsonCorrelation(const std::vector<std::vector<bool>> &columns) {
-        std::vector<double> maxCorrelation(columns.size());
-        for (size_t x = 0; x < columns.size(); x++) {
+    std::vector<double> findMaxAbsPearsonCorrelation(const std::vector<std::vector<bool>> &columns,
+                                                     const std::vector<size_t> &columnsIndexes = {}) {
+        std::vector<double> maxCorrelation(columns.size(), pearsonCorrelationInfinityValue);
+        const std::vector<size_t> *indexes = &columnsIndexes;
+        std::vector<size_t> fullIndexes;
+        if (columnsIndexes.empty()) {
+            fullIndexes.resize(columns.size());
+            std::iota(fullIndexes.begin(), fullIndexes.end(), 0);
+            indexes = &fullIndexes;
+        }
+        for (size_t i = 0; i < indexes->size(); i++) {
+            size_t x = (*indexes)[i];
             if (isConstColumn(columns[x])) {
                 maxCorrelation[x] = pearsonCorrelationInfinityValue;
                 continue;
             }
-            for (size_t y = x + 1; y < columns.size(); y++) {
+            for (size_t j = i + 1; j < indexes->size(); j++) {
+                size_t y = (*indexes)[j];
                 if (isConstColumn(columns[y]))
                     continue;
                 double corr = std::abs(findPearsonCorrelation(columns[x], columns[y]));
@@ -62,7 +73,7 @@ namespace qtr {
         return maxCorrelation;
     }
 
-    qtr::IndigoFingerprintTable selectSubset(const IndigoFingerprintTable &fingerprints, size_t subsetSize) {
+    qtr::IndigoFingerprintTable selectFingerprintSubset(const IndigoFingerprintTable &fingerprints, size_t subsetSize) {
         std::vector<size_t> indexes(fingerprints.size());
         std::iota(indexes.begin(), indexes.end(), 0);
         std::shuffle(indexes.begin(), indexes.end(), colSelectionRandom);

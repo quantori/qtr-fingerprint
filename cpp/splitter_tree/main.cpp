@@ -29,6 +29,9 @@ ABSL_FLAG(std::string, path_to_store_dir, "", "Path to directory where data shou
 ABSL_FLAG(std::string, path_to_rb_files_dir, "",
           "Path to directory where raw bucket files to build structure are stored");
 
+ABSL_FLAG(std::string, path_to_cols_subset, "",
+          "Path to file with columns for dimension reduction");
+
 filesystem::path getStoreDirPath(const filesystem::path &dataDir) {
     for (size_t i = 0;; i++) {
         auto path = dataDir / ("search_data_" + to_string(i));
@@ -53,12 +56,15 @@ int main(int argc, char *argv[]) {
 
     std::filesystem::path baseStoreDirPath = absl::GetFlag(FLAGS_path_to_store_dir);
     std::filesystem::path rbFilesPath = absl::GetFlag(FLAGS_path_to_rb_files_dir);
+    std::filesystem::path columnsSubsetPath = absl::GetFlag(FLAGS_path_to_cols_subset);
 
     emptyArgument(baseStoreDirPath, "Please specify path_to_store_dir option");
     emptyArgument(rbFilesPath, "Please specify path_to_rb_files_dir option");
+    if (columnsSubsetPath.empty()) {
+        LOG(WARNING) << "Probably, you forgot to specify path_to_cols_subset option. Full list of columns will be used";
+    }
 
     auto storeDirPath = getStoreDirPath(baseStoreDirPath);
-//    auto storeDirPath = filesystem::path("/home/Vsevolod.Vaskin/qtr-fingerprint/data/17kk_100_mcc");
     auto rawBucketsDirPath = storeDirPath / "raw_buckets";
     auto splitterTreeFilePath = storeDirPath / "tree";
     auto treeRootNodeDirPath = rawBucketsDirPath / "0";
@@ -85,7 +91,9 @@ int main(int argc, char *argv[]) {
     tickTimePoint("Splitter tree is built");
 
     // Choose minimum correlated columns
-    auto columnsChooser = ColumnsSelector(rawBucketsDirPath, qtr::PearsonCorrelationSelectionFunction());
+    auto columnsSubset = ColumnsReader(columnsSubsetPath).readAll();
+    auto selectFunction = qtr::PearsonCorrelationSelectionFunction(columnsSubset);
+    auto columnsChooser = ColumnsSelector(rawBucketsDirPath, selectFunction);
     columnsChooser.handleRawBuckets();
     tickTimePoint("Columns are chosen");
 #pragma omp parallel for
