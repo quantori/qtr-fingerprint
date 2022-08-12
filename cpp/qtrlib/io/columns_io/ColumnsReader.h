@@ -17,7 +17,7 @@ namespace qtr {
 
         ColumnsReader(const ColumnsReader&) = delete;
 
-        std::vector<column_t> readAll();
+        std::vector<size_t> readAll();
 
         ~ColumnsReader();
 

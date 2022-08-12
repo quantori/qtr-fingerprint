@@ -13,8 +13,8 @@
 
 namespace qtr {
 
-    using selection_result_t = std::vector<int>;
-    using select_argument_t = const IndigoFingerprintTable &;
+    using selection_result_t = std::vector<size_t>;
+    using selection_argument_t = const IndigoFingerprintTable &;
 
     template<typename Functor>
     class ColumnsSelector {
@@ -33,7 +33,7 @@ namespace qtr {
 
     static IndigoFingerprintTable readRawBucket(const std::filesystem::path &rawBucketDirPath) {
         IndigoFingerprintTable bucket;
-        for (const auto& rawBucketFilePath : findFiles(rawBucketDirPath, rawBucketExtension)) {
+        for (const auto &rawBucketFilePath: findFiles(rawBucketDirPath, rawBucketExtension)) {
             for (const auto &[_, fp]: RawBucketReader(rawBucketFilePath)) {
                 bucket.emplace_back(fp);
             }
@@ -41,7 +41,7 @@ namespace qtr {
         return bucket;
     }
 
-    static void saveColumns(const std::vector<column_t> &columns, const std::filesystem::path &rawBucketPath) {
+    static void saveColumns(const std::vector<size_t> &columns, const std::filesystem::path &rawBucketPath) {
         std::filesystem::path columnsPath = rawBucketPath;
         columnsPath.replace_extension(columnsExtension);
         ColumnsWriter(columnsPath).write(columns);
@@ -64,8 +64,9 @@ namespace qtr {
         for (size_t i = 0; i < bucketPaths.size(); i += step) {
             std::vector<std::future<void>> tasks;
             for (size_t j = i; j < i + step && j < bucketPaths.size(); j++) {
-                const auto& bucketPath = bucketPaths[j];
-                tasks.emplace_back(std::async(std::launch::async, handleRawBucket<Functor>, bucketPath, _selectFunction));
+                const auto &bucketPath = bucketPaths[j];
+                tasks.emplace_back(
+                        std::async(std::launch::async, handleRawBucket<Functor>, bucketPath, _selectFunction));
             }
             for (auto &task: tasks) {
                 task.get();

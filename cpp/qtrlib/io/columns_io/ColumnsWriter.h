@@ -17,7 +17,7 @@ namespace qtr {
 
         ColumnsWriter(const ColumnsWriter &) = default;
 
-        void write(const std::vector<column_t> &columns);
+        void write(const std::vector<size_t> &columns);
 
         ~ColumnsWriter();
 

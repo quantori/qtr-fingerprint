@@ -3,7 +3,7 @@
 
 namespace qtr {
 
-    void ColumnsWriter::write(const std::vector<column_t> &columns) {
+    void ColumnsWriter::write(const std::vector<size_t> &columns) {
         for (size_t i = 0; i < columns.size(); i++) {
             *_outStream << columns[i];
             *_outStream << (i + 1 == columns.size() ? "" : " ");

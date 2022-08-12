@@ -2,9 +2,9 @@
 
 namespace qtr {
 
-    std::vector<column_t> qtr::ColumnsReader::readAll() {
-        std::vector<column_t> columns;
-        column_t col;
+    std::vector<size_t> qtr::ColumnsReader::readAll() {
+        std::vector<size_t> columns;
+        size_t col;
         while (*_inStream >> col) {
             columns.emplace_back(col);
         }

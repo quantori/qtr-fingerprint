@@ -15,8 +15,8 @@ namespace qtr {
         return columns;
     }
 
-    std::vector<int> sortIndexesByValues(const std::vector<double> &values) {
-        std::vector<int> indexes(values.size());
+    std::vector<size_t> sortIndexesByValues(const std::vector<double> &values) {
+        std::vector<size_t> indexes(values.size());
         std::iota(indexes.begin(), indexes.end(), 0);
         std::sort(indexes.begin(), indexes.end(), [&values](int a, int b) {
             return values[a] < values[b];
