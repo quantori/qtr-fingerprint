@@ -13,6 +13,6 @@ namespace qtr {
 
     std::vector<double> findMaxAbsPearsonCorrelation(const std::vector<std::vector<bool>> &columns);
 
-    qtr::IndigoFingerprintTable chooseSubset(const IndigoFingerprintTable& fingerprints, size_t subsetSize);
+    qtr::IndigoFingerprintTable selectSubset(const IndigoFingerprintTable& fingerprints, size_t subsetSize);
 
 } // namespace qtr

@@ -1,4 +1,4 @@
-#include "PearsonCorrelationChoiceFuncUtils.h"
+#include "PearsonCorrelationSelectionFunctionUtils.h"
 
 #include <cassert>
 #include <cstdint>
@@ -11,7 +11,7 @@
 namespace qtr {
 
     namespace {
-        std::mt19937 colChoiceRandom(123);
+        std::mt19937 colSelectionRandom(123);
     }
 
     bool isConstColumn(const std::vector<bool> &x) {
@@ -62,10 +62,10 @@ namespace qtr {
         return maxCorrelation;
     }
 
-    qtr::IndigoFingerprintTable chooseSubset(const IndigoFingerprintTable &fingerprints, size_t subsetSize) {
+    qtr::IndigoFingerprintTable selectSubset(const IndigoFingerprintTable &fingerprints, size_t subsetSize) {
         std::vector<size_t> indexes(fingerprints.size());
         std::iota(indexes.begin(), indexes.end(), 0);
-        std::shuffle(indexes.begin(), indexes.end(), colChoiceRandom);
+        std::shuffle(indexes.begin(), indexes.end(), colSelectionRandom);
         indexes.resize(std::min(subsetSize, indexes.size()));
         IndigoFingerprintTable subset;
         for (size_t index: indexes) {

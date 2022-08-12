@@ -45,6 +45,11 @@ def byte_to_bits(byte: int) -> str:
 
 
 def load_columns_from_file(file_path: Path) -> List[int]:
-    assert file_path.is_file(), "Path to load columns from must be a file"
-    with file_path.open('rb') as f:
+    assert file_path.is_file(), f"Path to load columns from must be a file, {file_path}"
+    with Path(file_path).open('r') as f:
         return list(map(int, f.read().split()))
+
+
+def save_columns_to_file(columns: List[int], file_path: Path) -> None:
+    with Path(file_path).open('w') as f:
+        f.write(' '.join(map(str, columns)))

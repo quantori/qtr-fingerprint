@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#include "ColumnsChoiceUtils.h"
+#include "ColumnsSelectionUtils.h"
 
 using namespace qtr;
 

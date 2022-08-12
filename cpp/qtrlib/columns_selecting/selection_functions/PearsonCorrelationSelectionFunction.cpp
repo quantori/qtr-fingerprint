@@ -1,16 +1,16 @@
 #include <cassert>
-#include <numeric>
 #include <random>
 
-#include "PearsonCorrelationChoiceFunc.h"
-#include "PearsonCorrelationChoiceFuncUtils.h"
-#include "ColumnsChoiceUtils.h"
+#include "PearsonCorrelationSelectionFunction.h"
+#include "PearsonCorrelationSelectionFunctionUtils.h"
+#include "ColumnsSelectionUtils.h"
 #include "FingerprintTable.h"
 
 
 namespace qtr {
 
-    choice_result_t PearsonCorrelationChoiceFunc::operator()(const IndigoFingerprintTable &fingerprints) const {
+    selection_result_t
+    PearsonCorrelationSelectionFunction::operator()(const IndigoFingerprintTable &fingerprints) const {
         assert(!fingerprints.empty());
 //        auto subset = chooseSubset(fingerprints, subsetSize);
         auto subset = fingerprints;

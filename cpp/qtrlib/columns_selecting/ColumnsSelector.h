@@ -13,22 +13,22 @@
 
 namespace qtr {
 
-    using choice_result_t = std::vector<int>;
-    using choice_argumnent_t = const IndigoFingerprintTable &;
+    using selection_result_t = std::vector<int>;
+    using select_argument_t = const IndigoFingerprintTable &;
 
     template<typename Functor>
-    class ColumnsChooser {
+    class ColumnsSelector {
     public:
-        ColumnsChooser(std::filesystem::path bucketsDir, Functor chooseFunc) :
+        ColumnsSelector(std::filesystem::path bucketsDir, Functor selectFunction) :
                 _bucketsDir(std::move(bucketsDir)),
-                _choiceFunc(std::move(chooseFunc)) {
+                _selectFunction(std::move(selectFunction)) {
         };
 
         void handleRawBuckets();
 
     private:
         std::filesystem::path _bucketsDir;
-        Functor _choiceFunc;
+        Functor _selectFunction;
     };
 
     static IndigoFingerprintTable readRawBucket(const std::filesystem::path &rawBucketDirPath) {
@@ -48,16 +48,16 @@ namespace qtr {
     }
 
     template<typename Functor>
-    static void handleRawBucket(const std::filesystem::path &rawBucketPath, const Functor &choiceFunc) {
-        LOG(INFO) << "Start choosing columns in " << rawBucketPath;
+    static void handleRawBucket(const std::filesystem::path &rawBucketPath, const Functor &selectFunction) {
+        LOG(INFO) << "Start selection columns in " << rawBucketPath;
         auto rawBucket = readRawBucket(rawBucketPath);
-        auto chosenColumns = choiceFunc(rawBucket);
-        saveColumns(chosenColumns, rawBucketPath);
-        LOG(INFO) << "Finish choosing columns in " << rawBucketPath;
+        auto selectedColumns = selectFunction(rawBucket);
+        saveColumns(selectedColumns, rawBucketPath);
+        LOG(INFO) << "Finish selecting columns in " << rawBucketPath;
     }
 
     template<typename Functor>
-    void ColumnsChooser<Functor>::handleRawBuckets() {
+    void ColumnsSelector<Functor>::handleRawBuckets() {
         auto bucketPaths = findFiles(_bucketsDir, "");
         LOG(INFO) << "buckets dir: " << _bucketsDir << " count: " << bucketPaths.size();
         static const size_t step = 20;
@@ -65,7 +65,7 @@ namespace qtr {
             std::vector<std::future<void>> tasks;
             for (size_t j = i; j < i + step && j < bucketPaths.size(); j++) {
                 const auto& bucketPath = bucketPaths[j];
-                tasks.emplace_back(std::async(std::launch::async, handleRawBucket<Functor>, bucketPath, _choiceFunc));
+                tasks.emplace_back(std::async(std::launch::async, handleRawBucket<Functor>, bucketPath, _selectFunction));
             }
             for (auto &task: tasks) {
                 task.get();

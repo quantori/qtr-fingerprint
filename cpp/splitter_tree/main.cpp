@@ -14,7 +14,7 @@
 #include "RawBucketsIO.h"
 #include "CSVRawBucketIO.h"
 #include "SplitterTree.h"
-#include "ColumnsChoice.h"
+#include "ColumnsSelection.h"
 
 using namespace indigo_cpp;
 using namespace qtr;
@@ -85,8 +85,7 @@ int main(int argc, char *argv[]) {
     tickTimePoint("Splitter tree is built");
 
     // Choose minimum correlated columns
-    ColumnsChooser<qtr::PearsonCorrelationChoiceFunc> columnsChooser(rawBucketsDirPath,
-                                                                     qtr::PearsonCorrelationChoiceFunc());
+    auto columnsChooser = ColumnsSelector(rawBucketsDirPath, qtr::PearsonCorrelationSelectionFunction());
     columnsChooser.handleRawBuckets();
     tickTimePoint("Columns are chosen");
 #pragma omp parallel for

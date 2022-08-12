@@ -1,4 +1,4 @@
-#include "ColumnsChoiceUtils.h"
+#include "ColumnsSelectionUtils.h"
 
 #include <numeric>
 #include <algorithm>

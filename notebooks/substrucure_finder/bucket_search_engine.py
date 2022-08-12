@@ -34,7 +34,7 @@ class BucketSearchEngine:
 
     @classmethod
     def load(cls, file_path: Path) -> BucketSearchEngine:
-        assert file_path.is_file(), "Path to load bucket search engine from must be a file"
+        assert file_path.is_file(), f"Path to load bucket search engine from must be a file, got {file_path}"
         with file_path.open('rb') as stream:
             obj = joblib.load(stream)
         assert isinstance(obj, BucketSearchEngine)

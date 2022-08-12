@@ -59,7 +59,4 @@ namespace qtr {
         std::istream *_inStream;
     };
 
-};
-
-
 } // namespace qtr
