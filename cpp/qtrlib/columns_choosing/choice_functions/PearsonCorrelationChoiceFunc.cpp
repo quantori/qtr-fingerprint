@@ -12,7 +12,8 @@ namespace qtr {
 
     choice_result_t PearsonCorrelationChoiceFunc::operator()(const IndigoFingerprintTable &fingerprints) const {
         assert(!fingerprints.empty());
-        auto subset = chooseSubset(fingerprints, subsetSize);
+//        auto subset = chooseSubset(fingerprints, subsetSize);
+        auto subset = fingerprints;
         auto columns = fingerprintsToColumns(subset);
         auto maxCorrelation = findMaxAbsPearsonCorrelation(columns);
         auto columnsIndexes = sortIndexesByValues(maxCorrelation);

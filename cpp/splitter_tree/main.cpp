@@ -20,9 +20,9 @@ using namespace indigo_cpp;
 using namespace qtr;
 using namespace std;
 
-//#pragma GCC target("sse,sse2,sse3,ssse3,sse4,popcnt,abm,mmx,avx,avx2,fma,tune=native")
-//#pragma GCC optimize("O3")
-//#pragma GCC optimize("unroll-loops")
+#pragma GCC target("sse,sse2,sse3,ssse3,sse4,popcnt,abm,mmx,avx,avx2,fma,tune=native")
+#pragma GCC optimize("O3")
+#pragma GCC optimize("unroll-loops")
 
 ABSL_FLAG(std::string, path_to_store_dir, "", "Path to directory where data should be stored");
 
@@ -40,9 +40,15 @@ filesystem::path getStoreDirPath(const filesystem::path &dataDir) {
     }
 }
 
-int main(int argc, char *argv[]) {
+void initLogging(int argc, char *argv[]) {
     google::InitGoogleLogging(argv[0]);
-    google::LogToStderr();
+    google::SetLogDestination(google::INFO, "info.log");
+    FLAGS_alsologtostderr = true;
+}
+
+int main(int argc, char *argv[]) {
+
+    initLogging(argc, argv);
     absl::ParseCommandLine(argc, argv);
 
     std::filesystem::path baseStoreDirPath = absl::GetFlag(FLAGS_path_to_store_dir);
@@ -52,6 +58,7 @@ int main(int argc, char *argv[]) {
     emptyArgument(rbFilesPath, "Please specify path_to_rb_files_dir option");
 
     auto storeDirPath = getStoreDirPath(baseStoreDirPath);
+//    auto storeDirPath = filesystem::path("/home/Vsevolod.Vaskin/qtr-fingerprint/data/17kk_100_mcc");
     auto rawBucketsDirPath = storeDirPath / "raw_buckets";
     auto splitterTreeFilePath = storeDirPath / "tree";
     auto treeRootNodeDirPath = rawBucketsDirPath / "0";
@@ -72,7 +79,7 @@ int main(int argc, char *argv[]) {
 
     // Build splitter tree
     SplitterTree tree(rawBucketsDirPath);
-    tree.build(11, 10000, 3);
+    auto bucketDirPaths = tree.build(13, 1000, 3);
     ofstream treeFileOut(splitterTreeFilePath);
     tree.dump(treeFileOut);
     tickTimePoint("Splitter tree is built");
@@ -83,9 +90,8 @@ int main(int argc, char *argv[]) {
     columnsChooser.handleRawBuckets();
     tickTimePoint("Columns are chosen");
 #pragma omp parallel for
-    for (const auto &dirPath: findFiles(rawBucketsDirPath, "")) {
-        if (!filesystem::is_directory(dirPath))
-            continue;
+    for (const auto &dirPath: bucketDirPaths) {
+        assert(filesystem::is_directory(dirPath));
         LOG(INFO) << "Start creating CSV for " << dirPath;
         for (const auto &filePath: findFiles(dirPath, rawBucketExtension)) {
             {
@@ -93,15 +99,12 @@ int main(int argc, char *argv[]) {
                 filesystem::path outFilePath = filePath;
                 outFilePath.replace_extension(csvFileExtension);
                 CSVRawBucketWriter writer(outFilePath);
-                for (const auto &value: reader) {
-                    writer.write(value);
-                }
+                std::copy(reader.begin(), reader.end(), writer.begin());
             }
             filesystem::remove(filePath);
         }
         LOG(INFO) << "Finish creating CSV for " << dirPath;
     }
-    // Convert rbs to csvs
 
     chrono::duration<double> elapsed_seconds = timePoints.back() - timePoints.front();
     std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";

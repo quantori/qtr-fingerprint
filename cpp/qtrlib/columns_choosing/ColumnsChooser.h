@@ -49,25 +49,27 @@ namespace qtr {
 
     template<typename Functor>
     static void handleRawBucket(const std::filesystem::path &rawBucketPath, const Functor &choiceFunc) {
+        LOG(INFO) << "Start choosing columns in " << rawBucketPath;
         auto rawBucket = readRawBucket(rawBucketPath);
         auto chosenColumns = choiceFunc(rawBucket);
         saveColumns(chosenColumns, rawBucketPath);
+        LOG(INFO) << "Finish choosing columns in " << rawBucketPath;
     }
 
     template<typename Functor>
     void ColumnsChooser<Functor>::handleRawBuckets() {
-        using future_t = decltype(std::async(std::launch::async, handleRawBucket<Functor>, "", _choiceFunc));
-        std::vector<future_t> tasks;
-        int started = 0;
-        for (const auto &bucketPath: findFiles(_bucketsDir, "")) {
-            assert(std::filesystem::is_directory(bucketPath));
-            tasks.emplace_back(std::async(std::launch::async, handleRawBucket<Functor>, bucketPath, _choiceFunc));
-            LOG(INFO) << "Start choosing columns for " << bucketPath << " (" << ++started << ")";
-        }
-        int completed = 0;
-        for (auto &task: tasks) {
-            task.get();
-            LOG(INFO) << "Complete choosing columns (" << ++completed << ")";
+        auto bucketPaths = findFiles(_bucketsDir, "");
+        LOG(INFO) << "buckets dir: " << _bucketsDir << " count: " << bucketPaths.size();
+        static const size_t step = 20;
+        for (size_t i = 0; i < bucketPaths.size(); i += step) {
+            std::vector<std::future<void>> tasks;
+            for (size_t j = i; j < i + step && j < bucketPaths.size(); j++) {
+                const auto& bucketPath = bucketPaths[j];
+                tasks.emplace_back(std::async(std::launch::async, handleRawBucket<Functor>, bucketPath, _choiceFunc));
+            }
+            for (auto &task: tasks) {
+                task.get();
+            }
         }
     }
 
