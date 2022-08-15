@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <map>
 #include "FingerprintTable.h"
 #include "columns_io/ColumnsIOConsts.h"
 
@@ -12,8 +13,7 @@ namespace qtr {
 
     bool isConstColumn(const std::vector<bool> &x);
 
-    std::vector<double> findMaxAbsPearsonCorrelation(const std::vector<std::vector<bool>> &columns,
-                                                     const std::vector<size_t> &columnsIndexes);
+    std::map<size_t, double> findMaxAbsPearsonCorrelation(const std::map<size_t, std::vector<bool>> &columns);
 
     qtr::IndigoFingerprintTable selectFingerprintSubset(const IndigoFingerprintTable &fingerprints, size_t subsetSize);
 

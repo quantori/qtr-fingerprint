@@ -45,29 +45,25 @@ namespace qtr {
         return double(numerator) / (double) n / sqrt((double) denominator);
     }
 
-    std::vector<double> findMaxAbsPearsonCorrelation(const std::vector<std::vector<bool>> &columns,
-                                                     const std::vector<size_t> &columnsIndexes = {}) {
-        std::vector<double> maxCorrelation(columns.size(), pearsonCorrelationInfinityValue);
-        const std::vector<size_t> *indexes = &columnsIndexes;
-        std::vector<size_t> fullIndexes;
-        if (columnsIndexes.empty()) {
-            fullIndexes.resize(columns.size());
-            std::iota(fullIndexes.begin(), fullIndexes.end(), 0);
-            indexes = &fullIndexes;
+    std::map<size_t, double> findMaxAbsPearsonCorrelation(const std::map<size_t, std::vector<bool>> &columns) {
+        std::map<size_t, double> maxCorrelation;
+        for (const auto& [index, column] : columns) {
+            if (isConstColumn(column))
+                maxCorrelation[index] = pearsonCorrelationInfinityValue;
         }
-        for (size_t i = 0; i < indexes->size(); i++) {
-            size_t x = (*indexes)[i];
-            if (isConstColumn(columns[x])) {
-                maxCorrelation[x] = pearsonCorrelationInfinityValue;
+        for (auto it1 = columns.begin(); it1 != columns.end(); it1++) {
+            const auto &[index1, column1] = *it1;
+            if (maxCorrelation[index1] == pearsonCorrelationInfinityValue) {
                 continue;
             }
-            for (size_t j = i + 1; j < indexes->size(); j++) {
-                size_t y = (*indexes)[j];
-                if (isConstColumn(columns[y]))
+            for (auto it2 = std::next(it1); it2 != columns.end(); it2++) {
+                const auto &[index2, column2] = *it2;
+                if (maxCorrelation[index2] == pearsonCorrelationInfinityValue) {
                     continue;
-                double corr = std::abs(findPearsonCorrelation(columns[x], columns[y]));
-                maxCorrelation[x] = std::max(maxCorrelation[x], corr);
-                maxCorrelation[y] = std::max(maxCorrelation[y], corr);
+                }
+                double corr = std::abs(findPearsonCorrelation(column1, column2));
+                maxCorrelation[index1] = std::max(maxCorrelation[index1], corr);
+                maxCorrelation[index2] = std::max(maxCorrelation[index2], corr);
             }
         }
         return maxCorrelation;

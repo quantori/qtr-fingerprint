@@ -5,8 +5,8 @@
 namespace qtr {
     class PearsonCorrelationSelectionFunction {
     public:
-        PearsonCorrelationSelectionFunction(std::vector<size_t> columnsSubset = {},
-                                            size_t fingerprintSubsetSize = 0);
+        explicit PearsonCorrelationSelectionFunction(std::vector<size_t> columnsSubset = {},
+                                                     size_t fingerprintSubsetSize = 0);
 
         selection_result_t operator()(selection_argument_t fingerprints) const;
 

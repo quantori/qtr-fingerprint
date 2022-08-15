@@ -5,9 +5,11 @@
 using namespace qtr;
 
 TEST(ColumnsChoiceUtilsTests, SortIndexByValuesTest) {
-    std::vector<double> values = {1.0, -0.33, 0.12};
+    std::map<size_t, double> values = {{0, 1.0},
+                                       {1, -0.33},
+                                       {2, 0.12}};
     auto actual = sortIndexesByValues(values);
-    std::vector<int> expected = {1, 2, 0};
+    std::vector<size_t> expected = {1, 2, 0};
     EXPECT_EQ(expected, actual);
 }
 
@@ -18,15 +20,22 @@ TEST(ColumnsChoiceUtilsTests, fingerprintsToColumnsTest) {
     fingerprints.emplace_back(x);
     fingerprints.emplace_back(y);
     fingerprints.emplace_back(z);
-    auto columns = fingerprintsToColumns(fingerprints);
     std::vector<std::vector<bool>> expected = {{true,  false, false},
                                                {true,  true,  true},
                                                {false, false, true},
                                                {false, false, false}};
-    EXPECT_EQ(columns[0], expected[0]);
-    EXPECT_EQ(columns[1], expected[1]);
-    EXPECT_EQ(columns[2], expected[2]);
-    for (size_t i = 3; i < columns.size(); i++) {
-        EXPECT_EQ(columns[i], columns[3]);
+    auto actualFull = fingerprintsToColumns(fingerprints);
+    EXPECT_EQ(actualFull[0], expected[0]);
+    EXPECT_EQ(actualFull[1], expected[1]);
+    EXPECT_EQ(actualFull[2], expected[2]);
+    for (size_t i = 3; i < actualFull.size(); i++) {
+        EXPECT_EQ(actualFull[i], actualFull[3]);
     }
+
+    auto actualSub = fingerprintsToColumns(fingerprints, {2, 10, 1, 0});
+    EXPECT_EQ(actualSub[0], actualFull[0]);
+    EXPECT_EQ(actualSub[1], actualFull[1]);
+    EXPECT_EQ(actualSub[2], actualFull[2]);
+    EXPECT_EQ(actualSub[10], actualFull[10]);
+    EXPECT_EQ(actualSub.size(), 4);
 }

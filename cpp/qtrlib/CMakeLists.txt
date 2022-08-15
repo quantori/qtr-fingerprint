@@ -20,7 +20,7 @@ target_include_directories(${This}
         PUBLIC utils
         PUBLIC fingerprints
         PUBLIC splitter_tree
-        PUBLIC columns_selecting
+        PUBLIC columns_selection
         PUBLIC io
         )
 

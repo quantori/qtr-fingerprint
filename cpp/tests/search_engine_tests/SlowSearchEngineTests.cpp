@@ -62,3 +62,4 @@ TEST_F(SlowTestFixture, DECISION_TREE_OPTIMAL_PUBCHEM_300000)
     SearchEngineTests searchEngineTests(SearchEngineFactory::DECISION_TREE_OPTIMAL);
     searchEngineTests.testPubchem300000();
 }
+ todo uncomment

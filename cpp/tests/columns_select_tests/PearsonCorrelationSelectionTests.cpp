@@ -4,11 +4,10 @@
 
 #include <cmath>
 #include <stdexcept>
-#include <random>
 #include <set>
 
-#include "columns_choosing/choice_functions/PearsonCorrelationChoiceFuncUtils.h"
-#include "columns_choosing/choice_functions/PearsonCorrelationChoiceFunc.h"
+#include "columns_selection/selection_functions/PearsonCorrelationSelectionFunction.h"
+#include "columns_selection/selection_functions/PearsonCorrelationSelectionFunctionUtils.h"
 
 using namespace qtr;
 
@@ -37,7 +36,7 @@ double pearsonCoefficient(const std::vector<bool> &x, const std::vector<bool> &y
 
 class PearsonCorrelationChoiceFuncTests : public ::testing::Test {
 protected:
-    std::vector<std::vector<bool>> columns;
+    std::map<size_t, std::vector<bool>> columns;
     std::vector<bool> x, y, z, notX, trueValues, falseValues;
     std::vector<bool> a, b, notA;
 
@@ -50,14 +49,14 @@ protected:
         notX = {false, true, false, false, true};
         trueValues = {true, true, true, true, true};
         falseValues = {false, false, false, false, false};
-        columns = {x,
-                   y,
-                   trueValues,
-                   notX,
-                   falseValues,
-                   falseValues,
-                   trueValues,
-                   z};
+        columns = {{0, x},
+                   {1, y},
+                   {2, trueValues},
+                   {3, notX},
+                   {4, falseValues},
+                   {5, falseValues},
+                   {6, trueValues},
+                   {7, z}};
     }
 };
 
@@ -122,12 +121,12 @@ TEST_F(PearsonCorrelationChoiceFuncTests, ChoiceFuncTest) {
     fingerprints.emplace_back(x);
     fingerprints.emplace_back(y);
     fingerprints.emplace_back(z);
-    auto columns = PearsonCorrelationChoiceFunc()(fingerprints);
-    std::set<int> actualFirstColumns = {columns[0], columns[1]};
-    std::set<int> expectedFirstColumns = {3, 4};
+    auto columns = PearsonCorrelationSelectionFunction()(fingerprints);
+    std::set<size_t> actualFirstColumns = {columns[0], columns[1]};
+    std::set<size_t> expectedFirstColumns = {3, 4};
     EXPECT_EQ(expectedFirstColumns, actualFirstColumns);
-    std::set<int> actualMiddleColumns = {columns[2], columns[3]};
-    std::set<int> expectedMiddleColumns = {1, 2};
+    std::set<size_t> actualMiddleColumns = {columns[2], columns[3]};
+    std::set<size_t> expectedMiddleColumns = {1, 2};
     EXPECT_EQ(expectedMiddleColumns, actualMiddleColumns);
 
     for (size_t i = 4; i < columns.size(); i++) { // check all other columns

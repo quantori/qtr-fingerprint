@@ -181,7 +181,7 @@ TEST_F(SplitterTreeTests, BuildNotParallelTest) {
 TEST_F(SplitterTreeTests, DumpTest) {
     dumpBucket(rawBucketPath(0), rawBuckets[0]);
     SplitterTree tree(rawBucketsDirPath);
-    tree.build(3, 1, 1);
+    tree.build(2, 1, 1);
     auto filePath = DataPathManager::getTmpDataDir() / "splitterTreeTmp";
     {
         std::ofstream out(filePath);
