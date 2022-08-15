@@ -60,7 +60,7 @@ namespace qtr {
     void ColumnsSelector<Functor>::handleRawBuckets() {
         auto bucketPaths = findFiles(_bucketsDir, "");
         LOG(INFO) << "buckets dir: " << _bucketsDir << " count: " << bucketPaths.size();
-        static const size_t step = 20;
+        static const size_t step = 64;
         for (size_t i = 0; i < bucketPaths.size(); i += step) {
             std::vector<std::future<void>> tasks;
             for (size_t j = i; j < i + step && j < bucketPaths.size(); j++) {

@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
 
     // Build splitter tree
     SplitterTree tree(rawBucketsDirPath);
-    auto bucketDirPaths = tree.build(13, 1000, 3);
+    auto bucketDirPaths = tree.build(13, 1000, 3); // 16, 600, 3
     ofstream treeFileOut(splitterTreeFilePath);
     tree.dump(treeFileOut);
     tickTimePoint("Splitter tree is built");
@@ -114,6 +114,6 @@ int main(int argc, char *argv[]) {
     }
 
     chrono::duration<double> elapsed_seconds = timePoints.back() - timePoints.front();
-    std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
+    LOG(INFO) << "Elapsed time: " << elapsed_seconds.count() << "s\n";
     return 0;
 }

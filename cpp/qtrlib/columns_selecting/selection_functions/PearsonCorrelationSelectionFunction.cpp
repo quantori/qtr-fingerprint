@@ -21,7 +21,7 @@ namespace qtr {
             fingerprintSubset = fingerprints;
         }
         auto columns = fingerprintsToColumns(fingerprintSubset);
-        auto maxCorrelation = findMaxAbsPearsonCorrelation(columns, {});
+        auto maxCorrelation = findMaxAbsPearsonCorrelation(columns, _columnsSubset);
         auto columnsIndexes = sortIndexesByValues(maxCorrelation);
         return columnsIndexes;
     }
