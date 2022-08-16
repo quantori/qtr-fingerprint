@@ -40,6 +40,11 @@ class BucketSearchEngine:
         assert isinstance(obj, BucketSearchEngine)
         return obj
 
+    @classmethod
+    def search_in_drive(cls, fingerprint: Fingerprint, data_path: Path, bucket: int) -> Iterable[str]:
+        bucket_search_engine = cls.load(utils.bucket_path(Path(data_path), bucket))
+        return bucket_search_engine.search(fingerprint, data_path, bucket)
+
     def dump(self, file_path: Path) -> None:
         with file_path.open('wb') as f:
             joblib.dump(self, f, protocol=-1)
