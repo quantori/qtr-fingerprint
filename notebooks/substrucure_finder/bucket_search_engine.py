@@ -14,7 +14,8 @@ from substrucure_finder import utils
 class BucketSearchEngine:
     def __init__(self, molecules: pd.DataFrame, columns: List[int]) -> None:
         self.columns = columns
-        self.molecules = molecules
+        self.full_fingerprints = molecules.to_numpy(dtype=bool)
+        self.smiles = molecules.index.to_numpy()
         sub_fingerprints = [utils.take_columns_from_fingerprint(self.columns, fp) for fp in
                             map(lambda i: molecules.iloc[i].values, range(len(molecules)))]
         self.ball_tree = BallTree(sub_fingerprints, leaf_size=2, metric='russellrao')
@@ -28,8 +29,8 @@ class BucketSearchEngine:
             return list()
 
         filtered_answers = [i for i in ball_tree_answers if
-                            utils.is_sub_fingerprint(fingerprint, self.molecules.iloc[i].values)]
-        answers = [self.molecules.iloc[i].name for i in filtered_answers]
+                            utils.is_sub_fingerprint(fingerprint, self.full_fingerprints[i])]
+        answers = [self.smiles[i] for i in filtered_answers]
         return answers
 
     @classmethod
