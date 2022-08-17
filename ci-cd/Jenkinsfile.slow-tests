@@ -3,7 +3,7 @@ pipeline {
     agent {
         docker {
             image 'rikorose/gcc-cmake:latest'
-            args '-v /home/centos/SFO:/home/centos/workspace/SFO/slow-tests/SFO'
+            args '-v /home/ubuntu/SFO:/home/ubuntu/workspace/slow-tests/SFO'
         }
     }
 
@@ -33,7 +33,7 @@ pipeline {
                 sh '''
                     cd cpp/build
                     export GLOG_logtostdout=true
-                   ./bin/tests --gtest_output="xml:./report.xml" --big_data_dir_path=/home/centos/workspace/SFO/slow-tests/SFO --gtest_filter='SlowTest*'
+                   ./bin/tests --gtest_output="xml:./report.xml" --big_data_dir_path=/home/ubuntu/workspace/slow-tests/SFO --gtest_filter='SlowTest*'
                 '''
             }
         }
