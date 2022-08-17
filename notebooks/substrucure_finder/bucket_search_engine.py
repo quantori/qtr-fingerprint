@@ -20,13 +20,11 @@ class BucketSearchEngine:
 
         self.ball_tree = BallTree(sub_fingerprints, leaf_size=2, metric='russellrao')
         self.columns = columns
+        self.molecules_cnt = len(molecules)
 
-        utils.bucket_path(data_path, bucket_id).mkdir()
-        self.dump(utils.bucket_search_engine_path(data_path, bucket_id))
-        self.dump_fingerprints(full_fingerprints, utils.full_fingerprints_path(data_path, bucket_id))
-        self.dump_smiles(molecules.index.to_numpy(), utils.smiles_path(data_path, bucket_id))
+        self.dump(self, full_fingerprints, molecules.index.to_numpy(), utils.bucket_path(data_path, bucket_id))
 
-    def search(self, fingerprint: Fingerprint, data_path: Path, bucket_id: int) -> Iterable[str]:
+    def search(self, fingerprint: Fingerprint, data_stream: BinaryIO, stream_start: int) -> Iterable[str]:
         assert fingerprint.dtype == bool
         sub_fingerprint = utils.take_columns_from_fingerprint(self.columns, fingerprint)
         radius = utils.russelrao_radius(sub_fingerprint)
@@ -35,54 +33,45 @@ class BucketSearchEngine:
             return list()
 
         bytes_fingerprint = utils.fingerprint_to_bytes(fingerprint)
-        with utils.full_fingerprints_path(data_path, bucket_id).open('rb') as fp_stream:
-            filtered_answers = [i for i in ball_tree_answers if self.check_answer(bytes_fingerprint, fp_stream, i)]
+        filtered_answers = [i for i in sorted(ball_tree_answers) if
+                            self.check_answer(bytes_fingerprint, data_stream, stream_start, i)]
         if len(filtered_answers) == 0:
             return list()
 
-        smiles = self.load_smiles(utils.smiles_path(data_path, bucket_id))
+        smiles_data_start = stream_start + self.molecules_cnt * consts.fingerprint_size_in_bytes
+        smiles = self.load_smiles(data_stream, smiles_data_start)
         smiles_answers = [smiles[i] for i in filtered_answers]
         return smiles_answers
 
     @classmethod
-    def search_in_drive(cls, fingerprint: Fingerprint, data_path: Path, bucket: int) -> Iterable[str]:
-        bucket_search_engine = cls.load(utils.bucket_search_engine_path(Path(data_path), bucket))
-        return bucket_search_engine.search(fingerprint, data_path, bucket)
-
-    @classmethod
-    def load(cls, file_path: Path) -> BucketSearchEngine:
-        assert file_path.is_file(), f"Path to load bucket search engine from must be a file, got {file_path}"
-        with file_path.open('rb') as stream:
-            obj = joblib.load(stream)
-        assert isinstance(obj, BucketSearchEngine)
-        return obj
-
-    @classmethod
-    def load_smiles(cls, file_path: Path) -> List[str]:
-        with file_path.open('r') as f:
-            return f.read().split(consts.smiles_split_symbol)
-
-    def dump(self, file_path: Path) -> None:
-        with file_path.open('wb') as f:
-            joblib.dump(self, f, protocol=-1)
-
-    @classmethod
-    def check_answer(cls, byte_query: np.ndarray, fp_steam: BinaryIO, ans_id: int) -> bool:
-        fp_steam.seek(ans_id * consts.fingerprint_size_in_bytes)
+    def check_answer(cls, byte_query: np.ndarray, fp_steam: BinaryIO, fp_data_start: int, ans_id: int) -> bool:
+        fp_steam.seek(ans_id * consts.fingerprint_size_in_bytes + fp_data_start)
         ans_fp = np.fromiter(fp_steam.read(consts.fingerprint_size_in_bytes), dtype=np.uint8)
         return utils.is_sub_bytes_fingerprint(byte_query, ans_fp)
 
     @classmethod
-    def dump_fingerprints(cls, fingerprints: np.ndarray, file_path: Path) -> None:
-        bytes_fingerprints = np.apply_along_axis(utils.fingerprint_to_bytes, 1, fingerprints).astype(np.uint8)
-        assert bytes_fingerprints.dtype == np.uint8
-        assert all(map(lambda fp: len(fp) == consts.fingerprint_size_in_bytes, bytes_fingerprints))
-        byte_str = b''.join(map(bytes, bytes_fingerprints))
-        with file_path.open('wb') as f:
-            f.write(byte_str)
+    def search_in_drive(cls, fingerprint: Fingerprint, data_path: Path, bucket: int) -> Iterable[str]:
+        with utils.bucket_path(data_path, bucket).open('rb') as stream:
+            bucket_search_engine = joblib.load(stream)
+            assert isinstance(bucket_search_engine, cls)
+            data_start_pos = stream.tell()
+            return bucket_search_engine.search(fingerprint, stream, data_start_pos)
 
     @classmethod
-    def dump_smiles(cls, smiles: Iterable[str], file_path: Path) -> None:
-        smiles_str = consts.smiles_split_symbol.join(smiles)
-        with file_path.open('w') as f:
+    def load_smiles(cls, stream: BinaryIO, smiles_data_start: int) -> List[str]:
+        stream.seek(smiles_data_start)
+        return stream.read().decode(encoding='utf-8').split(consts.smiles_split_symbol)
+
+    @classmethod
+    def dump(cls, search_engine: BucketSearchEngine, full_fingerprints: np.ndarray, smiles: Iterable[str],
+             file_path: Path) -> None:
+
+        bytes_fingerprints = np.apply_along_axis(utils.fingerprint_to_bytes, 1, full_fingerprints).astype(np.uint8)
+
+        byte_str = b''.join(map(bytes, bytes_fingerprints))
+        smiles_str = consts.smiles_split_symbol.join(smiles).encode(encoding='utf-8')
+
+        with file_path.open('wb') as f:
+            joblib.dump(search_engine, f, protocol=-1)
+            f.write(byte_str)
             f.write(smiles_str)

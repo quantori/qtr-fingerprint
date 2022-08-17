@@ -1,7 +1,5 @@
 from substrucure_finder.buckets_initializer import BucketsInitializer
 
 from substrucure_finder.search_engine import SearchEngine
-from substrucure_finder.one_file_bucket_search_engine import OneFileBucketSearchEngine
 from substrucure_finder.search_engine import ThreadPoolSearchEngine
 
-from substrucure_finder.search_engine import SearchInBucketPolicy
