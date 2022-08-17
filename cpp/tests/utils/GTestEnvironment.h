@@ -4,15 +4,17 @@
 
 #include <filesystem>
 
-namespace qtr
-{
-    class GTestEnvironment final : public testing::Environment
-    {
+namespace qtr {
+    class GTestEnvironment final : public testing::Environment {
     public:
-        GTestEnvironment(const std::filesystem::path &bigDataDirPath);
+        GTestEnvironment(std::filesystem::path dataDirPath, std::filesystem::path bigDataDirPath,
+                         std::filesystem::path tmpDataDirPath);
+
         void SetUp() override;
 
     private:
+        std::filesystem::path _dataDirPath;
         std::filesystem::path _bigDataDirPath;
+        std::filesystem::path _tmpDataDirPath;
     };
 }

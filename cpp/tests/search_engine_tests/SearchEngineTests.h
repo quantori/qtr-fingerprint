@@ -1,8 +1,8 @@
 #pragma once
 
 #include "SearchEngineFactory.h"
-#include "utils/DataPathManager.h"
-#include "Common.h"
+#include "../utils/DataPathManager.h"
+#include "../Common.h"
 
 #include "IndigoSession.h"
 

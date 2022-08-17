@@ -19,6 +19,8 @@
 
 #include "Utils.h"
 #include "Fingerprint.h"
+#include "RawBucketsIO.h"
+#include "ColumnsIO.h"
 
 using namespace indigo_cpp;
 using namespace qtr;
@@ -48,14 +50,10 @@ static void hexToBin(const char *hexdec, ostringstream &out) {
         out << HEX_TO_DEC.at(hexdec[i]);
 }
 
+std::vector<int> zeroColumns;
+
 IndigoFingerprint cutZeroColumns(FullIndigoFingerprint fingerprint) {
     IndigoFingerprint cutFingerprint;
-    std::vector<int> zeroColumns = {};
-    ifstream fin("zero_columns");
-    int number;
-    while (fin >> number) {
-        zeroColumns.push_back(number);
-    }
     int currentZero = 0;
     for (int i = 0; i < fromBytesToBits(fingerprint.sizeInBytes); ++i) {
         if (currentZero < zeroColumns.size() && i == zeroColumns[currentZero]) {
@@ -67,10 +65,10 @@ IndigoFingerprint cutZeroColumns(FullIndigoFingerprint fingerprint) {
     return cutFingerprint;
 }
 
-void createFingerprintCSVFromFile(const string &sdfFile) {
+void createCSVFromSDF(const filesystem::path &sdfFilePath, const filesystem::path &csvFilePath) {
     auto indigoSessionPtr = IndigoSession::create();
-    ofstream fout(sdfFile + ".csv");
-    for (auto &mol: indigoSessionPtr->iterateSDFile(sdfFile)) {
+    ofstream fout(csvFilePath);
+    for (auto &mol: indigoSessionPtr->iterateSDFile(sdfFilePath)) {
         try {
             ostringstream fingerprint_line;
             mol->aromatize();
@@ -80,59 +78,82 @@ void createFingerprintCSVFromFile(const string &sdfFile) {
             fout << fingerprint_line.str() << endl;
         }
         catch (const exception &e) {
-            cerr << e.what();
+            LOG(INFO) << e.what();
         }
     }
 }
 
-/**
- * Merges many sdf files into one, named "0". Suitable for Splitter Tree.
- * @param dir -- directory with sdf files
- */
-void prepareSDFsForSplitterTree(const string &dir) {
+void createRBFromSDF(const filesystem::path &sdfFilePath, const filesystem::path &rbFilePath) {
+//    if (filesystem::exists(rbFilePath)) {
+//        LOG(INFO) << sdfFilePath << " already exist. It was skipped";
+//        return;
+//    }
+    LOG(INFO) << "start creating " << rbFilePath << " from " << sdfFilePath;
     auto indigoSessionPtr = IndigoSession::create();
-    string filename = dir + "/0";
-    if (dir.back() == '/')
-        filename = dir + "0";
-    ofstream fout(filename);
-    uint64_t cntMols = 0;
-    uint64_t cntSkipped = 0;
-    fout.write((char*)(&cntMols), sizeof(cntMols)); // Reserve space for bucket size
-    for (auto &sdfFile : findFiles(dir, ".sdf")) {
-        for (auto &mol: indigoSessionPtr->iterateSDFile(sdfFile)) {
-            try {
-                mol->aromatize();
-                int fingerprint = indigoFingerprint(mol->id(), "sub");
-                FullIndigoFingerprint fp(indigoToString(fingerprint));
-                IndigoFingerprint cutFP = cutZeroColumns(fp);
-                cutFP.saveBytes(fout);
-                fout << mol->smiles() << '\n';
-                ++cntMols;
-            }
-            catch (...) {
-                cntSkipped++;
-            }
+    RawBucketWriter writer(rbFilePath);
+    uint64_t skipped = 0;
+    uint64_t written = 0;
+    for (auto &mol: indigoSessionPtr->iterateSDFile(sdfFilePath)) {
+        try {
+            mol->aromatize();
+            int fingerprint = indigoFingerprint(mol->id(), "sub");
+            FullIndigoFingerprint fullFingerprints(indigoToString(fingerprint));
+            IndigoFingerprint cutFingerprint = cutZeroColumns(fullFingerprints);
+            writer.write({mol->smiles(), cutFingerprint});
+            written++;
         }
+        catch (const exception &e) {
+            LOG(ERROR) << "Fail to parse molecule from " << sdfFilePath << " -- " << e.what();
+            skipped++;
+        }
+        if ((written + skipped) % 100'000 == 0)
+            LOG(INFO) << (written + skipped) << " molecules was processed from " << sdfFilePath;
     }
-    fout.seekp(0, ios::beg); // Seek to the beginning of file
-    fout.write((char*)(&cntMols), sizeof(cntMols));
-    if (cntSkipped)
-        std::cerr << "Skipped " << cntSkipped << " molecules\n";
+    LOG(INFO) << "Finish creating " << rbFilePath << " : skipped -- " << skipped << ", written -- " << written;
 }
 
-ABSL_FLAG(std::string, path_to_dir, "",
+ABSL_FLAG(std::string, path_to_sdf_dir, "",
           "Path to dir with sdf files");
+
+ABSL_FLAG(std::string, path_to_store_dir, "",
+          "Path to dir with rb (raw bucket) files");
+
+ABSL_FLAG(std::string, path_to_zero_columns, "",
+          "Path to file with empty columns");
+
+ABSL_FLAG(std::string, type_of_output, "",
+          "Type of output objects. Possible values: rb, csv");
 
 int main(int argc, char *argv[]) {
     google::InitGoogleLogging(argv[0]);
+    google::LogToStderr();
     absl::ParseCommandLine(argc, argv);
-    std::string pathToDir = absl::GetFlag(FLAGS_path_to_dir);
-    emptyArgument(pathToDir, "Please specify path_to_dir option");
-    vector<string> sdfFiles = findFiles(pathToDir, ".sdf");
+    filesystem::path pathToSdfDir = absl::GetFlag(FLAGS_path_to_sdf_dir);
+    filesystem::path pathToStoreDir = absl::GetFlag(FLAGS_path_to_store_dir);
+    filesystem::path pathToZeroColumns = absl::GetFlag(FLAGS_path_to_zero_columns);
+    std::string type_of_output = absl::GetFlag(FLAGS_type_of_output);
+    emptyArgument(pathToSdfDir, "Please specify path_to_sdf_dir option");
+    emptyArgument(pathToStoreDir, "Please specify path_to_store_dir option");
+    emptyArgument(pathToZeroColumns, "Please specify path_to_zero_columns option");
+    if (type_of_output != "csv" && type_of_output != "rb") {
+        LOG(ERROR) << "Please specify type_of_output option with value \"csv\" or \"rb\"";
+        exit(-1);
+    }
+
+    ColumnsReader columnsReader(pathToZeroColumns);
+    zeroColumns = columnsReader.readAll();
+
+    vector<filesystem::path> sdfFiles = findFiles(pathToSdfDir, ".sdf");
     auto startTime = std::chrono::high_resolution_clock::now();
 #pragma omp parallel for
     for (int i = 0; i < sdfFiles.size(); ++i) {
-        createFingerprintCSVFromFile(sdfFiles[i]);
+        auto &sdfFilePath = sdfFiles[i];
+        auto outFilePath = pathToStoreDir / (string(sdfFilePath.stem()) + "." + type_of_output);
+        if (type_of_output == "csv") {
+            createCSVFromSDF(sdfFiles[i], outFilePath);
+        } else if (type_of_output == "rb") {
+            createRBFromSDF(sdfFiles[i], outFilePath);
+        }
     }
     auto endTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_seconds = endTime - startTime;

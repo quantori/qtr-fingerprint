@@ -2,124 +2,123 @@
 
 #include <cstring>
 #include <string>
+#include <utility>
 #include <vector>
 #include <fstream>
 #include <cstdio>
-#include <future>
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
 
 #include "Fingerprint.h"
 #include "Utils.h"
 
 namespace qtr {
-    const int COUNT_THREADS_POW = 3; // should be equals to log2(your count of threads)
-
     /**
-     * for better understanding formats of files, see
-     * https://quantori.atlassian.net/wiki/spaces/QLAB/pages/3139567644/1st+implementation+ideas#%D0%A4%D0%BE%D1%80%D0%BC%D0%B0%D1%82%D1%8B-%D1%84%D0%B0%D0%B9%D0%BB%D0%BE%D0%B2%3A
+     * @brief <a href="https://quantori.atlassian.net/wiki/spaces/QLAB/pages/3139567644/1st+implementation+ideas#%D0%A4%D0%BE%D1%80%D0%BC%D0%B0%D1%82%D1%8B-%D1%84%D0%B0%D0%B9%D0%BB%D0%BE%D0%B2%3A">There</a>
+     * is files format documentation
+     *
      */
     class SplitterTree {
-        static std::atomic_uint64_t _countOfNodes; // default set to zero, increases after each constructor call
-        uint64_t _nodeNumber;
-        std::string _filename;
-        size_t _depth;
-        std::string _dir; // location dir
-
-        uint64_t _splitBit = -1;
-        SplitterTree *_leftChild = nullptr; // go left if bit is zero
-        SplitterTree *_rightChild = nullptr; // go right if bit is one
     public:
-        inline ~SplitterTree() {
-            if (_leftChild != nullptr)
-                delete _leftChild;
-            if (_rightChild != nullptr)
-                delete _rightChild;
-        }
+        class Node;
 
+    private:
+        std::filesystem::path _directory;
+        std::atomic_uint64_t _countOfNodes;
+        Node *_root;
+
+        std::vector<std::filesystem::path> buildWithoutSubTreeParallelization(uint64_t maxDepth, uint64_t maxBucketSize) const;
+
+        std::vector<std::filesystem::path>
+        buildWithSubTreeParallelization(uint64_t maxDepth, uint64_t maxBucketSize, uint64_t parallelize_depth) const;
+
+    public:
         /**
-         * Not building tree, just save data for future splitting.
-         * @param dir directory, so all file names will be "dir + filename"
-         * @param filename name of file with data
-         * @param depth depth of node
+         * @brief Saves data for future building. Doesn't build the tree
+         * @param directory directory to save tree's data
          */
-        inline SplitterTree(const std::string &dir, const std::string &filename, size_t depth = 0) :
-                _dir(dir), _filename(filename), _depth(depth) {
-            _nodeNumber = _countOfNodes++;
-        }
+        explicit SplitterTree(std::filesystem::path directory);
+
+        ~SplitterTree();
 
         /**
-         * Building a tree with given depth. This node should be a leaf before call. Otherwise UB
-         * After splitting, current file(_filename) will be deleted
+         * @brief Builds a tree with given parameters.
+         * If call this function more than once, you get UB
          * @param maxDepth max depth of tree
-         * @param minCountInNode if count of records is less than [minCountInNode], than method do nothing
-         * @return vector of filenames(buckets), size of vector is not more than 2^maxDepth.
+         * @param maxBucketSize max number of elements in a leaf
+         * @param parallelize_debt debt of tree on which subtree parallelization starts
+         * @return vector of buckets' filenames
          */
-        std::vector<std::string> split(size_t maxDepth, uint64_t minCountInNode);
-
-        /**
-         * Saves tree with root at this node to stream
-         * Format of saving:
-         * count of nodes in tree, and then each node like 4 unsigned integral types in a row, without "|",
-         * _nodeNumber|_splitBit|_leftChild->number|_rightChild->number
-         *
-         * if _leftChild is null,
-         * than we take it's number as (uint64_t)-1
-         * @param out
-         * @param writeSize if false, than count of nodes, wont be wrote
-         */
-        void saveTo(std::ostream &out, bool writeSize = true);
-
-        /**
-         * Node should be a leaf
-         * @return vector of column ids, take X from the beginning, to get mostly not correlating
-         */
-        std::vector<int> getNonCorrelatingColumns(); // TODO probably not working
-
-        /**
-         * Saves mostly non correlating order of columns for each leaf, file format:
-         * filename: leaf->_filenameOrderColumns, for example: "1OrderColumns"
-         * and inside each file we have an order of columns, size_t numbers split with a space
-         * Example: "5 2 3 1 4 0"
-         */
-        void saveNonCorrelatingColumnInEachBucket();
+        std::vector<std::filesystem::path>
+        build(uint64_t maxDepth, uint64_t maxBucketSize, uint64_t parallelize_debt) const;
 
         /**
          * @return count of nodes in a tree
          */
-        uint64_t size() const;
-
-    private:
-        /**
-         * @param node
-         * @return -1 if node is nullptr and node number otherwise
-         */
-        uint64_t getNum(SplitterTree *node);
+        [[nodiscard]] uint64_t size() const;
 
         /**
-         * Finds column, that is the best to split with.
-         * Criteria: absolute difference between records with ones in that column and records with zeroes, is minimum.
-         * @return column id
+         * @brief Dumps tree to @c out.
+         *
+         * @File_Format
+         * 1st 4 bytes are @c uint32_t with count of nodes in tree.
+         * Whole next file consist of 16 bytes blocks. Each block consist of 4 @c uint32_t numbers describing node:
+         * @c nodeId, @c splitBit, @c leftChildId, @c rightChildId
+         *
+         * @b Note: if node is leaf than splitBit, leftChildId, rightChildId are equal to -1
+         * @param out
          */
-        uint64_t findBestBitToSplit();
-
-        /**
-         * Deletes current file, and creates two files for children
-         * To left child we write records, when bitSplit is zero, and to right child when bitSplit is one
-         * @return <count of records in left child, count of records in right child>
-         */
-        std::pair<uint64_t, uint64_t> prepareFilesForChildren(uint64_t bitSplit);
-
-        /**
-         * Runs in children and then merging their results
-         * @param sizeLeft - count of records in left child
-         * @param sizeRight - count of records in right child
-         * @param maxDepth
-         * @param minCountInNode
-         * @return merged results of children splits
-         */
-        std::vector<std::string>
-        splitInChildren(uint64_t sizeLeft, uint64_t sizeRight, size_t maxDepth, uint64_t minCountInNode);
+        void dump(std::ostream &out) const;
     };
 
-}
+    class SplitterTree::Node {
+    public:
+        /**
+         * @brief Saves data for future building. Doesn't build subtree
+         * @param tree tree to which this node belongs
+         * @param depth depth of node
+         */
+        explicit Node(SplitterTree *tree, uint64_t depth);
+
+        ~Node();
+
+        /**
+         * @return path to directory to save node's data
+         */
+        [[nodiscard]] std::filesystem::path getDirPath() const;
+
+        /**
+         * @return paths to files to save node's data
+         */
+        std::vector<std::filesystem::path> getFilesPaths() const;
+
+        /**
+         * @param node
+         * @return -1 if node is nullptr and node's id otherwise
+         */
+        static uint64_t getId(Node *node);
+
+        std::vector<SplitterTree::Node *>
+        buildSubTree(uint64_t maxDepth, uint64_t maxSizeOfBucket, bool parallelize);
+
+        void dumpSubTree(std::ostream &out);
+
+        void addBucketFiles(uint64_t count);
+
+        void clearData();
+
+    private:
+        std::pair<uint64_t, uint64_t> splitNode(bool parallelize);
+
+    private:
+        SplitterTree *_tree;
+        uint64_t _depth;
+        uint64_t _splitBit;
+        Node *_leftChild; // go left if bit is zero
+        Node *_rightChild; // go right if bit is one
+        uint64_t _id;
+        uint64_t _filesNumber; // number of files related to this node
+    };
+
+} // namespace qtr

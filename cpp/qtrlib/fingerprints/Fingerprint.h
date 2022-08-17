@@ -16,6 +16,7 @@ class Fingerprint : public std::bitset<CHAR_BIT*fingerprintSizeInBytes>
 {
 public:
     static constexpr size_t sizeInBytes = fingerprintSizeInBytes;
+    static constexpr size_t sizeInBits = fromBytesToBits(fingerprintSizeInBytes);
 
     Fingerprint() = default;
 
@@ -29,10 +30,10 @@ public:
         for (size_t i = 0; i < s.size(); ++i) {
             size_t j = i * 4ull;
             int currentSym = chexToInt(s[i]);
-            this->operator[](j) = currentSym & 1;
-            this->operator[](j + 1) = currentSym & 2;
-            this->operator[](j + 2) = currentSym & 4;
-            this->operator[](j + 3) = currentSym & 8;
+            this->operator[](j + 3) = currentSym & 1;
+            this->operator[](j + 2) = currentSym & 2;
+            this->operator[](j + 1) = currentSym & 4;
+            this->operator[](j + 0) = currentSym & 8;
         }
     }
 
@@ -70,7 +71,7 @@ public:
     }
 };
 
-using IndigoFingerprint = Fingerprint<323>;
+using IndigoFingerprint = Fingerprint<323>; // todo set size of fingerprint by number of bits, not bytes
 using FullIndigoFingerprint = Fingerprint<467>;
 
 } // namespace qtr

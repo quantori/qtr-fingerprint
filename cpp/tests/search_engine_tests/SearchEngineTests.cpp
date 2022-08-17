@@ -1,13 +1,13 @@
 #include "SearchEngineTests.h"
-#include "Common.h"
-#include "utils/DataPathManager.h"
+#include "../Common.h"
+#include "../utils/DataPathManager.h"
 
 #include "IndigoInChI.h"
 #include "IndigoQueryMolecule.h"
 #include "indigo.h"
 #include "indigo-inchi.h"
 
-#include <glog/logging.h>
+#include "glog/logging.h"
 
 #include <gtest/gtest.h>
 
