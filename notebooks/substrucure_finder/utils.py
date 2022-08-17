@@ -23,8 +23,26 @@ def is_sub_fingerprint(sub_fingerprint: Fingerprint, meta_fingerprint: Fingerpri
     return np.all(sub_fingerprint <= meta_fingerprint)
 
 
+def is_sub_bytes_fingerprint(sub_fingerprint: np.ndarray, meta_fingerprint: np.ndarray) -> bool:
+    assert len(sub_fingerprint) == len(meta_fingerprint)
+
+    return np.all(sub_fingerprint & meta_fingerprint == sub_fingerprint)
+
+
 def bucket_path(data_path: Path, bucket: int) -> Path:
-    return data_path / 'buckets' / (str(bucket) + '.pickle')
+    return data_path / 'buckets' / (str(bucket))
+
+
+def bucket_search_engine_path(data_path: Path, bucket: int) -> Path:
+    return bucket_path(data_path, bucket) / 'se.pickle'
+
+
+def full_fingerprints_path(data_path: Path, bucket: int) -> Path:
+    return bucket_path(data_path, bucket) / 'fp.bin'
+
+
+def smiles_path(data_path: Path, bucket: int) -> Path:
+    return bucket_path(data_path, bucket) / 'smiles.txt'
 
 
 def raw_bucket_path(data_path: Path, bucket: int) -> Path:
@@ -53,3 +71,13 @@ def load_columns_from_file(file_path: Path) -> List[int]:
 def save_columns_to_file(columns: List[int], file_path: Path) -> None:
     with Path(file_path).open('w') as f:
         f.write(' '.join(map(str, columns)))
+
+
+def fingerprint_to_bytes(fingerprint: Fingerprint) -> np.ndarray:
+    values = [0] * ((len(fingerprint) + 7) >> 3)
+    for i in range(0, len(fingerprint), 8):
+        val = 0
+        for j in range(i, min(i + 8, len(fingerprint))):
+            val = val * 2 + int(fingerprint[j])
+        values[i >> 3] = val
+    return np.fromiter(values, dtype=np.uint8)

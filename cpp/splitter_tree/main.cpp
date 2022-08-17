@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
 
     // Build splitter tree
     SplitterTree tree(rawBucketsDirPath);
-    auto bucketDirPaths = tree.build(13, 1000, 3); // 16, 600, 3
+    auto bucketDirPaths = tree.build(16, 600, 3); // 16, 600, 3
     ofstream treeFileOut(splitterTreeFilePath);
     tree.dump(treeFileOut);
     tickTimePoint("Splitter tree is built");
