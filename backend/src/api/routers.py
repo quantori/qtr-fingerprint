@@ -17,8 +17,10 @@ router = APIRouter()
 async def substructure(
         smiles: str
 ):
+    log.info("Substructure request {0}".format(smiles))
     await asyncio.sleep(1)
     result = [smiles]
+    log.info("Substructure request {0} finished. Found {1}".format(smiles, len(result)))
     return result
 
 

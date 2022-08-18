@@ -4,7 +4,7 @@ services:
 
   qtr-fingerprints:
     build:
-      context: core
+      context: src
       dockerfile: ./Dockerfile
     env_file: .env
     container_name: qtr-fingerprints
@@ -15,7 +15,7 @@ services:
     ports:
       - "${ENGINE_PORT}:${ENGINE_PORT}"
     volumes:
-      - "./core:/app/core"
+      - "./src:/app/src"
 #      - "index_data:${INDEX_DATA_DIR}"
 
 volumes:
