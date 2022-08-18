@@ -16,7 +16,7 @@ services:
       - "${ENGINE_PORT}:${ENGINE_PORT}"
     volumes:
       - "./src:/app/src"
-#      - "index_data:${INDEX_DATA_DIR}"
+      - "data:${INDEX_DATA_DIR}"
 
 volumes:
-  index_data:
+  data:
