@@ -135,13 +135,4 @@ namespace qtr {
         return bestBit;
     }
 
-    std::vector<std::filesystem::path> nodesToDirPaths(const std::vector<SplitterTree::Node *> &nodes) {
-        std::vector<std::filesystem::path> paths;
-        paths.reserve(nodes.size());
-        for (SplitterTree::Node *node: nodes) {
-            paths.emplace_back(node->getDirPath());
-        }
-        return paths;
-    }
-
-}
+} // namespace qtr

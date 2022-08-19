@@ -63,7 +63,7 @@ public:
 
     void readFrom(std::istream& in) {
         for (uint64_t i = 0, j = 0;
-             i < sizeInBytes; ++i, j += BIT_IN_BYTE) { // TODO Read fingerprint with one read
+             i < sizeInBytes; ++i, j += BIT_IN_BYTE) {
             auto curr = in.get();
             for (uint64_t k = 0; k < BIT_IN_BYTE; ++k)
                 this->operator[](j + k) = (curr & (1ull << k));

@@ -19,15 +19,14 @@ namespace qtr {
     template<typename Functor>
     class ColumnsSelector {
     public:
-        ColumnsSelector(std::filesystem::path bucketsDir, Functor selectFunction) :
-                _bucketsDir(std::move(bucketsDir)),
-                _selectFunction(std::move(selectFunction)) {
-        };
+        ColumnsSelector(std::vector<std::filesystem::path> dataDirectories, Functor selectFunction) :
+                _dataDirectories(std::move(dataDirectories)),
+                _selectFunction(std::move(selectFunction)) {};
 
         void handleRawBuckets();
 
     private:
-        std::filesystem::path _bucketsDir;
+        std::vector<std::filesystem::path> _dataDirectories;
         Functor _selectFunction;
     };
 
@@ -57,20 +56,37 @@ namespace qtr {
     }
 
     template<typename Functor>
-    void ColumnsSelector<Functor>::handleRawBuckets() {
-        auto bucketPaths = findFiles(_bucketsDir, "");
-        LOG(INFO) << "buckets dir: " << _bucketsDir << " count: " << bucketPaths.size();
-        static const size_t step = 64;
+    static void handleOneDir(const std::filesystem::path &dirPath, const Functor &selectFunction) {
+        auto bucketPaths = findFiles(dirPath, "");
+        LOG(INFO) << "Start handling dir: " << dirPath << "with " << bucketPaths.size() << " buckets inside";
+        static const size_t step = 32;
         for (size_t i = 0; i < bucketPaths.size(); i += step) {
             std::vector<std::future<void>> tasks;
-            for (size_t j = i; j < i + step && j < bucketPaths.size(); j++) {
-                const auto &bucketPath = bucketPaths[j];
+            for (size_t j = i; j < bucketPaths.size() && j < i + step; j++) {
                 tasks.emplace_back(
-                        std::async(std::launch::async, handleRawBucket<Functor>, bucketPath, _selectFunction));
+                        std::async(std::launch::async, handleRawBucket<Functor>, bucketPaths[j], selectFunction)
+                );
             }
-            for (auto &task: tasks) {
+            for (auto& task : tasks) {
                 task.get();
             }
+        }
+        for (auto &bucketPath: bucketPaths) {
+            handleRawBucket(bucketPath, selectFunction);
+        }
+        LOG(INFO) << "Finish handling dir: " << dirPath << "with " << bucketPaths.size() << " buckets inside";
+    }
+
+    template<typename Functor>
+    void ColumnsSelector<Functor>::handleRawBuckets() {
+        std::vector<std::future<void>> tasks;
+        for (auto &dirPath: _dataDirectories) {
+            tasks.emplace_back(
+                    std::async(std::launch::async, handleOneDir<Functor>, dirPath, _selectFunction)
+            );
+        }
+        for (auto &task: tasks) {
+            task.get();
         }
     }
 
