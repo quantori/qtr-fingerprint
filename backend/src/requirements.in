@@ -1,0 +1,15 @@
+# API Server
+fastapi
+python-multipart
+uvicorn[standard]
+
+# Database
+motor==2.4.0
+
+# Development
+numpy
+pandas
+sklearn
+
+# Services
+epam.indigo
