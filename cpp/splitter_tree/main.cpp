@@ -200,7 +200,7 @@ int main(int argc, char *argv[]) {
 
     qtr::SplitterTree tree(args.dbDataDirsPaths);
     tree.build(args.maxTreeDepth, args.stopBucketSize, args.subtreeParallelDepth);
-    std::ofstream treeFileOut(args.otherDataPath);
+    std::ofstream treeFileOut(args.splitterTreePath);
     tree.dump(treeFileOut);
     double splitterTreeTime = tickTimePoint("Splitter tree is built");
 
