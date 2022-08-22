@@ -77,11 +77,6 @@ namespace qtr {
         ~Node();
 
         /**
-         * @return paths to files to save node's data
-         */
-        [[nodiscard]] const std::vector<std::filesystem::path> &getFilesPaths() const;
-
-        /**
          * @param node
          * @return -1 if node is nullptr and node's id otherwise
          */

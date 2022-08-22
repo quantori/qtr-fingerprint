@@ -210,7 +210,7 @@ int main(int argc, char *argv[]) {
 
     std::chrono::duration<double> elapsed_seconds = timePoints.back() - timePoints.front();
     LOG(INFO) << "Elapsed time: " << elapsed_seconds.count() << "s";
-    LOG(INFO) << "Init files: " << initFileSystemTime << "s";
+    LOG(INFO) << "Files initialization: " << initFileSystemTime << "s";
     LOG(INFO) << "Splitter tree building: " << splitterTreeTime << "s";
     LOG(INFO) << "Columns selecting: " << columnsSelectingTime << "s";
     return 0;

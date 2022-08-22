@@ -33,14 +33,15 @@ namespace qtr {
         assert(parallelize_depth < maxDepth);
         LOG(INFO) << "Start creating first parallelize_depth(" << parallelize_depth << ") levels of tree";
         auto nodesToRunTasks = _root->buildSubTree(parallelize_depth, maxBucketSize, true);
+        LOG(INFO) << "Finish building first tree's levels. There are " << nodesToRunTasks.size()
+                  << " nodes to run subtree's tasks";
         std::vector<std::future<std::vector<Node *>>> tasks;
         tasks.reserve(nodesToRunTasks.size());
         LOG(INFO) << "Start sub trees parallelization";
         for (size_t i = 0; i < nodesToRunTasks.size(); i++) {
-            size_t baseDirId = std::min(_directories.size() - 1, i / _directories.size());
             tasks.emplace_back(
-                    std::async(std::launch::async, &SplitterTree::Node::buildSubTree, nodesToRunTasks[i],
-                               maxDepth, maxBucketSize, false, _directories[baseDirId])
+                    std::async(std::launch::async, &SplitterTree::Node::buildSubTree, nodesToRunTasks[i], maxDepth,
+                               maxBucketSize, false, _directories[i % _directories.size()])
             );
         }
         for (auto &task: tasks) {
@@ -65,10 +66,6 @@ namespace qtr {
             }
         }
         _root = new SplitterTree::Node(this, 0, rootRelatedFiles);
-        std::cerr << "root related files: \n";
-        for (auto &f: rootRelatedFiles) {
-            std::cerr << f << '\n';
-        }
     }
 
     uint64_t SplitterTree::size() const {
@@ -81,7 +78,7 @@ namespace qtr {
         if (_depth >= maxDepth)
             return {this};
 
-        _splitBit = findBestBitToSplit(getFilesPaths(), parallelize);
+        _splitBit = findBestBitToSplit(_relatedFiles, parallelize);
         auto [leftSize, rightSize] = splitNode(parallelize, baseDir);
         auto leftLeafs = leftSize <= maxSizeOfBucket ? std::vector{_leftChild} :
                          _leftChild->buildSubTree(maxDepth, maxSizeOfBucket, parallelize, baseDir);
@@ -90,10 +87,6 @@ namespace qtr {
         auto leafs = std::move(leftLeafs);
         leafs.insert(leafs.end(), std::move_iterator(rightLeafs.begin()), std::move_iterator(rightLeafs.end()));
         return leafs;
-    }
-
-    const std::vector<std::filesystem::path> &SplitterTree::Node::getFilesPaths() const {
-        return _relatedFiles;
     }
 
     void SplitterTree::Node::dumpSubTree(std::ostream &out) {
@@ -116,7 +109,7 @@ namespace qtr {
 
     void SplitterTree::Node::addBucketFilesByParent(SplitterTree::Node *parent) {
         assert(parent != nullptr);
-        auto &parentFiles = parent->getFilesPaths();
+        auto &parentFiles = parent->_relatedFiles;
         for (auto &parentFile: parentFiles) {
             std::filesystem::path baseDir = parentFile.parent_path().parent_path();
             std::filesystem::path currDir = baseDir / std::to_string(_id);
@@ -152,22 +145,22 @@ namespace qtr {
         _rightChild = new SplitterTree::Node(_tree, _depth + 1);
         uint64_t leftSize, rightSize;
         if (parallelize) {
-            size_t bucketFilesCount = getFilesPaths().size();
+            size_t bucketFilesCount = _relatedFiles.size();
             assert(bucketFilesCount != 0 && "Can not split bucket without files");
             LOG(INFO) << "Start parallel splitting of node " << _id << " with " << bucketFilesCount
                       << " files related to it";
             _leftChild->addBucketFilesByParent(this);
             _rightChild->addBucketFilesByParent(this);
-            std::tie(leftSize, rightSize) = splitRawBucketByBitParallel(getFilesPaths(), _splitBit,
-                                                                        _leftChild->getFilesPaths(),
-                                                                        _rightChild->getFilesPaths());
+            std::tie(leftSize, rightSize) = splitRawBucketByBitParallel(_relatedFiles, _splitBit,
+                                                                        _leftChild->_relatedFiles,
+                                                                        _rightChild->_relatedFiles);
         } else {
             _leftChild->addBucketFile(baseDir);
             _rightChild->addBucketFile(baseDir);
-            assert(_leftChild->getFilesPaths().size() == 1 && _rightChild->getFilesPaths().size() == 1);
-            std::tie(leftSize, rightSize) = splitRawBucketByBitNotParallel(getFilesPaths(), _splitBit,
-                                                                           _leftChild->getFilesPaths()[0],
-                                                                           _rightChild->getFilesPaths()[0]);
+            assert(_leftChild->_relatedFiles.size() == 1 && _rightChild->_relatedFiles.size() == 1);
+            std::tie(leftSize, rightSize) = splitRawBucketByBitNotParallel(_relatedFiles, _splitBit,
+                                                                           _leftChild->_relatedFiles[0],
+                                                                           _rightChild->_relatedFiles[0]);
         }
         clearData();
         return {leftSize, rightSize};
