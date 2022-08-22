@@ -1,48 +1,38 @@
 from __future__ import annotations
 
-import pickle
 from dataclasses import dataclass
-from typing import List
-from pathlib import Path
 import numpy as np
-import pandas as pd
+from typing import BinaryIO, List
 
 from substrucure_finder import consts
-from substrucure_finder.fingerprint import Fingerprint
+from substrucure_finder.fingerprint import ByteFingerprint
 
 
 @dataclass
 class Molecule:
+    byte_fingerprint: ByteFingerprint
     smiles: str
-    fingerprint: Fingerprint
 
     @classmethod
-    def load_list_from_dir(cls, dir_path: Path) -> pd.DataFrame:
-        file_path = dir_path / "0.csv"
-        df = pd.read_csv(file_path, header=0, index_col=0, delimiter='~',
-                         dtype=dict((str(i), bool) for i in range(consts.fingerprint_size_in_bits)))
-        return df
+    def load_byte_fingerprint_from_stream(cls, stream: BinaryIO) -> ByteFingerprint:
+        fingerprint_bytes = stream.read(consts.fingerprint_size_in_bytes)
+        assert len(fingerprint_bytes) == consts.fingerprint_size_in_bytes
+        return ByteFingerprint(np.fromiter(fingerprint_bytes, dtype=np.uint8))
 
     @classmethod
-    def dump_fingerprints_list(cls, fingerprints: List[Fingerprint], file_path: Path) -> None:
-        with file_path.open('wb') as stream:
-            obj = np.concatenate(fingerprints, axis=0).astype(bool)
-            pickle.dump(obj, stream, protocol=-1)
+    def load_smiles_from_stream(cls, stream: BinaryIO) -> str:
+        return stream.readline().decode(encoding='utf-8').strip()
 
     @classmethod
-    def load_fingerprints_list(cls, file_path: Path) -> List[Fingerprint]:
-        with file_path.open('rb') as stream:
-            obj = pickle.load(stream)
-        return list(obj)
+    def load_molecule_from_stream(cls, stream: BinaryIO) -> Molecule:
+        fp = cls.load_byte_fingerprint_from_stream(stream)
+        smiles = cls.load_smiles_from_stream(stream)
+        return Molecule(fp, smiles)
 
     @classmethod
-    def dump_smiles_list(cls, smiles: List[str], file_path: Path) -> None:
-        with file_path.open('wb') as stream:
-            pickle.dump(smiles, stream, protocol=-1)
-
-    @classmethod
-    def load_smiles_list(cls, file_path: Path) -> List[str]:
-        with file_path.open('rb') as stream:
-            obj = pickle.load(stream)
-        assert isinstance(obj, list)
-        return obj
+    def load_molecules_from_rb_stream(cls, stream: BinaryIO) -> List[Molecule]:
+        molecules_number = int.from_bytes(stream.read(8), byteorder=consts.byteorder, signed=False)
+        result = []
+        for _ in range(molecules_number):
+            result.append(cls.load_molecule_from_stream(stream))
+        return result
