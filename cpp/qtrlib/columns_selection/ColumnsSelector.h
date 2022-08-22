@@ -40,9 +40,8 @@ namespace qtr {
         return bucket;
     }
 
-    static void saveColumns(const std::vector<size_t> &columns, const std::filesystem::path &rawBucketPath) {
-        std::filesystem::path columnsPath = rawBucketPath;
-        columnsPath.replace_extension(columnsExtension);
+    static void saveColumns(const std::vector<size_t> &columns, const std::filesystem::path &rawBucketDirPath) {
+        std::filesystem::path columnsPath = rawBucketDirPath / ("columns" + columnsExtension);
         ColumnsWriter(columnsPath).write(columns);
     }
 
@@ -59,7 +58,7 @@ namespace qtr {
     static void handleOneDir(const std::filesystem::path &dirPath, const Functor &selectFunction) {
         auto bucketPaths = findFiles(dirPath, "");
         LOG(INFO) << "Start handling dir: " << dirPath << "with " << bucketPaths.size() << " buckets inside";
-        static const size_t step = 32;
+        static const size_t step = 8;
         for (size_t i = 0; i < bucketPaths.size(); i += step) {
             std::vector<std::future<void>> tasks;
             for (size_t j = i; j < bucketPaths.size() && j < i + step; j++) {
@@ -70,9 +69,6 @@ namespace qtr {
             for (auto& task : tasks) {
                 task.get();
             }
-        }
-        for (auto &bucketPath: bucketPaths) {
-            handleRawBucket(bucketPath, selectFunction);
         }
         LOG(INFO) << "Finish handling dir: " << dirPath << "with " << bucketPaths.size() << " buckets inside";
     }
