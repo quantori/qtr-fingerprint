@@ -202,7 +202,8 @@ int main(int argc, char *argv[]) {
     double splitterTreeTime = tickTimePoint("Splitter tree is built");
 
     auto columnsSubset = qtr::ColumnsReader(args.columnsSubsetPath).readAll();
-    auto selectFunction = qtr::PearsonCorrelationSelectionFunction(columnsSubset);
+//    auto selectFunction = qtr::PearsonCorrelationSelectionFunction(columnsSubset); todo change to normal function
+    auto selectFunction = qtr::IotaOrderSelectionFunction();
     auto columnsSelector = qtr::ColumnsSelector(args.dbDataDirsPaths, selectFunction);
     columnsSelector.handleRawBuckets();
     double columnsSelectingTime = tickTimePoint("Columns are selected");
