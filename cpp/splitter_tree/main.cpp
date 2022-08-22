@@ -7,6 +7,7 @@
 #include <chrono>
 #include <iostream>
 #include <filesystem>
+#include <random>
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
@@ -16,11 +17,11 @@
 #include "SplitterTree.h"
 #include "ColumnsSelection.h"
 
-ABSL_FLAG(std::vector<std::string>, rb_dir_paths, {},
+ABSL_FLAG(std::string, rb_dir_path, {},
           "Path to directory where raw bucket files to build structure are stored");
 
 ABSL_FLAG(std::vector<std::string>, store_dir_paths, {},
-          "Path to directory where data should be stored");
+          "Path to directories where data should be stored");
 
 ABSL_FLAG(std::string, other_data_path, "",
           "Path to file where splitter tree should be stored");
@@ -40,9 +41,13 @@ ABSL_FLAG(uint64_t, subtree_parallel_depth, 0,
 ABSL_FLAG(std::string, db_name, "",
           "Name of folders with data base's files");
 
+namespace {
+    std::mt19937 randomGenerator(0);
+}
+
 
 struct Args {
-    std::vector<std::filesystem::path> rbDirPaths;
+    std::filesystem::path rbDirPath;
     std::vector<std::filesystem::path> storeDirPaths;
     std::filesystem::path otherDataPath;
     std::string dbName;
@@ -56,12 +61,9 @@ struct Args {
     Args(int argc, char *argv[]) {
         absl::ParseCommandLine(argc, argv);
 
-        std::vector<std::string> rbDirPathsStrings = absl::GetFlag(FLAGS_rb_dir_paths);
-        std::copy(rbDirPathsStrings.begin(), rbDirPathsStrings.end(), std::back_inserter(rbDirPaths));
-        qtr::emptyArgument(rbDirPaths, "Please specify rb_dir_paths option");
-        for (size_t i = 0; i < rbDirPaths.size(); i++) {
-            LOG(INFO) << "rbDirPaths[" << i << "]: " << rbDirPaths[i];
-        }
+        rbDirPath = absl::GetFlag(FLAGS_rb_dir_path);
+        qtr::emptyArgument(rbDirPath, "Please specify rb_dir_path option");
+        LOG(INFO) << "rbDirPath: " << rbDirPath;
 
         std::vector<std::string> storeDirPathsStrings = absl::GetFlag(FLAGS_store_dir_paths);
         std::copy(storeDirPathsStrings.begin(), storeDirPathsStrings.end(), std::back_inserter(storeDirPaths));
@@ -99,12 +101,6 @@ struct Args {
         }
         for (size_t i = 0; i < dbDataDirsPaths.size(); i++) {
             LOG(INFO) << "dbDataDirPaths[" << i << "]: " << dbDataDirsPaths[i];
-        }
-
-
-        if (storeDirPaths.size() != rbDirPaths.size()) {
-            LOG(ERROR) << "count of store dir paths have to be equal to count of rb dir paths";
-            exit(-1);
         }
 
         splitterTreePath = otherDataPath / dbName / "tree";
@@ -158,12 +154,18 @@ void initFileSystem(const Args &args) {
         askAboutContinue("Data could be overridden.");
     }
 
-
-    assert(args.dbDataDirsPaths.size() == args.rbDirPaths.size());
-    for (size_t i = 0; i < args.dbDataDirsPaths.size(); i++) {
-        std::filesystem::create_directory(args.dbDataDirsPaths[i] / "0");
-        for (auto &path: qtr::findFiles(args.rbDirPaths[i], ".rb")) {
-            std::filesystem::copy(path, args.dbDataDirsPaths[i] / "0");
+    std::vector<std::filesystem::path> rbFilePaths = qtr::findFiles(args.rbDirPath, ".rb");
+    std::shuffle(rbFilePaths.begin(), rbFilePaths.end(), randomGenerator);
+    size_t drivesCount = args.dbDataDirsPaths.size();
+    for (size_t storeDirId = 0, rbFileId = 0; storeDirId < drivesCount; storeDirId++) {
+        size_t currDriveFilesCount = rbFilePaths.size() / drivesCount
+                                     + size_t(storeDirId < rbFilePaths.size() % drivesCount);
+        for (size_t i = 0; i < currDriveFilesCount; i++, rbFileId++) {
+            auto sourcePath = rbFilePaths[rbFileId];
+            auto destinationPath = args.dbDataDirsPaths[storeDirId] / "0" / sourcePath.filename();
+            std::filesystem::create_directory(destinationPath.parent_path());
+            LOG(INFO) << "Copy " << sourcePath << " to " << destinationPath;
+            std::filesystem::copy_file(sourcePath, destinationPath);
         }
     }
 }
@@ -191,12 +193,7 @@ int main(int argc, char *argv[]) {
     };
 
     initFileSystem(args);
-    double initFileSystemTime = tickTimePoint("Init files");
-
-    std::cerr << "db data dir paths: \n";
-    for (auto &dir: args.dbDataDirsPaths) {
-        std::cerr << dir << '\n';
-    }
+    double initFileSystemTime = tickTimePoint("Files are initialized");
 
     qtr::SplitterTree tree(args.dbDataDirsPaths);
     tree.build(args.maxTreeDepth, args.stopBucketSize, args.subtreeParallelDepth);
@@ -206,8 +203,8 @@ int main(int argc, char *argv[]) {
 
     auto columnsSubset = qtr::ColumnsReader(args.columnsSubsetPath).readAll();
     auto selectFunction = qtr::PearsonCorrelationSelectionFunction(columnsSubset);
-    auto columnsChooser = qtr::ColumnsSelector(args.dbDataDirsPaths, selectFunction);
-    columnsChooser.handleRawBuckets();
+    auto columnsSelector = qtr::ColumnsSelector(args.dbDataDirsPaths, selectFunction);
+    columnsSelector.handleRawBuckets();
     double columnsSelectingTime = tickTimePoint("Columns are selected");
 
     std::chrono::duration<double> elapsed_seconds = timePoints.back() - timePoints.front();
