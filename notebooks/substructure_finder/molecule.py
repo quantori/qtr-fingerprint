@@ -4,8 +4,8 @@ from dataclasses import dataclass
 import numpy as np
 from typing import BinaryIO, List
 
-from substrucure_finder import consts
-from substrucure_finder.fingerprint import ByteFingerprint
+from substructure_finder import consts
+from substructure_finder.fingerprint import ByteFingerprint
 
 
 @dataclass

@@ -1,11 +1,11 @@
 from typing import Generator
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from substrucure_finder.db_filesystem import DbFilesystem
-from substrucure_finder.fingerprint import BitFingerprint
-from substrucure_finder import consts
-from substrucure_finder.splitter_tree import SplitterTree
-from substrucure_finder.bucket_search_engine import BucketSearchEngine
+from substructure_finder.db_filesystem import DbFilesystem
+from substructure_finder.fingerprint import BitFingerprint
+from substructure_finder import consts
+from substructure_finder.splitter_tree import SplitterTree
+from substructure_finder.bucket_search_engine import BucketSearchEngine
 
 
 class SearchEngine:
@@ -21,7 +21,6 @@ class SearchEngine:
 
 class ScopeExecutor(ThreadPoolExecutor):
     def __del__(self):
-        print('del executor')
         self.shutdown(wait=False, cancel_futures=True)
 
 

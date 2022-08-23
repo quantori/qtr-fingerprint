@@ -2,8 +2,8 @@ from __future__ import annotations
 from typing import List, Generator, BinaryIO
 from pathlib import Path
 
-from substrucure_finder import consts
-from substrucure_finder.fingerprint import BitFingerprint
+from substructure_finder import consts
+from substructure_finder.fingerprint import BitFingerprint
 
 
 class SplitterTree:

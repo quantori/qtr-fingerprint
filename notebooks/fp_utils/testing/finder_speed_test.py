@@ -5,7 +5,7 @@ import random
 from fp_utils.catch_time import CatchTime
 from fp_utils.logger import Logger
 from fp_utils.finders.finder import Finder
-from fp_utils.tests.speed_test_stat import SpeedTestStat
+from fp_utils.testing.speed_test_stat import SpeedTestStat
 from fp_utils.consts import FingerprintType, FingerprintsArrayType
 from fp_utils import settings
 

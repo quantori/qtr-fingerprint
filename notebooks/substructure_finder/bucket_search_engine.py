@@ -7,10 +7,10 @@ from sklearn.neighbors import BallTree
 from pathlib import Path
 import joblib
 
-from substrucure_finder import consts
-from substrucure_finder.fingerprint import BitFingerprint
-from substrucure_finder import utils
-from substrucure_finder.molecule import Molecule
+from substructure_finder import consts
+from substructure_finder.fingerprint import BitFingerprint
+from substructure_finder import utils
+from substructure_finder.molecule import Molecule
 
 
 class BucketSearchEngine:

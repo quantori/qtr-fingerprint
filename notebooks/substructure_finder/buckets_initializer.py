@@ -2,10 +2,10 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import List, Dict
 
-from substrucure_finder.bucket_search_engine import BucketSearchEngine
-from substrucure_finder.molecule import Molecule
-from substrucure_finder import utils
-from substrucure_finder.db_filesystem import DbFilesystem
+from substructure_finder.bucket_search_engine import BucketSearchEngine
+from substructure_finder.molecule import Molecule
+from substructure_finder import utils
+from substructure_finder.db_filesystem import DbFilesystem
 
 
 class BucketsInitializer:

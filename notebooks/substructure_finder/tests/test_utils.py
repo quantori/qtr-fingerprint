@@ -1,13 +1,11 @@
-import sys
 import unittest
-import argparse
 from pathlib import Path
-
+import shutil
 import numpy as np
 
-from substrucure_finder import utils
-from substrucure_finder import consts
-from substrucure_finder.fingerprint import BitFingerprint, ByteFingerprint
+from substructure_finder import utils
+from substructure_finder import consts
+from substructure_finder.fingerprint import BitFingerprint, ByteFingerprint
 
 
 def assert_message(expected_val, actual_val) -> str:
@@ -17,6 +15,9 @@ def assert_message(expected_val, actual_val) -> str:
 class TestUtils(unittest.TestCase):
 
     def setUp(self) -> None:
+        self.tmp_dir = Path(__file__).absolute().parent / 'tmp'
+        self.tmp_dir.mkdir()
+
         self.bit_fp_zeros = BitFingerprint(np.array([0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=bool))
         self.bit_fp_ones = BitFingerprint(np.array([1, 1, 1, 1, 1, 1, 1, 1, 1], dtype=bool))
         self.bit_fp_1 = BitFingerprint(np.array([1, 0, 1, 0, 1, 0, 1, 0, 0], dtype=bool))
@@ -28,6 +29,9 @@ class TestUtils(unittest.TestCase):
         self.byte_fp_1 = ByteFingerprint(np.array([85, 0], dtype=np.uint8))
         self.byte_fp_2 = ByteFingerprint(np.array([119, 128], dtype=np.uint8))
         self.byte_fp_3 = ByteFingerprint(np.array([86, 128], dtype=np.uint8))
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.tmp_dir)
 
     def assertNpArraysEqual(self, arr_1: np.ndarray, arr_2: np.ndarray):
         self.assertTrue(np.all(arr_1 == arr_2), assert_message(arr_1, arr_2))
@@ -117,6 +121,13 @@ class TestUtils(unittest.TestCase):
         self.assertNpArraysEqual(self.bit_fp_1, utils.byte_fingerprint_to_bits(self.byte_fp_1, 9))
         self.assertNpArraysEqual(self.bit_fp_2, utils.byte_fingerprint_to_bits(self.byte_fp_2, 9))
         self.assertNpArraysEqual(self.bit_fp_3, utils.byte_fingerprint_to_bits(self.byte_fp_3, 9))
+
+    def test_save_and_load_columns(self):
+        expected = [4, 3, 0, 2, 1]
+        file_path = self.tmp_dir / 'columns.col'
+        utils.save_columns_to_file(expected, file_path)
+        actual = utils.load_columns_from_file(file_path)
+        self.assertEqual(expected, actual)
 
 
 if __name__ == '__main__':

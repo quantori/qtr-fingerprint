@@ -4,8 +4,8 @@ from typing import List
 import numpy as np
 from pathlib import Path
 
-from substrucure_finder.fingerprint import BitFingerprint, ByteFingerprint
-from substrucure_finder import consts
+from substructure_finder.fingerprint import BitFingerprint, ByteFingerprint
+from substructure_finder import consts
 
 
 def russelrao_radius(fingerprint: BitFingerprint) -> float:
