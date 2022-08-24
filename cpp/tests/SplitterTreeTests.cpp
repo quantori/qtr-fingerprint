@@ -63,7 +63,7 @@ protected:
 
     std::filesystem::path rawBucketPath(size_t i) {
         std::filesystem::create_directory(rawBucketsDirPath / std::to_string(i));
-        return rawBucketsDirPath / std::to_string(i) / "0.rb";
+        return rawBucketsDirPath / std::to_string(i) / "data.rb";
     }
 
     void dumpBucket(const std::filesystem::path &bucketPath, const std::vector<raw_bucket_value_t> &bucket) {
@@ -126,8 +126,8 @@ TEST_F(SplitterTreeTests, SplitRawBucketByBitTest) {
 
 TEST_F(SplitterTreeTests, BuildSmallDebthNotParallelTest) {
     dumpBucket(rawBucketPath(0), rawBuckets[0]);
-    SplitterTree tree(rawBucketsDirPath);
-    tree.build(1, 2, 2);
+    SplitterTree tree({rawBucketsDirPath});
+    tree.build(1, 2, 0);
     EXPECT_EQ(tree.size(), 3);
     for (size_t i = 1; i <= 2; i++) {
         auto actualBucket = loadBucket(rawBucketPath(i));
@@ -138,7 +138,7 @@ TEST_F(SplitterTreeTests, BuildSmallDebthNotParallelTest) {
 
 TEST_F(SplitterTreeTests, BuildSmallDebthParallelTest) {
     dumpBucket(rawBucketPath(0), rawBuckets[0]);
-    SplitterTree tree(rawBucketsDirPath);
+    SplitterTree tree({rawBucketsDirPath});
     tree.build(1, 1, 0);
     EXPECT_EQ(tree.size(), 3);
     for (size_t i = 1; i <= 2; i++) {
@@ -150,8 +150,8 @@ TEST_F(SplitterTreeTests, BuildSmallDebthParallelTest) {
 
 TEST_F(SplitterTreeTests, BuildNotParallelTest) {
     dumpBucket(rawBucketPath(0), rawBuckets[0]);
-    SplitterTree tree(rawBucketsDirPath);
-    tree.build(2, 1, 3);
+    SplitterTree tree({rawBucketsDirPath});
+    tree.build(2, 1, 0);
     EXPECT_EQ(tree.size(), 7);
     std::ofstream out(rawBucketsDirPath);
     tree.dump(out);
@@ -180,7 +180,7 @@ TEST_F(SplitterTreeTests, BuildNotParallelTest) {
 
 TEST_F(SplitterTreeTests, DumpTest) {
     dumpBucket(rawBucketPath(0), rawBuckets[0]);
-    SplitterTree tree(rawBucketsDirPath);
+    SplitterTree tree({rawBucketsDirPath});
     tree.build(2, 1, 1);
     auto filePath = DataPathManager::getTmpDataDir() / "splitterTreeTmp";
     {
