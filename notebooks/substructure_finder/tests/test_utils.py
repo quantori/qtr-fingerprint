@@ -8,10 +8,6 @@ from substructure_finder import consts
 from substructure_finder.fingerprint import BitFingerprint, ByteFingerprint
 
 
-def assert_message(expected_val, actual_val) -> str:
-    return f'\nexpected: {expected_val}\n  actual: {actual_val}'
-
-
 class TestUtils(unittest.TestCase):
 
     def setUp(self) -> None:
@@ -34,7 +30,7 @@ class TestUtils(unittest.TestCase):
         shutil.rmtree(self.tmp_dir)
 
     def assertNpArraysEqual(self, arr_1: np.ndarray, arr_2: np.ndarray):
-        self.assertTrue(np.all(arr_1 == arr_2), assert_message(arr_1, arr_2))
+        self.assertTrue(np.all(arr_1 == arr_2), f'\nexpected: {arr_1}\n  actual: {arr_2}')
 
     def test_russelrao_radius(self):
         r_zeros = utils.russelrao_radius(self.bit_fp_zeros)
