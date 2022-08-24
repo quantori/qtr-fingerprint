@@ -25,6 +25,4 @@ namespace qtr {
     splitRawBucketByBitNotParallel(const std::vector<std::filesystem::path> &bucketFiles, uint64_t splitBit,
                                    const std::filesystem::path &zeroFilePath,
                                    const std::filesystem::path &onesFilePath);
-
-    std::vector<std::filesystem::path> nodesToDirPaths(const std::vector<SplitterTree::Node *> &nodes);
 }

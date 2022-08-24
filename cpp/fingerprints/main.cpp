@@ -50,7 +50,7 @@ static void hexToBin(const char *hexdec, ostringstream &out) {
         out << HEX_TO_DEC.at(hexdec[i]);
 }
 
-std::vector<int> zeroColumns;
+std::vector<size_t> zeroColumns;
 
 IndigoFingerprint cutZeroColumns(FullIndigoFingerprint fingerprint) {
     IndigoFingerprint cutFingerprint;

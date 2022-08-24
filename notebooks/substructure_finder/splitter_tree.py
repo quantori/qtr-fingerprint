@@ -2,8 +2,8 @@ from __future__ import annotations
 from typing import List, Generator, BinaryIO
 from pathlib import Path
 
-from substrucure_finder import consts
-from substrucure_finder.fingerprint import Fingerprint
+from substructure_finder import consts
+from substructure_finder.fingerprint import BitFingerprint
 
 
 class SplitterTree:
@@ -51,7 +51,7 @@ class SplitterTree:
     def all_buckets(self) -> Generator[int, None, None]:
         return self.__find_leafs(self.root)
 
-    def __walk_tree(self, fingerprint: Fingerprint, node: SplitterTree.Node) -> Generator[int, None, None]:
+    def __walk_tree(self, fingerprint: BitFingerprint, node: SplitterTree.Node) -> Generator[int, None, None]:
         if node.is_leaf:
             yield node.id
         else:
@@ -59,7 +59,7 @@ class SplitterTree:
                 yield from self.__walk_tree(fingerprint, self.nodes[node.left])
             yield from self.__walk_tree(fingerprint, self.nodes[node.right])
 
-    def get_buckets(self, fingerprint: Fingerprint) -> Generator[int, None, None]:
+    def get_buckets(self, fingerprint: BitFingerprint) -> Generator[int, None, None]:
         return self.__walk_tree(fingerprint, self.root)
 
     @classmethod

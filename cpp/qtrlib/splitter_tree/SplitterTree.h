@@ -24,21 +24,16 @@ namespace qtr {
         class Node;
 
     private:
-        std::filesystem::path _directory;
+        std::vector<std::filesystem::path> _directories;
         std::atomic_uint64_t _countOfNodes;
         Node *_root;
-
-        std::vector<std::filesystem::path> buildWithoutSubTreeParallelization(uint64_t maxDepth, uint64_t maxBucketSize) const;
-
-        std::vector<std::filesystem::path>
-        buildWithSubTreeParallelization(uint64_t maxDepth, uint64_t maxBucketSize, uint64_t parallelize_depth) const;
 
     public:
         /**
          * @brief Saves data for future building. Doesn't build the tree
-         * @param directory directory to save tree's data
+         * @param directories directories to save tree's data
          */
-        explicit SplitterTree(std::filesystem::path directory);
+        explicit SplitterTree(std::vector<std::filesystem::path> directories);
 
         ~SplitterTree();
 
@@ -48,10 +43,8 @@ namespace qtr {
          * @param maxDepth max depth of tree
          * @param maxBucketSize max number of elements in a leaf
          * @param parallelize_debt debt of tree on which subtree parallelization starts
-         * @return vector of buckets' filenames
          */
-        std::vector<std::filesystem::path>
-        build(uint64_t maxDepth, uint64_t maxBucketSize, uint64_t parallelize_debt) const;
+        void build(uint64_t maxDepth, uint64_t maxBucketSize, uint64_t parallelize_debt) const;
 
         /**
          * @return count of nodes in a tree
@@ -79,19 +72,9 @@ namespace qtr {
          * @param tree tree to which this node belongs
          * @param depth depth of node
          */
-        explicit Node(SplitterTree *tree, uint64_t depth);
+        explicit Node(SplitterTree *tree, uint64_t depth, std::vector<std::filesystem::path> relatedFiles = {});
 
         ~Node();
-
-        /**
-         * @return path to directory to save node's data
-         */
-        [[nodiscard]] std::filesystem::path getDirPath() const;
-
-        /**
-         * @return paths to files to save node's data
-         */
-        std::vector<std::filesystem::path> getFilesPaths() const;
 
         /**
          * @param node
@@ -100,16 +83,19 @@ namespace qtr {
         static uint64_t getId(Node *node);
 
         std::vector<SplitterTree::Node *>
-        buildSubTree(uint64_t maxDepth, uint64_t maxSizeOfBucket, bool parallelize);
+        buildSubTree(uint64_t maxDepth, uint64_t maxSizeOfBucket, bool parallelize,
+                     const std::filesystem::path &baseDir = "");
 
         void dumpSubTree(std::ostream &out);
 
-        void addBucketFiles(uint64_t count);
+        void addBucketFilesByParent(SplitterTree::Node *parent);
+
+        void addBucketFile(const std::filesystem::path &baseDirectory);
 
         void clearData();
 
     private:
-        std::pair<uint64_t, uint64_t> splitNode(bool parallelize);
+        std::pair<uint64_t, uint64_t> splitNode(bool parallelize, const std::filesystem::path &baseDir = "");
 
     private:
         SplitterTree *_tree;
@@ -118,7 +104,7 @@ namespace qtr {
         Node *_leftChild; // go left if bit is zero
         Node *_rightChild; // go right if bit is one
         uint64_t _id;
-        uint64_t _filesNumber; // number of files related to this node
+        std::vector<std::filesystem::path> _relatedFiles;
     };
 
 } // namespace qtr
