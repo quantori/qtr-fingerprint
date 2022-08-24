@@ -1,4 +1,4 @@
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from typing import List, Dict
 
@@ -17,7 +17,7 @@ class BucketsInitializer:
         self.raw_bucket_paths = self.db_filesystem.bucket_dir_paths(raw_db_name)
 
     def init_buckets(self) -> None:
-        with ThreadPoolExecutor() as executor:
+        with ProcessPoolExecutor() as executor:
             tasks = []
             for _, buckets in self.db_filesystem.base_dir_to_buckets(self.raw_db_name).items():
                 tasks.append(executor.submit(self.__init_buckets, buckets))
