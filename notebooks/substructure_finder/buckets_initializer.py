@@ -1,8 +1,8 @@
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import List, Dict
+from typing import List
 
-from substructure_finder.bucket_search_engine import BucketSearchEngine
+from substructure_finder.search_engines.bucket_search_engine import BucketSearchEngine
 from substructure_finder.molecule import Molecule
 from substructure_finder import utils
 from substructure_finder.db_filesystem import DbFilesystem

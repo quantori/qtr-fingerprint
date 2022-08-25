@@ -4,7 +4,7 @@ from substructure_finder.db_filesystem import DbFilesystem
 from substructure_finder.fingerprint import BitFingerprint
 from substructure_finder import consts
 from substructure_finder.splitter_tree import SplitterTree
-from substructure_finder.bucket_search_engine import BucketSearchEngine
+from substructure_finder.search_engines.bucket_search_engine import BucketSearchEngine
 
 
 class SearchEngine:
@@ -16,5 +16,3 @@ class SearchEngine:
         assert len(fingerprint) == consts.fingerprint_size_in_bits
         for bucket in self.splitter_tree.get_buckets(fingerprint):
             yield from BucketSearchEngine.search_in_file(fingerprint, self.pickle_paths[bucket])
-
-

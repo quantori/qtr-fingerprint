@@ -3,9 +3,9 @@ from concurrent.futures import as_completed
 from typing import Generator
 
 from substructure_finder.search_engines.search_engine import SearchEngine
-from substructure_finder.bucket_search_engine import BucketSearchEngine
+from substructure_finder.search_engines.bucket_search_engine import BucketSearchEngine
 from substructure_finder.fingerprint import BitFingerprint
-from substructure_finder.scope_executor import ScopeExecutor
+from substructure_finder.search_engines.scope_executor import ScopeExecutor
 
 
 class ExecutorSearchEngine(SearchEngine, ABC):
