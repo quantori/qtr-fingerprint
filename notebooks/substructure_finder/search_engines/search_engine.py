@@ -1,5 +1,4 @@
 from typing import Generator
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from substructure_finder.db_filesystem import DbFilesystem
 from substructure_finder.fingerprint import BitFingerprint
@@ -19,17 +18,3 @@ class SearchEngine:
             yield from BucketSearchEngine.search_in_file(fingerprint, self.pickle_paths[bucket])
 
 
-class ScopeExecutor(ThreadPoolExecutor):
-    def __del__(self):
-        self.shutdown(wait=False, cancel_futures=True)
-
-
-class ThreadPoolSearchEngine(SearchEngine):
-
-    def search(self, fingerprint: BitFingerprint) -> Generator[str, None, None]:
-        executor = ScopeExecutor()
-        buckets = self.splitter_tree.get_buckets(fingerprint)
-        futures = [executor.submit(BucketSearchEngine.search_in_file, fingerprint, self.pickle_paths[bucket])
-                   for bucket in buckets]
-        for future in as_completed(futures):
-            yield from future.result()
