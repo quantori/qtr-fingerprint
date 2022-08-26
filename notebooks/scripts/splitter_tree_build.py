@@ -1,11 +1,20 @@
+import os
+import sys
 from pathlib import Path
 import argparse
-from script_utils import run_command
 
 project_dir = Path(__file__).absolute().parent.parent.parent
 cpp_dir = project_dir / 'cpp'
 build_dir = cpp_dir / "cmake-build-release"
 target_name = 'splitter_tree'
+
+
+def run_command(command: str):
+    print("Run command: ", command)
+    code = os.system(command)
+    if code != 0:
+        print(f'Command:\n\t{command}\nfiled with exit code {code}')
+        sys.exit(code)
 
 
 def create_parser() -> argparse.ArgumentParser:
