@@ -38,7 +38,7 @@ ABSL_FLAG(uint64_t, stop_bucket_size, 0,
 ABSL_FLAG(uint64_t, subtree_parallel_depth, 0,
           "Depth on which subtree parallelization starts");
 
-ABSL_FLAG(std::string, db_name, "",
+ABSL_FLAG(std::string, raw_db_name, "",
           "Name of folders with data base's files");
 
 namespace {
@@ -76,9 +76,9 @@ struct Args {
         qtr::emptyArgument(otherDataPath, "Please specify other_data_path option");
         LOG(INFO) << "otherDataPath: " << otherDataPath;
 
-        dbName = absl::GetFlag(FLAGS_db_name);
+        dbName = absl::GetFlag(FLAGS_raw_db_name);
         if (dbName.empty()) {
-            LOG(INFO) << "db_name option is not specified";
+            LOG(INFO) << "raw_db_name option is not specified";
             for (size_t i = 0; i < 10000; i++) {
                 bool ok = true;
                 std::string newDbName = "raw_db_" + std::to_string(i);
