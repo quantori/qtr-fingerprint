@@ -1,6 +1,9 @@
 import argparse
 import shutil
+import sys
 from pathlib import Path
+
+sys.path.append(str(Path(__file__).absolute().parent.parent))
 
 from substructure_finder import DbFilesystem
 from substructure_finder.buckets_initializer import BucketsInitializer
