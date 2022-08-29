@@ -13,14 +13,8 @@ class RamProcessPoolSearchEngine(ProcessPoolSearchEngine):
     def __init__(self, db_filesystem: DbFilesystem, db_name: str):
         super().__init__(db_filesystem, db_name)
         self.bucket_search_engines: Dict[int, BucketSearchEngine] = dict()
-        with self.get_executor() as executor:
-            futures = [executor.submit(self._load_buckets, buckets) for buckets in
-                       db_filesystem.base_dir_to_buckets(db_name).values()]
-            for future in as_completed(futures):
-                self.bucket_search_engines.update(future.result())
-
-    def _load_buckets(self, buckets: List[int]) -> Dict[int, BucketSearchEngine]:
-        return dict((bucket, BucketSearchEngine.load(self.pickle_paths[bucket])) for bucket in buckets)
+        for bucket, file_path in self.pickle_paths.items():
+            self.bucket_search_engines[bucket] = BucketSearchEngine.load(file_path)
 
     def search(self, fingerprint: BitFingerprint) -> Generator[str, None, None]:
         executor = self.get_executor()
