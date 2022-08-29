@@ -1,6 +1,5 @@
 import sys
 from concurrent.futures import as_completed, ThreadPoolExecutor
-from pathlib import Path
 from typing import Generator, Dict, List
 
 from substructure_finder.search_engines.search_engine import SearchEngine
