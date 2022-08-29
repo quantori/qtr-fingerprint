@@ -1,3 +1,4 @@
+import sys
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from typing import List, Dict
@@ -36,7 +37,7 @@ class BucketsInitializer:
         return bucket_path
 
     def _init_bucket(self, raw_bucket_path: Path, bucket: int) -> None:
-        print(f"Start init {bucket}\n", end='')
+        print(f"Start init {bucket}\n", end='', file=sys.stderr)
         with self.db_filesystem.rb_file_from_bucket_dir(raw_bucket_path).open('rb') as stream:
             molecules = Molecule.load_molecules_from_rb_stream(stream)
         columns_file = self.db_filesystem.col_file_from_bucket_dir(raw_bucket_path)
@@ -45,4 +46,4 @@ class BucketsInitializer:
         bucket_file_path = self._init_bucket_path(bucket)
         bucket_search_engine = BucketSearchEngine(molecules, columns)
         bucket_search_engine.dump(bucket_file_path)
-        print(f"Finish init {bucket}\n", end='')
+        print(f"Finish init {bucket}\n", end='', file=sys.stderr)

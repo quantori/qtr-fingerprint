@@ -20,7 +20,7 @@
 ABSL_FLAG(std::string, rb_dir_path, {},
           "Path to directory where raw bucket files to build structure are stored");
 
-ABSL_FLAG(std::vector<std::string>, store_dir_paths, {},
+ABSL_FLAG(std::vector<std::string>, data_dir_paths, {},
           "Path to directories where data should be stored");
 
 ABSL_FLAG(std::string, other_data_path, "",
@@ -48,7 +48,7 @@ namespace {
 
 struct Args {
     std::filesystem::path rbDirPath;
-    std::vector<std::filesystem::path> storeDirPaths;
+    std::vector<std::filesystem::path> dataDirPaths;
     std::filesystem::path otherDataPath;
     std::string dbName;
     std::vector<std::filesystem::path> dbDataDirsPaths;
@@ -65,11 +65,11 @@ struct Args {
         qtr::emptyArgument(rbDirPath, "Please specify rb_dir_path option");
         LOG(INFO) << "rbDirPath: " << rbDirPath;
 
-        std::vector<std::string> storeDirPathsStrings = absl::GetFlag(FLAGS_store_dir_paths);
-        std::copy(storeDirPathsStrings.begin(), storeDirPathsStrings.end(), std::back_inserter(storeDirPaths));
-        qtr::emptyArgument(storeDirPaths, "Please specify store_dir_paths option");
-        for (size_t i = 0; i < storeDirPaths.size(); i++) {
-            LOG(INFO) << "storeDirPaths[" << i << "]: " << storeDirPaths[i];
+        std::vector<std::string> dataDirPathsStrings = absl::GetFlag(FLAGS_data_dir_paths);
+        std::copy(dataDirPathsStrings.begin(), dataDirPathsStrings.end(), std::back_inserter(dataDirPaths));
+        qtr::emptyArgument(dataDirPaths, "Please specify data_dir_paths option");
+        for (size_t i = 0; i < dataDirPaths.size(); i++) {
+            LOG(INFO) << "dataDirPaths[" << i << "]: " << dataDirPaths[i];
         }
 
         otherDataPath = absl::GetFlag(FLAGS_other_data_path);
@@ -82,7 +82,7 @@ struct Args {
             for (size_t i = 0; i < 10000; i++) {
                 bool ok = true;
                 std::string newDbName = "raw_db_" + std::to_string(i);
-                for (auto &dir: storeDirPaths) {
+                for (auto &dir: dataDirPaths) {
                     ok &= !std::filesystem::exists(dir / newDbName);
                 }
                 ok &= !std::filesystem::exists(otherDataPath / newDbName);
@@ -96,7 +96,7 @@ struct Args {
         }
         LOG(INFO) << "dbName: " << dbName;
 
-        for (auto &dir: storeDirPaths) {
+        for (auto &dir: dataDirPaths) {
             dbDataDirsPaths.emplace_back(dir / dbName);
         }
         for (size_t i = 0; i < dbDataDirsPaths.size(); i++) {
@@ -143,7 +143,7 @@ void initFileSystem(const Args &args) {
         std::filesystem::create_directory(dbDirPath / "0");
     }
     if (!alreadyExists.empty()) {
-        std::cout << "Some store directories already exist: \n";
+        std::cout << "Some data directories already exist: \n";
         for (auto &dir: alreadyExists) {
             std::cout << dir << '\n';
         }
@@ -157,12 +157,12 @@ void initFileSystem(const Args &args) {
     std::vector<std::filesystem::path> rbFilePaths = qtr::findFiles(args.rbDirPath, ".rb");
     std::shuffle(rbFilePaths.begin(), rbFilePaths.end(), randomGenerator);
     size_t drivesCount = args.dbDataDirsPaths.size();
-    for (size_t storeDirId = 0, rbFileId = 0; storeDirId < drivesCount; storeDirId++) {
+    for (size_t dataDirId = 0, rbFileId = 0; dataDirId < drivesCount; dataDirId++) {
         size_t currDriveFilesCount = rbFilePaths.size() / drivesCount
-                                     + size_t(storeDirId < rbFilePaths.size() % drivesCount);
+                                     + size_t(dataDirId < rbFilePaths.size() % drivesCount);
         for (size_t i = 0; i < currDriveFilesCount; i++, rbFileId++) {
             auto sourcePath = rbFilePaths[rbFileId];
-            auto destinationPath = args.dbDataDirsPaths[storeDirId] / "0" / sourcePath.filename();
+            auto destinationPath = args.dbDataDirsPaths[dataDirId] / "0" / sourcePath.filename();
             std::filesystem::create_directory(destinationPath.parent_path());
             LOG(INFO) << "Copy " << sourcePath << " to " << destinationPath;
             std::filesystem::copy_file(sourcePath, destinationPath);
