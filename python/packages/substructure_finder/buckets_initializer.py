@@ -43,5 +43,6 @@ class BucketsInitializer:
         columns = utils.load_columns_from_file(columns_file)[:self.columns_count]
         assert len(columns) == self.columns_count
         bucket_file_path = self._init_bucket_path(bucket)
-        BucketSearchEngine(molecules, columns, bucket_file_path)
+        bucket_search_engine = BucketSearchEngine(molecules, columns)
+        bucket_search_engine.dump(bucket_file_path)
         print(f"Finish init {bucket}\n", end='')

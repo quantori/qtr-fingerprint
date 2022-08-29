@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from typing import List, Iterable, BinaryIO
+from typing import List, Iterable
 
-import numpy as np
 from sklearn.neighbors import BallTree
 from pathlib import Path
 import joblib
@@ -14,7 +13,7 @@ from substructure_finder.molecule import Molecule
 
 
 class BucketSearchEngine:
-    def __init__(self, molecules: List[Molecule], columns: List[int], store_file: Path) -> None:
+    def __init__(self, molecules: List[Molecule], columns: List[int]) -> None:
         full_bit_fingerprints = [utils.byte_fingerprint_to_bits(mol.byte_fingerprint, consts.fingerprint_size_in_bits)
                                  for mol in molecules]
         sub_bit_fingerprints = [utils.take_columns_from_bit_fingerprint(columns, fp) for fp in full_bit_fingerprints]
@@ -22,8 +21,6 @@ class BucketSearchEngine:
         self.ball_tree = BallTree(sub_bit_fingerprints, leaf_size=2, metric='russellrao')
         self.columns = columns
         self.molecules = molecules
-
-        self.dump(store_file)
 
     def search(self, bit_fingerprint: BitFingerprint) -> Iterable[str]:
         assert bit_fingerprint.dtype == bool
@@ -44,12 +41,16 @@ class BucketSearchEngine:
 
     @classmethod
     def search_in_file(cls, fingerprint: BitFingerprint, file: Path) -> Iterable[str]:
-        with file.open('rb') as stream:
-            bucket_search_engine = joblib.load(stream)
-            assert isinstance(bucket_search_engine, cls)
-            data_start_pos = stream.tell()
-            return bucket_search_engine.search(fingerprint)
+        bucket_search_engine = cls.load(file)
+        return bucket_search_engine.search(fingerprint)
 
     def dump(self, file_path: Path) -> None:
         with file_path.open('wb') as f:
             joblib.dump(self, f, protocol=-1)
+
+    @classmethod
+    def load(cls, file: Path) -> BucketSearchEngine:
+        with file.open('rb') as stream:
+            bucket_search_engine = joblib.load(stream)
+            assert isinstance(bucket_search_engine, cls)
+        return bucket_search_engine
