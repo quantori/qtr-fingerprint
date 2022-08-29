@@ -3,10 +3,15 @@ import shutil
 import sys
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).absolute().parent.parent))
+packages_dir = Path(__file__).absolute().parent.parent / 'packages'
+assert packages_dir.is_dir()
+sys.path.append(str(packages_dir))
 
+# noinspection PyUnresolvedReferences
 from substructure_finder import DbFilesystem
+# noinspection PyUnresolvedReferences
 from substructure_finder.buckets_initializer import BucketsInitializer
+# noinspection PyUnresolvedReferences
 from fp_utils import CatchTime
 
 
