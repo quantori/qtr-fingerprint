@@ -1,3 +1,4 @@
+import sys
 from typing import Generator
 
 from substructure_finder.db_filesystem import DbFilesystem
@@ -14,5 +15,7 @@ class SearchEngine:
 
     def search(self, fingerprint: BitFingerprint) -> Generator[str, None, None]:
         assert len(fingerprint) == consts.fingerprint_size_in_bits
-        for bucket in self.splitter_tree.get_buckets(fingerprint):
+        buckets = list(self.splitter_tree.get_buckets(fingerprint))
+        print(f'Buckets number: {len(buckets)}', file=sys.stderr)
+        for bucket in buckets:
             yield from BucketSearchEngine.search_in_file(fingerprint, self.pickle_paths[bucket])
