@@ -29,6 +29,10 @@ class DbFilesystem:
         bucket_dirs = self.bucket_dir_paths(db_name)
         return dict((bucket, self.pickle_file_from_bucket_dir(directory)) for bucket, directory in bucket_dirs.items())
 
+    def rb_paths(self, db_name: str) -> Dict[int, Path]:
+        bucket_dirs = self.bucket_dir_paths(db_name)
+        return dict((bucket, self.rb_file_from_bucket_dir(directory)) for bucket, directory in bucket_dirs.items())
+
     @property
     def data_directories(self):
         return self._data_directories
