@@ -17,7 +17,12 @@ class DbStat:
     def __init__(self, db_filesystem: DbFilesystem, db_name: str, db_type: Literal["raw_db", "db"]):
         self.db_filesystem = db_filesystem
         self.db_name = db_name
-        self.db_type = DbType.DB if db_type == 'db' else DbType.RawDB
+        if db_type == 'db':
+            self.db_type = DbType.DB
+        elif db_type == 'raw_db':
+            self.db_type = DbType.RawDB
+        else:
+            assert False, 'only "raw_db" and "db" types are possible'
 
     @property
     def size(self) -> int:
