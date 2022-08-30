@@ -47,6 +47,8 @@ def build_bucket_search_engines(arguments: argparse.Namespace):
     with catch_time:
         initializer.init_buckets()
     print(catch_time)
+    with open('buckets_building_time.txt', 'w') as f:
+        print(catch_time, file=f)
 
 
 if __name__ == '__main__':
