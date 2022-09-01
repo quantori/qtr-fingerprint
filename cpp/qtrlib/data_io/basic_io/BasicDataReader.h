@@ -56,18 +56,18 @@ namespace qtr {
     };
 
     template<typename T, typename Reader>
-    class BasicReader {
+    class BasicDataReader {
     public:
         using ReadValue = T;
-        using BaseReader = BasicReader<T, Reader>;
+        using BaseReader = BasicDataReader<T, Reader>;
 
-        explicit BasicReader(std::istream *stream) : _stream(stream) {};
+        explicit BasicDataReader(std::istream *stream) : _stream(stream) {};
 
-        explicit BasicReader(const std::filesystem::path &filePath) : BasicReader(new std::ifstream(filePath)) {}
+        explicit BasicDataReader(const std::filesystem::path &filePath) : BasicDataReader(new std::ifstream(filePath)) {}
 
-        BasicReader(const BasicReader &basicReader) = delete;
+        BasicDataReader(const BasicDataReader &basicReader) = delete;
 
-        virtual ~BasicReader() {
+        virtual ~BasicDataReader() {
             delete _stream;
         }
 

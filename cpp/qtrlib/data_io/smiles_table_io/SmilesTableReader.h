@@ -2,12 +2,12 @@
 
 #include <string>
 
-#include "basic_io/BasicReader.h"
+#include "basic_io/BasicDataReader.h"
 
 namespace qtr {
 
     // TODO: test this class
-    class SmilesTableReader : public BasicReader<std::pair<uint64_t, std::string>, SmilesTableReader> {
+    class SmilesTableReader : public BasicDataReader<std::pair<uint64_t, std::string>, SmilesTableReader> {
     private:
         uint64_t _smilesInStream;
 

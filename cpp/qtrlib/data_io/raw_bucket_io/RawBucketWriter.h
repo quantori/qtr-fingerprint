@@ -3,12 +3,12 @@
 #include "glog/logging.h"
 
 #include "RawBucketIOConsts.h"
-#include "basic_io/BasicWriter.h"
+#include "basic_io/BasicDataWriter.h"
 
 namespace qtr {
 
     // TODO class is not tested after refactoring
-    class RawBucketWriter : public BasicWriter<raw_bucket_value_t, RawBucketWriter> {
+    class RawBucketWriter : public BasicDataWriter<raw_bucket_value_t, RawBucketWriter> {
     private:
         uint64_t _writtenNumber;
 

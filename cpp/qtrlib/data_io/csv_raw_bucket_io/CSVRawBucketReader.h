@@ -1,12 +1,12 @@
 #pragma once
 
 #include "CSVRawBucketIOConsts.h"
-#include "basic_io/BasicReader.h"
+#include "basic_io/BasicDataReader.h"
 
 namespace qtr {
 
     // TODO class is not tested after refactoring
-    class CSVRawBucketReader : public BasicReader<csv_raw_bucket_value_t, CSVRawBucketReader> {
+    class CSVRawBucketReader : public BasicDataReader<csv_raw_bucket_value_t, CSVRawBucketReader> {
     public:
         explicit CSVRawBucketReader(std::istream *stream): BaseReader(stream) {
             int c;

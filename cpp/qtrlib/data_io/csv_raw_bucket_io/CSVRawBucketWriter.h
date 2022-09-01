@@ -1,12 +1,12 @@
 #pragma once
 
 #include "CSVRawBucketIOConsts.h"
-#include "basic_io/BasicWriter.h"
+#include "basic_io/BasicDataWriter.h"
 
 namespace qtr {
 
     // TODO class is not tested after refactoring
-    class CSVRawBucketWriter : public BasicWriter<csv_raw_bucket_value_t, CSVRawBucketWriter> {
+    class CSVRawBucketWriter : public BasicDataWriter<csv_raw_bucket_value_t, CSVRawBucketWriter> {
     public:
         explicit CSVRawBucketWriter(std::ostream *stream) : BaseWriter(stream) {
             *_outStream << csvRawBucketHeader();

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "basic_io/BasicWriter.h"
+#include "basic_io/BasicDataWriter.h"
 
 namespace qtr {
 
     // TODO class is not tested after refactoring
-    class ColumnsWriter : public BasicWriter<size_t, ColumnsWriter> {
+    class ColumnsWriter : public BasicDataWriter<size_t, ColumnsWriter> {
     public:
         explicit ColumnsWriter(std::ostream *stream) : BaseWriter(stream) {}
 

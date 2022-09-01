@@ -1,11 +1,11 @@
 #pragma once
 
-#include "basic_io/BasicReader.h"
+#include "basic_io/BasicDataReader.h"
 
 namespace qtr {
 
     // TODO class is not tested after refactoring
-    class ColumnsReader : public BasicReader<size_t, ColumnsReader> {
+    class ColumnsReader : public BasicDataReader<size_t, ColumnsReader> {
     public:
         explicit ColumnsReader(std::istream *stream) : BaseReader(stream) {};
 

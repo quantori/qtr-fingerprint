@@ -1,12 +1,12 @@
 #pragma once
 
 #include "RawBucketIOConsts.h"
-#include "basic_io/BasicReader.h"
+#include "basic_io/BasicDataReader.h"
 
 namespace qtr {
 
     // TODO class is not tested after refactoring
-    class RawBucketReader : public BasicReader<raw_bucket_value_t, RawBucketReader> {
+    class RawBucketReader : public BasicDataReader<raw_bucket_value_t, RawBucketReader> {
     private:
         uint64_t _moleculesInStream;
 

@@ -63,16 +63,16 @@ namespace qtr {
     };
 
     template<typename T, typename Writer>
-    class BasicWriter {
+    class BasicDataWriter {
     public:
         using WriteValue = T;
-        using BaseWriter = BasicWriter<T, Writer>;
+        using BaseWriter = BasicDataWriter<T, Writer>;
 
-        explicit BasicWriter(std::ostream *stream) : _stream(stream), _writtenSmiles(0) {}
+        explicit BasicDataWriter(std::ostream *stream) : _stream(stream), _writtenSmiles(0) {}
 
-        BasicWriter(const BasicWriter &bucketWriter) = delete;
+        BasicDataWriter(const BasicDataWriter &bucketWriter) = delete;
 
-        virtual ~BasicWriter() {
+        virtual ~BasicDataWriter() {
             delete _stream;
         }
 
