@@ -70,6 +70,11 @@ namespace qtr {
         return (a + b - 1) / b;
     }
 
+    template<typename T>
+    constexpr inline T lowerOrderBits(T number, size_t bits_count) {
+        return number & ((T(1) << bits_count) - 1);
+    }
+
     /**
      * Finds all files with extension in dir, recursively
      * @param pathToDir
