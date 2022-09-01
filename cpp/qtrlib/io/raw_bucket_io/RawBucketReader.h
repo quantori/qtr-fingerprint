@@ -1,66 +1,45 @@
 #pragma once
 
-#include <iterator>
-#include <algorithm>
-#include <string>
-#include <fstream>
-#include <filesystem>
-#include <cassert>
-
-#include "RawBucketsIO.h"
+#include "RawBucketIOConsts.h"
+#include "basic_io/BasicReader.h"
 
 namespace qtr {
 
-    class RawBucketReader {
-    public:
-        explicit RawBucketReader(std::istream *inStream);
-
-        explicit RawBucketReader(const std::filesystem::path &fileName);
-
-        RawBucketReader(const RawBucketReader &bucketLoader) = delete;
-
-        ~RawBucketReader();
-
-        class Iterator {
-        public:
-            using iterator_category = std::input_iterator_tag;
-            using difference_type = void;
-            using value_type = qtr::raw_bucket_value_t;
-            using pointer = value_type *;
-            using reference = value_type &;
-
-            Iterator() : _reader(nullptr), _isRead(false) {};
-
-            explicit Iterator(RawBucketReader *reader);
-
-            Iterator(const Iterator& it) = default;
-
-            ~Iterator() = default;
-
-            bool isEnd() const;
-
-            bool operator!=(const Iterator &it) const;
-
-            value_type operator*();
-
-            Iterator operator++();
-
-        private:
-            RawBucketReader *_reader;
-            bool _isRead;
-        };
-
-        raw_bucket_value_t readOne();
-
-        std::vector<raw_bucket_value_t> readAll();
-
-        Iterator begin();
-
-        static Iterator end();
-
+    // TODO class is not tested after refactoring
+    class RawBucketReader : public BasicReader<raw_bucket_value_t, RawBucketReader> {
     private:
         uint64_t _moleculesInStream;
-        std::istream *_inStream;
+
+    public:
+        explicit RawBucketReader(std::istream *stream) : BaseReader(stream), _moleculesInStream(0) {
+            _stream->read((char *) &_moleculesInStream, sizeof _moleculesInStream);
+        }
+
+        explicit RawBucketReader(const std::filesystem::path &fileName) : RawBucketReader(new std::ifstream(fileName)) {
+            LOG(INFO) << "Create raw bucket reader from " << fileName << " with " << _moleculesInStream
+                      << " molecules (" << _stream << ")";
+        }
+
+        ~RawBucketReader() override {
+            LOG(INFO) << "Delete raw bucket reader (" << _stream << ")";
+        }
+
+        raw_bucket_value_t readOne() override {
+            assert(_moleculesInStream != 0);
+            _moleculesInStream--;
+            IndigoFingerprint fingerprint;
+            std::string smiles;
+            fingerprint.readFrom(*_stream);
+            char symbol;
+            while ((symbol = (char) _stream->get()) != '\n') {
+                smiles += symbol;
+            }
+            return {smiles, fingerprint};
+        }
+
+        bool isEof() const override {
+            return _moleculesInStream == 0;
+        }
     };
 
 }  // namespace qtr

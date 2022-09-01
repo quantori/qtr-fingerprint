@@ -1,62 +1,54 @@
 #pragma once
 
-#include <fstream>
-#include <filesystem>
-
 #include "CSVRawBucketIOConsts.h"
+#include "basic_io/BasicReader.h"
 
 namespace qtr {
 
-    class CSVRawBucketReader {
+    // TODO class is not tested after refactoring
+    class CSVRawBucketReader : public BasicReader<csv_raw_bucket_value_t, CSVRawBucketReader> {
     public:
-        explicit CSVRawBucketReader(std::istream *inStream);
+        explicit CSVRawBucketReader(std::istream *stream): BaseReader(stream) {
+            int c;
+            auto header = csvRawBucketHeader();
+            for (size_t i = 0; i < csvRawBucketHeaderSize; i++) {
+                c = _stream->get();
+                assert(c != EOF && c == header[i]);
+            }
+        };
 
-        explicit CSVRawBucketReader(const std::filesystem::path &fileName);
+        explicit CSVRawBucketReader(const std::filesystem::path &fileName)
+                : CSVRawBucketReader(new std::ifstream(fileName)) {
+            LOG(INFO) << "Create csv raw bucket reader from " << fileName << " (" << _stream << ")";
+        }
 
         CSVRawBucketReader(const CSVRawBucketReader &bucketLoader) = delete;
 
-        ~CSVRawBucketReader();
+        ~CSVRawBucketReader() override {
+            LOG(INFO) << "Delete csv raw bucket reader (" << _stream << ")";
+        }
 
-        class Iterator {
-        public:
-            using iterator_category = std::input_iterator_tag;
-            using difference_type = void;
-            using value_type = qtr::csv_raw_bucket_value_t;
-            using pointer = value_type *;
-            using reference = value_type &;
+        csv_raw_bucket_value_t readOne() override {
+            int c;
+            std::string smiles;
+            while ((c = _stream->get()) != csvSplitSymbol) {
+                assert(c != EOF);
+                smiles += (char) c;
+            }
+            IndigoFingerprint fingerprint;
+            for (size_t i = 0; i < IndigoFingerprint::sizeInBits; i++) {
+                c = _stream->get();
+                fingerprint[i] = bool(c - '0');
+                c = _stream->get();
+                assert(c == csvSplitSymbol || i + 1 == IndigoFingerprint::sizeInBits);
+                assert(c == '\n' || i + 1 != IndigoFingerprint::sizeInBits);
+            }
+            return {smiles, fingerprint};
+        }
 
-            Iterator() : _reader(nullptr), _isRead(false) {};
-
-            explicit Iterator(CSVRawBucketReader *reader);
-
-            Iterator(const Iterator &it) = default;
-
-            ~Iterator() = default;
-
-            bool isEnd() const;
-
-            bool operator!=(const Iterator &it) const;
-
-            value_type operator*();
-
-            Iterator operator++();
-
-        private:
-            CSVRawBucketReader *_reader;
-            bool _isRead;
-        };
-
-        csv_raw_bucket_value_t readOne();
-
-        std::vector<csv_raw_bucket_value_t> readAll();
-
-        Iterator begin();
-
-        static Iterator end();
-
-    private:
-        uint64_t _moleculesInStream;
-        std::istream *_inStream;
+        bool isEof() const override {
+            return _stream->eof();
+        }
     };
 
 } // namespace qtr

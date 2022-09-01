@@ -1,29 +1,24 @@
 #pragma once
 
-#include <filesystem>
-#include <iostream>
-#include <fstream>
-#include <vector>
-
-#include "ColumnsIOConsts.h"
+#include "basic_io/BasicWriter.h"
 
 namespace qtr {
 
-    class ColumnsWriter {
+    // TODO class is not tested after refactoring
+    class ColumnsWriter : public BasicWriter<size_t, ColumnsWriter> {
     public:
-        explicit ColumnsWriter(std::ostream *outStream) : _outStream(outStream) {};
+        explicit ColumnsWriter(std::ostream *stream) : BaseWriter(stream) {}
 
-        explicit ColumnsWriter(const std::filesystem::path& fileName) : _outStream(new std::ofstream(fileName)) {};
+        explicit ColumnsWriter(const std::filesystem::path &fileName) : ColumnsWriter(new std::ofstream(fileName)) {};
 
-        ColumnsWriter(const ColumnsWriter &) = default;
+        void write(const size_t &value) override {
+            if (_writtenSmiles != 0)
+                *_stream << ' ';
+            *_stream << value;
+            _writtenSmiles++;
+        }
 
-        void write(const std::vector<size_t> &columns);
-
-        ~ColumnsWriter();
-
-    private:
-        std::ostream *_outStream;
-
+        using BaseWriter::write;
     };
 
 } // namespace qtr

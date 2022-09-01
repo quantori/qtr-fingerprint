@@ -1,29 +1,25 @@
 #pragma once
 
-#include <iostream>
-#include <vector>
-#include <filesystem>
-#include <fstream>
-
-#include "ColumnsIOConsts.h"
+#include "basic_io/BasicReader.h"
 
 namespace qtr {
 
-    class ColumnsReader {
+    // TODO class is not tested after refactoring
+    class ColumnsReader : public BasicReader<size_t, ColumnsReader> {
     public:
-        explicit ColumnsReader(std::istream *inStream) : _inStream(inStream) {};
+        explicit ColumnsReader(std::istream *stream) : BaseReader(stream) {};
 
         explicit ColumnsReader(const std::filesystem::path &fileName) : ColumnsReader(new std::ifstream(fileName)) {}
 
-        ColumnsReader(const ColumnsReader&) = delete;
+        size_t readOne() override {
+            size_t result;
+            *_stream >> result;
+            return result;
+        }
 
-        std::vector<size_t> readAll();
-
-        ~ColumnsReader();
-
-    private:
-        std::istream *_inStream;
-
+        bool isEof() const override {
+            return _stream->eof();
+        }
     };
 
 } // namespace qtr

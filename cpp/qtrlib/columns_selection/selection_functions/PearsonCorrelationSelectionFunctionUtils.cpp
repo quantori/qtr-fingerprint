@@ -1,5 +1,4 @@
 #include "PearsonCorrelationSelectionFunctionUtils.h"
-#include "columns_io/ColumnsIOConsts.h"
 
 #include <cassert>
 #include <cstdint>

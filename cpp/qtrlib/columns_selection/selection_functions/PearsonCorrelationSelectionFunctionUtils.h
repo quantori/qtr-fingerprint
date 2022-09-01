@@ -3,7 +3,6 @@
 #include <vector>
 #include <map>
 #include "FingerprintTable.h"
-#include "columns_io/ColumnsIOConsts.h"
 
 namespace qtr {
 

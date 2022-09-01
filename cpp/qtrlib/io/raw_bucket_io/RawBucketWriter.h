@@ -1,71 +1,40 @@
 #pragma once
 
-#include <iostream>
-#include <filesystem>
-#include <fstream>
+#include "glog/logging.h"
 
-#include "RawBucketsIO.h"
+#include "RawBucketIOConsts.h"
+#include "basic_io/BasicWriter.h"
 
 namespace qtr {
 
-    class RawBucketWriter {
+    // TODO class is not tested after refactoring
+    class RawBucketWriter : public BasicWriter<raw_bucket_value_t, RawBucketWriter> {
+    private:
+        uint64_t _writtenNumber;
+
     public:
-        explicit RawBucketWriter(std::ostream *outStream);
-
-        explicit RawBucketWriter(const std::filesystem::path &fileName);
-
-        RawBucketWriter(const RawBucketWriter &bucketWriter) = delete;
-
-        ~RawBucketWriter();
-
-        class Iterator {
-        private:
-            struct Proxy {
-                Proxy(RawBucketWriter::Iterator &it) : _iterator(it) {};
-
-                Proxy &operator=(const raw_bucket_value_t &value);
-
-                RawBucketWriter::Iterator &_iterator;
-            };
-
-            RawBucketWriter *_writer;
-            bool _isWritten;
-
-        public:
-            using iterator_category = std::output_iterator_tag;
-            using difference_type = void;
-            using value_type = raw_bucket_value_t;
-            using pointer = value_type *;
-            using reference = value_type &;
-
-            Iterator() : _writer(nullptr), _isWritten(false) {};
-
-            explicit Iterator(RawBucketWriter *writer);
-
-            Iterator(const Iterator &it) = default;
-
-            ~Iterator() = default;
-
-            Proxy operator*();
-
-            Iterator operator++();
-
-            bool operator!=(const Iterator &it) const;
-
-            bool isEnd() const;
+        explicit RawBucketWriter(std::ostream *stream) : BaseWriter(stream), _writtenNumber(0) {
+            _stream->write((char *) &_writtenNumber, sizeof _writtenNumber); // reserve space for bucket size
         };
 
-        void write(const raw_bucket_value_t &value);
+        explicit RawBucketWriter(const std::filesystem::path &fileName) : RawBucketWriter(new std::ofstream(fileName)) {
+            LOG(INFO) << "Create raw bucket writer to " << fileName << " (" << _stream << ")";
+        }
 
-        void write(const std::vector<raw_bucket_value_t> &values);
+        ~RawBucketWriter() override {
+            _stream->seekp(0, std::ios::beg);
+            _stream->write((char *) &_writtenNumber, sizeof _writtenNumber); // write bucket size
+            LOG(INFO) << "Delete raw bucket writer with " << _writtenNumber << " molecules (" << _stream << ")";
+        }
 
-        Iterator begin();
+        void write(const raw_bucket_value_t &value) override {
+            _writtenNumber++;
+            auto &[smiles, fingerprint] = value;
+            fingerprint.saveBytes(*_stream);
+            *_stream << smiles << '\n';
+        }
 
-        static Iterator end();
-
-    private:
-        std::ostream *_outStream;
-        uint64_t _writtenNumber;
+        using BaseWriter::write;
     };
 
 } // namespace qtr
