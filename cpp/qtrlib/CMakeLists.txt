@@ -22,6 +22,7 @@ target_include_directories(${This}
         PUBLIC splitter_tree
         PUBLIC columns_selection
         PUBLIC data_io
+        PUBLIC io
         )
 
 target_link_libraries(${This} glog::glog)
