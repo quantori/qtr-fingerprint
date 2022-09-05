@@ -1,4 +1,6 @@
 #include "ColumnsIO.h"
+#include "io/BufferedReader.h"
+#include "io/BufferedWriter.h"
 
 int main(int argc, char *argv[]) {
     {

@@ -36,7 +36,7 @@ namespace qtr {
         }
 
         bool isEof() const {
-            return _reader == nullptr || _reader->isEof();
+            return _reader == nullptr || _reader->eof();
         }
 
         value_type operator*() {
@@ -55,27 +55,26 @@ namespace qtr {
         bool _isRead;
     };
 
-    template<typename T, typename Reader>
+    template<typename T, typename DataReader, typename BinaryReader>
     class BasicDataReader {
     public:
         using ReadValue = T;
-        using BaseReader = BasicDataReader<T, Reader>;
+        using BaseReader = BasicDataReader<T, DataReader, BinaryReader>;
 
-        explicit BasicDataReader(std::istream *stream) : _stream(stream) {};
-
-        explicit BasicDataReader(const std::filesystem::path &filePath) : BasicDataReader(new std::ifstream(filePath)) {}
+        explicit BasicDataReader(const std::filesystem::path &filePath)
+                : _binaryReader(new BinaryReader(filePath.c_str())) {}
 
         BasicDataReader(const BasicDataReader &basicReader) = delete;
 
         virtual ~BasicDataReader() {
-            delete _stream;
+            delete _binaryReader;
         }
 
-        virtual ReaderIterator<Reader> begin() {
-            return ReaderIterator(dynamic_cast<Reader *>(this));
+        virtual ReaderIterator<DataReader> begin() {
+            return ReaderIterator(dynamic_cast<DataReader *>(this));
         }
 
-        virtual ReaderIterator<Reader> end() {
+        virtual ReaderIterator<DataReader> end() {
             return {};
         }
 
@@ -87,13 +86,13 @@ namespace qtr {
             return result;
         }
 
-        virtual bool isEof() const = 0;
+        virtual bool eof() const = 0;
 
 
-        friend class ReaderIterator<Reader>;
+        friend class ReaderIterator<DataReader>;
 
     protected:
-        std::istream *_stream;
+        BinaryReader *_binaryReader;
     };
 
 } // qtr

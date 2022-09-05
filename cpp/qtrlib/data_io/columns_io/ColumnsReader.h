@@ -1,24 +1,24 @@
 #pragma once
 
 #include "basic_io/BasicDataReader.h"
+#include "io/BufferedReader.h"
 
 namespace qtr {
 
     // TODO class is not tested after refactoring
-    class ColumnsReader : public BasicDataReader<size_t, ColumnsReader> {
+    class ColumnsReader : public BasicDataReader<size_t, ColumnsReader, std::ifstream> {
     public:
-        explicit ColumnsReader(std::istream *stream) : BaseReader(stream) {};
 
-        explicit ColumnsReader(const std::filesystem::path &fileName) : ColumnsReader(new std::ifstream(fileName)) {}
+        explicit ColumnsReader(const std::filesystem::path &fileName) : BaseReader(fileName) {}
 
         size_t readOne() override {
             size_t result;
-            *_stream >> result;
+            *_binaryReader >> result;
             return result;
         }
 
-        bool isEof() const override {
-            return _stream->eof();
+        bool eof() const override {
+            return _binaryReader->eof();
         }
     };
 

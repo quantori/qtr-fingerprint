@@ -8,30 +8,27 @@
 namespace qtr {
 
     // TODO class is not tested after refactoring
-    class RawBucketWriter : public BasicDataWriter<raw_bucket_value_t, RawBucketWriter> {
+    class RawBucketWriter : public BasicDataWriter<raw_bucket_value_t, RawBucketWriter, std::ofstream> {
     private:
         uint64_t _writtenNumber;
 
     public:
-        explicit RawBucketWriter(std::ostream *stream) : BaseWriter(stream), _writtenNumber(0) {
-            _stream->write((char *) &_writtenNumber, sizeof _writtenNumber); // reserve space for bucket size
-        };
-
-        explicit RawBucketWriter(const std::filesystem::path &fileName) : RawBucketWriter(new std::ofstream(fileName)) {
-            LOG(INFO) << "Create raw bucket writer to " << fileName << " (" << _stream << ")";
+        explicit RawBucketWriter(const std::filesystem::path &fileName) : BaseWriter(fileName), _writtenNumber(0) {
+            LOG(INFO) << "Create raw bucket writer to " << fileName << " (" << _binaryWriter << ")";
+            _binaryWriter->write((char *) &_writtenNumber, sizeof _writtenNumber); // reserve space for bucket size
         }
 
         ~RawBucketWriter() override {
-            _stream->seekp(0, std::ios::beg);
-            _stream->write((char *) &_writtenNumber, sizeof _writtenNumber); // write bucket size
-            LOG(INFO) << "Delete raw bucket writer with " << _writtenNumber << " molecules (" << _stream << ")";
+            _binaryWriter->seekp(0, std::ios::beg);
+            _binaryWriter->write((char *) &_writtenNumber, sizeof _writtenNumber); // write bucket size
+            LOG(INFO) << "Delete raw bucket writer with " << _writtenNumber << " molecules (" << _binaryWriter << ")";
         }
 
         void write(const raw_bucket_value_t &value) override {
             _writtenNumber++;
             auto &[smiles, fingerprint] = value;
-            fingerprint.saveBytes(*_stream);
-            *_stream << smiles << '\n';
+            fingerprint.saveBytes(*_binaryWriter);
+            *_binaryWriter << smiles << '\n';
         }
 
         using BaseWriter::write;

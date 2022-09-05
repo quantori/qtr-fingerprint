@@ -7,36 +7,34 @@
 namespace qtr {
 
     // TODO: test this class
-    class SmilesTableReader : public BasicDataReader<std::pair<uint64_t, std::string>, SmilesTableReader> {
+    class SmilesTableReader
+            : public BasicDataReader<std::pair<uint64_t, std::string>, SmilesTableReader, std::ifstream> {
     private:
         uint64_t _smilesInStream;
 
     public:
-        explicit SmilesTableReader(std::istream *stream) : BaseReader(stream), _smilesInStream(0) {
-            _stream->read((char *) &_smilesInStream, sizeof _smilesInStream);
-        }
-
         explicit SmilesTableReader(const std::filesystem::path &fileName)
-                : SmilesTableReader(new std::ifstream(fileName)) {
-            LOG(INFO) << "Create SMILES table reader with " << _smilesInStream << " SMILES (" << _stream << ")";
+                : BaseReader(fileName), _smilesInStream(0) {
+            _binaryReader->read((char *) &_smilesInStream, sizeof _smilesInStream);
+            LOG(INFO) << "Create SMILES table reader with " << _smilesInStream << " SMILES (" << _binaryReader << ")";
         }
 
         ~SmilesTableReader() override {
-            LOG(INFO) << "Delete SMILES table reader (" << _stream << ")";
+            LOG(INFO) << "Delete SMILES table reader (" << _binaryReader << ")";
         }
 
         ReadValue readOne() override {
             uint64_t id;
-            _stream->read((char *) &id, sizeof id);
+            _binaryReader->read((char *) &id, sizeof id);
             std::string smiles;
             char symbol;
-            while ((symbol = (char) _stream->get()) != '\n') {
+            while ((symbol = (char) _binaryReader->get()) != '\n') {
                 smiles += symbol;
             }
             return {id, smiles};
         }
 
-        bool isEof() const override {
+        bool eof() const override {
             return _smilesInStream == 0;
         }
     };

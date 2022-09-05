@@ -62,26 +62,26 @@ namespace qtr {
         };
     };
 
-    template<typename T, typename Writer>
+    template<typename T, typename DataWriter, typename BinaryWriter>
     class BasicDataWriter {
     public:
         using WriteValue = T;
-        using BaseWriter = BasicDataWriter<T, Writer>;
+        using BaseWriter = BasicDataWriter<T, DataWriter, BinaryWriter>;
 
-        explicit BasicDataWriter(std::ostream *stream) : _stream(stream), _writtenSmiles(0) {}
+        explicit BasicDataWriter(const std::filesystem::path &filePath) : _binaryWriter(new BinaryWriter(filePath)) {}
 
         BasicDataWriter(const BasicDataWriter &bucketWriter) = delete;
 
         virtual ~BasicDataWriter() {
-            delete _stream;
+            delete _binaryWriter;
         }
 
-        virtual WriterIterator<Writer> begin() {
-            return WriterIterator(dynamic_cast<Writer *>(this));
+        virtual WriterIterator<DataWriter> begin() {
+            return WriterIterator(dynamic_cast<DataWriter *>(this));
         }
 
-        virtual WriterIterator<Writer> end() {
-            return WriterIterator<Writer>();
+        virtual WriterIterator<DataWriter> end() {
+            return WriterIterator<DataWriter>();
         }
 
         virtual void write(const WriteValue &value) = 0;
@@ -91,7 +91,6 @@ namespace qtr {
         }
 
     protected:
-        std::ostream *_stream;
-        uint64_t _writtenSmiles;
+        BinaryWriter *_binaryWriter;
     };
 } // qtr

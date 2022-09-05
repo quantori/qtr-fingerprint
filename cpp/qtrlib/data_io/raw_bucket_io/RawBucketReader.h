@@ -6,22 +6,21 @@
 namespace qtr {
 
     // TODO class is not tested after refactoring
-    class RawBucketReader : public BasicDataReader<raw_bucket_value_t, RawBucketReader> {
+    class RawBucketReader : public BasicDataReader<raw_bucket_value_t, RawBucketReader, std::ifstream> {
     private:
         uint64_t _moleculesInStream;
 
     public:
-        explicit RawBucketReader(std::istream *stream) : BaseReader(stream), _moleculesInStream(0) {
-            _stream->read((char *) &_moleculesInStream, sizeof _moleculesInStream);
-        }
 
-        explicit RawBucketReader(const std::filesystem::path &fileName) : RawBucketReader(new std::ifstream(fileName)) {
+        explicit RawBucketReader(const std::filesystem::path &fileName) : BaseReader(fileName), _moleculesInStream(0) {
             LOG(INFO) << "Create raw bucket reader from " << fileName << " with " << _moleculesInStream
-                      << " molecules (" << _stream << ")";
+                      << " molecules (" << _binaryReader << ")";
+
+            _binaryReader->read((char *) &_moleculesInStream, sizeof _moleculesInStream);
         }
 
         ~RawBucketReader() override {
-            LOG(INFO) << "Delete raw bucket reader (" << _stream << ")";
+            LOG(INFO) << "Delete raw bucket reader (" << _binaryReader << ")";
         }
 
         raw_bucket_value_t readOne() override {
@@ -29,15 +28,15 @@ namespace qtr {
             _moleculesInStream--;
             IndigoFingerprint fingerprint;
             std::string smiles;
-            fingerprint.readFrom(*_stream);
+            fingerprint.readFrom(*_binaryReader);
             char symbol;
-            while ((symbol = (char) _stream->get()) != '\n') {
+            while ((symbol = (char) _binaryReader->get()) != '\n') {
                 smiles += symbol;
             }
             return {smiles, fingerprint};
         }
 
-        bool isEof() const override {
+        bool eof() const override {
             return _moleculesInStream == 0;
         }
     };

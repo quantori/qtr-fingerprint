@@ -18,7 +18,7 @@ namespace qtr {
             _file = std::fopen(fileName, "r");
         }
 
-        bool isEof() {
+        bool eof() {
             if (_buf_ptr == _current_buf_size) {
                 _buf_ptr = 0;
                 _current_buf_size = fread(_buf, 1, buf_size, _file);
@@ -27,11 +27,11 @@ namespace qtr {
         }
 
         int get() {
-            return isEof() ? EOF : _buf[_buf_ptr++];
+            return eof() ? EOF : _buf[_buf_ptr++];
         }
 
         BufferedReader &read(char *s, size_t count) {
-            while (!isEof() && count != 0) {
+            while (!eof() && count != 0) {
                 if (count <= _current_buf_size - _buf_ptr) {
                     memcpy(s, _buf + _buf_ptr, count);
                     _buf_ptr += count;
@@ -48,7 +48,7 @@ namespace qtr {
         }
 
         operator bool() const {
-            return isEof();
+            return eof();
         }
 
         ~BufferedReader() {
