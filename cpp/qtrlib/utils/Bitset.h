@@ -23,10 +23,12 @@ namespace qtr {
         T _data[_data_length];
     public:
         void dump(std::ostream &out) {
-
+            // TODO
         }
 
-        void load(std::istream &in);
+        void load(std::istream &in) {
+            // TODO
+        }
 
         bool operator<=(const Bitset &other) const {
             bool answer = true;

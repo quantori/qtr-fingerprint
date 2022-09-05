@@ -1,8 +1,7 @@
 #pragma once
 
 #include <cstdio>
-#include <string>
-#include <string.h>
+#include <cstring>
 
 namespace qtr {
 
@@ -15,8 +14,8 @@ namespace qtr {
         size_t _current_buf_size;
         size_t _buf_ptr;
     public:
-        BufferedReader(const char *fileName) : _current_buf_size(0), _buf(0) {
-            _file = std::fopen(fileName, "rb");
+        BufferedReader(const char *fileName) : _current_buf_size(0), _buf_ptr(0) {
+            _file = std::fopen(fileName, "r");
         }
 
         bool isEof() {
