@@ -16,18 +16,21 @@ namespace qtr {
         static_assert(std::is_unsigned_v<T>());
         static_assert(sizeof(T) >= sizeof(char));
 
-    private:
+    protected:
         static const size_t _type_bits = fromBytesToBits(sizeof(T));
         static const size_t _data_length = divideIntegersCeil(S, _type_bits);
         static const size_t _size_in_bytes = divideIntegersCeil(S, BIT_IN_BYTE);
         T _data[_data_length];
     public:
-        void dump(std::ostream &out) {
-            // TODO
+        template<typename BinaryWriter>
+        void dump(BinaryWriter &writer) {
+            writer.write((char *) _data, _size_in_bytes);
         }
 
-        void load(std::istream &in) {
-            // TODO
+        template<typename BinaryReader>
+        void load(BinaryReader &reader) {
+            _data[_data_length - 1] = 0; // init extra bits with zeros
+            reader.read(_data, _size_in_bytes);
         }
 
         bool operator<=(const Bitset &other) const {
