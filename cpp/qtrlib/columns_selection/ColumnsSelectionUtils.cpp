@@ -8,7 +8,7 @@ namespace qtr {
 
     namespace {
         std::map<size_t, std::vector<bool>> fingerprintToFullColumns(const IndigoFingerprintTable &fingerprints) {
-            size_t columnsNumber = fingerprints[0].size();
+            size_t columnsNumber = fingerprints[0].size;
             std::map<size_t, std::vector<bool>> columns;
             for (auto &fp: fingerprints) {
                 for (size_t col = 0; col < columnsNumber; col++) {
@@ -41,7 +41,7 @@ namespace qtr {
 
     std::vector<size_t> sortIndexesByValues(const std::map<size_t, double> &values) {
         std::vector<size_t> indexes;
-        for (auto& [index, _] : values) {
+        for (auto &[index, _]: values) {
             indexes.emplace_back(index);
         }
         std::sort(indexes.begin(), indexes.end(), [&values](size_t a, size_t b) {

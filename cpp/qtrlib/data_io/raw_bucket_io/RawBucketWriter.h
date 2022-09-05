@@ -27,7 +27,7 @@ namespace qtr {
         void write(const raw_bucket_value_t &value) override {
             _writtenNumber++;
             auto &[smiles, fingerprint] = value;
-            fingerprint.saveBytes(*_binaryWriter);
+            fingerprint.dump(*_binaryWriter);
             *_binaryWriter << smiles << '\n';
         }
 

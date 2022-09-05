@@ -17,7 +17,7 @@ namespace qtr {
     public:
         explicit SmilesTableWriter(const std::filesystem::path &fileName) : BaseWriter(fileName), _writtenSmiles(0) {
             _binaryWriter->write((char *) &_writtenSmiles, sizeof _writtenSmiles); // reserve space for table size
-            LOG(INFO) << "Create SMILES talbe writer to " << fileName << " (" << _binaryWriter << ")";
+            LOG(INFO) << "Create SMILES table writer to " << fileName << " (" << _binaryWriter << ")";
         }
 
         ~SmilesTableWriter() override {

@@ -4,74 +4,61 @@
 #include <climits>
 #include <cstddef>
 #include <vector>
+#include <cassert>
 
 #include "Utils.h"
-
-class QtrIndigoFingerprint;
+#include "Bitset.h"
+#include "QtrIndigoFingerprint.h"
 
 namespace qtr {
 
-template<size_t fingerprintSizeInBytes>
-class Fingerprint : public std::bitset<CHAR_BIT*fingerprintSizeInBytes>
-{
-public:
-    static constexpr size_t sizeInBytes = fingerprintSizeInBytes;
-    static constexpr size_t sizeInBits = fromBytesToBits(fingerprintSizeInBytes);
+    template<size_t sizeInBits, typename T = standardBitsetDataType>
+    class Fingerprint : public qtr::Bitset<sizeInBits, T> {
+    public:
+        using qtr::Bitset<sizeInBits, T>::_size_in_bytes;
 
-    Fingerprint() = default;
+        Fingerprint() = default;
 
-    explicit Fingerprint(const QtrIndigoFingerprint &f);
-
-    /**
-     * Builds fingerprint from HEX string(for example - "a4210f")
-     * @param s - string with fingerprint, strlen(s) should be equals to fingerprintSizeInBytes * 2
-     */
-    explicit Fingerprint(const std::string &s) {
-        for (size_t i = 0; i < s.size(); ++i) {
-            size_t j = i * 4ull;
-            int currentSym = chexToInt(s[i]);
-            this->operator[](j + 3) = currentSym & 1;
-            this->operator[](j + 2) = currentSym & 2;
-            this->operator[](j + 1) = currentSym & 4;
-            this->operator[](j + 0) = currentSym & 8;
+        /**
+         * Builds fingerprint from HEX string(for example - "a4210f")
+         * @param s - string with fingerprint, strlen(s) should be equals to fingerprintSizeInBytes * 2
+         */
+        explicit Fingerprint(const std::string &s) {
+            assert(s.size() * 2 == _size_in_bytes);
+            for (size_t i = 0; i < s.size(); ++i) {
+                size_t j = i * 4ull;
+                int currentSym = chexToInt(s[i]);
+                this->setValue(j + 3, currentSym & 1);
+                this->setValue(j + 2, currentSym & 2);
+                this->setValue(j + 1, currentSym & 4);
+                this->setValue(j + 0, currentSym & 8);
+            }
         }
-    }
 
-    void setBytes(const std::vector<std::byte> &bytes) {
-        this->reset();
-        for(size_t i = 0; i < bytes.size(); i++)
-            for(size_t j = 0; j < CHAR_BIT; j++)
-                if (bool((bytes[i] >> j) & std::byte(1))) 
-                    this->set(i*CHAR_BIT + j);
-    }
-
-    std::vector<std::byte> getBytes() const {
-        std::vector<std::byte> result(fingerprintSizeInBytes, std::byte(0));
-
-        for(size_t i = 0; i < result.size(); i++)
-            for(size_t j = 0; j < CHAR_BIT; j++)
-                if (this->test(i*CHAR_BIT + j)) 
-                    result[i] |= (std::byte(1) << j);
-
-        return result;
-    }
-
-    void saveBytes(std::ostream& out) const {
-        auto toWrite = getBytes();
-        out.write((char*)toWrite.data(), toWrite.size());
-    }
-
-    void readFrom(std::istream& in) {
-        for (uint64_t i = 0, j = 0;
-             i < sizeInBytes; ++i, j += BIT_IN_BYTE) {
-            auto curr = in.get();
-            for (uint64_t k = 0; k < BIT_IN_BYTE; ++k)
-                this->operator[](j + k) = (curr & (1ull << k));
+        void setBytes(const std::vector<std::byte> &bytes) {
+            assert(bytes.size() == _size_in_bytes);
+            for (size_t i = 0; i < bytes.size(); i++)
+                for (size_t j = 0; j < CHAR_BIT; j++)
+                    this->setValue(i * CHAR_BIT + j, bool((bytes[i] >> j) & std::byte(1)));
         }
-    }
-};
 
-using IndigoFingerprint = Fingerprint<323>; // todo set size of fingerprint by number of bits, not bytes
-using FullIndigoFingerprint = Fingerprint<467>;
+        std::vector<std::byte> getBytes() const {
+            std::vector<std::byte> result(sizeInBits, std::byte(0));
+
+            for (size_t i = 0; i < result.size(); i++)
+                for (size_t j = 0; j < CHAR_BIT; j++)
+                    if (this->operator[](i * CHAR_BIT + j))
+                        result[i] |= (std::byte(1) << j);
+
+            return result;
+        }
+
+        explicit Fingerprint(const QtrIndigoFingerprint &f) {
+            setBytes(f.data());
+        }
+    };
+
+    using IndigoFingerprint = Fingerprint<2584, unsigned long long>;
+    using FullIndigoFingerprint = Fingerprint<3736, unsigned long long>;
 
 } // namespace qtr

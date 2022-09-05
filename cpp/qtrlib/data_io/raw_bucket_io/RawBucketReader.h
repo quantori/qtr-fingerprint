@@ -28,7 +28,7 @@ namespace qtr {
             _moleculesInStream--;
             IndigoFingerprint fingerprint;
             std::string smiles;
-            fingerprint.readFrom(*_binaryReader);
+            fingerprint.load(*_binaryReader);
             char symbol;
             while ((symbol = (char) _binaryReader->get()) != '\n') {
                 smiles += symbol;
