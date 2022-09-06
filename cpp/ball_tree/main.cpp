@@ -136,7 +136,7 @@ void initFileSystem(const Args &args) {
     std::filesystem::create_directory(args.fingerprintTablesPath);
 }
 
-void enumerateMolecules(const Args &args) {
+size_t enumerateMolecules(const Args &args) {
     std::vector<std::filesystem::path> rbFilePaths = qtr::findFiles(args.rbDirPath, ".rb");
     qtr::SmilesTableWriter smilesTableWriter(args.smilesTablePath);
     size_t number = 0;
@@ -150,6 +150,7 @@ void enumerateMolecules(const Args &args) {
             number++;
         }
     }
+    return number;
 }
 
 void distributeFingerprintTables(const Args &args) {
@@ -173,7 +174,8 @@ int main(int argc, char *argv[]) {
 
     initFileSystem(args);
     timeTicker.tick("Files initialization");
-    enumerateMolecules(args);
+    size_t moleculesNumber = enumerateMolecules(args);
+    LOG(INFO) << "Molecules number: " << moleculesNumber;
     timeTicker.tick("Molecules enumerating");
     distributeFingerprintTables(args);
     timeTicker.tick("Files distribution");
