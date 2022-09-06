@@ -1,6 +1,5 @@
 #include "SplitterTreeUtils.h"
 #include <future>
-#include <numeric>
 
 namespace qtr {
     namespace {
@@ -9,11 +8,11 @@ namespace qtr {
         **/
         std::pair<std::vector<uint64_t>, uint64_t>
         findColumnsSumInFile(const std::filesystem::path &rawBucketFilePath) {
-            std::vector<uint64_t> columnsSum(IndigoFingerprint::size, 0);
+            std::vector<uint64_t> columnsSum(IndigoFingerprint::size(), 0);
             uint64_t bucketSize = 0;
             for (const auto &[_, fingerprint]: RawBucketReader(rawBucketFilePath)) {
                 bucketSize++;
-                for (size_t i = 0; i < IndigoFingerprint::size; ++i)
+                for (size_t i = 0; i < IndigoFingerprint::size(); ++i)
                     columnsSum[i] += fingerprint[i];
             }
             return {columnsSum, bucketSize};
@@ -22,14 +21,14 @@ namespace qtr {
         void mergeResults(std::vector<uint64_t> &currColumnsSum, uint64_t &currBucketSize,
                           const std::vector<uint64_t> &fileColumnsSum, uint64_t fileBucketSize) {
             currBucketSize += fileBucketSize;
-            for (size_t i = 0; i < IndigoFingerprint::size; i++) {
+            for (size_t i = 0; i < IndigoFingerprint::size(); i++) {
                 currColumnsSum[i] += fileColumnsSum[i];
             }
         }
 
         std::pair<std::vector<uint64_t>, uint64_t>
         findColumnsSumInBucketNotParallel(const std::vector<std::filesystem::path> &bucketFiles) {
-            std::vector<uint64_t> columnsSum(IndigoFingerprint::size, 0);
+            std::vector<uint64_t> columnsSum(IndigoFingerprint::size(), 0);
             uint64_t bucketSize = 0;
             for (const auto &filePath: bucketFiles) {
                 const auto &[fileColumnsSum, fileBucketSize] = findColumnsSumInFile(filePath);
@@ -45,7 +44,7 @@ namespace qtr {
             for (const auto &filePath: bucketFiles) {
                 tasks.emplace_back(std::async(std::launch::async, findColumnsSumInFile, filePath));
             }
-            std::vector<uint64_t> columnsSum(IndigoFingerprint::size, 0);
+            std::vector<uint64_t> columnsSum(IndigoFingerprint::size(), 0);
             uint64_t bucketSize = 0;
             for (auto &task: tasks) {
                 const auto &[fileColumnsSum, fileBucketSize] = task.get();

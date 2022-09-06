@@ -25,7 +25,9 @@ namespace qtr {
         static const size_t _size_in_bytes = divideIntegersCeil(S, BIT_IN_BYTE);
         T _data[_data_length];
     public:
-        static const size_t size = S;
+        static constexpr size_t size() {
+            return S;
+        }
 
         template<typename BinaryWriter>
         void dump(BinaryWriter &writer) const {
