@@ -13,7 +13,6 @@
 #include "absl/flags/parse.h"
 
 #include "RawBucketsIO.h"
-#include "CSVRawBucketIO.h"
 #include "SplitterTree.h"
 #include "ColumnsSelection.h"
 
@@ -79,20 +78,8 @@ struct Args {
         dbName = absl::GetFlag(FLAGS_raw_db_name);
         if (dbName.empty()) {
             LOG(INFO) << "raw_db_name option is not specified";
-            for (size_t i = 0; i < 10000; i++) {
-                bool ok = true;
-                std::string newDbName = "raw_db_" + std::to_string(i);
-                for (auto &dir: dataDirPaths) {
-                    ok &= !std::filesystem::exists(dir / newDbName);
-                }
-                ok &= !std::filesystem::exists(otherDataPath / newDbName);
-                if (ok) {
-                    dbName = newDbName;
-                    break;
-                }
-            }
-            qtr::emptyArgument(dbName, "Something wrong with data base name generation");
-            LOG(INFO) << "Generated name for data base: " << dbName;
+            dbName = qtr::generateDbName(dataDirPaths, otherDataPath);
+            LOG(INFO) << "Generated name for raw data base: " << dbName;
         }
         LOG(INFO) << "dbName: " << dbName;
 
@@ -125,34 +112,30 @@ struct Args {
     }
 };
 
-void askAboutContinue(const std::string &question) {
-    std::cout << question << ". Continue? (Y/n): ";
-    std::string userAnswer;
-    std::cin >> userAnswer;
-    if (userAnswer != "Y" && userAnswer != "y") {
-        std::cout << "abort\n";
-        exit(-1);
-    }
-}
-
 void initFileSystem(const Args &args) {
     std::vector<std::filesystem::path> alreadyExists;
     for (auto &dbDirPath: args.dbDataDirsPaths) {
-        if (!std::filesystem::create_directory(dbDirPath))
+        if (std::filesystem::exists(dbDirPath))
             alreadyExists.emplace_back(dbDirPath);
-        std::filesystem::create_directory(dbDirPath / "0");
+    }
+    if (std::filesystem::exists(args.otherDataPath / args.dbName)) {
+        alreadyExists.emplace_back(args.otherDataPath / args.dbName);
     }
     if (!alreadyExists.empty()) {
         std::cout << "Some data directories already exist: \n";
         for (auto &dir: alreadyExists) {
             std::cout << dir << '\n';
         }
-        askAboutContinue("Data could be overridden");
+        qtr::askAboutContinue("Data will be overridden");
+        for (auto& dir : alreadyExists) {
+            std::filesystem::remove_all(dir);
+        }
     }
-    if (!std::filesystem::create_directory(args.otherDataPath / args.dbName)) {
-        std::cout << "Other file path " << args.otherDataPath / args.dbName << " already exists. ";
-        askAboutContinue("Data could be overridden.");
+    for (auto& dbDirPath : args.dbDataDirsPaths) {
+        std::filesystem::create_directory(dbDirPath);
+        std::filesystem::create_directory(dbDirPath / "0");
     }
+    std::filesystem::create_directory(args.otherDataPath / args.dbName);
 
     std::vector<std::filesystem::path> rbFilePaths = qtr::findFiles(args.rbDirPath, ".rb");
     std::shuffle(rbFilePaths.begin(), rbFilePaths.end(), randomGenerator);
@@ -181,37 +164,23 @@ int main(int argc, char *argv[]) {
     initLogging(argc, argv);
     Args args(argc, argv);
 
-    auto timePoints = std::vector{std::chrono::high_resolution_clock::now()};
-
-    auto tickTimePoint = [&timePoints](const std::string &message) {
-        auto t1 = timePoints.back();
-        timePoints.emplace_back(std::chrono::high_resolution_clock::now());
-        auto t2 = timePoints.back();
-        std::chrono::duration<double> t = t2 - t1;
-        LOG(INFO) << message << " : " << t.count() << " sec";
-        return t.count();
-    };
+    qtr::TimeTicker timeTicker;
 
     initFileSystem(args);
-    double initFileSystemTime = tickTimePoint("Files are initialized");
+    timeTicker.tick("Files initialization");
 
     qtr::SplitterTree tree(args.dbDataDirsPaths);
     tree.build(args.maxTreeDepth, args.stopBucketSize, args.subtreeParallelDepth);
     std::ofstream treeFileOut(args.splitterTreePath);
     tree.dump(treeFileOut);
-    double splitterTreeTime = tickTimePoint("Splitter tree is built");
+    timeTicker.tick("Splitter tree building");
 
     auto columnsSubset = qtr::ColumnsReader(args.columnsSubsetPath).readAll();
     auto selectFunction = qtr::PearsonCorrelationSelectionFunction(columnsSubset);
-//    auto selectFunction = qtr::IotaOrderSelectionFunction();
     auto columnsSelector = qtr::ColumnsSelector(args.dbDataDirsPaths, selectFunction);
     columnsSelector.handleRawBuckets();
-    double columnsSelectingTime = tickTimePoint("Columns are selected");
+    timeTicker.tick("Columns selection");
 
-    std::chrono::duration<double> elapsed_seconds = timePoints.back() - timePoints.front();
-    LOG(INFO) << "Elapsed time: " << elapsed_seconds.count() << "s";
-    LOG(INFO) << "Files initialization: " << initFileSystemTime << "s";
-    LOG(INFO) << "Splitter tree building: " << splitterTreeTime << "s";
-    LOG(INFO) << "Columns selecting: " << columnsSelectingTime << "s";
+    timeTicker.logResults();
     return 0;
 }

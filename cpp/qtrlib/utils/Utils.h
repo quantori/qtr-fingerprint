@@ -9,6 +9,23 @@
 
 namespace qtr {
 
+    class TimeTicker {
+    public:
+        TimeTicker() {
+            _timePoints.emplace_back(std::chrono::high_resolution_clock::now());
+        }
+
+        double tick(const std::string& message);
+
+        double elapsedTime() const;
+
+        void logResults() const;
+
+    private:
+        std::vector<decltype(std::chrono::high_resolution_clock::now())> _timePoints;
+        std::vector<std::pair<std::string, double>> _results;
+    };
+
     /**
      * Check, if string a ends with string b.
      * @param a
@@ -30,6 +47,11 @@ namespace qtr {
             exit(-1);
         }
     }
+
+    std::string generateDbName(const std::vector<std::filesystem::path> &dataDirPaths,
+                               const std::filesystem::path &otherDataPath);
+
+    void askAboutContinue(const std::string &question);
 
     template<>
     void emptyArgument<uint64_t>(const uint64_t &argument, const std::string &message);
@@ -81,6 +103,7 @@ namespace qtr {
      * @param extension
      * @return vector of filenames
      */
-    std::vector<std::filesystem::path> findFiles(const std::filesystem::path &pathToDir, const std::string &extension);
+    std::vector<std::filesystem::path>
+    findFiles(const std::filesystem::path &pathToDir, const std::string &extension);
 
 } // namespace qtr

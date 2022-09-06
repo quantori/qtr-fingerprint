@@ -68,7 +68,8 @@ namespace qtr {
         using WriteValue = T;
         using BaseWriter = BasicDataWriter<T, DataWriter, BinaryWriter>;
 
-        explicit BasicDataWriter(const std::filesystem::path &filePath) : _binaryWriter(new BinaryWriter(filePath)) {}
+        explicit BasicDataWriter(const std::filesystem::path &filePath) :
+                _binaryWriter(new BinaryWriter(filePath.c_str())) {}
 
         BasicDataWriter(const BasicDataWriter &bucketWriter) = delete;
 
