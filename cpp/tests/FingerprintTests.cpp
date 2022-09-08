@@ -26,7 +26,7 @@ protected:
 };
 
 TEST_F(FingerprintTestFixture, SIZE) {
-    EXPECT_EQ(_data.size(), qtr::IndigoFingerprint::size);
+    EXPECT_EQ(_data.size(), qtr::IndigoFingerprint::size());
 }
 
 TEST_F(FingerprintTestFixture, CONVERSION) {

@@ -14,6 +14,6 @@ public:
     explicit FingerprintTable(const std::string &sdfFile);
 };
 
-using IndigoFingerprintTable = FingerprintTable<IndigoFingerprint::size>;
+using IndigoFingerprintTable = FingerprintTable<IndigoFingerprint::size()>;
 
 } // namespace qtr

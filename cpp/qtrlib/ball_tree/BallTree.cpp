@@ -11,6 +11,14 @@ namespace qtr {
                             const std::filesystem::path &rightFiles) {
             // todo как сплить ровно по ровну? как синхронизироваться между файлами?
         }
+
+        void prepareFilesForNode(const std::vector<std::filesystem::path> &dataDirectories, size_t nodeId) {
+            for (auto &dirPath: dataDirectories) {
+                std::filesystem::create_directory(dirPath / std::to_string(nodeId));
+            }
+        }
+
+
     } // namespace
 
     BallTree::BallTree(size_t depth, size_t parallelizationDepth, std::vector<std::filesystem::path> dataDirectories,
@@ -44,8 +52,8 @@ namespace qtr {
 
     void BallTree::_splitNodeManyFiles(size_t nodeId, size_t splitBit) {
         // todo
-        prepareFilesForNode(leftChild(nodeId));
-        prepareFilesForNode(rightChild(nodeId));
+        prepareFilesForNode(_dataDirectories, leftChild(nodeId));
+        prepareFilesForNode(_dataDirectories, rightChild(nodeId));
         std::vector<std::future<void>> tasks;
         tasks.reserve(_dataDirectories.size());
         for (auto &nodeFile: _getNodesFiles(nodeId)) {
@@ -57,8 +65,8 @@ namespace qtr {
     std::vector<size_t> BallTree::_buildFirstLevels(size_t nodeId, size_t levels, const BitSelector &bitSelector) {
         if (levels == 0)
             return {nodeId};
-        size_t splitBit = bitSelector(_getNodesFiles(nodeId));
-        _splitNodeManyFiles(nodeId, splitBit);
+//        size_t splitBit = bitSelector(_getNodesFiles(nodeId)); todo
+//        _splitNodeManyFiles(nodeId, splitBit);
         std::vector<size_t> nodes = _buildFirstLevels(leftChild(nodeId), levels - 1, bitSelector);
         std::vector<size_t> rightNodes = _buildFirstLevels(rightChild(nodeId), levels - 1, bitSelector);
         nodes.insert(nodes.end(), rightNodes.begin(), rightNodes.end());
@@ -79,10 +87,5 @@ namespace qtr {
         return (nodeId - 1) >> 1ull;
     }
 
-    void BallTree::prepareFilesForNode(size_t nodeId) const {
-        for (auto &dirPath: _dataDirectories) {
-            std::filesystem::create_directory(dirPath / std::to_string(nodeId));
-        }
-    }
 
 } // qtr

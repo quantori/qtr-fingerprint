@@ -8,7 +8,7 @@ namespace qtr {
 
     namespace {
         std::map<size_t, std::vector<bool>> fingerprintToFullColumns(const IndigoFingerprintTable &fingerprints) {
-            size_t columnsNumber = fingerprints[0].size;
+            size_t columnsNumber = fingerprints[0].size();
             std::map<size_t, std::vector<bool>> columns;
             for (auto &fp: fingerprints) {
                 for (size_t col = 0; col < columnsNumber; col++) {

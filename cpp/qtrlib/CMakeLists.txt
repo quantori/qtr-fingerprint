@@ -24,7 +24,7 @@ target_include_directories(${This}
         PUBLIC data_io
         PUBLIC io
         PUBLIC ball_tree
-        PUBLIC ball_tree/split_bit_selectors
+        PUBLIC ball_tree/split_bit_selection
         )
 
 target_link_libraries(${This} glog::glog)

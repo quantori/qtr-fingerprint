@@ -36,23 +36,27 @@ namespace qtr {
         }
     }
 
-    size_t MaxDispersionBitSelector::operator()(const std::vector<std::filesystem::path> &fpTablePaths) const {
-        std::vector<std::future<std::pair<std::vector<uint64_t>, uint64_t>>> tasks;
-        tasks.resize(fpTablePaths.size());
-        for (auto &filePath: fpTablePaths) {
-            tasks.emplace_back(std::async(std::launch::async, findColumnsSumInFile, filePath));
-        }
-        std::vector<size_t> columnsSum(IndigoFingerprint::size(), 0);
-        size_t tableSize = 0;
-        for (auto &task: tasks) {
-            const auto &[fileColumnsSum, fileTableSize] = task.get();
-            mergeResults(columnsSum, tableSize, fileColumnsSum, fileTableSize);
-        }
-        return selectBitByColumnsSum(columnsSum, tableSize);
-    }
+//    size_t MaxDispersionBitSelector::operator()(const std::vector<std::filesystem::path> &fpTablePaths) const {
+//        std::vector<std::future<std::pair<std::vector<uint64_t>, uint64_t>>> tasks;
+//        tasks.resize(fpTablePaths.size());
+//        for (auto &filePath: fpTablePaths) {
+//            tasks.emplace_back(std::async(std::launch::async, findColumnsSumInFile, filePath));
+//        }
+//        std::vector<size_t> columnsSum(IndigoFingerprint::size(), 0);
+//        size_t tableSize = 0;
+//        for (auto &task: tasks) {
+//            const auto &[fileColumnsSum, fileTableSize] = task.get();
+//            mergeResults(columnsSum, tableSize, fileColumnsSum, fileTableSize);
+//        }
+//        return selectBitByColumnsSum(columnsSum, tableSize);
+//    }
+//
+//    size_t MaxDispersionBitSelector::operator()(const std::filesystem::path &fpTablePath) const {
+//        auto [columnsSum, tableSize] = findColumnsSumInFile(fpTablePath);
+//        return selectBitByColumnsSum(columnsSum, tableSize);
+//    }
 
-    size_t MaxDispersionBitSelector::operator()(const std::filesystem::path &fpTablePath) const {
-        auto [columnsSum, tableSize] = findColumnsSumInFile(fpTablePath);
-        return selectBitByColumnsSum(columnsSum, tableSize);
+    size_t MaxDispersionBitSelector::operator()(const ColumnsStatistic &statistic) const {
+        return 0;
     }
 } // qtr
