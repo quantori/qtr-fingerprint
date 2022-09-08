@@ -12,6 +12,7 @@
 
 namespace qtr {
 
+    // todo: test this class
     template<size_t sizeInBits, typename T = standardBitsetDataType>
     class Fingerprint : public qtr::Bitset<sizeInBits, T> {
     public:
@@ -44,7 +45,6 @@ namespace qtr {
 
         std::vector<std::byte> getBytes() const {
             std::vector<std::byte> result(sizeInBits, std::byte(0));
-
             for (size_t i = 0; i < result.size(); i++)
                 for (size_t j = 0; j < CHAR_BIT; j++)
                     if (this->operator[](i * CHAR_BIT + j))
@@ -58,7 +58,7 @@ namespace qtr {
         }
     };
 
-    using IndigoFingerprint = Fingerprint<2584, unsigned long long>;
-    using FullIndigoFingerprint = Fingerprint<3736, unsigned long long>;
+    using IndigoFingerprint = Fingerprint<2584>;
+    using FullIndigoFingerprint = Fingerprint<3736>;
 
 } // namespace qtr

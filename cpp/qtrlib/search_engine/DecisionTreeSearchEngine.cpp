@@ -50,7 +50,7 @@ void DecisionTreeSearchEngine<SplittingStrategy>::build(const std::string &path)
 
         LOG(INFO) << "Bit: " << bit << ", size: " << view.size();
 
-        if (bit < qtr::IndigoFingerprint::size && view.size() > _maxLeafSize) {
+        if (bit < qtr::IndigoFingerprint::size() && view.size() > _maxLeafSize) {
 
             BitSet pred(_splittingStrategy(bit, view));
             typename Node::Children children = node->setPred(pred);

@@ -9,8 +9,8 @@
 namespace qtr {
 
 template<size_t fingerprintSizeInBytes>
-using FingerprintTableView = TableView<FingerprintTable<IndigoFingerprint::size>>;
+using FingerprintTableView = TableView<FingerprintTable<IndigoFingerprint::size()>>;
 
-using IndigoFingerprintTableView = FingerprintTableView<IndigoFingerprint::size>;
+using IndigoFingerprintTableView = FingerprintTableView<IndigoFingerprint::size()>;
 
 } // namespace qtr

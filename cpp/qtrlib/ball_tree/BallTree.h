@@ -4,7 +4,7 @@
 #include <filesystem>
 
 #include "Fingerprint.h"
-#include "split_bit_selectors/BitSelector.h"
+#include "split_bit_selection//BitSelector.h"
 
 namespace qtr {
 
@@ -34,8 +34,6 @@ namespace qtr {
         void _splitNodeManyFiles(size_t nodeId, size_t splitBit);
 
         std::vector<std::filesystem::path> _getNodesFiles(size_t nodeId) const;
-
-        void prepareFilesForNode(size_t nodeId) const;
 
     public:
         BallTree(size_t depth, size_t parallelizationDepth, std::vector<std::filesystem::path> dataDirectories,
