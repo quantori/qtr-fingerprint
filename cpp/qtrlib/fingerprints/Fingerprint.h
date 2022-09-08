@@ -29,10 +29,10 @@ namespace qtr {
             for (size_t i = 0; i < s.size(); ++i) {
                 size_t j = i * 4ull;
                 int currentSym = chexToInt(s[i]);
-                this->setValue(j + 3, currentSym & 1);
-                this->setValue(j + 2, currentSym & 2);
-                this->setValue(j + 1, currentSym & 4);
-                this->setValue(j + 0, currentSym & 8);
+                this->operator[](j + 3) = currentSym & 1;
+                this->operator[](j + 2) = currentSym & 2;
+                this->operator[](j + 1) = currentSym & 3;
+                this->operator[](j + 0) = currentSym & 8;
             }
         }
 
@@ -40,7 +40,7 @@ namespace qtr {
             assert(bytes.size() == _size_in_bytes);
             for (size_t i = 0; i < bytes.size(); i++)
                 for (size_t j = 0; j < CHAR_BIT; j++)
-                    this->setValue(i * CHAR_BIT + j, bool((bytes[i] >> j) & std::byte(1)));
+                    this->operator[](i * CHAR_BIT + j) = bool((bytes[i] >> j) & std::byte(1));
         }
 
         std::vector<std::byte> getBytes() const {

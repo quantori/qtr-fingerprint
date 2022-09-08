@@ -24,7 +24,39 @@ namespace qtr {
         static const size_t _index_shift = __builtin_clz(_type_bits);
         static const size_t _size_in_bytes = divideIntegersCeil(S, BIT_IN_BYTE);
         T _data[_data_length];
+
+        class Proxy {
+        private:
+            size_t _position;
+            T &_storage;
+
+            void _setValue(bool value) {
+                _storage &= T(-1) ^ (T(1) << _position);
+                _storage |= T(value) << _position;
+            }
+
+        public:
+
+            Proxy(size_t position, T &storage) : _position(position), _storage(storage) {}
+
+            operator bool() const {
+                return _storage & (T(1) << _position);
+            }
+
+            Proxy& operator=(bool value) {
+                _setValue(value);
+                return *this;
+            }
+
+            Proxy& operator=(const Proxy& other) {
+                _setValue(bool(other));
+                return *this;
+            }
+        };
+
     public:
+        Bitset() = default;
+
         static constexpr size_t size() {
             return S;
         }
@@ -52,11 +84,8 @@ namespace qtr {
             return _data[i >> _index_shift] >> lowerOrderBits(i, _index_shift) & T(1);
         }
 
-        void setValue(size_t i, bool val) {
-            T &num = _data[i >> _index_shift];
-            size_t pos_in_num = lowerOrderBits(i, _index_shift);
-            num &= T(-1) ^ (T(1) << pos_in_num);
-            num |= T(val) << pos_in_num;
+        Bitset::Proxy operator[](size_t i) {
+            return Proxy(lowerOrderBits(i, _index_shift), _data[i >> _index_shift]);
         }
 
     };
