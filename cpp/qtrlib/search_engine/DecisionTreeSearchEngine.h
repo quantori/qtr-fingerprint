@@ -28,7 +28,7 @@ private:
         BitSet(std::size_t pos) : _pos(pos) {}
 
         bool operator ()(const IndigoFingerprint &fp) const {
-            return fp.test(_pos);
+            return fp[_pos];
         };
     private:
         std::size_t _pos;

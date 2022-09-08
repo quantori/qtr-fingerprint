@@ -74,9 +74,8 @@ std::vector<indigo_cpp::IndigoMolecule> FingerprintTableSearchEngine::findOverMo
         for (IndigoFingerprintTableView::IndexType idx : *view) {
             
             qtr::IndigoFingerprint f = _fingerprintTable.at(idx);
-            f &= fp;
-            
-            if (f.count() != bitsCount)
+
+            if (!(fp <= f))
                 continue;
 
             const std::vector<byte> &buf = _serializedMolecules.at(idx);
