@@ -7,7 +7,21 @@
 
 namespace qtr {
 
+    namespace {
+        ColumnsStatistic buildColumnsStatistic(const std::filesystem::path &filePath) {
+            return ColumnsStatistic(filePath);
+        }
+    }
+
     ColumnsStatistic::ColumnsStatistic() : _zerosCount(IndigoFingerprint::size(), 0), _fingerprintsCount(0) {}
+
+    ColumnsStatistic::ColumnsStatistic(const std::filesystem::path &filePath) : ColumnsStatistic() {
+        collectStatistic(filePath);
+    }
+
+    ColumnsStatistic::ColumnsStatistic(const std::vector<std::filesystem::path> &filePaths) : ColumnsStatistic() {
+        collectStatistic(filePaths);
+    }
 
     size_t ColumnsStatistic::zeros(size_t i) const {
         return _zerosCount[i];
@@ -34,7 +48,7 @@ namespace qtr {
     void ColumnsStatistic::collectStatistic(const std::vector<std::filesystem::path> &filePaths) {
         std::vector<std::future<ColumnsStatistic>> tasks;
         for (auto &filePath: filePaths) {
-//            tasks.emplace_back(std::async(std::launch::async, &ColumnsStatistic::collectStatistic, this, filePath));
+            tasks.emplace_back(std::async(std::launch::async, buildColumnsStatistic, filePath));
         }
         for (auto &task: tasks) {
             operator+=(task.get());
@@ -48,5 +62,6 @@ namespace qtr {
         }
         return *this;
     }
+
 
 } // qtr

@@ -36,7 +36,6 @@ namespace qtr {
             }
 
         public:
-
             Proxy(size_t position, T &storage) : _position(position), _storage(storage) {}
 
             operator bool() const {

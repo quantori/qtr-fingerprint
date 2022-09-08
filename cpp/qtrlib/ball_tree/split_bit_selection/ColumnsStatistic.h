@@ -9,6 +9,10 @@ namespace qtr {
     public:
         ColumnsStatistic();
 
+        explicit ColumnsStatistic(const std::filesystem::path &filePath);
+
+        explicit ColumnsStatistic(const std::vector<std::filesystem::path>& filePaths);
+
         size_t zeros(size_t i) const;
 
         size_t ones(size_t i) const;
