@@ -273,14 +273,30 @@ namespace qtr {
         size_t expectedFilesNumber = (_nodes.size() + 1) / 2;
         _leafDataPaths.resize(expectedFilesNumber);
         std::vector<bool> isInit(expectedFilesNumber, false);
-        for (auto& dataDir : _dataDirectories) {
-            for (auto& filePath : findFiles(dataDir, "")) {
+        for (auto &dataDir: _dataDirectories) {
+            for (auto &filePath: findFiles(dataDir, "")) {
                 size_t nodeId = atoll(filePath.filename().c_str());
                 assert(!isInit[nodeId]);
                 isInit[nodeId] = true;
             }
         }
         assert(std::count(isInit.begin(), isInit.end(), false) == 0);
+    }
+
+    std::vector<size_t> BallTree::search(const IndigoFingerprint &query, size_t ansCount, size_t startDepth) {
+        std::vector<std::future<std::vector<size_t>>> tasks;
+        bool isTerminate = false;
+        std::vector<size_t> results;
+        std::mutex resultsLock;
+        for (size_t i = (1ull << startDepth) - 1; i < (2ull << startDepth) - 1; i++) {
+            // todo
+        }
+        return results;
+    }
+
+    void searchInSubtree(const IndigoFingerprint &query, size_t ansCount, std::vector<size_t> &result,
+                         std::mutex &resultLock, bool &isTerminate) {
+        // todo
     }
 
 

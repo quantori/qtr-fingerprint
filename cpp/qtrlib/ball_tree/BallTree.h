@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <filesystem>
+#include <mutex>
 
 #include "Fingerprint.h"
 #include "split_bit_selection//BitSelector.h"
@@ -45,12 +46,15 @@ namespace qtr {
 
         void initLeafDataPaths();
 
+        void searchInSubtree(const IndigoFingerprint &query, size_t ansCount, std::vector<size_t> &result,
+                             std::mutex &resultLock, bool &isTerminate);
+
     public:
         BallTree(size_t depth, size_t parallelizationDepth, std::vector<std::filesystem::path> dataDirectories,
                  const BitSelector &bitSelector);
 
         template<typename BinaryReader>
-        BallTree(BinaryReader& nodesReader, std::vector<std::filesystem::path>  dataDirectories);
+        BallTree(BinaryReader &nodesReader, std::vector<std::filesystem::path> dataDirectories);
 
         BallTree() = default;
 
@@ -59,6 +63,8 @@ namespace qtr {
 
         template<typename BinaryReader>
         void loadNodes(BinaryReader &reader);
+
+        std::vector<size_t> search(const IndigoFingerprint &query, size_t ansCount, size_t startDepth);
     };
 
     class BallTree::Node {
