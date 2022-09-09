@@ -55,7 +55,7 @@ std::vector<size_t> zeroColumns;
 IndigoFingerprint cutZeroColumns(FullIndigoFingerprint fingerprint) {
     IndigoFingerprint cutFingerprint;
     int currentZero = 0;
-    for (int i = 0; i < fromBytesToBits(FullIndigoFingerprint::_size_in_bytes); ++i) {
+    for (int i = 0; i < fromBytesToBits(FullIndigoFingerprint::sizeInBytes); ++i) {
         if (currentZero < zeroColumns.size() && i == zeroColumns[currentZero]) {
             currentZero++;
             continue;

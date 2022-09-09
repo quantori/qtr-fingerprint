@@ -3,7 +3,6 @@
 
 #include "MaxDispersionBitSelector.h"
 #include "Fingerprint.h"
-#include "fingerprint_table_io/FingerprintTableReader.h"
 
 namespace qtr {
 

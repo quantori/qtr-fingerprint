@@ -16,16 +16,18 @@ namespace qtr {
     template<size_t sizeInBits, typename T = standardBitsetDataType>
     class Fingerprint : public qtr::Bitset<sizeInBits, T> {
     public:
-        using qtr::Bitset<sizeInBits, T>::_size_in_bytes;
+        using Bitset<sizeInBits, T>::sizeInBytes;
 
         Fingerprint() = default;
+
+        Fingerprint(const Fingerprint &other) = default;
 
         /**
          * Builds fingerprint from HEX string(for example - "a4210f")
          * @param s - string with fingerprint, strlen(s) should be equals to fingerprintSizeInBytes * 2
          */
         explicit Fingerprint(const std::string &s) {
-            assert(s.size() * 2 == _size_in_bytes);
+            assert(s.size() * 2 == sizeInBytes);
             for (size_t i = 0; i < s.size(); ++i) {
                 size_t j = i * 4ull;
                 int currentSym = chexToInt(s[i]);
@@ -37,7 +39,7 @@ namespace qtr {
         }
 
         void setBytes(const std::vector<std::byte> &bytes) {
-            assert(bytes.size() == _size_in_bytes);
+            assert(bytes.size() == sizeInBytes);
             for (size_t i = 0; i < bytes.size(); i++)
                 for (size_t j = 0; j < CHAR_BIT; j++)
                     this->operator[](i * CHAR_BIT + j) = bool((bytes[i] >> j) & std::byte(1));

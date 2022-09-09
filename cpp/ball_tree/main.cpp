@@ -10,6 +10,8 @@
 #include "smiles_table_io/SmilesTableWriter.h"
 #include "raw_bucket_io/RawBucketReader.h"
 #include "fingerprint_table_io/FingerprintTableWriter.h"
+#include "BallTree.h"
+#include "ball_tree/split_bit_selection/MaxDispersionBitSelector.h"
 
 ABSL_FLAG(std::string, rb_dir_path, {},
           "Path to directory where raw bucket files to build structure are stored");
@@ -179,6 +181,12 @@ int main(int argc, char *argv[]) {
     timeTicker.tick("Molecules enumerating");
     distributeFingerprintTables(args);
     timeTicker.tick("Files distribution");
+    qtr::BallTree ballTree(args.treeDepth, args.subtreeParallelDepth, args.dbDataDirsPaths,
+                           qtr::MaxDispersionBitSelector());
+    timeTicker.tick("Ball tree building");
+    std::ofstream ballTreeWriter(args.ballTreePath);
+    ballTree.dumpNodes(ballTreeWriter);
+    timeTicker.tick("Ball tree dumping");
 
     timeTicker.logResults();
 

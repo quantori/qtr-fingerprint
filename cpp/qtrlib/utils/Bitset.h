@@ -7,6 +7,7 @@
 #include <cstdlib>
 
 #include "Utils.h"
+#include "Fingerprint.h"
 
 namespace qtr {
 
@@ -22,7 +23,7 @@ namespace qtr {
         static const size_t _type_bits = fromBytesToBits(sizeof(T));
         static const size_t _data_length = divideIntegersCeil(S, _type_bits);
         static const size_t _index_shift = __builtin_clz(_type_bits);
-        static const size_t _size_in_bytes = divideIntegersCeil(S, BIT_IN_BYTE);
+        static const size_t sizeInBytes = divideIntegersCeil(S, BIT_IN_BYTE);
         T _data[_data_length];
 
         class Proxy {
@@ -42,12 +43,12 @@ namespace qtr {
                 return _storage & (T(1) << _position);
             }
 
-            Proxy& operator=(bool value) {
+            Proxy &operator=(bool value) {
                 _setValue(value);
                 return *this;
             }
 
-            Proxy& operator=(const Proxy& other) {
+            Proxy &operator=(const Proxy &other) {
                 _setValue(bool(other));
                 return *this;
             }
@@ -56,19 +57,21 @@ namespace qtr {
     public:
         Bitset() = default;
 
+        Bitset(const Bitset &other) = default;
+
         static constexpr size_t size() {
             return S;
         }
 
         template<typename BinaryWriter>
         void dump(BinaryWriter &writer) const {
-            writer.write((char *) _data, _size_in_bytes);
+            writer.write((char *) _data, sizeInBytes);
         }
 
         template<typename BinaryReader>
         void load(BinaryReader &reader) {
             _data[_data_length - 1] = 0; // init extra bits with zeros
-            reader.read((char *) _data, _size_in_bytes);
+            reader.read((char *) _data, sizeInBytes);
         }
 
         bool operator<=(const Bitset &other) const {
@@ -79,6 +82,29 @@ namespace qtr {
             return answer;
         }
 
+        // todo: test this function
+        Bitset &reset() {
+            std::memset(_data, 0, sizeof _data);
+            return *this;
+        }
+
+        // todo: test this function
+        Bitset operator|(const Bitset &other) const {
+            Bitset answer;
+            for (size_t i = 0; i < _data_length; i++) {
+                answer._data[i] = _data[i] | other._data[i];
+            }
+            return answer;
+        }
+
+        // todo: test this function
+        Bitset &operator|=(const Bitset &other) {
+            for (size_t i = 0; i < _data_length; i++) {
+                _data[i] |= other._data[i];
+            }
+            return *this;
+        }
+
         bool operator[](size_t i) const {
             return _data[i >> _index_shift] >> lowerOrderBits(i, _index_shift) & T(1);
         }
@@ -86,7 +112,6 @@ namespace qtr {
         Bitset::Proxy operator[](size_t i) {
             return Proxy(lowerOrderBits(i, _index_shift), _data[i >> _index_shift]);
         }
-
     };
 
 } // qrt
