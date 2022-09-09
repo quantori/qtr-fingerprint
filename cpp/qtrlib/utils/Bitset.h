@@ -79,6 +79,14 @@ namespace qtr {
             return answer;
         }
 
+        bool operator==(const Bitset &other) const {
+            bool answer = true;
+            for (size_t i = 0; i < _data_length && answer; i++) {
+                answer &= (_data[i] == other._data[i]);
+            }
+            return answer;
+        }
+
         bool operator[](size_t i) const {
             return _data[i >> _index_shift] >> lowerOrderBits(i, _index_shift) & T(1);
         }
