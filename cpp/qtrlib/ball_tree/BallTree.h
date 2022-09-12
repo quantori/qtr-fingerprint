@@ -17,6 +17,7 @@ namespace qtr {
         std::vector<Node> _nodes;
         std::vector<std::filesystem::path> _dataDirectories;
         std::vector<std::filesystem::path> _leafDataPaths;
+        size_t _depth;
 
         static size_t leftChild(size_t nodeId);
 
@@ -46,8 +47,11 @@ namespace qtr {
 
         void initLeafDataPaths();
 
-        void searchInSubtree(const IndigoFingerprint &query, size_t ansCount, std::vector<size_t> &result,
-                             std::mutex &resultLock, bool &isTerminate);
+        void
+        searchInSubtree(size_t nodeId, const IndigoFingerprint &query, size_t ansCount, std::vector<size_t> &result,
+                        std::mutex &resultLock, bool &isTerminate);
+
+        const std::filesystem::path & getLeafFile(size_t nodeId) const;
 
     public:
         BallTree(size_t depth, size_t parallelizationDepth, std::vector<std::filesystem::path> dataDirectories,
@@ -71,6 +75,16 @@ namespace qtr {
     public:
         IndigoFingerprint centroid;
     };
+
+    template<typename BinaryReader>
+    BallTree::BallTree(BinaryReader &nodesReader, std::vector<std::filesystem::path> dataDirectories)
+            : _dataDirectories(std::move(dataDirectories)) {
+        loadNodes(nodesReader);
+        initLeafDataPaths();
+        assert(__builtin_popcountll(_nodes.size() + 1) == 1);
+        _depth = __builtin_clzll(_nodes.size() + 1);
+        assert((1ull << _depth) == _nodes.size() + 1);
+    }
 
     template<typename BinaryWriter>
     void BallTree::dumpNodes(BinaryWriter &writer) {

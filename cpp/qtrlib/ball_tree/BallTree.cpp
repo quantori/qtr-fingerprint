@@ -113,11 +113,27 @@ namespace qtr {
                 std::filesystem::remove(source);
             }
         }
+
+        void putAnswer(std::vector<size_t> &result, size_t value, size_t ansCount, std::mutex &resultLock,
+                       bool &isTerminate) {
+            std::lock_guard<std::mutex> lock(resultLock);
+            result.emplace_back(value);
+            isTerminate |= result.size() >= ansCount;
+        }
+
+        void searchInFile(const std::filesystem::path &filePath, const IndigoFingerprint &query, size_t ansCount,
+                          std::vector<size_t> &result, std::mutex &resultsLock, bool &isTerminate) {
+            for (const auto& [id, fingerprint] : FingerprintTableReader(filePath)) {
+                if (query <= fingerprint)
+                    putAnswer(result, id, ansCount, resultsLock, isTerminate);
+            }
+        }
+
     } // namespace
 
     BallTree::BallTree(size_t depth, size_t parallelizationDepth, std::vector<std::filesystem::path> dataDirectories,
                        const BitSelector &bitSelector)
-            : _dataDirectories(std::move(dataDirectories)) {
+            : _dataDirectories(std::move(dataDirectories)), _depth(depth) {
         _nodes.resize((1ull << depth) - 1);
         _leafDataPaths.resize((1ull << (depth - 1)));
         buildTree(depth, parallelizationDepth, bitSelector);
@@ -262,13 +278,6 @@ namespace qtr {
         }
     }
 
-    template<typename BinaryReader>
-    BallTree::BallTree(BinaryReader &nodesReader, std::vector<std::filesystem::path> dataDirectories)
-            : _dataDirectories(std::move(dataDirectories)) {
-        loadNodes(nodesReader);
-        initLeafDataPaths();
-    }
-
     void BallTree::initLeafDataPaths() {
         size_t expectedFilesNumber = (_nodes.size() + 1) / 2;
         _leafDataPaths.resize(expectedFilesNumber);
@@ -284,20 +293,39 @@ namespace qtr {
     }
 
     std::vector<size_t> BallTree::search(const IndigoFingerprint &query, size_t ansCount, size_t startDepth) {
-        std::vector<std::future<std::vector<size_t>>> tasks;
+        std::vector<std::future<void>> tasks;
         bool isTerminate = false;
         std::vector<size_t> results;
         std::mutex resultsLock;
-        for (size_t i = (1ull << startDepth) - 1; i < (2ull << startDepth) - 1; i++) {
-            // todo
+        for (size_t i = (1ull << startDepth) - 1; i < (1ull << (startDepth - 1)) - 1; i++) {
+            tasks.emplace_back(
+                    std::async(std::launch::async, &BallTree::searchInSubtree, this, i, std::cref(query), ansCount,
+                               std::ref(results), std::ref(resultsLock), std::ref(isTerminate))
+            );
+        }
+        for (auto &task: tasks) {
+            task.get();
         }
         return results;
     }
 
-    void searchInSubtree(const IndigoFingerprint &query, size_t ansCount, std::vector<size_t> &result,
-                         std::mutex &resultLock, bool &isTerminate) {
-        // todo
+    void BallTree::searchInSubtree(size_t nodeId, const IndigoFingerprint &query, size_t ansCount,
+                                   std::vector<size_t> &result,
+                                   std::mutex &resultLock, bool &isTerminate) {
+        if (isTerminate || !(query <= _nodes[nodeId].centroid)) {
+            return;
+        }
+        if (isLeaf(nodeId)) {
+            searchInFile(getLeafFile(nodeId), query, ansCount, result, resultLock, isTerminate);
+            return;
+        }
+        searchInSubtree(leftChild(nodeId), query, ansCount, result, resultLock, isTerminate);
+        searchInSubtree(rightChild(nodeId), query, ansCount, result, resultLock, isTerminate);
     }
 
+    const std::filesystem::path &BallTree::getLeafFile(size_t nodeId) const {
+        assert((1ull << _depth) - 1 <= nodeId);
+        return _leafDataPaths[nodeId - (1ull << _depth) + 1];
+    }
 
 } // qtr
