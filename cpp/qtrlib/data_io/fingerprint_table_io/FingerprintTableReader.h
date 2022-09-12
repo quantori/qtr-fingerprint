@@ -25,10 +25,12 @@ namespace qtr {
         }
 
         ReadValue readOne() override {
+            assert(_fingerprintsInStream > 0);
             uint64_t id;
             _binaryReader->read((char *) &id, sizeof id);
             IndigoFingerprint fingerprint;
             fingerprint.load(*_binaryReader);
+            _fingerprintsInStream--;
             return {id, fingerprint};
         }
 

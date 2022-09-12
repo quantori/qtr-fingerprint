@@ -23,7 +23,7 @@ namespace qtr {
                 _buf_ptr = 0;
                 _current_buf_size = fread(_buf, 1, buf_size, _file);
             }
-            return buf_size == 0;
+            return _current_buf_size == 0;
         }
 
         int get() {

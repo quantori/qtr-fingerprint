@@ -71,27 +71,28 @@ namespace qtr {
         std::vector<std::pair<size_t, size_t>>
         findSplitPolicy(const std::vector<ColumnsStatistic> &filesStats, const ColumnsStatistic &summaryStat,
                         size_t splitBit) {
-            size_t summaryZeros = summaryStat.zeros(splitBit);
-            size_t summaryOnes = summaryStat.ones(splitBit);
+            size_t leftSize = summaryStat.size() / 2;
+            size_t rightSize = (summaryStat.size() + 1) / 2;
             std::vector<std::pair<size_t, size_t>> result;
             for (const auto &filesStat: filesStats) {
                 size_t fileZeros = filesStat.zeros(splitBit);
                 size_t fileOnes = filesStat.ones(splitBit);
-                assert(fileZeros + fileOnes <= summaryZeros + summaryOnes);
-                if (fileZeros <= summaryZeros && fileOnes <= summaryOnes) {
+                assert(fileZeros + fileOnes <= leftSize + rightSize);
+                if (fileZeros <= leftSize && fileOnes <= rightSize) {
                     result.emplace_back(fileZeros, fileOnes);
-                } else if (fileZeros > summaryZeros && fileOnes <= summaryOnes) {
-                    assert(fileOnes + fileZeros >= summaryZeros);
-                    result.emplace_back(summaryZeros, fileZeros + fileOnes - summaryZeros);
-                } else if (fileZeros <= summaryZeros && fileOnes > summaryOnes) {
-                    assert(fileZeros + fileOnes >= summaryOnes);
-                    result.emplace_back(fileZeros + fileOnes - summaryOnes, summaryOnes);
+                } else if (fileZeros > leftSize && fileOnes <= rightSize) {
+                    assert(fileOnes + fileZeros >= leftSize);
+                    result.emplace_back(leftSize, fileZeros + fileOnes - leftSize);
+                } else if (fileZeros <= leftSize && fileOnes > rightSize) {
+                    assert(fileZeros + fileOnes >= rightSize);
+                    result.emplace_back(fileZeros + fileOnes - rightSize, rightSize);
                 } else {
                     assert(false);
                 }
-                summaryZeros -= result.back().first;
-                summaryOnes -= result.back().second;
+                leftSize -= result.back().first;
+                rightSize -= result.back().second;
             }
+            assert(leftSize == 0 && rightSize == 0);
             return result;
         }
 
@@ -123,7 +124,7 @@ namespace qtr {
 
         void searchInFile(const std::filesystem::path &filePath, const IndigoFingerprint &query, size_t ansCount,
                           std::vector<size_t> &result, std::mutex &resultsLock, bool &isTerminate) {
-            for (const auto& [id, fingerprint] : FingerprintTableReader(filePath)) {
+            for (const auto &[id, fingerprint]: FingerprintTableReader(filePath)) {
                 if (query <= fingerprint)
                     putAnswer(result, id, ansCount, resultsLock, isTerminate);
             }
@@ -134,8 +135,8 @@ namespace qtr {
     BallTree::BallTree(size_t depth, size_t parallelizationDepth, std::vector<std::filesystem::path> dataDirectories,
                        const BitSelector &bitSelector)
             : _dataDirectories(std::move(dataDirectories)), _depth(depth) {
-        _nodes.resize((1ull << depth) - 1);
-        _leafDataPaths.resize((1ull << (depth - 1)));
+        _nodes.resize((1ull << (depth + 1)) - 1);
+        _leafDataPaths.resize(1ull << depth);
         buildTree(depth, parallelizationDepth, bitSelector);
     }
 
@@ -161,21 +162,30 @@ namespace qtr {
 
     void BallTree::buildTree(size_t depth, size_t parallelizationDepth, const BitSelector &bitSelector) {
         assert(depth > parallelizationDepth);
+        LOG(INFO) << "Start tree building";
+        LOG(INFO) << "Start first levels building";
         std::vector<size_t> nodes = buildFirstLevels(root(), parallelizationDepth, bitSelector);
+        LOG(INFO) << "Finish first levels building";
         std::shuffle(nodes.begin(), nodes.end(), randomGenerator);
         std::vector<std::filesystem::path> nodesDirs = findDrivesForNodes(nodes.size(), _dataDirectories);
+        LOG(INFO) << "Start subtree parallelization preparation";
         for (size_t i = 0; i < nodes.size(); i++) {
             std::filesystem::path destinationPath = nodesDirs[i] / std::to_string(nodes[i]) / dataFilename;
+            LOG(INFO) << "Start transferring node " << nodes[i] << " to " << destinationPath;
             std::filesystem::create_directory(destinationPath.parent_path());
             std::vector<std::filesystem::path> nodeFiles = getNodeFiles(nodes[i]);
             mergeFiles(nodeFiles, destinationPath);
+            LOG(INFO) << "Finish transferring node " << nodes[i] << " to " << destinationPath;
             for (auto &nodeFile: nodeFiles) {
                 if (nodeFile.parent_path() != destinationPath.parent_path() &&
                     std::filesystem::exists(nodeFile.parent_path())) {
+                    LOG(INFO) << "Delete " << nodeFile.parent_path();
                     std::filesystem::remove_all(nodeFile.parent_path());
                 }
             }
         }
+        LOG(INFO) << "Finish subtree parallelization preparation";
+        LOG(INFO) << "Start last levels building";
         std::vector<std::future<void>> tasks;
         for (size_t i = 0; i < nodes.size(); i++) {
             tasks.emplace_back(std::async(std::launch::async, &BallTree::buildLastLevels, this, nodes[i],
@@ -185,14 +195,25 @@ namespace qtr {
         for (auto &task: tasks) {
             task.get();
         }
+        LOG(INFO) << "Finish last levels building";
+        LOG(INFO) << "Start centroids calculating";
         calculateCentroid(root());
+        LOG(INFO) << "Finish centroids calculating";
+        LOG(INFO) << "Finish tree building";
     }
 
     void BallTree::splitNodeManyFiles(size_t nodeId, const BitSelector &bitSelector) {
         std::vector<std::filesystem::path> nodeFiles = getNodeFiles(nodeId);
+        LOG(INFO) << "Start parallel splitting of node " << nodeId << " with " << nodeFiles.size() << " files";
         std::shuffle(nodeFiles.begin(), nodeFiles.end(), randomGenerator);
+        LOG(INFO) << "Start collecting statistics for node " << nodeId;
         auto [filesStatistics, summaryStat] = collectFilesStatistic(nodeFiles);
+        LOG(INFO) << "Finish collecting statistics for node " << nodeId;
+        LOG(INFO) << "Start selecting split bit for node " << nodeId;
         size_t splitBit = bitSelector(summaryStat);
+        LOG(INFO) << "Finish selecting split bit for node " << nodeId << ". Selected bit - " << splitBit
+                  << ", ones - " << summaryStat.ones(splitBit) << ", zeros - " << summaryStat.zeros(splitBit);
+
         std::vector<std::pair<size_t, size_t>> splitPolicy = findSplitPolicy(filesStatistics, summaryStat, splitBit);
         prepareManyDirsForNode(_dataDirectories, leftChild(nodeId));
         prepareManyDirsForNode(_dataDirectories, rightChild(nodeId));
@@ -208,8 +229,10 @@ namespace qtr {
         for (auto &task: tasks) {
             task.get();
         }
+        LOG(INFO) << "Finish parallel splitting of node " << nodeId;
         for (auto &nodeFile: nodeFiles) {
             if (std::filesystem::exists(nodeFile.parent_path())) {
+                LOG(INFO) << "Delete " << nodeFile.parent_path();
                 std::filesystem::remove_all(nodeFile.parent_path());
             }
         }
@@ -243,7 +266,9 @@ namespace qtr {
     std::vector<std::filesystem::path> BallTree::getNodeFiles(size_t nodeId) const {
         std::vector<std::filesystem::path> result;
         for (auto &dirPath: _dataDirectories) {
-            for (auto &filePath: findFiles(dirPath / std::to_string(nodeId), "")) {
+            if (!std::filesystem::exists(dirPath / std::to_string(nodeId)))
+                continue;
+            for (auto &filePath: findFiles(dirPath / std::to_string(nodeId), ".ft")) {
                 result.emplace_back(filePath);
             }
         }

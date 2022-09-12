@@ -177,7 +177,6 @@ int main(int argc, char *argv[]) {
     initFileSystem(args);
     timeTicker.tick("Files initialization");
     size_t moleculesNumber = enumerateMolecules(args);
-    LOG(INFO) << "Molecules number: " << moleculesNumber;
     timeTicker.tick("Molecules enumerating");
     distributeFingerprintTables(args);
     timeTicker.tick("Files distribution");
@@ -188,6 +187,7 @@ int main(int argc, char *argv[]) {
     ballTree.dumpNodes(ballTreeWriter);
     timeTicker.tick("Ball tree dumping");
 
+    LOG(INFO) << "Molecules number: " << moleculesNumber;
     timeTicker.logResults();
 
     return 0;

@@ -13,10 +13,9 @@ namespace qtr {
     public:
 
         explicit RawBucketReader(const std::filesystem::path &fileName) : BaseReader(fileName), _moleculesInStream(0) {
+            _binaryReader->read((char *) &_moleculesInStream, sizeof _moleculesInStream);
             LOG(INFO) << "Create raw bucket reader from " << fileName << " with " << _moleculesInStream
                       << " molecules (" << _binaryReader << ")";
-
-            _binaryReader->read((char *) &_moleculesInStream, sizeof _moleculesInStream);
         }
 
         ~RawBucketReader() override {
