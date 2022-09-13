@@ -1,6 +1,6 @@
 #include "TableView.h"
 
-#include "Common.h"
+#include "../Common.h"
 
 #include <gtest/gtest.h>
 

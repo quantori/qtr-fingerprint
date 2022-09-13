@@ -6,19 +6,16 @@
 
 namespace qtr {
 
-struct SearchEngineFactory {
-    
-    enum SearchEngineType {
-        BINGO,
-        EXHAUSTIVE,
-        DECISION_TREE_TRIVIAL,
-        DECISION_TREE_OPTIMAL
-    };
+    struct SearchEngineFactory {
 
-    static SearchEnginePtr create(
-        SearchEngineType searchEngineType,
-        indigo_cpp::IndigoSessionPtr indigoSessionPtr,
-        size_t decisionTreeMaxLeafSize = 100);
-};
+        enum SearchEngineType {
+            BINGO,
+            EXHAUSTIVE
+        };
+
+        static SearchEnginePtr create(
+                SearchEngineType searchEngineType,
+                indigo_cpp::IndigoSessionPtr indigoSessionPtr);
+    };
 
 } // namespace qtr

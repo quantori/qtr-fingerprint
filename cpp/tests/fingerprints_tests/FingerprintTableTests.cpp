@@ -1,6 +1,6 @@
 #include "FingerprintTable.h"
 
-#include "utils/DataPathManager.h"
+#include "../utils/DataPathManager.h"
 
 #include <gtest/gtest.h>
 

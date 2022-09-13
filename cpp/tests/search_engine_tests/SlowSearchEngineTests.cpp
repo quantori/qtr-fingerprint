@@ -39,26 +39,3 @@ TEST_F(SlowTestFixture, BINGO_PUBCHEM_300000)
     searchEngineTests.testPubchem300000();
 }
 
-TEST_F(SlowTestFixture, DECISION_TREE_TRIVIAL_BUILD_PUBCHEM_300000)
-{
-    SearchEngineTests searchEngineTests(SearchEngineFactory::DECISION_TREE_TRIVIAL);
-    searchEngineTests.testBuildPubchem300000();
-}
-
-TEST_F(SlowTestFixture, DECISION_TREE_TRIVIAL_PUBCHEM_300000)
-{
-    SearchEngineTests searchEngineTests(SearchEngineFactory::DECISION_TREE_TRIVIAL);
-    searchEngineTests.testPubchem300000();
-}
-
-TEST_F(SlowTestFixture, DECISION_TREE_OPTIMAL_BUILD_PUBCHEM_300000)
-{
-    SearchEngineTests searchEngineTests(SearchEngineFactory::DECISION_TREE_OPTIMAL);
-    searchEngineTests.testBuildPubchem300000();
-}
-
-TEST_F(SlowTestFixture, DECISION_TREE_OPTIMAL_PUBCHEM_300000)
-{
-    SearchEngineTests searchEngineTests(SearchEngineFactory::DECISION_TREE_OPTIMAL);
-    searchEngineTests.testPubchem300000();
-}

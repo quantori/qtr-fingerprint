@@ -1,4 +1,4 @@
-#include "Common.h"
+#include "../Common.h"
 
 #include "Fingerprint.h"
 #include "QtrIndigoFingerprint.h"

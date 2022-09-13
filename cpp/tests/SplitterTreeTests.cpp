@@ -162,22 +162,6 @@ TEST_F(SplitterTreeTests, BuildNotParallelTest) {
     }
 }
 
-//TEST_F(SplitterTreeTests, BuildParallelTest) {
-//    dumpBucket(rawBucketPath(0), rawBuckets[0]);
-//    SplitterTree tree(rawBucketsDirPath);
-//    tree.build(3, 1, 1);
-//    EXPECT_EQ(tree.size(), 7);
-//    std::ofstream out(rawBucketsDirPath);
-//    tree.dump(out);
-//    for (size_t i = 3; i <= 6; i++) {
-//        auto actualBucket = loadBucket(rawBucketPath(i));
-//        auto &expectedBucket = rawBuckets[i];
-//        checkBucketsEqual(actualBucket, expectedBucket);
-//    }
-//}
-// todo test parallel version?
-
-
 TEST_F(SplitterTreeTests, DumpTest) {
     dumpBucket(rawBucketPath(0), rawBuckets[0]);
     SplitterTree tree({rawBucketsDirPath});
