@@ -104,6 +104,6 @@ namespace qtr {
      * @return vector of filenames
      */
     std::vector<std::filesystem::path>
-    findFiles(const std::filesystem::path &pathToDir, const std::string &extension);
+    findFiles(const std::filesystem::path &pathToDir, std::string extension);
 
 } // namespace qtr
