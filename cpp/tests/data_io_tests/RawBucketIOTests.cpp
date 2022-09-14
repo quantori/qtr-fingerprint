@@ -17,7 +17,9 @@ protected:
 
     std::vector<qtr::raw_bucket_value_t> readTmpBucket() {
         qtr::RawBucketReader reader(_tmpRawBucketFilePath);
-        return reader.readAll();
+        std::vector<qtr::raw_bucket_value_t> bucket;
+        reader >> bucket;
+        return bucket;
     }
 
     void SetUp() override {

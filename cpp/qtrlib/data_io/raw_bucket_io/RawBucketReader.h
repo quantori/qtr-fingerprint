@@ -21,18 +21,19 @@ namespace qtr {
             LOG(INFO) << "Delete raw bucket reader (" << _binaryReader << ")";
         }
 
-        raw_bucket_value_t readOne() override {
+        RawBucketReader &operator>>(raw_bucket_value_t &value) override {
             assert(_moleculesInStream != 0);
             _moleculesInStream--;
-            IndigoFingerprint fingerprint;
-            std::string smiles;
+            auto &[smiles, fingerprint] = value;
             fingerprint.load(*_binaryReader);
             char symbol;
             while ((symbol = (char) _binaryReader->get()) != '\n') {
                 smiles += symbol;
             }
-            return {smiles, fingerprint};
+            return *this;
         }
+
+        using BaseReader::operator>>;
     };
 
 }  // namespace qtr

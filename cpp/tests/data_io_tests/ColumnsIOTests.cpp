@@ -16,7 +16,9 @@ protected:
 
     std::vector<size_t> readTmpColumns() {
         qtr::ColumnsReader reader(_tmpColumnsFilePath);
-        return reader.readAll();
+        std::vector<qtr::ColumnsReader::ReadValue> result;
+        reader >> result;
+        return result;
     }
 
     void SetUp() override {

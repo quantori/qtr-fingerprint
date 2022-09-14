@@ -10,11 +10,12 @@ namespace qtr {
 
         explicit ColumnsReader(const std::filesystem::path &fileName) : BaseReader(fileName) {}
 
-        size_t readOne() override {
-            size_t result;
-            *_binaryReader >> result;
-            return result;
+        ColumnsReader &operator>>(size_t &value) override {
+            *_binaryReader >> value;
+            return *this;
         }
+
+        using BaseReader::operator>>;
     };
 
 } // namespace qtr

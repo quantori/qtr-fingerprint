@@ -1,13 +1,14 @@
 #pragma once
 
 #include "basic_io/BasicDataReader.h"
-#include "Fingerprint.h"
+#include "FingerprintTableIOConsts.h"
+
 
 namespace qtr {
 
     // TODO: test this class
     class FingerprintTableReader
-            : public BasicDataReader<std::pair<size_t, IndigoFingerprint>, FingerprintTableReader, std::ifstream> {
+            : public BasicDataReader<fingerprint_table_value_t, FingerprintTableReader, std::ifstream> {
 
     private:
         uint64_t _fingerprintsInStream;
@@ -24,14 +25,13 @@ namespace qtr {
             LOG(INFO) << "Delete fingerprint table reader (" << _binaryReader << ")";
         }
 
-        ReadValue readOne() override {
+        FingerprintTableReader& operator>>(ReadValue& readValue) override {
             assert(_fingerprintsInStream > 0);
-            uint64_t id;
+            auto& [id, fingerprint] = readValue;
             _binaryReader->read((char *) &id, sizeof id);
-            IndigoFingerprint fingerprint;
             fingerprint.load(*_binaryReader);
             _fingerprintsInStream--;
-            return {id, fingerprint};
+            return *this;
         }
     };
 

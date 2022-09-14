@@ -80,7 +80,9 @@ protected:
 
     std::vector<raw_bucket_value_t> loadBucket(const std::filesystem::path &bucketPath) {
         RawBucketReader reader(bucketPath);
-        return reader.readAll();
+        std::vector<raw_bucket_value_t> bucket;
+        reader >> bucket;
+        return bucket;
     }
 
     void
