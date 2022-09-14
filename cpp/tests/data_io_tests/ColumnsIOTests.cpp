@@ -3,7 +3,8 @@
 #include "gtest/gtest.h"
 #include "../utils/DataPathManager.h"
 
-#include "ColumnsIO.h"
+#include "columns_io/ColumnsReader.h"
+#include "columns_io/ColumnsWriter.h"
 
 
 class ColumnsIOTests : public ::testing::Test {

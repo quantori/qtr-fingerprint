@@ -4,7 +4,8 @@
 #include "SplitterTreeUtils.h"
 #include "FingerprintTable.h"
 #include "utils/DataPathManager.h"
-#include "RawBucketsIO.h"
+#include "raw_bucket_io/RawBucketReader.h"
+#include "raw_bucket_io/RawBucketWriter.h"
 
 using namespace qtr;
 

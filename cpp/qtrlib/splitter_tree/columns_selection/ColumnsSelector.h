@@ -8,8 +8,10 @@
 
 #include "FingerprintTable.h"
 
-#include "RawBucketsIO.h"
-#include "ColumnsIO.h"
+#include "raw_bucket_io/RawBucketReader.h"
+#include "raw_bucket_io/RawBucketWriter.h"
+#include "columns_io/ColumnsReader.h"
+#include "columns_io/ColumnsWriter.h"
 
 namespace qtr {
 

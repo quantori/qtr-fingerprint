@@ -5,7 +5,8 @@
 #include <filesystem>
 
 #include "SplitterTree.h"
-#include "RawBucketsIO.h"
+#include "raw_bucket_io/RawBucketReader.h"
+#include "raw_bucket_io/RawBucketWriter.h"
 
 namespace qtr {
     /**

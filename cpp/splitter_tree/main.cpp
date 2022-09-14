@@ -12,7 +12,8 @@
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 
-#include "RawBucketsIO.h"
+#include "raw_bucket_io/RawBucketReader.h"
+#include "raw_bucket_io/RawBucketWriter.h"
 #include "SplitterTree.h"
 #include "ColumnsSelection.h"
 
