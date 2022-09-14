@@ -24,6 +24,7 @@ protected:
 
     void TearDown() override {
         EXPECT_EQ(expected, actual);
+        std::filesystem::remove(_tmpColumnsFilePath);
     }
 
     std::filesystem::path _tmpColumnsFilePath;

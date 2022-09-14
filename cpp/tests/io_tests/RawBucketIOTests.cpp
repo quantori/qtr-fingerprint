@@ -25,6 +25,7 @@ protected:
 
     void TearDown() override {
         EXPECT_EQ(expected, actual);
+        std::filesystem::remove(_tmpRawBucketFilePath);
     }
 
     std::filesystem::path _tmpRawBucketFilePath;
