@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "Utils.h"
-#include "TmpDirFixture.h"
+#include "../utils/TmpDirFixture.h"
 
 #include <bitset>
 #include <fstream>

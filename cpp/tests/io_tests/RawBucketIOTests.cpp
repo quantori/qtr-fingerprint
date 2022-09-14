@@ -54,7 +54,7 @@ TEST_F(RawBucketIOTests, DefaultValues) {
 
 TEST_F(RawBucketIOTests, RandomValue) {
     auto fp1 = qtr::IndigoFingerprint(), fp2 = qtr::IndigoFingerprint(), fp3 = qtr::IndigoFingerprint();
-    fp1[0] = fp1[1] = fp1[10] = fp1[20] = fp1[fp1.size() - 1] = true;
+    fp1[0] = fp1[1] = fp1[10] = fp1[20] = fp1[qtr::IndigoFingerprint::size() - 1] = true;
     fp2[1] = fp2[3] = fp2[4] = true;
     fp3[100] = fp3[200] = fp3[400] = true;
     std::string str1 = "C1=CC=C(C=C1)C=O";
