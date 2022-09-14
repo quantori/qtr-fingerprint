@@ -33,10 +33,6 @@ namespace qtr {
             _fingerprintsInStream--;
             return {id, fingerprint};
         }
-
-        bool eof() const override {
-            return _fingerprintsInStream == 0;
-        }
     };
 
 } // qtr

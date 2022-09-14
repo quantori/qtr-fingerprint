@@ -7,7 +7,6 @@
 
 namespace qtr {
 
-    // TODO class is not tested after refactoring
     class RawBucketWriter : public BasicDataWriter<raw_bucket_value_t, RawBucketWriter, std::ofstream> {
     private:
         uint64_t _writtenNumber;

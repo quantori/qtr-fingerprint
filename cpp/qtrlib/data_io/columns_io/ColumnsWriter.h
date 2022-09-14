@@ -4,7 +4,6 @@
 
 namespace qtr {
 
-    // TODO class is not tested after refactoring
     class ColumnsWriter : public BasicDataWriter<size_t, ColumnsWriter, std::ofstream> {
     public:
 

@@ -5,7 +5,6 @@
 
 namespace qtr {
 
-    // TODO class is not tested after refactoring
     class RawBucketReader : public BasicDataReader<raw_bucket_value_t, RawBucketReader, std::ifstream> {
     private:
         uint64_t _moleculesInStream;
@@ -33,10 +32,6 @@ namespace qtr {
                 smiles += symbol;
             }
             return {smiles, fingerprint};
-        }
-
-        bool eof() const override {
-            return _moleculesInStream == 0;
         }
     };
 

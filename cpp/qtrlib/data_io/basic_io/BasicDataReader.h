@@ -36,7 +36,7 @@ namespace qtr {
         }
 
         bool isEof() const {
-            return _reader == nullptr || _reader->eof();
+            return _reader == nullptr || _reader->_binaryReader->peek() == EOF;
         }
 
         value_type operator*() {
@@ -85,9 +85,6 @@ namespace qtr {
             std::copy(begin(), end(), std::back_inserter(result));
             return result;
         }
-
-        virtual bool eof() const = 0;
-
 
         friend class ReaderIterator<DataReader>;
 

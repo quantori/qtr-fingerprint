@@ -40,6 +40,10 @@ namespace qtr {
             return checkEof() ? EOF : (int) (unsigned char) _buf[_buf_ptr++];
         }
 
+        int peek() {
+            return checkEof() ? EOF : (int) (unsigned char) _buf[_buf_ptr];
+        }
+
         BufferedReader &read(char *s, size_t count) {
             while (count != 0 && !checkEof()) {
                 if (count <= _current_buf_size - _buf_ptr) {
