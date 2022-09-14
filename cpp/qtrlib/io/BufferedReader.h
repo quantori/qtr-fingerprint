@@ -5,7 +5,6 @@
 
 namespace qtr {
 
-    // TODO: test this class
     template<size_t buf_size>
     class BufferedReader {
     private:
@@ -13,25 +12,36 @@ namespace qtr {
         char _buf[buf_size];
         size_t _current_buf_size;
         size_t _buf_ptr;
-    public:
-        BufferedReader(const char *fileName) : _current_buf_size(0), _buf_ptr(0) {
-            _file = std::fopen(fileName, "r");
-        }
+        bool _eof;
 
-        bool eof() {
+    private:
+        bool checkEof() {
             if (_buf_ptr == _current_buf_size) {
                 _buf_ptr = 0;
                 _current_buf_size = fread(_buf, 1, buf_size, _file);
             }
-            return _current_buf_size == 0;
+            return _eof = _current_buf_size == 0;
+        }
+
+    public:
+        BufferedReader(const char *filePath) : _current_buf_size(0), _buf_ptr(0), _eof(false) {
+            _file = std::fopen(filePath, "r");
+        }
+
+        BufferedReader(const std::filesystem::path &filePath) : BufferedReader(filePath.c_str()) {}
+
+        BufferedReader(const std::string &filePath) : BufferedReader(filePath.c_str()) {}
+
+        bool eof() const {
+            return _eof;
         }
 
         int get() {
-            return eof() ? EOF : _buf[_buf_ptr++];
+            return checkEof() ? EOF : (int) (unsigned char) _buf[_buf_ptr++];
         }
 
         BufferedReader &read(char *s, size_t count) {
-            while (!eof() && count != 0) {
+            while (count != 0 && !checkEof()) {
                 if (count <= _current_buf_size - _buf_ptr) {
                     memcpy(s, _buf + _buf_ptr, count);
                     _buf_ptr += count;
@@ -45,10 +55,6 @@ namespace qtr {
                 }
             }
             return *this;
-        }
-
-        operator bool() const {
-            return eof();
         }
 
         ~BufferedReader() {

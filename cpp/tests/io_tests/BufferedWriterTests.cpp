@@ -19,8 +19,6 @@ public:
         std::iota(str, str + StrLen, 0);
     }
 
-    using TmpDirFixture::TearDown;
-
     void checkWrittenFileContainsStr() {
         std::ifstream reader(file);
         for (char i: str) {
