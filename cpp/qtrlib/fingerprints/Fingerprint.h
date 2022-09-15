@@ -46,7 +46,7 @@ namespace qtr {
         }
 
         std::vector<std::byte> getBytes() const {
-            std::vector<std::byte> result(sizeInBits, std::byte(0));
+            std::vector<std::byte> result(sizeInBytes, std::byte(0));
             for (size_t i = 0; i < result.size(); i++)
                 for (size_t j = 0; j < CHAR_BIT; j++)
                     if (this->operator[](i * CHAR_BIT + j))

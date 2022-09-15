@@ -26,12 +26,12 @@ protected:
 };
 
 TEST_F(FingerprintTestFixture, SIZE) {
-    EXPECT_EQ(_data.size(), qtr::IndigoFingerprint::size());
+    EXPECT_EQ(_data.size(), 323); // 323 is default byte length of indigo fingerprint
 }
 
 TEST_F(FingerprintTestFixture, CONVERSION) {
-    auto fingerprint = std::make_unique<qtr::IndigoFingerprint>();
-    fingerprint->setBytes(_data);
-    std::vector<std::byte> data = fingerprint->getBytes();
+    qtr::IndigoFingerprint fingerprint;
+    fingerprint.setBytes(_data);
+    std::vector<std::byte> data = fingerprint.getBytes();
     compareTwoVectors(data, _data);
 }
