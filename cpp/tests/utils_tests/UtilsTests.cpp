@@ -123,3 +123,15 @@ TEST(lowerOrderBitsTest, COMMON) {
     EXPECT_EQ(qtr::lowerOrderBits(0b10111, 10), 0b10111);
     EXPECT_EQ(qtr::lowerOrderBits(0xffffffffull, 32), 0xffffffffull);
 }
+
+TEST(log2Floor, COMMON) {
+    EXPECT_EQ(0, qtr::log2Floor(1));
+    EXPECT_EQ(1, qtr::log2Floor(2));
+    EXPECT_EQ(1, qtr::log2Floor(3));
+    EXPECT_EQ(2, qtr::log2Floor(4));
+    EXPECT_EQ(2, qtr::log2Floor(5));
+    EXPECT_EQ(2, qtr::log2Floor(6));
+    EXPECT_EQ(2, qtr::log2Floor(7));
+    EXPECT_EQ(3, qtr::log2Floor(8));
+    EXPECT_EQ(10, qtr::log2Floor(1025));
+}

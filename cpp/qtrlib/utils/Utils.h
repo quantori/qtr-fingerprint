@@ -15,7 +15,7 @@ namespace qtr {
             _timePoints.emplace_back(std::chrono::high_resolution_clock::now());
         }
 
-        double tick(const std::string& message);
+        double tick(const std::string &message);
 
         double elapsedTime() const;
 
@@ -95,6 +95,15 @@ namespace qtr {
     template<typename T>
     constexpr inline T lowerOrderBits(T number, size_t bits_count) {
         return number & ((T(1) << bits_count) - 1);
+    }
+
+    constexpr inline size_t log2Floor(size_t number) {
+        size_t answer = 0;
+        while (number > 1) {
+            answer++;
+            number >>= 1u;
+        }
+        return answer;
     }
 
     /**
