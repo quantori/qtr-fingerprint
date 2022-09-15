@@ -11,7 +11,7 @@ class ColumnsIOTests : public ::testing::Test {
 protected:
     void writeTmpColumns(const std::vector<size_t> &values) {
         qtr::ColumnsWriter writer(_tmpColumnsFilePath);
-        writer.write(values);
+        writer << values;
     }
 
     std::vector<size_t> readTmpColumns() {

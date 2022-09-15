@@ -26,12 +26,16 @@ namespace qtr {
             LOG(INFO) << "Delete SMILES table writer with " << _writtenSmiles << " molecules (" << _binaryWriter << ")";
         }
 
-        void write(const WriteValue &value) override {
+        SmilesTableWriter &operator<<(const WriteValue &value) override {
             _writtenSmiles++;
             auto &[id, smiles] = value;
             _binaryWriter->write((char *) &id, sizeof id);
-            *_binaryWriter << smiles << '\n';
+            _binaryWriter->write(smiles.c_str(), smiles.size());
+            _binaryWriter->write("\n", 1);
+            return *this;
         }
+
+        using BaseWriter::operator<<;
     };
 
 } // qtr

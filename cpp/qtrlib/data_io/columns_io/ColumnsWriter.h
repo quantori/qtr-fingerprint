@@ -9,14 +9,15 @@ namespace qtr {
 
         explicit ColumnsWriter(const std::filesystem::path &fileName) : BaseWriter(fileName), _writtenColumns(0) {};
 
-        void write(const size_t &value) override {
+        ColumnsWriter &operator<<(const WriteValue &value) override {
             if (_writtenColumns != 0)
                 *_binaryWriter << ' ';
             *_binaryWriter << value;
             _writtenColumns++;
+            return *this;
         }
 
-        using BaseWriter::write;
+        using BaseWriter::operator<<;
 
         size_t _writtenColumns;
     private:

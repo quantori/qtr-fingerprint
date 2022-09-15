@@ -28,12 +28,15 @@ namespace qtr {
                       << _binaryWriter << ")";
         }
 
-        void write(const WriteValue &value) override {
+        FingerprintTableWriter &operator<<(const WriteValue &value) override {
             _writtenFingerprints++;
             auto &[id, fingerprint] = value;
             _binaryWriter->write((char *) &id, sizeof id);
             fingerprint.dump(*_binaryWriter);
+            return *this;
         }
+
+        using BaseWriter::operator<<;
     };
 
 } // qtr

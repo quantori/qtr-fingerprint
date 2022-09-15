@@ -23,14 +23,16 @@ namespace qtr {
             LOG(INFO) << "Delete raw bucket writer with " << _writtenNumber << " molecules (" << _binaryWriter << ")";
         }
 
-        void write(const raw_bucket_value_t &value) override {
+        RawBucketWriter &operator<<(const raw_bucket_value_t &value) override {
             _writtenNumber++;
             auto &[smiles, fingerprint] = value;
             fingerprint.dump(*_binaryWriter);
-            *_binaryWriter << smiles << '\n';
+            _binaryWriter->write(smiles.c_str(), smiles.size());
+            _binaryWriter->write("\n", 1);
+            return *this;
         }
 
-        using BaseWriter::write;
+        using BaseWriter::operator<<;
     };
 
 } // namespace qtr

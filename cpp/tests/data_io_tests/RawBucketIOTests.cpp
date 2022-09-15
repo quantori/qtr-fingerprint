@@ -12,7 +12,7 @@ class RawBucketIOTests : public ::testing::Test {
 protected:
     void writeTmpBucket(const std::vector<qtr::raw_bucket_value_t> &values) {
         qtr::RawBucketWriter writer(_tmpRawBucketFilePath);
-        writer.write(values);
+        writer << values;
     }
 
     std::vector<qtr::raw_bucket_value_t> readTmpBucket() {

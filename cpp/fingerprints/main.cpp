@@ -100,7 +100,7 @@ void createRBFromSDF(const filesystem::path &sdfFilePath, const filesystem::path
             int fingerprint = indigoFingerprint(mol->id(), "sub");
             FullIndigoFingerprint fullFingerprints(indigoToString(fingerprint));
             IndigoFingerprint cutFingerprint = cutZeroColumns(fullFingerprints);
-            writer.write({mol->smiles(), cutFingerprint});
+            writer << std::make_pair(mol->smiles(), cutFingerprint);
             written++;
         }
         catch (const exception &e) {
@@ -142,7 +142,7 @@ int main(int argc, char *argv[]) {
     }
 
     ColumnsReader columnsReader(pathToZeroColumns);
-    zeroColumns = columnsReader.readAll();
+    columnsReader >> zeroColumns;
 
     vector<filesystem::path> sdfFiles = findFiles(pathToSdfDir, ".sdf");
     auto startTime = std::chrono::high_resolution_clock::now();

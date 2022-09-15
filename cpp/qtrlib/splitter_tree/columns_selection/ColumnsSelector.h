@@ -44,7 +44,7 @@ namespace qtr {
 
     static void saveColumns(const std::vector<size_t> &columns, const std::filesystem::path &rawBucketDirPath) {
         std::filesystem::path columnsPath = rawBucketDirPath / ("columns.col");
-        ColumnsWriter(columnsPath).write(columns);
+        ColumnsWriter(columnsPath) << columns;
     }
 
     template<typename Functor>
@@ -68,7 +68,7 @@ namespace qtr {
                         std::async(std::launch::async, handleRawBucket<Functor>, bucketPaths[j], selectFunction)
                 );
             }
-            for (auto& task : tasks) {
+            for (auto &task: tasks) {
                 task.get();
             }
         }

@@ -147,8 +147,8 @@ size_t enumerateMolecules(const Args &args) {
         qtr::FingerprintTableWriter fingerprintTableWriter(
                 args.fingerprintTablesPath / (rbFilePath.stem().replace_extension(".ft")));
         for (const auto &[smiles, fingerprint]: rawBucketReader) {
-            smilesTableWriter.write({number, smiles});
-            fingerprintTableWriter.write({number, fingerprint});
+            smilesTableWriter << std::make_pair(number, smiles);
+            fingerprintTableWriter << std::make_pair(number, fingerprint);
             number++;
         }
     }

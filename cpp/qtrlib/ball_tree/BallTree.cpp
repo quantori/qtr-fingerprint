@@ -20,10 +20,10 @@ namespace qtr {
             for (const auto &value: FingerprintTableReader(file)) {
                 const auto &[_, fingerprint] = value;
                 if (leftSize != 0 && (!fingerprint[splitBit] || rightSize == 0)) {
-                    leftWriter.write(value);
+                    leftWriter << value;
                     leftSize--;
                 } else if (rightSize != 0 && (fingerprint[splitBit] || leftSize == 0)) {
-                    rightWriter.write(value);
+                    rightWriter << value;
                     rightSize--;
                 } else {
                     assert(false);

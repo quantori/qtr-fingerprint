@@ -69,7 +69,7 @@ protected:
 
     void dumpBucket(const std::filesystem::path &bucketPath, const std::vector<raw_bucket_value_t> &bucket) {
         RawBucketWriter writer(bucketPath);
-        writer.write(bucket);
+        writer << bucket;
     }
 
     void dumpAllBuckets() {
