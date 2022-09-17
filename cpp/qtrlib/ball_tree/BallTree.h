@@ -77,10 +77,10 @@ namespace qtr {
     BallTree::BallTree(BinaryReader &nodesReader, std::vector<std::filesystem::path> dataDirectories)
             : _dataDirectories(std::move(dataDirectories)) {
         loadNodes(nodesReader);
-        initLeafDataPaths();
         assert(__builtin_popcountll(_nodes.size() + 1) == 1);
-        _depth = __builtin_clzll(_nodes.size() + 1);
-        assert((1ull << _depth) == _nodes.size() + 1);
+        _depth = log2Floor(_nodes.size());
+        assert((1ull << (_depth + 1)) == _nodes.size() + 1);
+        initLeafDataPaths();
     }
 
     template<typename BinaryWriter>

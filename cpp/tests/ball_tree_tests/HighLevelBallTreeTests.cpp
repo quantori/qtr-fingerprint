@@ -124,7 +124,8 @@ public:
     void prepareTreeDirs(const DataTable &data) {
         auto treeDirs = getTreeDirs();
         for (size_t i = 0; i < treeDirs.size(); i++) {
-            auto writerPath = treeDirs[i] / "0" / "data.ft";
+            auto writerPath = treeDirs[i] / "0" / "_data.ft";
+            LOG(INFO) << "Create dir: " << writerPath.parent_path();
             std::filesystem::create_directory(writerPath.parent_path());
             qtr::FingerprintTableWriter writer(writerPath);
             for (size_t j = i; j < data.size(); j += treeDirs.size()) {
@@ -134,10 +135,16 @@ public:
     }
 
     void buildBallTree(const DataTable &data, size_t depth, size_t parallelize_depth) {
+        LOG(INFO) << "Start data preparation";
         prepareTreeDirs(data);
+        LOG(INFO) << "Finish data preparation";
+        LOG(INFO) << "Start building ball tree";
         qtr::BallTree ballTree(depth, parallelize_depth, getTreeDirs(), qtr::MaxDispersionBitSelector());
+        LOG(INFO) << "Finish building ball tree";
+        LOG(INFO) << "Start dumping ball tree to " << getTreePath();
         qtr::BufferedWriter<4096> treeWriter(getTreePath());
         ballTree.dumpNodes(treeWriter);
+        LOG(INFO) << "Finish dumping ball tree to " << getTreePath();
     }
 
     void runTest(const DataTable &data, const QueryTable &queries, size_t depth, size_t parallelize_depth,
@@ -158,6 +165,5 @@ public:
 };
 
 TEST_F(HighLevelBallTreeTests, AllDataTest) {
-//    runTest(getAllData(), getQueries(), 2, 1, 1);
-// todo run rests on different databases with different parameters
+    runTest(getAll5BitsMasksData(), getQueries(), 4, 2, 2);
 }

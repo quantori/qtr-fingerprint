@@ -310,8 +310,10 @@ namespace qtr {
         for (auto &dataDir: _dataDirectories) {
             for (auto &filePath: findFiles(dataDir, "")) {
                 size_t nodeId = atoll(filePath.filename().c_str());
-                assert(!isInit[nodeId]);
-                isInit[nodeId] = true;
+                size_t index = nodeId - (1ull << _depth) + 1;
+                assert(!isInit[index]);
+                isInit[index] = true;
+                _leafDataPaths[index] = filePath;
             }
         }
         assert(std::count(isInit.begin(), isInit.end(), false) == 0);
@@ -322,7 +324,7 @@ namespace qtr {
         bool isTerminate = false;
         std::vector<size_t> results;
         std::mutex resultsLock;
-        for (size_t i = (1ull << startDepth) - 1; i < (1ull << (startDepth - 1)) - 1; i++) {
+        for (size_t i = (1ull << (startDepth - 1)) - 1; i < (1ull << startDepth) - 1; i++) {
             tasks.emplace_back(
                     std::async(std::launch::async, &BallTree::searchInSubtree, this, i, std::cref(query), ansCount,
                                std::ref(results), std::ref(resultsLock), std::ref(isTerminate))
