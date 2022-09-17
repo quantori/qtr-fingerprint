@@ -4,13 +4,14 @@
 
 #include "glog/logging.h"
 
+#include "SmilesTableIOConsts.h"
 #include "basic_io/BasicDataWriter.h"
 
 namespace qtr {
 
     // TODO test this class
     class SmilesTableWriter
-            : public BasicDataWriter<std::pair<uint64_t, std::string>, SmilesTableWriter, std::ofstream> {
+            : public BasicDataWriter<smiles_table_value_t, SmilesTableWriter, std::ofstream> {
     private:
         uint64_t _writtenSmiles;
 

@@ -2,13 +2,14 @@
 
 #include <string>
 
+#include "SmilesTableIOConsts.h"
 #include "basic_io/BasicDataReader.h"
 
 namespace qtr {
 
     // TODO: test this class
     class SmilesTableReader
-            : public BasicDataReader<std::pair<uint64_t, std::string>, SmilesTableReader, std::ifstream> {
+            : public BasicDataReader<smiles_table_value_t, SmilesTableReader, std::ifstream> {
     private:
         uint64_t _smilesInStream;
 

@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 
-#include "data_io/fingerprint_table_io/FingerprintTableWriter.h"
-#include "data_io/fingerprint_table_io/FingerprintTableReader.h"
+#include "fingerprint_table_io/FingerprintTableWriter.h"
+#include "fingerprint_table_io/FingerprintTableReader.h"
 
 #include "../utils/DataPathManager.h"
 
