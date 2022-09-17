@@ -23,20 +23,17 @@ namespace qtr {
             LOG(INFO) << "Delete SMILES table reader (" << _binaryReader << ")";
         }
 
-        ReadValue readOne() override {
-            uint64_t id;
+        SmilesTableReader &operator>>(ReadValue &value) override {
+            auto &[id, smiles] = value;
             _binaryReader->read((char *) &id, sizeof id);
-            std::string smiles;
             char symbol;
             while ((symbol = (char) _binaryReader->get()) != '\n') {
                 smiles += symbol;
             }
-            return {id, smiles};
+            return *this;
         }
 
-        bool eof() const override {
-            return _smilesInStream == 0;
-        }
+        using BaseReader::operator>>;
     };
 
 

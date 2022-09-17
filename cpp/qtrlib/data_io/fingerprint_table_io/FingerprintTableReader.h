@@ -25,14 +25,16 @@ namespace qtr {
             LOG(INFO) << "Delete fingerprint table reader (" << _binaryReader << ")";
         }
 
-        FingerprintTableReader& operator>>(ReadValue& readValue) override {
+        FingerprintTableReader &operator>>(ReadValue &readValue) override {
             assert(_fingerprintsInStream > 0);
-            auto& [id, fingerprint] = readValue;
+            auto &[id, fingerprint] = readValue;
             _binaryReader->read((char *) &id, sizeof id);
             fingerprint.load(*_binaryReader);
             _fingerprintsInStream--;
             return *this;
         }
+
+        using BaseReader::operator>>;
     };
 
 } // qtr
