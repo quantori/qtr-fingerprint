@@ -317,7 +317,7 @@ namespace qtr {
         assert(std::count(isInit.begin(), isInit.end(), false) == 0);
     }
 
-    std::vector<size_t> BallTree::search(const IndigoFingerprint &query, size_t ansCount, size_t startDepth) {
+    std::vector<size_t> BallTree::search(const IndigoFingerprint &query, size_t ansCount, size_t startDepth) const {
         std::vector<std::future<void>> tasks;
         bool isTerminate = false;
         std::vector<size_t> results;
@@ -336,7 +336,7 @@ namespace qtr {
 
     void BallTree::searchInSubtree(size_t nodeId, const IndigoFingerprint &query, size_t ansCount,
                                    std::vector<size_t> &result,
-                                   std::mutex &resultLock, bool &isTerminate) {
+                                   std::mutex &resultLock, bool &isTerminate) const {
         if (isTerminate || !(query <= _nodes[nodeId].centroid)) {
             return;
         }

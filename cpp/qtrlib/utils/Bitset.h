@@ -84,13 +84,17 @@ namespace qtr {
             return answer;
         }
 
-        // todo: test this function
         Bitset &reset() {
             std::memset(_data, 0, sizeof _data);
             return *this;
         }
 
         // todo: test this function
+        Bitset &set() {
+            std::memset(_data, 255, sizeof _data);
+            return *this;
+        }
+
         Bitset operator|(const Bitset &other) const {
             Bitset answer;
             for (size_t i = 0; i < DataLength; i++) {
@@ -107,7 +111,6 @@ namespace qtr {
             return answer;
         }
 
-        // todo: test this function
         Bitset &operator|=(const Bitset &other) {
             for (size_t i = 0; i < DataLength; i++) {
                 _data[i] |= other._data[i];

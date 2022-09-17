@@ -49,9 +49,9 @@ namespace qtr {
 
         void
         searchInSubtree(size_t nodeId, const IndigoFingerprint &query, size_t ansCount, std::vector<size_t> &result,
-                        std::mutex &resultLock, bool &isTerminate);
+                        std::mutex &resultLock, bool &isTerminate) const;
 
-        const std::filesystem::path & getLeafFile(size_t nodeId) const;
+        const std::filesystem::path &getLeafFile(size_t nodeId) const;
 
     public:
         BallTree(size_t depth, size_t parallelizationDepth, std::vector<std::filesystem::path> dataDirectories,
@@ -60,19 +60,16 @@ namespace qtr {
         template<typename BinaryReader>
         BallTree(BinaryReader &nodesReader, std::vector<std::filesystem::path> dataDirectories);
 
-        BallTree() = default;
-
         template<typename BinaryWriter>
         void dumpNodes(BinaryWriter &writer);
 
         template<typename BinaryReader>
         void loadNodes(BinaryReader &reader);
 
-        std::vector<size_t> search(const IndigoFingerprint &query, size_t ansCount, size_t startDepth);
+        std::vector<size_t> search(const IndigoFingerprint &query, size_t ansCount, size_t startDepth) const;
     };
 
-    class BallTree::Node {
-    public:
+    struct BallTree::Node {
         IndigoFingerprint centroid;
     };
 

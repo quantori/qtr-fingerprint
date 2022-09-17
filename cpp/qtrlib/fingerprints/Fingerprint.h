@@ -12,7 +12,6 @@
 
 namespace qtr {
 
-    // todo: test this class
     template<size_t sizeInBits, typename T = standardBitsetDataType>
     class Fingerprint : public qtr::Bitset<sizeInBits, T> {
     public:
