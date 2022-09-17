@@ -7,7 +7,6 @@
 
 namespace qtr {
 
-    // TODO test this class
     class FingerprintTableWriter
             : public BasicDataWriter<std::pair<uint64_t, IndigoFingerprint>, FingerprintTableWriter, std::ofstream> {
     private:

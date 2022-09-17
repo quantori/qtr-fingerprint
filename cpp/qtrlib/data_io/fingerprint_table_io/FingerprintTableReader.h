@@ -6,7 +6,6 @@
 
 namespace qtr {
 
-    // TODO: test this class
     class FingerprintTableReader
             : public BasicDataReader<fingerprint_table_value_t, FingerprintTableReader, std::ifstream> {
 

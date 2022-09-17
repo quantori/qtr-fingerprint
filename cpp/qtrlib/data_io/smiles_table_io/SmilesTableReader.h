@@ -7,7 +7,6 @@
 
 namespace qtr {
 
-    // TODO: test this class
     class SmilesTableReader
             : public BasicDataReader<smiles_table_value_t, SmilesTableReader, std::ifstream> {
     private:

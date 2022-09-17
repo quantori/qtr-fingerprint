@@ -9,7 +9,6 @@
 
 namespace qtr {
 
-    // TODO test this class
     class SmilesTableWriter
             : public BasicDataWriter<smiles_table_value_t, SmilesTableWriter, std::ofstream> {
     private:
