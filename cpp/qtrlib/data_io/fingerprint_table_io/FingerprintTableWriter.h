@@ -3,6 +3,7 @@
 #include "glog/logging.h"
 
 #include "basic_io/BasicDataWriter.h"
+#include "fingerprint_table_io/FingerprintTableIOConsts.h"
 #include "Fingerprint.h"
 
 namespace qtr {

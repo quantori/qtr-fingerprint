@@ -124,7 +124,8 @@ namespace qtr {
 
         void searchInFile(const std::filesystem::path &filePath, const IndigoFingerprint &query, size_t ansCount,
                           std::vector<size_t> &result, std::mutex &resultsLock, bool &isTerminate) {
-            for (const auto &[id, fingerprint]: FingerprintTableReader(filePath)) {
+            FingerprintTableReader reader(filePath);
+            for (const auto &[id, fingerprint]: reader) {
                 if (query <= fingerprint)
                     putAnswer(result, id, ansCount, resultsLock, isTerminate);
             }
@@ -313,7 +314,8 @@ namespace qtr {
                 size_t index = nodeId - (1ull << _depth) + 1;
                 assert(!isInit[index]);
                 isInit[index] = true;
-                _leafDataPaths[index] = filePath;
+                _leafDataPaths[index] = filePath / ("data" + qtr::fingerprintTableExtension);
+                assert(std::filesystem::is_regular_file(_leafDataPaths[index]));
             }
         }
         assert(std::count(isInit.begin(), isInit.end(), false) == 0);
@@ -324,7 +326,7 @@ namespace qtr {
         bool isTerminate = false;
         std::vector<size_t> results;
         std::mutex resultsLock;
-        for (size_t i = (1ull << (startDepth - 1)) - 1; i < (1ull << startDepth) - 1; i++) {
+        for (size_t i = (1ull << (startDepth)) - 1; i < (1ull << (startDepth + 1)) - 1; i++) {
             tasks.emplace_back(
                     std::async(std::launch::async, &BallTree::searchInSubtree, this, i, std::cref(query), ansCount,
                                std::ref(results), std::ref(resultsLock), std::ref(isTerminate))

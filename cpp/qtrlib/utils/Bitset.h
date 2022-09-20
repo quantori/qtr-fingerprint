@@ -92,7 +92,12 @@ namespace qtr {
         // todo: test this function
         Bitset &set() {
             std::memset(_data, 255, sizeof _data);
+            _data[DataLength - 1] &= T(1) << (size() % TypeSizeInBits) - 1;
             return *this;
+        }
+
+        T *data() {
+            return _data;
         }
 
         Bitset operator|(const Bitset &other) const {

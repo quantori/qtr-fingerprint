@@ -176,3 +176,14 @@ TEST_F(BitsetTests, QtrIODumpLoadTest) {
     std::filesystem::remove(filePath);
 }
 
+TEST_F(BitsetTests, SetTest) {
+    auto bitset2 = bitset;
+    bitset.reset();
+    for (size_t i = 0; i < bitset.size(); i++) {
+        bitset[i] = true;
+    }
+    bitset2.set();
+    EXPECT_EQ(0, std::memcmp(bitset2.data(), bitset.data(),
+                             qtr::divideIntegersCeil(BitsetSize, sizeof(BitsetStorageType) * 8))
+    );
+}
