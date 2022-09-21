@@ -18,6 +18,7 @@ SET(ABSL_PROPAGATE_CXX_STD ON)
 
 
 add_subdirectory(app)
+add_subdirectory(db_console_queries)
 add_subdirectory(fingerprints)
 add_subdirectory(splitter_tree)
 add_subdirectory(ball_tree)

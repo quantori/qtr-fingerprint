@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <vector>
 #include <cassert>
+#include <string>
 
 #include "Utils.h"
 #include "Bitset.h"
@@ -61,5 +62,14 @@ namespace qtr {
 
     using IndigoFingerprint = Fingerprint<2584>;
     using FullIndigoFingerprint = Fingerprint<3736>;
+
+    static constexpr std::pair<uint64_t, uint64_t> FullIndigoFingerprintEmptyRange = {1624, 2776};
+
+    static_assert(FullIndigoFingerprint::size() - IndigoFingerprint::size() ==
+                  FullIndigoFingerprintEmptyRange.second - FullIndigoFingerprintEmptyRange.first);
+
+    IndigoFingerprint IndigoFingerprintFromSmiles(const std::string &smiles);
+
+    IndigoFingerprint cutFullIndigoFingerprint(const FullIndigoFingerprint &fullFingerprint);
 
 } // namespace qtr

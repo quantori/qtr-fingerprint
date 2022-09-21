@@ -15,7 +15,7 @@ namespace qtr {
             _timePoints.emplace_back(std::chrono::high_resolution_clock::now());
         }
 
-        double tick(const std::string &message);
+        double tick(const std::string &message = "");
 
         double elapsedTime() const;
 
@@ -114,5 +114,7 @@ namespace qtr {
      */
     std::vector<std::filesystem::path>
     findFiles(const std::filesystem::path &pathToDir, std::string extension);
+
+
 
 } // namespace qtr

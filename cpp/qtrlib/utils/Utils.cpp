@@ -58,8 +58,10 @@ namespace qtr {
     double TimeTicker::tick(const std::string &message) {
         _timePoints.emplace_back(std::chrono::high_resolution_clock::now());
         std::chrono::duration<double> t = _timePoints.back() - _timePoints[_timePoints.size() - 2];
-        LOG(INFO) << message << ": " << t.count() << "sec";
-        _results.emplace_back(message, t.count());
+        if (!message.empty()) {
+            LOG(INFO) << message << ": " << t.count() << "sec";
+            _results.emplace_back(message, t.count());
+        }
         return t.count();
     }
 
