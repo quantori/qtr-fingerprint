@@ -15,7 +15,7 @@ ABSL_FLAG(std::vector<std::string>, data_dir_paths, {},
           "Path to directories where data are stored");
 
 ABSL_FLAG(std::string, other_data_path, "",
-          "Path to file where splitter tree are stored");
+          "Path to directory with other files");
 
 ABSL_FLAG(std::string, db_name, "",
           "Name of folders with data base's files");
