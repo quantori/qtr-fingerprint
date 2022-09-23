@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
             throw std::exception();
         smilesTable.emplace_back(smiles);
     }
-    qtr::BufferedReader<4096> ballTreeReader(args.ballTreePath);
+    qtr::BufferedReader ballTreeReader(args.ballTreePath);
     qtr::BallTree ballTree(ballTreeReader, args.dbDataDirsPaths);
     timeTicker.tick("DB initialization");
 

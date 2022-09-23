@@ -189,7 +189,7 @@ public:
         qtr::BallTree ballTree(_treeDepth, _parallelizeDepth, getTreeDirs(), qtr::MaxDispersionBitSelector());
         LOG(INFO) << "Finish building ball tree";
         LOG(INFO) << "Start dumping ball tree to " << getTreePath();
-        qtr::BufferedWriter<4096> treeWriter(getTreePath());
+        qtr::BufferedWriter treeWriter(getTreePath());
         ballTree.dumpNodes(treeWriter);
         LOG(INFO) << "Finish dumping ball tree to " << getTreePath();
     }
@@ -224,7 +224,7 @@ public:
             GTEST_FAIL() << "Properties wasn't initialized";
         }
         buildBallTreeAndCheck(data);
-        qtr::BufferedReader<4096> treeReader(getTreePath());
+        qtr::BufferedReader treeReader(getTreePath());
         qtr::BallTree ballTree(treeReader, getTreeDirs());
         for (const auto &query: queries) {
             auto expectedAnswer = getAnswers(data, query);

@@ -2,12 +2,13 @@
 
 #include "basic_io/BasicDataReader.h"
 #include "FingerprintTableIOConsts.h"
+#include "io/BufferedReader.h"
 
 
 namespace qtr {
 
     class FingerprintTableReader
-            : public BasicDataReader<fingerprint_table_value_t, FingerprintTableReader, std::ifstream> {
+            : public BasicDataReader<fingerprint_table_value_t, FingerprintTableReader, BufferedReader<>> {
 
     private:
         uint64_t _fingerprintsInStream;

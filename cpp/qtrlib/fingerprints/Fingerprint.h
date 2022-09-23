@@ -99,9 +99,4 @@ namespace qtr {
         IndigoFingerprint cutFingerprint = cutFullIndigoFingerprint(fullFingerprints);
         return cutFingerprint;
     }
-
-//    IndigoFingerprint IndigoFingerprintFromSmiles(const std::string &smiles);
-//
-//    IndigoFingerprint cutFullIndigoFingerprint(const FullIndigoFingerprint &fullFingerprint);
-
 } // namespace qtr

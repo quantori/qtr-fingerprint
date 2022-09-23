@@ -4,11 +4,12 @@
 
 #include "SmilesTableIOConsts.h"
 #include "basic_io/BasicDataReader.h"
+#include "io/BufferedReader.h"
 
 namespace qtr {
 
     class SmilesTableReader
-            : public BasicDataReader<smiles_table_value_t, SmilesTableReader, std::ifstream> {
+            : public BasicDataReader<smiles_table_value_t, SmilesTableReader, BufferedReader<>> {
     private:
         uint64_t _smilesInStream;
 

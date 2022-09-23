@@ -2,10 +2,11 @@
 
 #include "RawBucketIOConsts.h"
 #include "basic_io/BasicDataReader.h"
+#include "io/BufferedReader.h"
 
 namespace qtr {
 
-    class RawBucketReader : public BasicDataReader<raw_bucket_value_t, RawBucketReader, std::ifstream> {
+    class RawBucketReader : public BasicDataReader<raw_bucket_value_t, RawBucketReader, BufferedReader<>> {
     private:
         uint64_t _moleculesInStream;
 
