@@ -7,6 +7,13 @@
 #include <cassert>
 #include <string>
 
+#include "indigo.h"
+
+#include "IndigoMolecule.h"
+#include "IndigoSession.h"
+#include "IndigoWriteBuffer.h"
+#include "IndigoSDFileIterator.h"
+
 #include "Utils.h"
 #include "Bitset.h"
 #include "QtrIndigoFingerprint.h"
@@ -27,13 +34,13 @@ namespace qtr {
          * @param s - string with fingerprint, strlen(s) should be equals to fingerprintSizeInBytes * 2
          */
         explicit Fingerprint(const std::string &s) {
-            assert(s.size() * 2 == sizeInBytes);
+            assert(s.size() == sizeInBytes * 2);
             for (size_t i = 0; i < s.size(); ++i) {
                 size_t j = i * 4ull;
                 int currentSym = chexToInt(s[i]);
                 this->operator[](j + 3) = currentSym & 1;
                 this->operator[](j + 2) = currentSym & 2;
-                this->operator[](j + 1) = currentSym & 3;
+                this->operator[](j + 1) = currentSym & 4;
                 this->operator[](j + 0) = currentSym & 8;
             }
         }
@@ -68,8 +75,33 @@ namespace qtr {
     static_assert(FullIndigoFingerprint::size() - IndigoFingerprint::size() ==
                   FullIndigoFingerprintEmptyRange.second - FullIndigoFingerprintEmptyRange.first);
 
-    IndigoFingerprint IndigoFingerprintFromSmiles(const std::string &smiles);
+    inline IndigoFingerprint cutFullIndigoFingerprint(const FullIndigoFingerprint &fullFingerprint) {
+        IndigoFingerprint fingerprint;
+        for (size_t i = 0; i < FullIndigoFingerprint::size(); i++) {
+            if (i < FullIndigoFingerprintEmptyRange.first) {
+                fingerprint[i] = fullFingerprint[i];
+            } else if (i >= FullIndigoFingerprintEmptyRange.second) {
+                fingerprint[i - FullIndigoFingerprintEmptyRange.second +
+                            FullIndigoFingerprintEmptyRange.first] = fullFingerprint[i];
+            } else {
+                assert(!fullFingerprint[i]);
+            }
+        }
+        return fingerprint;
+    }
 
-    IndigoFingerprint cutFullIndigoFingerprint(const FullIndigoFingerprint &fullFingerprint);
+    inline IndigoFingerprint IndigoFingerprintFromSmiles(const std::string &smiles) {
+        auto indigoSessionPtr = indigo_cpp::IndigoSession::create();
+        auto mol = indigoSessionPtr->loadMolecule(smiles);
+        mol.aromatize();
+        int fingerprint = indigoFingerprint(mol.id(), "sub");
+        FullIndigoFingerprint fullFingerprints(indigoToString(fingerprint));
+        IndigoFingerprint cutFingerprint = cutFullIndigoFingerprint(fullFingerprints);
+        return cutFingerprint;
+    }
+
+//    IndigoFingerprint IndigoFingerprintFromSmiles(const std::string &smiles);
+//
+//    IndigoFingerprint cutFullIndigoFingerprint(const FullIndigoFingerprint &fullFingerprint);
 
 } // namespace qtr

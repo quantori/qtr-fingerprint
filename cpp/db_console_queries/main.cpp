@@ -9,6 +9,7 @@
 #include "io/BufferedReader.h"
 #include "data_io/smiles_table_io/SmilesTableReader.h"
 #include "BallTree.h"
+#include "fingerprint_table_io/FingerprintTableReader.h"
 
 ABSL_FLAG(std::vector<std::string>, data_dir_paths, {},
           "Path to directories where data are stored");
@@ -102,27 +103,53 @@ int main(int argc, char *argv[]) {
     qtr::BallTree ballTree(ballTreeReader, args.dbDataDirsPaths);
     timeTicker.tick("DB initialization");
 
-    size_t ansCount = 0;
-    std::cout << "Enter number of answers you want to find: ";
-    std::cin >> ansCount;
+    size_t ansCount = 10;
+//    std::cout << "Enter number of answers you want to find: ";
+//    std::cin >> ansCount;
 
     std::string smiles;
     while (std::cin >> smiles) {
         timeTicker.tick();
-        qtr::IndigoFingerprint fingerprint = qtr::IndigoFingerprintFromSmiles(smiles);
-        auto ans = ballTree.search(fingerprint, ansCount, args.startSearchDepth);
+        qtr::IndigoFingerprint fingerprint;
+        try {
+            fingerprint = qtr::IndigoFingerprintFromSmiles(smiles);
+        }
+        catch (std::exception &exception) {
+            std::cout << "skip query:" << exception.what() << std::endl;
+            continue;
+        }
+//        auto it = std::find(smilesTable.begin(), smilesTable.end(), smiles);
+//        if (it != smilesTable.end()) {
+//            uint64_t fpId = it - smilesTable.begin();
+//            std::cout << "Check fingerprint " << fpId << std::endl;
+//            for (const auto &filePath: qtr::findFiles(args.dbOtherDataPath / "fingerprintTables", ".ft")) {
+//                for (const auto &[id, fp]: qtr::FingerprintTableReader(filePath)) {
+//                    if (id == fpId) {
+//                        std::cout << "same fingerprints?: " << (fp == fingerprint ? "YES" : "NO") << std::endl;
+//                        if (!(fp == fingerprint)) {
+//                            std::cout << "Diff bits: ";
+//                            for (size_t i = 0; i < qtr::IndigoFingerprint::size(); i++) {
+//                                if (fp[i] != fingerprint[i]) {
+//                                    std::cout << i << ' ';
+//                                }
+//                            }
+//                            std::cout << std::endl;
+//                        }
+//                    }
+//                }
+//            }
+//            std::cout << "finish fingerprint check" << std::endl;
+//        }
+        auto ans = ballTree.search(fingerprint, -1, args.startSearchDepth);
         std::cout << "found answers: " << ans.size() << std::endl;
-        std::cout << '[';
         size_t answersToPrint = std::min(ansCount, ans.size());
         for (size_t i = 0; i < answersToPrint; i++) {
-            std::cout << smilesTable[ans[i]];
-            std::cout << (i + 1 == answersToPrint ? "]" : ", ");
+            if (i == 0)
+                std::cout << "[";
+            std::cout << '\"' << smilesTable[ans[i]] << '\"';
+            std::cout << (i + 1 == answersToPrint ? "]\n" : ", ");
         }
         timeTicker.tick("Search time");
-//        for (auto& i : ans) {
-//            std::cout << i << std::endl;
-//        }
-
     }
 
     return 0;
