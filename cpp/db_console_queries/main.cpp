@@ -103,12 +103,17 @@ int main(int argc, char *argv[]) {
     qtr::BallTree ballTree(ballTreeReader, args.dbDataDirsPaths);
     timeTicker.tick("DB initialization");
 
-    size_t ansCount = 10;
-//    std::cout << "Enter number of answers you want to find: ";
-//    std::cin >> ansCount;
-
-    std::string smiles;
-    while (std::cin >> smiles) {
+    while (true) {
+        std::cout << "Enter smiles: ";
+        std::string smiles;
+        std::cin >> smiles;
+        if (smiles.empty())
+            break;
+        std::cout << "Enter andCount (0 - find all): ";
+        uint64_t ansCount;
+        std::cin >> ansCount;
+        if (ansCount == 0)
+            ansCount = -1;
         timeTicker.tick();
         qtr::IndigoFingerprint fingerprint;
         try {
@@ -118,31 +123,10 @@ int main(int argc, char *argv[]) {
             std::cout << "skip query:" << exception.what() << std::endl;
             continue;
         }
-//        auto it = std::find(smilesTable.begin(), smilesTable.end(), smiles);
-//        if (it != smilesTable.end()) {
-//            uint64_t fpId = it - smilesTable.begin();
-//            std::cout << "Check fingerprint " << fpId << std::endl;
-//            for (const auto &filePath: qtr::findFiles(args.dbOtherDataPath / "fingerprintTables", ".ft")) {
-//                for (const auto &[id, fp]: qtr::FingerprintTableReader(filePath)) {
-//                    if (id == fpId) {
-//                        std::cout << "same fingerprints?: " << (fp == fingerprint ? "YES" : "NO") << std::endl;
-//                        if (!(fp == fingerprint)) {
-//                            std::cout << "Diff bits: ";
-//                            for (size_t i = 0; i < qtr::IndigoFingerprint::size(); i++) {
-//                                if (fp[i] != fingerprint[i]) {
-//                                    std::cout << i << ' ';
-//                                }
-//                            }
-//                            std::cout << std::endl;
-//                        }
-//                    }
-//                }
-//            }
-//            std::cout << "finish fingerprint check" << std::endl;
-//        }
-        auto ans = ballTree.search(fingerprint, -1, args.startSearchDepth);
+
+        auto ans = ballTree.search(fingerprint, ansCount, args.startSearchDepth);
         std::cout << "found answers: " << ans.size() << std::endl;
-        size_t answersToPrint = std::min(ansCount, ans.size());
+        size_t answersToPrint = std::min(size_t(10), ans.size());
         for (size_t i = 0; i < answersToPrint; i++) {
             if (i == 0)
                 std::cout << "[";
