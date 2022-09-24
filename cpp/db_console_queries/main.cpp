@@ -90,10 +90,13 @@ struct Args {
         std::string modeStr = absl::GetFlag(FLAGS_mode);
         qtr::emptyArgument(modeStr, "Please specify mode option");
         inputFile = absl::GetFlag(FLAGS_input_file);
+        LOG(INFO) << "inputFile: " << inputFile;
         if (modeStr == "interactive") {
             mode = Mode::Interactive;
+            LOG(INFO) << "mode: interactive";
         } else if (modeStr == "from_file") {
             mode = Mode::FromFile;
+            LOG(INFO) << "mode: fromFile";
             qtr::emptyArgument(inputFile, "Please specify input_file option");
         } else {
             LOG(ERROR) << "Bad mode option value";
@@ -101,6 +104,7 @@ struct Args {
         }
 
         ansCount = absl::GetFlag(FLAGS_ans_count);
+        LOG(INFO) << "ansCount: " << ansCount;
 
         for (auto &dir: dataDirPaths) {
             dbDataDirsPaths.emplace_back(dir / dbName);
