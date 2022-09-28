@@ -4,12 +4,12 @@
 
 namespace qtr {
 
-    class ColumnsWriter : public BasicDataWriter<size_t, ColumnsWriter, std::ofstream> {
+    class IndexesWriter : public BasicDataWriter<uint64_t, IndexesWriter, std::ofstream> {
     public:
 
-        explicit ColumnsWriter(const std::filesystem::path &fileName) : BaseWriter(fileName), _writtenColumns(0) {};
+        explicit IndexesWriter(const std::filesystem::path &fileName) : BaseWriter(fileName), _writtenColumns(0) {};
 
-        ColumnsWriter &operator<<(const WriteValue &value) override {
+        IndexesWriter &operator<<(const WriteValue &value) override {
             if (_writtenColumns != 0)
                 *_binaryWriter << ' ';
             *_binaryWriter << value;

@@ -10,8 +10,8 @@
 
 #include "raw_bucket_io/RawBucketReader.h"
 #include "raw_bucket_io/RawBucketWriter.h"
-#include "columns_io/ColumnsReader.h"
-#include "columns_io/ColumnsWriter.h"
+#include "indexes_io/IndexesReader.h"
+#include "indexes_io/IndexesWriter.h"
 
 namespace qtr {
 
@@ -44,7 +44,7 @@ namespace qtr {
 
     static void saveColumns(const std::vector<size_t> &columns, const std::filesystem::path &rawBucketDirPath) {
         std::filesystem::path columnsPath = rawBucketDirPath / ("columns.col");
-        ColumnsWriter(columnsPath) << columns;
+        IndexesWriter(columnsPath) << columns;
     }
 
     template<typename Functor>

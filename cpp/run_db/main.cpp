@@ -36,7 +36,7 @@ ABSL_FLAG(std::uint64_t, ans_count, -1,
 
 void initLogging(int argc, char *argv[]) {
     google::InitGoogleLogging(argv[0]);
-    google::SetLogDestination(google::INFO, "db_console_queries.info");
+    google::SetLogDestination(google::INFO, "run_db.info");
     FLAGS_alsologtostderr = true;
 }
 
@@ -117,7 +117,7 @@ struct Args {
         LOG(INFO) << "dbOtherDataPath" << dbOtherDataPath;
 
         ballTreePath = dbOtherDataPath / "tree";
-        LOG(INFO) << "splitterTreePath: " << ballTreePath;
+        LOG(INFO) << "ballTreePath: " << ballTreePath;
 
         smilesTablePath = dbOtherDataPath / "smilesTable";
         LOG(INFO) << "smilesTablePath: " << smilesTablePath;
@@ -154,7 +154,7 @@ void runInteractive(const qtr::BallTree &ballTree, const std::vector<std::string
             std::cout << '\"' << smilesTable[ans[i]] << '\"';
             std::cout << (i + 1 == answersToPrint ? "]\n" : ", ");
         }
-        timeTicker.tick("Search time");
+        std::cout<< "Search time: " << timeTicker.tick("Search time") << std::endl;
     }
 }
 
