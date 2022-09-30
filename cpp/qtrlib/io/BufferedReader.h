@@ -28,6 +28,9 @@ namespace qtr {
     public:
         BufferedReader(const char *filePath) : _currentBufSize(0), _bufPtr(0), _eof(false) {
             _file = std::fopen(filePath, "r");
+            if (_file == nullptr) {
+                LOG(INFO) << "Can't open file " << filePath << ", errno " << errno;
+            }
         }
 
         BufferedReader(const std::filesystem::path &filePath) : BufferedReader(filePath.c_str()) {}

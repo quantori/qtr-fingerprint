@@ -14,7 +14,7 @@ namespace qtr {
         const std::string dataFilename = "data.ft";
         std::mt19937 randomGenerator(0);
 
-        void splitFileBybit(const std::filesystem::path &file, size_t splitBit, const std::filesystem::path &leftFile,
+        void splitFileByBit(const std::filesystem::path &file, size_t splitBit, const std::filesystem::path &leftFile,
                             const std::filesystem::path &rightFile, size_t leftSize, size_t rightSize) {
             FingerprintTableWriter leftWriter(leftFile), rightWriter(rightFile);
             for (const auto &value: FingerprintTableReader(file)) {
@@ -36,6 +36,7 @@ namespace qtr {
         void prepareManyDirsForNode(const std::vector<std::filesystem::path> &dataDirectories, size_t nodeId) {
             for (auto &dirPath: dataDirectories) {
                 std::filesystem::create_directory(dirPath / std::to_string(nodeId));
+                LOG(INFO) << "create directory " << dirPath / std::to_string(nodeId);
             }
         }
 
@@ -223,7 +224,7 @@ namespace qtr {
             std::filesystem::path leftFile = switchFilesNode(nodeFiles[i], leftChild(nodeId));
             std::filesystem::path rightFile = switchFilesNode(nodeFiles[i], rightChild(nodeId));
             tasks.emplace_back(
-                    std::async(std::launch::async, splitFileBybit, nodeFiles[i], splitBit, leftFile, rightFile,
+                    std::async(std::launch::async, splitFileByBit, nodeFiles[i], splitBit, leftFile, rightFile,
                                splitPolicy[i].first, splitPolicy[i].second)
             );
         }
@@ -249,7 +250,7 @@ namespace qtr {
         std::filesystem::path rightFile = dataDirectory / std::to_string(rightChild(nodeId)) / dataFilename;
         std::filesystem::create_directory(leftFile.parent_path());
         std::filesystem::create_directory(rightFile.parent_path());
-        splitFileBybit(nodeFile, splitBit, leftFile, rightFile, leftSize, rightSize);
+        splitFileByBit(nodeFile, splitBit, leftFile, rightFile, leftSize, rightSize);
         std::filesystem::remove_all(nodeFile.parent_path());
     }
 

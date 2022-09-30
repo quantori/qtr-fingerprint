@@ -16,7 +16,11 @@ namespace qtr {
 
     public:
         BufferedWriter(const char *filePath) : _bufPtr(0) {
+            std::ifstream kek(filePath);
             _file = std::fopen(filePath, "w");
+            if (_file == nullptr) {
+                LOG(INFO) << "Can't open file " << filePath << ", errno " << errno;
+            }
         }
 
         BufferedWriter(const std::filesystem::path &filePath) : BufferedWriter(filePath.c_str()) {}
