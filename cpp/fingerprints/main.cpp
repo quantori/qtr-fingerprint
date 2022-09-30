@@ -20,8 +20,8 @@
 #include "Utils.h"
 #include "Fingerprint.h"
 #include "raw_bucket_io/RawBucketWriter.h"
-#include "columns_io/ColumnsReader.h"
-#include "columns_io/ColumnsWriter.h"
+#include "indexes_io/IndexesReader.h"
+#include "indexes_io/IndexesWriter.h"
 
 using namespace indigo_cpp;
 using namespace qtr;
@@ -141,7 +141,7 @@ int main(int argc, char *argv[]) {
         exit(-1);
     }
 
-    ColumnsReader columnsReader(pathToZeroColumns);
+    IndexesReader columnsReader(pathToZeroColumns);
     columnsReader >> zeroColumns;
 
     vector<filesystem::path> sdfFiles = findFiles(pathToSdfDir, ".sdf");

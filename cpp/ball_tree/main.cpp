@@ -8,6 +8,7 @@
 
 #include "Utils.h"
 #include "smiles_table_io/SmilesTableWriter.h"
+#include "smiles_table_io/SmilesRandomAccessTable.h"
 #include "raw_bucket_io/RawBucketReader.h"
 #include "fingerprint_table_io/FingerprintTableWriter.h"
 #include "BallTree.h"
@@ -54,6 +55,7 @@ struct Args {
 
     std::filesystem::path ballTreePath;
     std::filesystem::path smilesTablePath;
+    std::filesystem::path smilesRandomAccessTablePath;
     std::filesystem::path fingerprintTablesPath;
 
     Args(int argc, char *argv[]) {
@@ -106,6 +108,9 @@ struct Args {
         smilesTablePath = dbOtherDataPath / "smilesTable";
         LOG(INFO) << "smilesTablePath: " << smilesTablePath;
 
+        smilesRandomAccessTablePath = dbOtherDataPath / "smilesRandomAccessTablePath";
+        LOG(INFO) << "smilesRandomAccessTablePath: " << smilesRandomAccessTablePath;
+
         fingerprintTablesPath = dbOtherDataPath / "fingerprintTables";
         LOG(INFO) << "fingerprintTablePaths" << fingerprintTablesPath;
     }
@@ -136,6 +141,7 @@ void initFileSystem(const Args &args) {
     }
     std::filesystem::create_directory(args.dbOtherDataPath);
     std::filesystem::create_directory(args.fingerprintTablesPath);
+    std::filesystem::create_directory(args.smilesRandomAccessTablePath);
 }
 
 size_t enumerateMolecules(const Args &args) {
@@ -153,6 +159,10 @@ size_t enumerateMolecules(const Args &args) {
         }
     }
     return number;
+}
+
+void createSmilesRandomAccessTable(const Args& args) {
+    qtr::SmilesRandomAccessTable smilesRandomAccessTable(args.smilesTablePath, args.smilesRandomAccessTablePath);
 }
 
 void distributeFingerprintTables(const Args &args) {
@@ -175,9 +185,12 @@ int main(int argc, char *argv[]) {
     qtr::TimeTicker timeTicker;
 
     initFileSystem(args);
+
     timeTicker.tick("Files initialization");
     size_t moleculesNumber = enumerateMolecules(args);
     timeTicker.tick("Molecules enumerating");
+    createSmilesRandomAccessTable(args);
+    timeTicker.tick("Smiles Random Access table creating");
     distributeFingerprintTables(args);
     timeTicker.tick("Files distribution");
     qtr::BallTree ballTree(args.treeDepth, args.subtreeParallelDepth, args.dbDataDirsPaths,

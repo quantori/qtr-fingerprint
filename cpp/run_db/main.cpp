@@ -12,6 +12,7 @@
 #include "data_io/smiles_table_io/SmilesTableReader.h"
 #include "BallTree.h"
 #include "fingerprint_table_io/FingerprintTableReader.h"
+#include "smiles_table_io/SmilesRandomAccessTable.h"
 
 ABSL_FLAG(std::vector<std::string>, data_dir_paths, {},
           "Path to directories where data are stored");
@@ -36,7 +37,7 @@ ABSL_FLAG(std::uint64_t, ans_count, -1,
 
 void initLogging(int argc, char *argv[]) {
     google::InitGoogleLogging(argv[0]);
-    google::SetLogDestination(google::INFO, "db_console_queries.info");
+    google::SetLogDestination(google::INFO, "run_db.info");
     FLAGS_alsologtostderr = true;
 }
 
@@ -60,6 +61,7 @@ struct Args {
 
     std::filesystem::path ballTreePath;
     std::filesystem::path smilesTablePath;
+    std::filesystem::path smilesRandomAccessTablePath;
     std::filesystem::path fingerprintTablesPath;
 
     Args(int argc, char *argv[]) {
@@ -117,17 +119,20 @@ struct Args {
         LOG(INFO) << "dbOtherDataPath" << dbOtherDataPath;
 
         ballTreePath = dbOtherDataPath / "tree";
-        LOG(INFO) << "splitterTreePath: " << ballTreePath;
+        LOG(INFO) << "ballTreePath: " << ballTreePath;
 
         smilesTablePath = dbOtherDataPath / "smilesTable";
         LOG(INFO) << "smilesTablePath: " << smilesTablePath;
+
+        smilesRandomAccessTablePath = dbOtherDataPath / "smilesRandomAccessTablePath";
+        LOG(INFO) << "smilesRandomAccessTablePath: " << smilesRandomAccessTablePath;
 
         fingerprintTablesPath = dbOtherDataPath / "fingerprintTables";
         LOG(INFO) << "fingerprintTablePaths" << fingerprintTablesPath;
     }
 };
 
-void runInteractive(const qtr::BallTree &ballTree, const std::vector<std::string> &smilesTable,
+void runInteractive(const qtr::BallTree &ballTree, qtr::SmilesRandomAccessTable &smilesTable,
                     qtr::TimeTicker &timeTicker, const Args &args) {
     while (true) {
         std::cout << "Enter smiles: ";
@@ -154,11 +159,11 @@ void runInteractive(const qtr::BallTree &ballTree, const std::vector<std::string
             std::cout << '\"' << smilesTable[ans[i]] << '\"';
             std::cout << (i + 1 == answersToPrint ? "]\n" : ", ");
         }
-        timeTicker.tick("Search time");
+        std::cout<< "Search time: " << timeTicker.tick("Search time") << std::endl;
     }
 }
 
-void runFromFile(const qtr::BallTree &ballTree, const std::vector<std::string> &smilesTable,
+void runFromFile(const qtr::BallTree &ballTree, const qtr::SmilesRandomAccessTable &smilesTable,
                  qtr::TimeTicker &timeTicker, const Args &args) {
     std::ifstream input(args.inputFile);
     std::vector<std::string> queries;
@@ -210,14 +215,9 @@ int main(int argc, char *argv[]) {
     Args args(argc, argv);
 
     qtr::TimeTicker timeTicker;
-    std::vector<std::string> smilesTable;
-    for (const auto &[id, smiles]: qtr::SmilesTableReader(args.smilesTablePath)) {
-        if (id != smilesTable.size())
-            throw std::exception();
-        smilesTable.emplace_back(smiles);
-    }
     qtr::BufferedReader ballTreeReader(args.ballTreePath);
     qtr::BallTree ballTree(ballTreeReader, args.dbDataDirsPaths);
+    qtr::SmilesRandomAccessTable smilesTable(args.smilesRandomAccessTablePath);
     timeTicker.tick("DB initialization");
 
     if (args.mode == Args::Mode::Interactive)

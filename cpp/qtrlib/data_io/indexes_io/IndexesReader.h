@@ -5,12 +5,12 @@
 
 namespace qtr {
 
-    class ColumnsReader : public BasicDataReader<size_t, ColumnsReader, std::ifstream> {
+    class IndexesReader : public BasicDataReader<uint64_t, IndexesReader, std::ifstream> {
     public:
 
-        explicit ColumnsReader(const std::filesystem::path &fileName) : BaseReader(fileName) {}
+        explicit IndexesReader(const std::filesystem::path &fileName) : BaseReader(fileName) {}
 
-        ColumnsReader &operator>>(size_t &value) override {
+        IndexesReader &operator>>(ReadValue &value) override {
             *_binaryReader >> value;
             return *this;
         }
