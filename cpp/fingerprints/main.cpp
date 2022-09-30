@@ -20,8 +20,8 @@
 #include "Utils.h"
 #include "Fingerprint.h"
 #include "raw_bucket_io/RawBucketWriter.h"
-#include "columns_io/IndexesReader.h"
-#include "columns_io/IndexesWriter.h"
+#include "indexes_io/IndexesReader.h"
+#include "indexes_io/IndexesWriter.h"
 
 using namespace indigo_cpp;
 using namespace qtr;
