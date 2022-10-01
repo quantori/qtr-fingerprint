@@ -11,6 +11,8 @@
 #include "BallTree.h"
 #include "fingerprint_table_io/FingerprintTableReader.h"
 #include "smiles_table_io/SmilesRandomAccessTable.h"
+#include "IndigoSubstructureMatcher.h"
+#include "IndigoQueryMolecule.h"
 
 ABSL_FLAG(std::vector<std::string>, data_dir_paths, {},
           "Path to directories where data are stored");
@@ -149,8 +151,17 @@ void printSmiles(const std::vector<std::string> &smiles) {
     }
 }
 
-std::vector<std::string> filterSmiles(const std::vector<std::string> &smiles, const std::string &query) {
-    return smiles; // todo add filtering
+std::vector<std::string> filterSmiles(const std::vector<std::string> &candidateSmiles, const std::string &query) {
+    auto indigoSessionPtr = indigo_cpp::IndigoSession::create();
+    auto queryMol = indigoSessionPtr->loadQueryMolecule(query);
+    std::vector<std::string> result;
+    for (auto &smiles: candidateSmiles) {
+        auto candidateMol = indigoSessionPtr->loadMolecule(smiles);
+        auto matcher = indigoSessionPtr->substructureMatcher(candidateMol);
+        if (indigoMatch(matcher.id(), queryMol.id()))
+            result.emplace_back(smiles);
+    }
+    return result;
 }
 
 bool doSearch(const std::string &smiles, const qtr::BallTree &ballTree,
@@ -200,7 +211,7 @@ void runFromFile(const qtr::BallTree &ballTree, qtr::SmilesRandomAccessTable &sm
         queries.emplace_back(query);
     }
     std::vector<double> times;
-    size_t skipped;
+    size_t skipped = 0;
     LOG(INFO) << "Loaded " << queries.size() << " queries";
     for (size_t i = 0; i < queries.size(); i++) {
         LOG(INFO) << "Start search for " << i << ": " << queries[i];
