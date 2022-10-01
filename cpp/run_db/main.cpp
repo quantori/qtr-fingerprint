@@ -1,6 +1,5 @@
 #include <filesystem>
 #include <string>
-#include <algorithm>
 #include <numeric>
 
 #include <glog/logging.h>
@@ -9,7 +8,6 @@
 
 #include "Utils.h"
 #include "io/BufferedReader.h"
-#include "data_io/smiles_table_io/SmilesTableReader.h"
 #include "BallTree.h"
 #include "fingerprint_table_io/FingerprintTableReader.h"
 #include "smiles_table_io/SmilesRandomAccessTable.h"
@@ -132,6 +130,49 @@ struct Args {
     }
 };
 
+std::vector<std::string>
+getSmiles(const std::vector<size_t> &smilesIndexes, qtr::SmilesRandomAccessTable &smilesTable, uint64_t ansCount) {
+    std::vector<std::string> result;
+    for (size_t i = 0; i < smilesIndexes.size() && i < ansCount; i++) {
+        result.emplace_back(smilesTable[smilesIndexes[i]]);
+    }
+    return result;
+}
+
+void printSmiles(const std::vector<std::string> &smiles) {
+    size_t answersToPrint = std::min(size_t(10), smiles.size());
+    for (size_t i = 0; i < answersToPrint; i++) {
+        if (i == 0)
+            std::cout << "[";
+        std::cout << '\"' << smiles[i] << '\"';
+        std::cout << (i + 1 == answersToPrint ? "]\n" : ", ");
+    }
+}
+
+std::vector<std::string> filterSmiles(const std::vector<std::string> &smiles, const std::string &query) {
+    return smiles; // todo add filtering
+}
+
+bool doSearch(const std::string &smiles, const qtr::BallTree &ballTree,
+              qtr::SmilesRandomAccessTable &smilesTable, const Args &args) {
+    qtr::IndigoFingerprint fingerprint;
+    try {
+        fingerprint = qtr::IndigoFingerprintFromSmiles(smiles);
+    }
+    catch (std::exception &exception) {
+        std::cout << "skip query:" << exception.what() << std::endl;
+        return false;
+    }
+    auto candidateIndexes = ballTree.search(fingerprint, args.ansCount, args.startSearchDepth);
+    auto candidateSmiles = getSmiles(candidateIndexes, smilesTable, args.ansCount);
+    auto answerSmiles = filterSmiles(candidateSmiles, smiles);
+    LOG(INFO) << "found answers before filtering: " << candidateSmiles.size();
+    LOG(INFO) << "found answers: " << answerSmiles.size();
+    printSmiles(candidateSmiles);
+    return true;
+}
+
+
 void runInteractive(const qtr::BallTree &ballTree, qtr::SmilesRandomAccessTable &smilesTable,
                     qtr::TimeTicker &timeTicker, const Args &args) {
     while (true) {
@@ -141,29 +182,13 @@ void runInteractive(const qtr::BallTree &ballTree, qtr::SmilesRandomAccessTable 
         if (smiles.empty())
             break;
         timeTicker.tick();
-        qtr::IndigoFingerprint fingerprint;
-        try {
-            fingerprint = qtr::IndigoFingerprintFromSmiles(smiles);
-        }
-        catch (std::exception &exception) {
-            std::cout << "skip query:" << exception.what() << std::endl;
+        if (!doSearch(smiles, ballTree, smilesTable, args))
             continue;
-        }
-
-        auto ans = ballTree.search(fingerprint, args.ansCount, args.startSearchDepth);
-        std::cout << "found answers: " << ans.size() << std::endl;
-        size_t answersToPrint = std::min(size_t(10), ans.size());
-        for (size_t i = 0; i < answersToPrint; i++) {
-            if (i == 0)
-                std::cout << "[";
-            std::cout << '\"' << smilesTable[ans[i]] << '\"';
-            std::cout << (i + 1 == answersToPrint ? "]\n" : ", ");
-        }
-        std::cout<< "Search time: " << timeTicker.tick("Search time") << std::endl;
+        std::cout << "Search time: " << timeTicker.tick("Search time") << std::endl;
     }
 }
 
-void runFromFile(const qtr::BallTree &ballTree, const qtr::SmilesRandomAccessTable &smilesTable,
+void runFromFile(const qtr::BallTree &ballTree, qtr::SmilesRandomAccessTable &smilesTable,
                  qtr::TimeTicker &timeTicker, const Args &args) {
     std::ifstream input(args.inputFile);
     std::vector<std::string> queries;
@@ -180,16 +205,10 @@ void runFromFile(const qtr::BallTree &ballTree, const qtr::SmilesRandomAccessTab
     for (size_t i = 0; i < queries.size(); i++) {
         LOG(INFO) << "Start search for " << i << ": " << queries[i];
         timeTicker.tick();
-        qtr::IndigoFingerprint fingerprint;
-        try {
-            fingerprint = qtr::IndigoFingerprintFromSmiles(queries[i]);
-        }
-        catch (std::exception &exception) {
-            std::cout << "skip query:" << exception.what() << std::endl;
+        if (!doSearch(queries[i], ballTree, smilesTable, args)) {
             skipped++;
             continue;
         }
-        auto ans = ballTree.search(fingerprint, args.ansCount, args.startSearchDepth);
         times.emplace_back(timeTicker.tick("search molecule " + std::to_string(i) + ": " + queries[i]));
     }
 
@@ -199,15 +218,11 @@ void runFromFile(const qtr::BallTree &ballTree, const qtr::SmilesRandomAccessTab
     std::sort(times.begin(), times.end());
     double median = times.size() & 1 ? times[times.size() / 2] : times[times.size() / 2] + times[times.size() / 2 + 1];
 
+    LOG(INFO) << "skipped queries: " << skipped;
     LOG(INFO) << "  mean: " << mean;
     LOG(INFO) << "   max: " << max;
     LOG(INFO) << "   min: " << min;
     LOG(INFO) << "median: " << median;
-
-    std::cout << "  mean: " << mean << std::endl;
-    std::cout << "   max: " << max << std::endl;
-    std::cout << "   min: " << min << std::endl;
-    std::cout << "median: " << median << std::endl;
 }
 
 int main(int argc, char *argv[]) {
