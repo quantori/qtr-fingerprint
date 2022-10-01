@@ -119,7 +119,8 @@ namespace qtr {
         void putAnswer(std::vector<size_t> &result, size_t value, size_t ansCount, std::mutex &resultLock,
                        bool &isTerminate) {
             std::lock_guard<std::mutex> lock(resultLock);
-            result.emplace_back(value);
+            if (result.size() < ansCount)
+                result.emplace_back(value);
             isTerminate |= result.size() >= ansCount;
         }
 
