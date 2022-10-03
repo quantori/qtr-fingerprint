@@ -156,10 +156,16 @@ std::vector<std::string> filterSmiles(const std::vector<std::string> &candidateS
     auto queryMol = indigoSessionPtr->loadQueryMolecule(query);
     std::vector<std::string> result;
     for (auto &smiles: candidateSmiles) {
-        auto candidateMol = indigoSessionPtr->loadMolecule(smiles);
-        auto matcher = indigoSessionPtr->substructureMatcher(candidateMol);
-        if (indigoMatch(matcher.id(), queryMol.id()))
-            result.emplace_back(smiles);
+        try {
+            auto candidateMol = indigoSessionPtr->loadMolecule(smiles);
+            auto matcher = indigoSessionPtr->substructureMatcher(candidateMol);
+            if (indigoMatch(matcher.id(), queryMol.id()))
+                result.emplace_back(smiles);
+        }
+        catch (std::exception &e) {
+            LOG(ERROR) << "Error while filtering answer. "
+                          "Query: " << query << ", candidate: " << smiles << ", error: " << e.what();
+        }
     }
     return result;
 }
