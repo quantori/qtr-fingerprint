@@ -3,7 +3,8 @@
 #include "../utils/TmpDirFixture.h"
 
 #include "Fingerprint.h"
-#include "BallTree.h"
+#include "BallTreeBuilder.h"
+#include "BallTreeSearchEngine.h"
 #include "split_bit_selection/MaxDispersionBitSelector.h"
 #include "io/BufferedWriter.h"
 #include "io/BufferedReader.h"
@@ -186,7 +187,7 @@ public:
         prepareTreeDirs(data);
         LOG(INFO) << "Finish data preparation";
         LOG(INFO) << "Start building ball tree";
-        qtr::BallTree ballTree(_treeDepth, _parallelizeDepth, getTreeDirs(), qtr::MaxDispersionBitSelector());
+        qtr::BallTreeBuilder ballTree(_treeDepth, _parallelizeDepth, getTreeDirs(), qtr::MaxDispersionBitSelector());
         LOG(INFO) << "Finish building ball tree";
         LOG(INFO) << "Start dumping ball tree to " << getTreePath();
         qtr::BufferedWriter treeWriter(getTreePath());
@@ -225,7 +226,7 @@ public:
         }
         buildBallTreeAndCheck(data);
         qtr::BufferedReader treeReader(getTreePath());
-        qtr::BallTree ballTree(treeReader, getTreeDirs());
+        qtr::BallTreeSearchEngine ballTree(treeReader, getTreeDirs());
         for (const auto &query: queries) {
             auto expectedAnswer = getAnswers(data, query);
             auto actualAnswer = ballTree.search(query, -1, _startSearchDepth);

@@ -3,6 +3,8 @@
 #include <cstdio>
 #include <cstring>
 
+#include "glog/logging.h"
+
 namespace qtr {
 
     static const size_t DefaultWriterBufferSize = 1ull << 13;

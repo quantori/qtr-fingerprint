@@ -177,7 +177,7 @@ int main(int argc, char *argv[]) {
     timeTicker.tick("Splitter tree building");
 
     std::vector<size_t> columnsSubset;
-    qtr::ColumnsReader(args.columnsSubsetPath) >> columnsSubset;
+    qtr::IndexesReader(args.columnsSubsetPath) >> columnsSubset;
     auto selectFunction = qtr::PearsonCorrelationSelectionFunction(columnsSubset);
     auto columnsSelector = qtr::ColumnsSelector(args.dbDataDirsPaths, selectFunction);
     columnsSelector.handleRawBuckets();

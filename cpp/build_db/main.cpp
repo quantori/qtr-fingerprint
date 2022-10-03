@@ -11,7 +11,7 @@
 #include "smiles_table_io/SmilesRandomAccessTable.h"
 #include "raw_bucket_io/RawBucketReader.h"
 #include "fingerprint_table_io/FingerprintTableWriter.h"
-#include "BallTree.h"
+#include "BallTreeBuilder.h"
 #include "ball_tree/split_bit_selection/MaxDispersionBitSelector.h"
 
 ABSL_FLAG(std::string, rb_dir_path, {},
@@ -193,8 +193,8 @@ int main(int argc, char *argv[]) {
     timeTicker.tick("Smiles Random Access table creating");
     distributeFingerprintTables(args);
     timeTicker.tick("Files distribution");
-    qtr::BallTree ballTree(args.treeDepth, args.subtreeParallelDepth, args.dbDataDirsPaths,
-                           qtr::MaxDispersionBitSelector());
+    qtr::BallTreeBuilder ballTree(args.treeDepth, args.subtreeParallelDepth, args.dbDataDirsPaths,
+                                  qtr::MaxDispersionBitSelector());
     timeTicker.tick("Ball tree building");
     std::ofstream ballTreeWriter(args.ballTreePath);
     ballTree.dumpNodes(ballTreeWriter);

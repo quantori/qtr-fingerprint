@@ -8,7 +8,7 @@
 
 #include "Utils.h"
 #include "io/BufferedReader.h"
-#include "BallTree.h"
+#include "BallTreeSearchEngine.h"
 #include "fingerprint_table_io/FingerprintTableReader.h"
 #include "smiles_table_io/SmilesRandomAccessTable.h"
 #include "IndigoSubstructureMatcher.h"
@@ -164,7 +164,7 @@ std::vector<std::string> filterSmiles(const std::vector<std::string> &candidateS
     return result;
 }
 
-bool doSearch(const std::string &smiles, const qtr::BallTree &ballTree,
+bool doSearch(const std::string &smiles, const qtr::BallTreeSearchEngine &ballTree,
               qtr::SmilesRandomAccessTable &smilesTable, const Args &args) {
     qtr::IndigoFingerprint fingerprint;
     try {
@@ -184,7 +184,7 @@ bool doSearch(const std::string &smiles, const qtr::BallTree &ballTree,
 }
 
 
-void runInteractive(const qtr::BallTree &ballTree, qtr::SmilesRandomAccessTable &smilesTable,
+void runInteractive(const qtr::BallTreeSearchEngine &ballTree, qtr::SmilesRandomAccessTable &smilesTable,
                     qtr::TimeTicker &timeTicker, const Args &args) {
     while (true) {
         std::cout << "Enter smiles: ";
@@ -199,7 +199,7 @@ void runInteractive(const qtr::BallTree &ballTree, qtr::SmilesRandomAccessTable 
     }
 }
 
-void runFromFile(const qtr::BallTree &ballTree, qtr::SmilesRandomAccessTable &smilesTable,
+void runFromFile(const qtr::BallTreeSearchEngine &ballTree, qtr::SmilesRandomAccessTable &smilesTable,
                  qtr::TimeTicker &timeTicker, const Args &args) {
     std::ifstream input(args.inputFile);
     std::vector<std::string> queries;
@@ -242,7 +242,7 @@ int main(int argc, char *argv[]) {
 
     qtr::TimeTicker timeTicker;
     qtr::BufferedReader ballTreeReader(args.ballTreePath);
-    qtr::BallTree ballTree(ballTreeReader, args.dbDataDirsPaths);
+    qtr::BallTreeSearchEngine ballTree(ballTreeReader, args.dbDataDirsPaths);
     qtr::SmilesRandomAccessTable smilesTable(args.smilesRandomAccessTablePath);
     timeTicker.tick("DB initialization");
 
