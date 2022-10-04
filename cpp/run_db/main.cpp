@@ -234,13 +234,19 @@ void runFromFile(const qtr::BallTreeSearchEngine &ballTree, SmilesTable &smilesT
     double min = *std::min_element(times.begin(), times.end());
     double max = *std::max_element(times.begin(), times.end());
     std::sort(times.begin(), times.end());
-    double median = times.size() & 1 ? times[times.size() / 2] : times[times.size() / 2] + times[times.size() / 2 + 1];
-
+    double median = times[times.size() / 2];
+    double p60 = times[times.size() * 6 / 10];
+    double p70 = times[times.size() * 7 / 10];
+    double p80 = times[times.size() * 8 / 10];
+    double p90 = times[times.size() * 9 / 10];
+    double p95 = times[times.size() * 95 / 100];
     LOG(INFO) << "skipped queries: " << skipped;
     LOG(INFO) << "  mean: " << mean;
     LOG(INFO) << "   max: " << max;
     LOG(INFO) << "   min: " << min;
     LOG(INFO) << "median: " << median;
+    LOG(INFO) << "60%: " << p60 << " | 70%: " << p70 << " | 80%: " << p80 << " | 90%: " << p90 << " | 95%: " << p95;
+
 }
 
 int main(int argc, char *argv[]) {
