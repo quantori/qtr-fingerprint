@@ -154,10 +154,12 @@ void printSmiles(const std::vector<std::string> &smiles) {
 std::vector<std::string> filterSmiles(const std::vector<std::string> &candidateSmiles, const std::string &query) {
     auto indigoSessionPtr = indigo_cpp::IndigoSession::create();
     auto queryMol = indigoSessionPtr->loadQueryMolecule(query);
+    queryMol.aromatize();
     std::vector<std::string> result;
     for (auto &smiles: candidateSmiles) {
         try {
             auto candidateMol = indigoSessionPtr->loadMolecule(smiles);
+            candidateMol.aromatize();
             auto matcher = indigoSessionPtr->substructureMatcher(candidateMol);
             if (indigoMatch(matcher.id(), queryMol.id()))
                 result.emplace_back(smiles);
@@ -182,10 +184,10 @@ bool doSearch(const std::string &smiles, const qtr::BallTreeSearchEngine &ballTr
     }
     auto candidateIndexes = ballTree.search(fingerprint, args.ansCount, args.startSearchDepth);
     auto candidateSmiles = getSmiles(candidateIndexes, smilesTable, args.ansCount);
-    auto answerSmiles = filterSmiles(candidateSmiles, smiles);
     LOG(INFO) << "found answers before filtering: " << candidateSmiles.size();
+    auto answerSmiles = filterSmiles(candidateSmiles, smiles);
     LOG(INFO) << "found answers: " << answerSmiles.size();
-    printSmiles(candidateSmiles);
+    printSmiles(answerSmiles);
     return true;
 }
 
