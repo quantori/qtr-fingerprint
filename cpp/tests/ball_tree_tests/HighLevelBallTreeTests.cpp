@@ -229,7 +229,7 @@ public:
         qtr::BallTreeSearchEngine ballTree(treeReader, getTreeDirs());
         for (const auto &query: queries) {
             auto expectedAnswer = getAnswers(data, query);
-            auto actualAnswer = ballTree.search(query, -1, _startSearchDepth);
+            auto actualAnswer = ballTree.search(query, -1, _startSearchDepth, std::function<bool(uint64_t)>());
             EXPECT_TRUE(std::is_permutation(expectedAnswer.begin(), expectedAnswer.end(),
                                             actualAnswer.begin(), actualAnswer.end()));
         }

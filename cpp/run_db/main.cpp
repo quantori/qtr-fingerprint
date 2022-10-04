@@ -128,12 +128,13 @@ struct Args {
         LOG(INFO) << "smilesRandomAccessTablePath: " << smilesRandomAccessTablePath;
 
         fingerprintTablesPath = dbOtherDataPath / "fingerprintTables";
-        LOG(INFO) << "fingerprintTablePaths" << fingerprintTablesPath;
+        LOG(INFO) << "fingerprintTablesPath " << fingerprintTablesPath;
     }
 };
 
+template<typename SmilesTable>
 std::vector<std::string>
-getSmiles(const std::vector<size_t> &smilesIndexes, qtr::SmilesRandomAccessTable &smilesTable, uint64_t ansCount) {
+getSmiles(const std::vector<size_t> &smilesIndexes, SmilesTable &smilesTable, uint64_t ansCount) {
     std::vector<std::string> result;
     for (size_t i = 0; i < smilesIndexes.size() && i < ansCount; i++) {
         result.emplace_back(smilesTable[smilesIndexes[i]]);
@@ -151,48 +152,45 @@ void printSmiles(const std::vector<std::string> &smiles) {
     }
 }
 
-std::vector<std::string> filterSmiles(const std::vector<std::string> &candidateSmiles, const std::string &query) {
-    auto indigoSessionPtr = indigo_cpp::IndigoSession::create();
-    auto queryMol = indigoSessionPtr->loadQueryMolecule(query);
-    queryMol.aromatize();
-    std::vector<std::string> result;
-    for (auto &smiles: candidateSmiles) {
-        try {
-            auto candidateMol = indigoSessionPtr->loadMolecule(smiles);
-            candidateMol.aromatize();
-            auto matcher = indigoSessionPtr->substructureMatcher(candidateMol);
-            if (indigoMatch(matcher.id(), queryMol.id()))
-                result.emplace_back(smiles);
-        }
-        catch (std::exception &e) {
-            LOG(ERROR) << "Error while filtering answer. "
-                          "Query: " << query << ", candidate: " << smiles << ", error: " << e.what();
-        }
-    }
-    return result;
-}
-
-bool doSearch(const std::string &smiles, const qtr::BallTreeSearchEngine &ballTree,
-              qtr::SmilesRandomAccessTable &smilesTable, const Args &args) {
+template<typename SmilesTable>
+bool doSearch(const std::string &querySmiles, const qtr::BallTreeSearchEngine &ballTree,
+              SmilesTable &smilesTable, const Args &args) {
     qtr::IndigoFingerprint fingerprint;
     try {
-        fingerprint = qtr::IndigoFingerprintFromSmiles(smiles);
+        fingerprint = qtr::IndigoFingerprintFromSmiles(querySmiles);
     }
     catch (std::exception &exception) {
         std::cout << "skip query:" << exception.what() << std::endl;
         return false;
     }
-    auto candidateIndexes = ballTree.search(fingerprint, args.ansCount, args.startSearchDepth);
-    auto candidateSmiles = getSmiles(candidateIndexes, smilesTable, args.ansCount);
-    LOG(INFO) << "found answers before filtering: " << candidateSmiles.size();
-    auto answerSmiles = filterSmiles(candidateSmiles, smiles);
+    auto indigoSessionPtr = indigo_cpp::IndigoSession::create();
+    auto queryMol = indigoSessionPtr->loadQueryMolecule(querySmiles);
+    queryMol.aromatize();
+    auto filter = [&smilesTable, &queryMol, &indigoSessionPtr, &querySmiles](size_t ansId) {
+        auto ansSmiles = smilesTable[ansId];
+        try {
+            auto candidateMol = indigoSessionPtr->loadMolecule(ansSmiles);
+            candidateMol.aromatize();
+            auto matcher = indigoSessionPtr->substructureMatcher(candidateMol);
+            return bool(indigoMatch(matcher.id(), queryMol.id()));
+        }
+        catch (std::exception &e) {
+            LOG(ERROR) << "Error while filtering answer. "
+                          "Query: " << querySmiles << ", candidate: " << ansId << " " << ansSmiles << ", error: "
+                       << e.what();
+            return false;
+        }
+    };
+    auto candidateIndexes = ballTree.search(fingerprint, args.ansCount, args.startSearchDepth, filter);
+    auto answerSmiles = getSmiles(candidateIndexes, smilesTable, args.ansCount);
     LOG(INFO) << "found answers: " << answerSmiles.size();
     printSmiles(answerSmiles);
     return true;
 }
 
 
-void runInteractive(const qtr::BallTreeSearchEngine &ballTree, qtr::SmilesRandomAccessTable &smilesTable,
+template<typename SmilesTable>
+void runInteractive(const qtr::BallTreeSearchEngine &ballTree, SmilesTable &smilesTable,
                     qtr::TimeTicker &timeTicker, const Args &args) {
     while (true) {
         std::cout << "Enter smiles: ";
@@ -207,7 +205,8 @@ void runInteractive(const qtr::BallTreeSearchEngine &ballTree, qtr::SmilesRandom
     }
 }
 
-void runFromFile(const qtr::BallTreeSearchEngine &ballTree, qtr::SmilesRandomAccessTable &smilesTable,
+template<typename SmilesTable>
+void runFromFile(const qtr::BallTreeSearchEngine &ballTree, SmilesTable &smilesTable,
                  qtr::TimeTicker &timeTicker, const Args &args) {
     std::ifstream input(args.inputFile);
     std::vector<std::string> queries;
@@ -251,7 +250,9 @@ int main(int argc, char *argv[]) {
     qtr::TimeTicker timeTicker;
     qtr::BufferedReader ballTreeReader(args.ballTreePath);
     qtr::BallTreeSearchEngine ballTree(ballTreeReader, args.dbDataDirsPaths);
-    qtr::SmilesRandomAccessTable smilesTable(args.smilesRandomAccessTablePath);
+    qtr::SmilesRandomAccessTable smilesRandomAccessTable(args.smilesRandomAccessTablePath);
+    std::vector<std::string> smilesTable;
+    smilesRandomAccessTable.toVector(smilesTable);
     timeTicker.tick("DB initialization");
 
     if (args.mode == Args::Mode::Interactive)

@@ -44,4 +44,10 @@ namespace qtr {
         seeksOut << _seeks;
         _smilesFile = std::ifstream(SmilesRandomAccessTable::getSmilesStoragePath(tableDir));
     }
+
+    void SmilesRandomAccessTable::toVector(std::vector<std::string> &vector) {
+        for (size_t i = 0; i < _seeks.size(); i++) {
+            vector.emplace_back(operator[](i));
+        }
+    }
 }

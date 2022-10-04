@@ -24,6 +24,8 @@ namespace qtr {
 
         std::string operator[](size_t i);
 
+        void toVector(std::vector<std::string>& vector);
+
     private:
         std::vector<uint64_t> _seeks;
         std::ifstream _smilesFile;

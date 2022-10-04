@@ -3,12 +3,19 @@
 #include <vector>
 #include <filesystem>
 #include <future>
+#include <functional>
 
 #include "BallTree.h"
 #include "Fingerprint.h"
 
 
 namespace qtr {
+
+    namespace {
+        auto noFiltering = [](size_t) {
+            return true;
+        };
+    }
 
     class BallTreeSearchEngine : public BallTree {
     public:
@@ -20,7 +27,7 @@ namespace qtr {
 
         void
         searchInSubtree(size_t nodeId, const IndigoFingerprint &query, size_t ansCount, std::vector<size_t> &result,
-                        std::mutex &resultLock, bool &isTerminate) const;
+                        std::mutex &resultLock, bool &isTerminate, const std::function<bool(size_t)>& filter) const;
 
         const std::filesystem::path &getLeafFile(size_t nodeId) const;
 
@@ -28,7 +35,8 @@ namespace qtr {
         void loadNodes(BinaryReader &reader);
 
     public:
-        std::vector<size_t> search(const IndigoFingerprint &query, size_t ansCount, size_t startDepth) const;
+        std::vector<size_t> search(const IndigoFingerprint &query, size_t ansCount, size_t startDepth,
+                                   const std::function<bool(size_t)> &filter = noFiltering) const;
 
     protected:
         std::vector<std::filesystem::path> _leafDataPaths;
