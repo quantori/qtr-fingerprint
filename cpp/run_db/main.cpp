@@ -8,7 +8,8 @@
 
 #include "Utils.h"
 #include "io/BufferedReader.h"
-#include "BallTreeSearchEngine.h"
+#include "BallTreeRAMSearchEngine.h"
+#include "BallTreeDriveSearchEngine.h"
 #include "fingerprint_table_io/FingerprintTableReader.h"
 #include "IndigoSubstructureMatcher.h"
 #include "IndigoQueryMolecule.h"
@@ -163,11 +164,12 @@ bool doSearch(const std::string &querySmiles, const qtr::BallTreeSearchEngine &b
         std::cout << "skip query:" << exception.what() << std::endl;
         return false;
     }
-    auto indigoSessionPtr = indigo_cpp::IndigoSession::create();
-    auto queryMol = indigoSessionPtr->loadQueryMolecule(querySmiles);
-    queryMol.aromatize();
-    auto filter = [&smilesTable, &queryMol, &indigoSessionPtr, &querySmiles](size_t ansId) {
+
+    auto filter = [&smilesTable, &querySmiles](size_t ansId) {
         auto ansSmiles = smilesTable[ansId];
+        auto indigoSessionPtr = indigo_cpp::IndigoSession::create();
+        auto queryMol = indigoSessionPtr->loadQueryMolecule(querySmiles);
+        queryMol.aromatize();
         try {
             auto candidateMol = indigoSessionPtr->loadMolecule(ansSmiles);
             candidateMol.aromatize();
@@ -269,7 +271,7 @@ int main(int argc, char *argv[]) {
     auto loadSmilesTableTask = std::async(std::launch::async, loadSmilesTable, std::ref(smilesTable),
                                           std::cref(args.smilesTablePath));
     LOG(INFO) << "Start ball tree loading";
-    qtr::BallTreeSearchEngine ballTree(ballTreeReader, args.dbDataDirsPaths);
+    qtr::BallTreeRAMSearchEngine ballTree(ballTreeReader, args.dbDataDirsPaths);
     LOG(INFO) << "Finish ball tree loading";
     loadSmilesTableTask.get();
     timeTicker.tick("DB initialization");

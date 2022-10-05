@@ -4,10 +4,10 @@
 
 #include "Fingerprint.h"
 #include "BallTreeBuilder.h"
-#include "BallTreeSearchEngine.h"
+#include "BallTreeDriveSearchEngine.h"
+#include "BallTreeRAMSearchEngine.h"
 #include "split_bit_selection/MaxDispersionBitSelector.h"
 #include "io/BufferedWriter.h"
-#include "io/BufferedReader.h"
 #include "fingerprint_table_io/FingerprintTableWriter.h"
 #include "fingerprint_table_io/FingerprintTableReader.h"
 
@@ -220,16 +220,17 @@ public:
         EXPECT_EQ(dataUsed.size(), dataMap.size());
     }
 
+    template<class BallTreeType>
     void runTest(const DataTable &data, const QueryTable &queries) {
         if (!_propertiesInitialized) {
             GTEST_FAIL() << "Properties wasn't initialized";
         }
         buildBallTreeAndCheck(data);
         qtr::BufferedReader treeReader(getTreePath());
-        qtr::BallTreeSearchEngine ballTree(treeReader, getTreeDirs());
+        BallTreeType ballTree(treeReader, getTreeDirs());
         for (const auto &query: queries) {
             auto expectedAnswer = getAnswers(data, query);
-            auto actualAnswer = ballTree.search(query, -1, _startSearchDepth, std::function<bool(uint64_t)>());
+            auto actualAnswer = ballTree.search(query, -1, _startSearchDepth);
             EXPECT_TRUE(std::is_permutation(expectedAnswer.begin(), expectedAnswer.end(),
                                             actualAnswer.begin(), actualAnswer.end()));
         }
@@ -241,22 +242,42 @@ TEST_F(HighLevelBallTreeTests, buildBallTree) {
     buildBallTreeAndCheck(getAllData());
 }
 
-TEST_F(HighLevelBallTreeTests, buildANdRunBallTree5BitsMasks) {
+TEST_F(HighLevelBallTreeTests, buildAndRunBallTreeRAM5BitsMasks) {
     initProperties(6, 3, 4, 3);
-    runTest(getAllData(), getAll5BitsMasksQueries());
+    runTest<qtr::BallTreeRAMSearchEngine>(getAllData(), getAll5BitsMasksQueries());
 }
 
-TEST_F(HighLevelBallTreeTests, buildANdRunBallTreeRowOfSubMasks) {
+TEST_F(HighLevelBallTreeTests, buildAndRunBallTreeRAMRowOfSubMasks) {
     initProperties(6, 3, 4, 3);
-    runTest(getAllData(), getRowOfSubMasksQueries());
+    runTest<qtr::BallTreeRAMSearchEngine>(getAllData(), getRowOfSubMasksQueries());
 }
 
-TEST_F(HighLevelBallTreeTests, buildANdRunBallTreeNoSubMasks) {
+TEST_F(HighLevelBallTreeTests, buildAndRunBallTreeRAMNoSubMasks) {
     initProperties(6, 3, 4, 3);
-    runTest(getAllData(), getNoSubMasksQueries());
+    runTest<qtr::BallTreeRAMSearchEngine>(getAllData(), getNoSubMasksQueries());
 }
 
-TEST_F(HighLevelBallTreeTests, buildANdRunBallTreeAllZerosAndAllOnesQueries) {
+TEST_F(HighLevelBallTreeTests, buildAndRunBallTreeRAMAllZerosAndAllOnesQueries) {
     initProperties(6, 3, 4, 3);
-    runTest(getAllData(), getHalfZerosAndHalfOnesQueries());
+    runTest<qtr::BallTreeRAMSearchEngine>(getAllData(), getHalfZerosAndHalfOnesQueries());
+}
+
+TEST_F(HighLevelBallTreeTests, buildAndRunBallTreeDrive5BitsMasks) {
+    initProperties(6, 3, 4, 3);
+    runTest<qtr::BallTreeDriveSearchEngine>(getAllData(), getAll5BitsMasksQueries());
+}
+
+TEST_F(HighLevelBallTreeTests, buildAndRunBallTreeDriveRowOfSubMasks) {
+    initProperties(6, 3, 4, 3);
+    runTest<qtr::BallTreeDriveSearchEngine>(getAllData(), getRowOfSubMasksQueries());
+}
+
+TEST_F(HighLevelBallTreeTests, buildAndRunBallTreeDriveNoSubMasks) {
+    initProperties(6, 3, 4, 3);
+    runTest<qtr::BallTreeDriveSearchEngine>(getAllData(), getNoSubMasksQueries());
+}
+
+TEST_F(HighLevelBallTreeTests, buildAndRunBallTreeDriveAllZerosAndAllOnesQueries) {
+    initProperties(6, 3, 4, 3);
+    runTest<qtr::BallTreeDriveSearchEngine>(getAllData(), getHalfZerosAndHalfOnesQueries());
 }

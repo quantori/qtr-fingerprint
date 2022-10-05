@@ -25,14 +25,34 @@ namespace qtr {
     protected:
         void initLeafDataPaths();
 
+        struct QueryData {
+            const IndigoFingerprint &query;
+            std::vector<size_t> &result;
+            std::mutex &resultLock;
+            size_t ansCount;
+            bool isTerminate;
+            const std::function<bool(size_t)> &filter;
+
+            void updateIsTerminate();
+
+            void addAnswer(size_t value);
+        };
+
         void
-        searchInSubtree(size_t nodeId, const IndigoFingerprint &query, size_t ansCount, std::vector<size_t> &result,
-                        std::mutex &resultLock, bool &isTerminate, const std::function<bool(size_t)>& filter) const;
+        searchInSubtree(size_t nodeId, QueryData &queryData) const;
 
         const std::filesystem::path &getLeafFile(size_t nodeId) const;
 
+        std::filesystem::path &getLeafFile(size_t nodeId);
+
         template<typename BinaryReader>
         void loadNodes(BinaryReader &reader);
+
+        std::vector<size_t> getLeafIds() const;
+
+        static void putAnswer(size_t ansValue, QueryData& queryData);
+
+        virtual void searchInLeaf(size_t leafId, QueryData &queryData) const = 0;
 
     public:
         std::vector<size_t> search(const IndigoFingerprint &query, size_t ansCount, size_t startDepth,
