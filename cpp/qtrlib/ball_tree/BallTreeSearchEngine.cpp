@@ -39,6 +39,7 @@ namespace qtr {
             for (auto &filePath: findFiles(dataDir, "")) {
                 size_t nodeId = atoll(filePath.filename().c_str());
                 size_t index = nodeId - (1ull << _depth) + 1;
+                assert(index < expectedFilesNumber);
                 assert(!isInit[index]);
                 isInit[index] = true;
                 _leafDataPaths[index] = filePath / ("data" + qtr::fingerprintTableExtension);

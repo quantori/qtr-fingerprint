@@ -10,9 +10,9 @@
 #include "io/BufferedReader.h"
 #include "BallTreeSearchEngine.h"
 #include "fingerprint_table_io/FingerprintTableReader.h"
-#include "smiles_table_io/SmilesRandomAccessTable.h"
 #include "IndigoSubstructureMatcher.h"
 #include "IndigoQueryMolecule.h"
+#include "smiles_table_io/SmilesTableReader.h"
 
 ABSL_FLAG(std::vector<std::string>, data_dir_paths, {},
           "Path to directories where data are stored");
@@ -166,6 +166,7 @@ bool doSearch(const std::string &querySmiles, const qtr::BallTreeSearchEngine &b
     auto indigoSessionPtr = indigo_cpp::IndigoSession::create();
     auto queryMol = indigoSessionPtr->loadQueryMolecule(querySmiles);
     queryMol.aromatize();
+    std::atomic_int64_t answersBeforeFiltering = 0;
     auto filter = [&smilesTable, &queryMol, &indigoSessionPtr, &querySmiles](size_t ansId) {
         auto ansSmiles = smilesTable[ansId];
         try {
@@ -183,6 +184,7 @@ bool doSearch(const std::string &querySmiles, const qtr::BallTreeSearchEngine &b
     };
     auto candidateIndexes = ballTree.search(fingerprint, args.ansCount, args.startSearchDepth, filter);
     auto answerSmiles = getSmiles(candidateIndexes, smilesTable, args.ansCount);
+    LOG(INFO) << "found before filtering: " << answersBeforeFiltering;
     LOG(INFO) << "found answers: " << answerSmiles.size();
     printSmiles(answerSmiles);
     return true;
@@ -246,8 +248,15 @@ void runFromFile(const qtr::BallTreeSearchEngine &ballTree, SmilesTable &smilesT
     LOG(INFO) << "   min: " << min;
     LOG(INFO) << "median: " << median;
     LOG(INFO) << "60%: " << p60 << " | 70%: " << p70 << " | 80%: " << p80 << " | 90%: " << p90 << " | 95%: " << p95;
-
 }
+
+void loadSmilesTable(std::vector<std::string> &smilesTable, const std::filesystem::path &smilesTablePath) {
+    for (const auto &[id, smiles]: qtr::SmilesTableReader(smilesTablePath)) {
+        assert(id == smilesTable.size());
+        smilesTable.emplace_back(smiles);
+    }
+}
+
 
 int main(int argc, char *argv[]) {
     initLogging(argc, argv);
@@ -255,12 +264,13 @@ int main(int argc, char *argv[]) {
 
     qtr::TimeTicker timeTicker;
     qtr::BufferedReader ballTreeReader(args.ballTreePath);
-    qtr::BallTreeSearchEngine ballTree(ballTreeReader, args.dbDataDirsPaths);
-    qtr::SmilesRandomAccessTable smilesRandomAccessTable(args.smilesRandomAccessTablePath);
-    std::vector<std::string> smilesTable;
-    smilesRandomAccessTable.toVector(smilesTable);
-    timeTicker.tick("DB initialization");
 
+    std::vector<std::string> smilesTable;
+    auto loadSmilesTableTask = std::async(std::launch::async, loadSmilesTable, std::ref(smilesTable),
+                                          std::cref(args.smilesTablePath));
+    qtr::BallTreeSearchEngine ballTree(ballTreeReader, args.dbDataDirsPaths);
+    loadSmilesTableTask.get();
+    timeTicker.tick("DB initialization");
     if (args.mode == Args::Mode::Interactive)
         runInteractive(ballTree, smilesTable, timeTicker, args);
     else if (args.mode == Args::Mode::FromFile)
