@@ -30,13 +30,14 @@ namespace qtr {
                 }
             }
             assert(leftSize == 0 && rightSize == 0);
+            LOG(INFO) << "Delete " << file;
             std::filesystem::remove(file);
         }
 
         void prepareManyDirsForNode(const std::vector<std::filesystem::path> &dataDirectories, size_t nodeId) {
             for (auto &dirPath: dataDirectories) {
+                LOG(INFO) << "Create directory " << dirPath / std::to_string(nodeId);
                 std::filesystem::create_directory(dirPath / std::to_string(nodeId));
-                LOG(INFO) << "create directory " << dirPath / std::to_string(nodeId);
             }
         }
 
@@ -112,6 +113,7 @@ namespace qtr {
                 std::copy(reader.begin(), reader.end(), writer.begin());
             }
             for (auto &source: sources) {
+                LOG(INFO) << "Delete " << source;
                 std::filesystem::remove(source);
             }
         }
@@ -142,11 +144,12 @@ namespace qtr {
             std::vector<std::filesystem::path> nodeFiles = getNodeFiles(nodes[i]);
             mergeFiles(nodeFiles, destinationPath);
             LOG(INFO) << "Finish transferring node " << nodes[i] << " to " << destinationPath;
-            for (auto &nodeFile: nodeFiles) {
-                if (nodeFile.parent_path() != destinationPath.parent_path() &&
-                    std::filesystem::exists(nodeFile.parent_path())) {
-                    LOG(INFO) << "Delete " << nodeFile.parent_path();
-                    std::filesystem::remove_all(nodeFile.parent_path());
+            for (auto &dir: _dataDirectories) {
+                auto nodeDir = dir / std::to_string(nodes[i]);
+                if (nodeDir != destinationPath.parent_path() &&
+                    std::filesystem::exists(nodeDir)) {
+                    LOG(INFO) << "Delete " << nodeDir;
+                    std::filesystem::remove_all(nodeDir);
                 }
             }
         }
@@ -196,12 +199,7 @@ namespace qtr {
             task.get();
         }
         LOG(INFO) << "Finish parallel splitting of node " << nodeId;
-        for (auto &nodeFile: nodeFiles) {
-            if (std::filesystem::exists(nodeFile.parent_path())) {
-                LOG(INFO) << "Delete " << nodeFile.parent_path();
-                std::filesystem::remove_all(nodeFile.parent_path());
-            }
-        }
+        deleteNodeFromFilesystem(nodeId);
     }
 
     void BallTreeBuilder::splitNodeOneFile(size_t nodeId, const BitSelector &bitSelector,
@@ -215,6 +213,7 @@ namespace qtr {
         std::filesystem::create_directory(leftFile.parent_path());
         std::filesystem::create_directory(rightFile.parent_path());
         splitFileByBit(nodeFile, splitBit, leftFile, rightFile, leftSize, rightSize);
+        LOG(INFO) << "Delete " << nodeFile.parent_path();
         std::filesystem::remove_all(nodeFile.parent_path());
     }
 
@@ -267,6 +266,16 @@ namespace qtr {
             calculateCentroid(rightChild(nodeId));
             _nodes[nodeId].centroid = _nodes[leftChild(nodeId)].centroid;
             _nodes[nodeId].centroid |= _nodes[rightChild(nodeId)].centroid;
+        }
+    }
+
+    void BallTreeBuilder::deleteNodeFromFilesystem(size_t nodeId) const {
+        for (auto &dir: _dataDirectories) {
+            auto nodeDir = dir / std::to_string(nodeId);
+            if (std::filesystem::exists(nodeDir)) {
+                LOG(INFO) << "Delete " << nodeDir;
+                std::filesystem::remove_all(nodeDir);
+            }
         }
     }
 

@@ -29,6 +29,8 @@ namespace qtr {
 
         void calculateCentroid(size_t nodeId);
 
+        void deleteNodeFromFilesystem(size_t nodeId) const;
+
     public:
         BallTreeBuilder(size_t depth, size_t parallelizationDepth, std::vector<std::filesystem::path> dataDirectories,
                         const BitSelector &bitSelector);

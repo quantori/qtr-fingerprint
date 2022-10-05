@@ -166,7 +166,6 @@ bool doSearch(const std::string &querySmiles, const qtr::BallTreeSearchEngine &b
     auto indigoSessionPtr = indigo_cpp::IndigoSession::create();
     auto queryMol = indigoSessionPtr->loadQueryMolecule(querySmiles);
     queryMol.aromatize();
-    std::atomic_int64_t answersBeforeFiltering = 0;
     auto filter = [&smilesTable, &queryMol, &indigoSessionPtr, &querySmiles](size_t ansId) {
         auto ansSmiles = smilesTable[ansId];
         try {
@@ -184,7 +183,6 @@ bool doSearch(const std::string &querySmiles, const qtr::BallTreeSearchEngine &b
     };
     auto candidateIndexes = ballTree.search(fingerprint, args.ansCount, args.startSearchDepth, filter);
     auto answerSmiles = getSmiles(candidateIndexes, smilesTable, args.ansCount);
-    LOG(INFO) << "found before filtering: " << answersBeforeFiltering;
     LOG(INFO) << "found answers: " << answerSmiles.size();
     printSmiles(answerSmiles);
     return true;
@@ -251,10 +249,12 @@ void runFromFile(const qtr::BallTreeSearchEngine &ballTree, SmilesTable &smilesT
 }
 
 void loadSmilesTable(std::vector<std::string> &smilesTable, const std::filesystem::path &smilesTablePath) {
+    LOG(INFO) << "Start smiles table loading";
     for (const auto &[id, smiles]: qtr::SmilesTableReader(smilesTablePath)) {
         assert(id == smilesTable.size());
         smilesTable.emplace_back(smiles);
     }
+    LOG(INFO) << "Finish smiles table loading";
 }
 
 
@@ -268,7 +268,9 @@ int main(int argc, char *argv[]) {
     std::vector<std::string> smilesTable;
     auto loadSmilesTableTask = std::async(std::launch::async, loadSmilesTable, std::ref(smilesTable),
                                           std::cref(args.smilesTablePath));
+    LOG(INFO) << "Start ball tree loading";
     qtr::BallTreeSearchEngine ballTree(ballTreeReader, args.dbDataDirsPaths);
+    LOG(INFO) << "Finish ball tree loading";
     loadSmilesTableTask.get();
     timeTicker.tick("DB initialization");
     if (args.mode == Args::Mode::Interactive)
