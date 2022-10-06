@@ -33,9 +33,16 @@ namespace qtr {
     BallTreeRAMSearchEngine::BallTreeRAMSearchEngine(BinaryReader &nodesReader,
                                                      std::vector<std::filesystem::path> dataDirectories)
             :BallTreeSearchEngine(nodesReader, dataDirectories), _buckets(1ull << _depth) {
-        for (const auto &[_, leafs]: groupedByDriveLeafFiles()) {
-            loadLeafFiles(leafs);
+        std::vector<std::future<void>> tasks;
+        auto grupedLeafFiles = groupedByDriveLeafFiles();
+        for (const auto &[_, leafs]: grupedLeafFiles) {
+            tasks.emplace_back(
+                    std::async(std::launch::async, &BallTreeRAMSearchEngine::loadLeafFiles, this, std::cref(leafs))
+            );
+        }
+        for (auto &task: tasks) {
+            task.get();
         }
     }
-} // qtr
 
+} // qtr

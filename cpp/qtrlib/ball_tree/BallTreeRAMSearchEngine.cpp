@@ -16,16 +16,18 @@ namespace qtr {
 
     void
     BallTreeRAMSearchEngine::loadLeafFiles(const std::vector<std::pair<size_t, std::filesystem::path>> &leafsList) {
+        LOG(INFO) << "Start loading leaf content from drive " << leafsList.front().second.parent_path().parent_path();
         for (auto &[leafId, leafFilePath]: leafsList) {
             FingerprintTableReader reader(leafFilePath);
             std::copy(reader.begin(), reader.end(), std::back_inserter(getLeafBucket(leafId)));
         }
+        LOG(INFO) << "Finish loading leaf content from drive " << leafsList.front().second.parent_path().parent_path();
     }
 
     const std::vector<fingerprint_table_value_t> &BallTreeRAMSearchEngine::getLeafBucket(size_t leafId) const {
         assert((1ull << _depth) - 1 <= leafId);
         leafId -= (1ull << _depth) - 1;
-        assert(leafId <= _buckets.size());
+        assert(leafId < _buckets.size());
         return _buckets[leafId];
     }
 
