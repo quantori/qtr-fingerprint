@@ -28,4 +28,4 @@ target_include_directories(${This}
         )
 
 target_link_libraries(${This} glog::glog)
-target_link_libraries(fingerprints indigo indigo-cpp)
+target_link_libraries(parse_sdf indigo indigo-cpp)

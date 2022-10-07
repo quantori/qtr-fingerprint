@@ -19,7 +19,7 @@ SET(ABSL_PROPAGATE_CXX_STD ON)
 
 add_subdirectory(app)
 add_subdirectory(run_db)
-add_subdirectory(fingerprints)
+add_subdirectory(parse_sdf)
 add_subdirectory(splitter_tree)
 add_subdirectory(build_db)
 add_subdirectory(qtrlib)
