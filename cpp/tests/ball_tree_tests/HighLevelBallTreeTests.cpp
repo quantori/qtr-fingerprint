@@ -6,6 +6,7 @@
 #include "BallTreeBuilder.h"
 #include "BallTreeDriveSearchEngine.h"
 #include "BallTreeRAMSearchEngine.h"
+#include "BallTreeNoChecksSearchEngine.h"
 #include "split_bit_selection/MaxDispersionBitSelector.h"
 #include "io/BufferedWriter.h"
 #include "fingerprint_table_io/FingerprintTableWriter.h"
@@ -242,6 +243,30 @@ TEST_F(HighLevelBallTreeTests, buildBallTree) {
     buildBallTreeAndCheck(getAllData());
 }
 
+// No checks ball tree
+
+TEST_F(HighLevelBallTreeTests, buildAndRunBallTreeNoChecks5BitsMasks) {
+    initProperties(13, 3, 4, 3);
+    runTest<qtr::BallTreeNoChecksSearchEngine>(getAllData(), getAll5BitsMasksQueries());
+}
+
+TEST_F(HighLevelBallTreeTests, buildAndRunBallTreeNoChecksRowOfSubMasks) {
+    initProperties(13, 3, 4, 3);
+    runTest<qtr::BallTreeNoChecksSearchEngine>(getAllData(), getRowOfSubMasksQueries());
+}
+
+TEST_F(HighLevelBallTreeTests, buildAndRunBallTreeNoChecksNoSubMasks) {
+    initProperties(13, 3, 4, 3);
+    runTest<qtr::BallTreeNoChecksSearchEngine>(getAllData(), getNoSubMasksQueries());
+}
+
+TEST_F(HighLevelBallTreeTests, buildAndRunBallTreeNoChecksAllZerosAndAllOnesQueries) {
+    initProperties(13, 3, 4, 3);
+    runTest<qtr::BallTreeNoChecksSearchEngine>(getAllData(), getHalfZerosAndHalfOnesQueries());
+}
+
+// RAM ball tree
+
 TEST_F(HighLevelBallTreeTests, buildAndRunBallTreeRAM5BitsMasks) {
     initProperties(6, 3, 4, 3);
     runTest<qtr::BallTreeRAMSearchEngine>(getAllData(), getAll5BitsMasksQueries());
@@ -261,6 +286,8 @@ TEST_F(HighLevelBallTreeTests, buildAndRunBallTreeRAMAllZerosAndAllOnesQueries) 
     initProperties(6, 3, 4, 3);
     runTest<qtr::BallTreeRAMSearchEngine>(getAllData(), getHalfZerosAndHalfOnesQueries());
 }
+
+// Drive ball tree
 
 TEST_F(HighLevelBallTreeTests, buildAndRunBallTreeDrive5BitsMasks) {
     initProperties(6, 3, 4, 3);

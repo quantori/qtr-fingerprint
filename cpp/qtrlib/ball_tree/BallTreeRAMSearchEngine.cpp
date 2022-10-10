@@ -19,26 +19,13 @@ namespace qtr {
         LOG(INFO) << "Start loading leaf content from drive " << leafsList.front().second.parent_path().parent_path();
         for (auto &[leafId, leafFilePath]: leafsList) {
             FingerprintTableReader reader(leafFilePath);
-            std::copy(reader.begin(), reader.end(), std::back_inserter(getLeafBucket(leafId)));
+            std::copy(reader.begin(), reader.end(), std::back_inserter(_buckets[leafNumberById(leafId)]));
         }
         LOG(INFO) << "Finish loading leaf content from drive " << leafsList.front().second.parent_path().parent_path();
     }
 
-    const std::vector<fingerprint_table_value_t> &BallTreeRAMSearchEngine::getLeafBucket(size_t leafId) const {
-        assert((1ull << _depth) - 1 <= leafId);
-        leafId -= (1ull << _depth) - 1;
-        assert(leafId < _buckets.size());
-        return _buckets[leafId];
-    }
-
-    std::vector<fingerprint_table_value_t> &BallTreeRAMSearchEngine::getLeafBucket(size_t leafId) {
-        return const_cast<std::vector<fingerprint_table_value_t> &>(
-                const_cast<const BallTreeRAMSearchEngine *>(this)->getLeafBucket(leafId)
-        );
-    }
-
     void BallTreeRAMSearchEngine::searchInLeaf(size_t leafId, BallTreeSearchEngine::QueryData &queryData) const {
-        for (const auto &[id, fingerprint]: getLeafBucket(leafId)) {
+        for (const auto &[id, fingerprint]: _buckets[leafNumberById((leafId))]) {
             if (queryData.query <= fingerprint)
                 putAnswer(id, queryData);
         }

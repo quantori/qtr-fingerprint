@@ -38,8 +38,7 @@ namespace qtr {
             void addAnswer(size_t value);
         };
 
-        void
-        searchInSubtree(size_t nodeId, QueryData &queryData) const;
+        void searchInSubtree(size_t nodeId, QueryData &queryData) const;
 
         const std::filesystem::path &getLeafFile(size_t nodeId) const;
 

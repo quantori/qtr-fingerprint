@@ -22,6 +22,8 @@ namespace qtr {
 
         bool isLeaf(size_t nodeId) const;
 
+        size_t leafNumberById(size_t leafId) const;
+
         static size_t root();
 
     protected:

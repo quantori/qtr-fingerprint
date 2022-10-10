@@ -21,10 +21,6 @@ namespace qtr {
 
         void loadLeafFiles(const std::vector<std::pair<size_t, std::filesystem::path>> &leafsList);
 
-        std::vector<fingerprint_table_value_t> &getLeafBucket(size_t leafId);
-
-        const std::vector<fingerprint_table_value_t> &getLeafBucket(size_t leafId) const;
-
     protected:
         std::vector<std::vector<fingerprint_table_value_t>> _buckets;
     };
@@ -34,8 +30,8 @@ namespace qtr {
                                                      std::vector<std::filesystem::path> dataDirectories)
             :BallTreeSearchEngine(nodesReader, dataDirectories), _buckets(1ull << _depth) {
         std::vector<std::future<void>> tasks;
-        auto grupedLeafFiles = groupedByDriveLeafFiles();
-        for (const auto &[_, leafs]: grupedLeafFiles) {
+        auto groupedLeafFiles = groupedByDriveLeafFiles();
+        for (const auto &[_, leafs]: groupedLeafFiles) {
             tasks.emplace_back(
                     std::async(std::launch::async, &BallTreeRAMSearchEngine::loadLeafFiles, this, std::cref(leafs))
             );
