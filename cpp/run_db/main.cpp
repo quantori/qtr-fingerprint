@@ -10,6 +10,7 @@
 #include "io/BufferedReader.h"
 #include "BallTreeRAMSearchEngine.h"
 #include "BallTreeDriveSearchEngine.h"
+#include "BallTreeNoChecksSearchEngine.h"
 #include "fingerprint_table_io/FingerprintTableReader.h"
 #include "IndigoSubstructureMatcher.h"
 #include "IndigoQueryMolecule.h"
@@ -271,7 +272,7 @@ int main(int argc, char *argv[]) {
     auto loadSmilesTableTask = std::async(std::launch::async, loadSmilesTable, std::ref(smilesTable),
                                           std::cref(args.smilesTablePath));
     LOG(INFO) << "Start ball tree loading";
-    qtr::BallTreeRAMSearchEngine ballTree(ballTreeReader, args.dbDataDirsPaths);
+    qtr::BallTreeNoChecksSearchEngine ballTree(ballTreeReader, args.dbDataDirsPaths);
     LOG(INFO) << "Finish ball tree loading";
     loadSmilesTableTask.get();
     timeTicker.tick("DB initialization");
