@@ -38,7 +38,7 @@ namespace {
 
 void initLogging(int argc, char *argv[]) {
     google::InitGoogleLogging(argv[0]);
-    google::SetLogDestination(google::INFO, "info.log");
+    google::SetLogDestination(google::INFO, "build_db.log");
     FLAGS_alsologtostderr = true;
 }
 
