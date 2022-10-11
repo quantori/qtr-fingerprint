@@ -109,6 +109,6 @@ if __name__ == "__main__":
     with open(processed_file, 'r') as f:
         processed_before = set(f.read().split())
     sdfs = get_urls(url, ".sdf.gz")
-    file_names = pd.Series(list(sorted(sdfs)))[:2]
+    file_names = pd.Series(list(sorted(sdfs)))
 
     ThreadPoolExecutor().map(process, file_names)
