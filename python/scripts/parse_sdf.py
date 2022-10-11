@@ -57,7 +57,7 @@ def remove_unprocessed():
         if check_processed(file, processed):
             continue
         if (sdf_dir_path / file).is_dir():
-            os.rmdir(sdf_dir_path / file)
+            shutil.rmtree(sdf_dir_path / file)
         else:
             os.remove(sdf_dir_path / file)
         print('remove:', sdf_dir_path / file, file=sys.stderr)
