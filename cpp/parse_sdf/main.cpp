@@ -30,7 +30,7 @@ ABSL_FLAG(std::string, source_dir_path, "",
 ABSL_FLAG(std::string, dest_dir_path, "",
           "Path to directory where parsed data should be stored");
 
-ABSL_FLAG(std::string, dest_type, "",
+ABSL_FLAG(std::string, parse_mode, "",
           R"(How parsed data should be stored: "rb", "tables")");
 
 enum DestType {
@@ -41,7 +41,7 @@ enum DestType {
 struct Args {
     std::filesystem::path sourceDirPath;
     std::filesystem::path destDirPath;
-    DestType destType;
+    DestType parseMode;
 
     Args(int argc, char *argv[]) {
         absl::ParseCommandLine(argc, argv);
@@ -52,11 +52,11 @@ struct Args {
         destDirPath = absl::GetFlag(FLAGS_dest_dir_path);
         qtr::emptyArgument(destDirPath, "Please specify dest_dir_path option");
 
-        std::string parseModeStr = absl::GetFlag(FLAGS_dest_type);
+        std::string parseModeStr = absl::GetFlag(FLAGS_parse_mode);
         if (parseModeStr == "rb") {
-            destType = RB;
+            parseMode = RB;
         } else if (parseModeStr == "tables") {
-            destType = TABLES;
+            parseMode = TABLES;
         } else {
             LOG(ERROR) << R"(Please specify parseModeStr option with value "rb" or "tables")";
             exit(-1);
@@ -97,9 +97,13 @@ void sdfToRb(const std::filesystem::path &sdFilePath, const Args &args) {
 }
 
 void sdfToTables(const std::filesystem::path &sdFilePath, const Args &args) {
-    std::filesystem::path smilesTablePath = args.destDirPath / (sdFilePath.stem().string() + qtr::smilesTableExtension);
+    std::filesystem::path smilesTablePath =
+            args.destDirPath / "smilesTables" / (sdFilePath.stem().string() + qtr::smilesTableExtension);
     std::filesystem::path fingerprintTablePath =
-            args.destDirPath / (sdFilePath.stem().stem().string() + qtr::fingerprintTableExtension);
+            args.destDirPath / "fingerprintTables" / (sdFilePath.stem().string() + qtr::fingerprintTableExtension);
+
+    std::filesystem::create_directory(smilesTablePath.parent_path());
+    std::filesystem::create_directory(fingerprintTablePath.parent_path());
 
     qtr::SmilesTableWriter smilesTableWriter(smilesTablePath);
     qtr::FingerprintTableWriter fingerprintTableWriter(fingerprintTablePath);
@@ -116,9 +120,9 @@ void sdfToTables(const std::filesystem::path &sdFilePath, const Args &args) {
 }
 
 void parseSDF(const std::filesystem::path &sdFilePath, const Args &args) {
-    if (args.destType == RB) {
+    if (args.parseMode == RB) {
         sdfToRb(sdFilePath, args);
-    } else if (args.destType == TABLES) {
+    } else if (args.parseMode == TABLES) {
         sdfToTables(sdFilePath, args);
     }
 }

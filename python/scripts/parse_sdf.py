@@ -9,6 +9,8 @@ import pandas as pd
 from pathlib import Path
 from bs4 import BeautifulSoup
 
+sys.path.append(str(Path(__file__).absolute().parent.parent))
+
 from scripts import build_and_run
 
 url = "https://ftp.ncbi.nlm.nih.gov/pubchem/Compound/CURRENT-Full/SDF/"
