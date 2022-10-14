@@ -1,6 +1,7 @@
 #include <filesystem>
 #include <string>
 #include <random>
+#include <future>
 
 #include <glog/logging.h>
 #include <absl/flags/flag.h>
@@ -8,14 +9,18 @@
 
 #include "Utils.h"
 #include "smiles_table_io/SmilesTableWriter.h"
+#include "smiles_table_io/SmilesTableReader.h"
 #include "smiles_table_io/SmilesRandomAccessTable.h"
 #include "raw_bucket_io/RawBucketReader.h"
 #include "fingerprint_table_io/FingerprintTableWriter.h"
 #include "BallTreeBuilder.h"
 #include "ball_tree/split_bit_selection/MaxDispersionBitSelector.h"
 
-ABSL_FLAG(std::string, rb_dir_path, {},
-          "Path to directory where raw bucket files to build structure are stored");
+ABSL_FLAG(std::string, smiles_dir_path, "",
+          "Path to directory where smiles tables are stored");
+
+ABSL_FLAG(std::string, fingerprints_dir_path, "",
+          "Path to directory where fingerprint tables are stored");
 
 ABSL_FLAG(std::vector<std::string>, data_dir_paths, {},
           "Path to directories where data should be stored");
@@ -43,7 +48,8 @@ void initLogging(int argc, char *argv[]) {
 }
 
 struct Args {
-    std::filesystem::path rbDirPath;
+    std::filesystem::path smilesDirPath;
+    std::filesystem::path fingerprintsDirPath;
     std::vector<std::filesystem::path> dataDirPaths;
     std::filesystem::path otherDataPath;
     uint64_t subtreeParallelDepth;
@@ -55,15 +61,17 @@ struct Args {
 
     std::filesystem::path ballTreePath;
     std::filesystem::path smilesTablePath;
-    std::filesystem::path smilesRandomAccessTablePath;
-    std::filesystem::path fingerprintTablesPath;
 
     Args(int argc, char *argv[]) {
         absl::ParseCommandLine(argc, argv);
 
-        rbDirPath = absl::GetFlag(FLAGS_rb_dir_path);
-        qtr::emptyArgument(rbDirPath, "Please specify rb_dir_path option");
-        LOG(INFO) << "rbDirPath: " << rbDirPath;
+        smilesDirPath = absl::GetFlag(FLAGS_smiles_dir_path);
+        qtr::emptyArgument(smilesDirPath, "Please specify smiles_dir_path option");
+        LOG(INFO) << "smilesDirPath: " << smilesDirPath;
+
+        fingerprintsDirPath = absl::GetFlag(FLAGS_fingerprints_dir_path);
+        qtr::emptyArgument(fingerprintsDirPath, "Please specify fingerprints_dir_path option");
+        LOG(INFO) << "fingerprintsDirPath" << fingerprintsDirPath;
 
         std::vector<std::string> dataDirPathsStrings = absl::GetFlag(FLAGS_data_dir_paths);
         std::copy(dataDirPathsStrings.begin(), dataDirPathsStrings.end(), std::back_inserter(dataDirPaths));
@@ -100,19 +108,13 @@ struct Args {
         }
 
         dbOtherDataPath = otherDataPath / dbName;
-        LOG(INFO) << "dbOtherDataPath" << dbOtherDataPath;
+        LOG(INFO) << "dbOtherDataPath: " << dbOtherDataPath;
 
         ballTreePath = dbOtherDataPath / "tree";
         LOG(INFO) << "splitterTreePath: " << ballTreePath;
 
         smilesTablePath = dbOtherDataPath / "smilesTable";
         LOG(INFO) << "smilesTablePath: " << smilesTablePath;
-
-        smilesRandomAccessTablePath = dbOtherDataPath / "smilesRandomAccessTablePath";
-        LOG(INFO) << "smilesRandomAccessTablePath: " << smilesRandomAccessTablePath;
-
-        fingerprintTablesPath = dbOtherDataPath / "fingerprintTables";
-        LOG(INFO) << "fingerprintTablePaths" << fingerprintTablesPath;
     }
 };
 
@@ -140,33 +142,11 @@ void initFileSystem(const Args &args) {
         std::filesystem::create_directory(dbDirPath / "0");
     }
     std::filesystem::create_directory(args.dbOtherDataPath);
-    std::filesystem::create_directory(args.fingerprintTablesPath);
-    std::filesystem::create_directory(args.smilesRandomAccessTablePath);
-}
-
-size_t enumerateMolecules(const Args &args) {
-    std::vector<std::filesystem::path> rbFilePaths = qtr::findFiles(args.rbDirPath, ".rb");
-    qtr::SmilesTableWriter smilesTableWriter(args.smilesTablePath);
-    size_t number = 0;
-    for (auto &rbFilePath: rbFilePaths) {
-        qtr::RawBucketReader rawBucketReader(rbFilePath);
-        qtr::FingerprintTableWriter fingerprintTableWriter(
-                args.fingerprintTablesPath / (rbFilePath.stem().replace_extension(".ft")));
-        for (const auto &[smiles, fingerprint]: rawBucketReader) {
-            smilesTableWriter << std::make_pair(number, smiles);
-            fingerprintTableWriter << std::make_pair(number, fingerprint);
-            number++;
-        }
-    }
-    return number;
-}
-
-void createSmilesRandomAccessTable(const Args& args) {
-    qtr::SmilesRandomAccessTable smilesRandomAccessTable(args.smilesTablePath, args.smilesRandomAccessTablePath);
 }
 
 void distributeFingerprintTables(const Args &args) {
-    std::vector<std::filesystem::path> ftFilePaths = qtr::findFiles(args.fingerprintTablesPath, ".ft");
+    std::vector<std::filesystem::path> ftFilePaths = qtr::findFiles(args.fingerprintsDirPath,
+                                                                    qtr::fingerprintTableExtension);
     std::shuffle(ftFilePaths.begin(), ftFilePaths.end(), randomGenerator);
     size_t drivesCount = args.dbDataDirsPaths.size();
     for (size_t i = 0; i < ftFilePaths.size(); i++) {
@@ -178,6 +158,24 @@ void distributeFingerprintTables(const Args &args) {
     }
 }
 
+size_t mergeSmilesTables(const Args &args) {
+    std::vector<std::filesystem::path> stFilesPaths = qtr::findFiles(args.smilesDirPath, qtr::smilesTableExtension);
+    std::vector<qtr::smiles_table_value_t> smilesTable;
+
+    for (auto &stFile: stFilesPaths) {
+        qtr::SmilesTableReader reader(stFile);
+        std::copy(reader.begin(), reader.end(), std::back_inserter(smilesTable));
+    }
+
+    std::sort(smilesTable.begin(), smilesTable.end(),
+              [](const qtr::smiles_table_value_t &a, const qtr::smiles_table_value_t &b) {
+                  return a.first < b.first;
+              });
+    qtr::SmilesTableWriter writer(args.smilesTablePath);
+    std::copy(smilesTable.begin(), smilesTable.end(), writer.begin());
+    return smilesTable.size();
+}
+
 int main(int argc, char *argv[]) {
     initLogging(argc, argv);
     Args args(argc, argv);
@@ -185,13 +183,11 @@ int main(int argc, char *argv[]) {
     qtr::TimeTicker timeTicker;
 
     initFileSystem(args);
-
-    timeTicker.tick("Files initialization");
-    size_t moleculesNumber = enumerateMolecules(args);
-    timeTicker.tick("Molecules enumerating");
-    createSmilesRandomAccessTable(args);
-    timeTicker.tick("Smiles Random Access table creating");
-    distributeFingerprintTables(args);
+    timeTicker.tick("Filesystem initialization");
+    auto smilesTask = std::async(std::launch::async, mergeSmilesTables, std::cref(args));
+    auto fingerprintsTask = std::async(std::launch::async, distributeFingerprintTables, std::cref(args));
+    size_t moleculesNumber = smilesTask.get();
+    fingerprintsTask.get();
     timeTicker.tick("Files distribution");
     qtr::BallTreeBuilder ballTree(args.treeDepth, args.subtreeParallelDepth, args.dbDataDirsPaths,
                                   qtr::MaxDispersionBitSelector());

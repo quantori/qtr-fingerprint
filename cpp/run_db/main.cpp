@@ -64,7 +64,6 @@ struct Args {
     std::filesystem::path ballTreePath;
     std::filesystem::path smilesTablePath;
     std::filesystem::path smilesRandomAccessTablePath;
-    std::filesystem::path fingerprintTablesPath;
 
     Args(int argc, char *argv[]) {
         absl::ParseCommandLine(argc, argv);
@@ -128,9 +127,6 @@ struct Args {
 
         smilesRandomAccessTablePath = dbOtherDataPath / "smilesRandomAccessTablePath";
         LOG(INFO) << "smilesRandomAccessTablePath: " << smilesRandomAccessTablePath;
-
-        fingerprintTablesPath = dbOtherDataPath / "fingerprintTables";
-        LOG(INFO) << "fingerprintTablesPath " << fingerprintTablesPath;
     }
 };
 
