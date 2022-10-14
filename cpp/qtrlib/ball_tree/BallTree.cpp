@@ -32,7 +32,7 @@ namespace qtr {
     size_t BallTree::leafNumberById(size_t leafId) const {
         assert((1ull << _depth) - 1 <= leafId);
         leafId -= (1ull << _depth) - 1;
-        assert(leafId < _buckets.size());
+        assert(leafId < (1 << _depth));
         return leafId;
     }
 

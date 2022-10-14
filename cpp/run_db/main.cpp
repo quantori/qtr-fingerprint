@@ -260,7 +260,6 @@ void loadSmilesTable(std::vector<std::string> &smilesTable, const std::filesyste
     LOG(INFO) << "Finish smiles table loading";
 }
 
-
 int main(int argc, char *argv[]) {
     initLogging(argc, argv);
     Args args(argc, argv);

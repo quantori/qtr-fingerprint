@@ -37,7 +37,6 @@ int main(int argc, char *argv[]) {
     Args args(argc, argv);
 
     std::map<char, uint64_t> frequency;
-
     for (auto &smilesTableFile: qtr::findFiles(args.smilesDirPath, qtr::smilesTableExtension)) {
         LOG(INFO) << "Start processing " << smilesTableFile;
         for (const auto &[_, smiles]: qtr::SmilesTableReader(smilesTableFile)) {
@@ -50,7 +49,7 @@ int main(int argc, char *argv[]) {
 
     std::ofstream out(args.statFilePath);
     for (auto &[symbol, rate]: frequency) {
-        out << symbol << ' ' << rate << '\n';
+        out << (int)(uint8_t) symbol << ' ' << rate << "\n";
     }
 
     return 0;
