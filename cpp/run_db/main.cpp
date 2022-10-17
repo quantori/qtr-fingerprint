@@ -47,7 +47,8 @@ struct Args {
 
     enum class Mode {
         Interactive,
-        FromFile
+        FromFile,
+        PseudoRest
     };
 
     std::vector<std::filesystem::path> dataDirPaths;
@@ -63,7 +64,6 @@ struct Args {
 
     std::filesystem::path ballTreePath;
     std::filesystem::path smilesTablePath;
-    std::filesystem::path smilesRandomAccessTablePath;
 
     Args(int argc, char *argv[]) {
         absl::ParseCommandLine(argc, argv);
@@ -124,9 +124,6 @@ struct Args {
 
         smilesTablePath = dbOtherDataPath / "smilesTable";
         LOG(INFO) << "smilesTablePath: " << smilesTablePath;
-
-        smilesRandomAccessTablePath = dbOtherDataPath / "smilesRandomAccessTablePath";
-        LOG(INFO) << "smilesRandomAccessTablePath: " << smilesRandomAccessTablePath;
     }
 };
 
@@ -256,6 +253,12 @@ void loadSmilesTable(std::vector<std::string> &smilesTable, const std::filesyste
     LOG(INFO) << "Finish smiles table loading";
 }
 
+template<typename SmilesTable>
+void runPseudoRest(const qtr::BallTreeSearchEngine &ballTree, SmilesTable &smilesTable,
+                   qtr::TimeTicker &timeTicker, const Args &args) {
+
+}
+
 int main(int argc, char *argv[]) {
     initLogging(argc, argv);
     Args args(argc, argv);
@@ -275,6 +278,8 @@ int main(int argc, char *argv[]) {
         runInteractive(ballTree, smilesTable, timeTicker, args);
     else if (args.mode == Args::Mode::FromFile)
         runFromFile(ballTree, smilesTable, timeTicker, args);
+    else if (args.mode == Args::Mode::PseudoRest)
+        runPseudoRest(ballTree, smilesTable, timeTicker, args);
 
     return 0;
 }
