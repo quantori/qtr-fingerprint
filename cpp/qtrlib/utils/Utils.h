@@ -15,7 +15,7 @@ namespace qtr {
             _timePoints.emplace_back(std::chrono::high_resolution_clock::now());
         }
 
-        double tick(const std::string& message);
+        double tick(const std::string &message = "");
 
         double elapsedTime() const;
 
@@ -97,6 +97,15 @@ namespace qtr {
         return number & ((T(1) << bits_count) - 1);
     }
 
+    constexpr inline size_t log2Floor(size_t number) {
+        size_t answer = 0;
+        while (number > 1) {
+            answer++;
+            number >>= 1u;
+        }
+        return answer;
+    }
+
     /**
      * Finds all files with extension in dir, recursively
      * @param pathToDir
@@ -104,6 +113,8 @@ namespace qtr {
      * @return vector of filenames
      */
     std::vector<std::filesystem::path>
-    findFiles(const std::filesystem::path &pathToDir, const std::string &extension);
+    findFiles(const std::filesystem::path &pathToDir, std::string extension);
+
+
 
 } // namespace qtr

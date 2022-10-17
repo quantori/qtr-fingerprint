@@ -4,7 +4,8 @@
 #include "SplitterTreeUtils.h"
 #include "FingerprintTable.h"
 #include "utils/DataPathManager.h"
-#include "RawBucketsIO.h"
+#include "raw_bucket_io/RawBucketReader.h"
+#include "raw_bucket_io/RawBucketWriter.h"
 
 using namespace qtr;
 
@@ -68,7 +69,7 @@ protected:
 
     void dumpBucket(const std::filesystem::path &bucketPath, const std::vector<raw_bucket_value_t> &bucket) {
         RawBucketWriter writer(bucketPath);
-        writer.write(bucket);
+        writer << bucket;
     }
 
     void dumpAllBuckets() {
@@ -79,7 +80,9 @@ protected:
 
     std::vector<raw_bucket_value_t> loadBucket(const std::filesystem::path &bucketPath) {
         RawBucketReader reader(bucketPath);
-        return reader.readAll();
+        std::vector<raw_bucket_value_t> bucket;
+        reader >> bucket;
+        return bucket;
     }
 
     void
@@ -162,22 +165,6 @@ TEST_F(SplitterTreeTests, BuildNotParallelTest) {
     }
 }
 
-//TEST_F(SplitterTreeTests, BuildParallelTest) {
-//    dumpBucket(rawBucketPath(0), rawBuckets[0]);
-//    SplitterTree tree(rawBucketsDirPath);
-//    tree.build(3, 1, 1);
-//    EXPECT_EQ(tree.size(), 7);
-//    std::ofstream out(rawBucketsDirPath);
-//    tree.dump(out);
-//    for (size_t i = 3; i <= 6; i++) {
-//        auto actualBucket = loadBucket(rawBucketPath(i));
-//        auto &expectedBucket = rawBuckets[i];
-//        checkBucketsEqual(actualBucket, expectedBucket);
-//    }
-//}
-// todo test parallel version?
-
-
 TEST_F(SplitterTreeTests, DumpTest) {
     dumpBucket(rawBucketPath(0), rawBuckets[0]);
     SplitterTree tree({rawBucketsDirPath});
@@ -187,24 +174,27 @@ TEST_F(SplitterTreeTests, DumpTest) {
         std::ofstream out(filePath);
         tree.dump(out);
     }
-    std::ifstream in(filePath);
+    {
+        std::ifstream in(filePath);
 
-    auto getNum = [&in]() {
-        uint64_t num;
-        in.read((char *) &num, sizeof num);
-        return num;
-    };
+        auto getNum = [&in]() {
+            uint64_t num;
+            in.read((char *) &num, sizeof num);
+            return num;
+        };
 
-    uint64_t treeSize = getNum();
-    EXPECT_EQ(treeSize, 7);
-    for (size_t i = 0; i < 7; i++) {
-        uint64_t nodeId = getNum();
-        uint64_t splitBit = getNum();
-        uint64_t leftChild = getNum();
-        uint64_t rightChild = getNum();
-        EXPECT_LT(nodeId, 7);
-        EXPECT_EQ(splitBit, splitBits[nodeId]);
-        EXPECT_EQ(leftChild, children[nodeId].first);
-        EXPECT_EQ(rightChild, children[nodeId].second);
+        uint64_t treeSize = getNum();
+        EXPECT_EQ(treeSize, 7);
+        for (size_t i = 0; i < 7; i++) {
+            uint64_t nodeId = getNum();
+            uint64_t splitBit = getNum();
+            uint64_t leftChild = getNum();
+            uint64_t rightChild = getNum();
+            EXPECT_LT(nodeId, 7);
+            EXPECT_EQ(splitBit, splitBits[nodeId]);
+            EXPECT_EQ(leftChild, children[nodeId].first);
+            EXPECT_EQ(rightChild, children[nodeId].second);
+        }
     }
+    std::filesystem::remove(filePath);
 }

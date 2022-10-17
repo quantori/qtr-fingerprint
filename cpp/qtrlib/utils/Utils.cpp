@@ -11,11 +11,12 @@ namespace qtr {
         return letter >= '0' && letter <= '9' ? letter - '0' : letter - 'a' + 10;
     }
 
-    std::vector<std::filesystem::path> findFiles(const std::filesystem::path &pathToDir, const std::string &extension) {
+    std::vector<std::filesystem::path> findFiles(const std::filesystem::path &pathToDir, std::string extension) {
         std::vector<std::filesystem::path> sdfFiles;
+        if (!extension.empty() && extension[0] != '.')
+            extension = "." + extension;
         for (const auto &entry: std::filesystem::recursive_directory_iterator(pathToDir)) {
             if (entry.path().extension() == extension) {
-                //            LOG(INFO) << entry.path().string() << std::endl;
                 sdfFiles.push_back(entry.path());
             }
         }
@@ -57,8 +58,10 @@ namespace qtr {
     double TimeTicker::tick(const std::string &message) {
         _timePoints.emplace_back(std::chrono::high_resolution_clock::now());
         std::chrono::duration<double> t = _timePoints.back() - _timePoints[_timePoints.size() - 2];
-        LOG(INFO) << message << ": " << t.count() << "sec";
-        _results.emplace_back(message, t.count());
+        if (!message.empty()) {
+            LOG(INFO) << message << ": " << t.count() << "sec";
+            _results.emplace_back(message, t.count());
+        }
         return t.count();
     }
 

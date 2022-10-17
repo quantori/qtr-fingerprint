@@ -3,52 +3,69 @@
 #include <cstdio>
 #include <cstring>
 
+#include "glog/logging.h"
+
 namespace qtr {
 
-    // TODO: test this class
-    template<size_t buf_size>
+    static const size_t DefaultReaderBufferSize = 1ull << 13;
+
+    template<size_t bufSize = DefaultReaderBufferSize>
     class BufferedReader {
     private:
         FILE *_file;
-        char _buf[buf_size];
-        size_t _current_buf_size;
-        size_t _buf_ptr;
-    public:
-        BufferedReader(const char *fileName) : _current_buf_size(0), _buf_ptr(0) {
-            _file = std::fopen(fileName, "r");
+        char _buf[bufSize];
+        size_t _currentBufSize;
+        size_t _bufPtr;
+        bool _eof;
+
+    private:
+        bool checkEof() {
+            if (_bufPtr == _currentBufSize) {
+                _bufPtr = 0;
+                _currentBufSize = fread(_buf, 1, bufSize, _file);
+            }
+            return _eof = _currentBufSize == 0;
         }
 
-        bool eof() {
-            if (_buf_ptr == _current_buf_size) {
-                _buf_ptr = 0;
-                _current_buf_size = fread(_buf, 1, buf_size, _file);
+    public:
+        BufferedReader(const char *filePath) : _currentBufSize(0), _bufPtr(0), _eof(false) {
+            _file = std::fopen(filePath, "r");
+            if (_file == nullptr) {
+                LOG(INFO) << "Can't open file " << filePath << ", errno " << errno;
             }
-            return buf_size == 0;
+        }
+
+        BufferedReader(const std::filesystem::path &filePath) : BufferedReader(filePath.c_str()) {}
+
+        BufferedReader(const std::string &filePath) : BufferedReader(filePath.c_str()) {}
+
+        bool eof() const {
+            return _eof;
         }
 
         int get() {
-            return eof() ? EOF : _buf[_buf_ptr++];
+            return checkEof() ? EOF : (int) (unsigned char) _buf[_bufPtr++];
+        }
+
+        int peek() {
+            return checkEof() ? EOF : (int) (unsigned char) _buf[_bufPtr];
         }
 
         BufferedReader &read(char *s, size_t count) {
-            while (!eof() && count != 0) {
-                if (count <= _current_buf_size - _buf_ptr) {
-                    memcpy(s, _buf + _buf_ptr, count);
-                    _buf_ptr += count;
+            while (count != 0 && !checkEof()) {
+                if (count <= _currentBufSize - _bufPtr) {
+                    memcpy(s, _buf + _bufPtr, count);
+                    _bufPtr += count;
                     s += count;
                     count = 0;
                 } else {
-                    memcpy(s, _buf + _buf_ptr, _current_buf_size - _buf_ptr);
-                    count -= _current_buf_size - _buf_ptr;
-                    s += _current_buf_size - _buf_ptr;
-                    _buf_ptr = _current_buf_size;
+                    memcpy(s, _buf + _bufPtr, _currentBufSize - _bufPtr);
+                    count -= _currentBufSize - _bufPtr;
+                    s += _currentBufSize - _bufPtr;
+                    _bufPtr = _currentBufSize;
                 }
             }
             return *this;
-        }
-
-        operator bool() const {
-            return eof();
         }
 
         ~BufferedReader() {

@@ -29,7 +29,7 @@ TEST(ColumnsChoiceUtilsTests, fingerprintsToColumnsTest) {
     EXPECT_EQ(actualFull[1], expected[1]);
     EXPECT_EQ(actualFull[2], expected[2]);
     for (size_t i = 3; i < actualFull.size(); i++) {
-        EXPECT_EQ(actualFull[i], actualFull[3]);
+        EXPECT_EQ(actualFull[i], expected[3]);
     }
 
     auto actualSub = fingerprintsToColumns(fingerprints, {2, 10, 1, 0});

@@ -3,11 +3,11 @@
 #include "glog/logging.h"
 
 #include "basic_io/BasicDataWriter.h"
+#include "fingerprint_table_io/FingerprintTableIOConsts.h"
 #include "Fingerprint.h"
 
 namespace qtr {
 
-    // TODO test this class
     class FingerprintTableWriter
             : public BasicDataWriter<std::pair<uint64_t, IndigoFingerprint>, FingerprintTableWriter, std::ofstream> {
     private:
@@ -28,12 +28,15 @@ namespace qtr {
                       << _binaryWriter << ")";
         }
 
-        void write(const WriteValue &value) override {
+        FingerprintTableWriter &operator<<(const WriteValue &value) override {
             _writtenFingerprints++;
             auto &[id, fingerprint] = value;
             _binaryWriter->write((char *) &id, sizeof id);
             fingerprint.dump(*_binaryWriter);
+            return *this;
         }
+
+        using BaseWriter::operator<<;
     };
 
 } // qtr

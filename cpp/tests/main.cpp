@@ -20,6 +20,7 @@ ABSL_FLAG(std::string, tmp_data_dir_path, "",
 int main(int argc, char **argv)
 {
     google::InitGoogleLogging(argv[0]);
+    FLAGS_alsologtostderr = true;
     ::testing::InitGoogleTest(&argc, argv);
 
     absl::ParseCommandLine(argc, argv);

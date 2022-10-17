@@ -36,13 +36,15 @@ namespace qtr {
         }
 
         bool isEof() const {
-            return _reader == nullptr || _reader->eof();
+            return _reader == nullptr || _reader->_binaryReader->peek() == EOF;
         }
 
         value_type operator*() {
             assert(_reader != nullptr && !_isRead && "Incorrect read of iterator");
             _isRead = true;
-            return _reader->readOne();
+            value_type result;
+            *_reader >> result;
+            return result;
         }
 
         ReaderIterator &operator++() {
@@ -78,16 +80,12 @@ namespace qtr {
             return {};
         }
 
-        virtual ReadValue readOne() = 0;
+        virtual BasicDataReader &operator>>(ReadValue &readValue) = 0;
 
-        virtual std::vector<ReadValue> readAll() {
-            std::vector<ReadValue> result;
-            std::copy(begin(), end(), std::back_inserter(result));
-            return result;
+        virtual BasicDataReader &operator>>(std::vector<ReadValue> &readValues) {
+            std::copy(begin(), end(), std::back_inserter(readValues));
+            return *this;
         }
-
-        virtual bool eof() const = 0;
-
 
         friend class ReaderIterator<DataReader>;
 

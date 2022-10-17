@@ -1,13 +1,14 @@
 #pragma once
 
 #include "basic_io/BasicDataReader.h"
-#include "Fingerprint.h"
+#include "FingerprintTableIOConsts.h"
+#include "io/BufferedReader.h"
+
 
 namespace qtr {
 
-    // TODO: test this class
     class FingerprintTableReader
-            : public BasicDataReader<std::pair<size_t, IndigoFingerprint>, FingerprintTableReader, std::ifstream> {
+            : public BasicDataReader<fingerprint_table_value_t, FingerprintTableReader, BufferedReader<>> {
 
     private:
         uint64_t _fingerprintsInStream;
@@ -16,25 +17,24 @@ namespace qtr {
         explicit FingerprintTableReader(const std::filesystem::path &fileName) : BaseReader(fileName),
                                                                                  _fingerprintsInStream(0) {
             _binaryReader->read((char *) &_fingerprintsInStream, sizeof _fingerprintsInStream);
-            LOG(INFO) << "Create fingerprint table reader with " << _fingerprintsInStream << " SMILES ("
-                      << _binaryReader << ")";
+            LOG(INFO) << "Create fingerprint table reader from " << fileName << " with " << _fingerprintsInStream
+                      << " fingerprints (" << _binaryReader << ")";
         }
 
         ~FingerprintTableReader() override {
             LOG(INFO) << "Delete fingerprint table reader (" << _binaryReader << ")";
         }
 
-        ReadValue readOne() override {
-            uint64_t id;
+        FingerprintTableReader &operator>>(ReadValue &readValue) override {
+            assert(_fingerprintsInStream > 0);
+            auto &[id, fingerprint] = readValue;
             _binaryReader->read((char *) &id, sizeof id);
-            IndigoFingerprint fingerprint;
             fingerprint.load(*_binaryReader);
-            return {id, fingerprint};
+            _fingerprintsInStream--;
+            return *this;
         }
 
-        bool eof() const override {
-            return _fingerprintsInStream == 0;
-        }
+        using BaseReader::operator>>;
     };
 
 } // qtr

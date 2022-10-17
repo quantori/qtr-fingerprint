@@ -54,7 +54,7 @@ namespace qtr {
             Proxy(WriterIterator &it) : _iterator(it) {};
 
             Proxy &operator=(const value_type &value) {
-                _iterator._writer->write(value);
+                _iterator._writer->operator<<(value);
                 return *this;
             }
 
@@ -85,10 +85,13 @@ namespace qtr {
             return WriterIterator<DataWriter>();
         }
 
-        virtual void write(const WriteValue &value) = 0;
+        virtual DataWriter &operator<<(const WriteValue &value) = 0;
 
-        virtual void write(const std::vector<WriteValue> &values) {
-            std::copy(values.begin(), values.end(), begin());
+        virtual BaseWriter &operator<<(const std::vector<WriteValue> &values) {
+            for (const auto &value: values) {
+                *this << value;
+            }
+            return *this;
         }
 
     protected:

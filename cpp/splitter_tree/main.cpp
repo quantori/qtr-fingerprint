@@ -12,7 +12,8 @@
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 
-#include "RawBucketsIO.h"
+#include "raw_bucket_io/RawBucketReader.h"
+#include "raw_bucket_io/RawBucketWriter.h"
 #include "SplitterTree.h"
 #include "ColumnsSelection.h"
 
@@ -127,11 +128,11 @@ void initFileSystem(const Args &args) {
             std::cout << dir << '\n';
         }
         qtr::askAboutContinue("Data will be overridden");
-        for (auto& dir : alreadyExists) {
+        for (auto &dir: alreadyExists) {
             std::filesystem::remove_all(dir);
         }
     }
-    for (auto& dbDirPath : args.dbDataDirsPaths) {
+    for (auto &dbDirPath: args.dbDataDirsPaths) {
         std::filesystem::create_directory(dbDirPath);
         std::filesystem::create_directory(dbDirPath / "0");
     }
@@ -175,7 +176,8 @@ int main(int argc, char *argv[]) {
     tree.dump(treeFileOut);
     timeTicker.tick("Splitter tree building");
 
-    auto columnsSubset = qtr::ColumnsReader(args.columnsSubsetPath).readAll();
+    std::vector<size_t> columnsSubset;
+    qtr::IndexesReader(args.columnsSubsetPath) >> columnsSubset;
     auto selectFunction = qtr::PearsonCorrelationSelectionFunction(columnsSubset);
     auto columnsSelector = qtr::ColumnsSelector(args.dbDataDirsPaths, selectFunction);
     columnsSelector.handleRawBuckets();

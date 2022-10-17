@@ -1,7 +1,5 @@
 #include "BingoSearchEngine.h"
 
-#include "IndigoException.h"
-
 using namespace indigo_cpp;
 
 namespace qtr {

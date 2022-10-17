@@ -4,7 +4,6 @@
 #include <filesystem>
 
 #include "Fingerprint.h"
-#include "split_bit_selection//BitSelector.h"
 
 namespace qtr {
 
@@ -12,10 +11,8 @@ namespace qtr {
     public:
         class Node;
 
-    private:
-        std::vector<Node> _nodes;
-        std::vector<std::filesystem::path> _dataDirectories;
-        std::vector<std::filesystem::path> _leafDataPath;
+    protected:
+        explicit BallTree(std::vector<std::filesystem::path> dataDirectories);
 
         static size_t leftChild(size_t nodeId);
 
@@ -25,35 +22,17 @@ namespace qtr {
 
         bool isLeaf(size_t nodeId) const;
 
-        size_t root() const;
+        size_t leafNumberById(size_t leafId) const;
 
-        void build();
+        static size_t root();
 
-        std::vector<size_t> _buildFirstLevels(size_t nodeId, size_t levels, const BitSelector& bitSelector);
-
-        void _splitNodeManyFiles(size_t nodeId, size_t splitBit);
-
-        std::vector<std::filesystem::path> _getNodesFiles(size_t nodeId) const;
-
-    public:
-        BallTree(size_t depth, size_t parallelizationDepth, std::vector<std::filesystem::path> dataDirectories,
-                 const BitSelector &bitSelector);
-
-        BallTree() = default;
-
-        template<typename BinaryWriter>
-        void dump(BinaryWriter &writer) {
-            // todo
-        }
-
-        template<typename BinaryReader>
-        void load(BinaryReader &reader) {
-            // todo
-        }
+    protected:
+        std::vector<Node> _nodes;
+        size_t _depth;
+        std::vector<std::filesystem::path> _dataDirectories;
     };
 
-    class BallTree::Node {
-    private:
+    struct BallTree::Node {
         IndigoFingerprint centroid;
     };
 

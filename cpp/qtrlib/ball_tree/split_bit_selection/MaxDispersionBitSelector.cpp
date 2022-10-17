@@ -3,7 +3,6 @@
 
 #include "MaxDispersionBitSelector.h"
 #include "Fingerprint.h"
-#include "fingerprint_table_io/FingerprintTableReader.h"
 
 namespace qtr {
 
@@ -18,7 +17,7 @@ namespace qtr {
         size_t bestBit = 0;
         size_t bestBitVal = getBitValToMinimize(statistic, bestBit);
         for (size_t i = 1; i < IndigoFingerprint::size(); i++) {
-            size_t iVal = getBitValToMinimize(statistic, bestBit);
+            size_t iVal = getBitValToMinimize(statistic, i);
             if (iVal < bestBitVal) {
                 bestBit = i;
                 bestBitVal = iVal;

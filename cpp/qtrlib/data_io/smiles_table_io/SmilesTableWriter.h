@@ -4,13 +4,13 @@
 
 #include "glog/logging.h"
 
+#include "SmilesTableIOConsts.h"
 #include "basic_io/BasicDataWriter.h"
 
 namespace qtr {
 
-    // TODO test this class
     class SmilesTableWriter
-            : public BasicDataWriter<std::pair<uint64_t, std::string>, SmilesTableWriter, std::ofstream> {
+            : public BasicDataWriter<smiles_table_value_t, SmilesTableWriter, std::ofstream> {
     private:
         uint64_t _writtenSmiles;
 
@@ -26,12 +26,16 @@ namespace qtr {
             LOG(INFO) << "Delete SMILES table writer with " << _writtenSmiles << " molecules (" << _binaryWriter << ")";
         }
 
-        void write(const WriteValue &value) override {
+        SmilesTableWriter &operator<<(const WriteValue &value) override {
             _writtenSmiles++;
             auto &[id, smiles] = value;
             _binaryWriter->write((char *) &id, sizeof id);
-            *_binaryWriter << smiles << '\n';
+            _binaryWriter->write(smiles.c_str(), smiles.size());
+            _binaryWriter->write("\n", 1);
+            return *this;
         }
+
+        using BaseWriter::operator<<;
     };
 
 } // qtr

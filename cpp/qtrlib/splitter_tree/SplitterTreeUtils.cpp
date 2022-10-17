@@ -59,10 +59,10 @@ namespace qtr {
             uint64_t leftSize = 0, rightSize = 0;
             for (const auto &[smiles, fp]: reader) {
                 if (fp[splitBit]) {
-                    onesWriter.write(make_pair(smiles, fp));
+                    onesWriter << std::make_pair(smiles, fp);
                     leftSize++;
                 } else {
-                    zerosWriter.write(make_pair(smiles, fp));
+                    zerosWriter << std::make_pair(smiles, fp);
                     rightSize++;
                 }
             }

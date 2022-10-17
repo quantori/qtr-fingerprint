@@ -2,13 +2,14 @@
 
 #include <string>
 
+#include "SmilesTableIOConsts.h"
 #include "basic_io/BasicDataReader.h"
+#include "io/BufferedReader.h"
 
 namespace qtr {
 
-    // TODO: test this class
     class SmilesTableReader
-            : public BasicDataReader<std::pair<uint64_t, std::string>, SmilesTableReader, std::ifstream> {
+            : public BasicDataReader<smiles_table_value_t, SmilesTableReader, BufferedReader<>> {
     private:
         uint64_t _smilesInStream;
 
@@ -23,20 +24,17 @@ namespace qtr {
             LOG(INFO) << "Delete SMILES table reader (" << _binaryReader << ")";
         }
 
-        ReadValue readOne() override {
-            uint64_t id;
+        SmilesTableReader &operator>>(ReadValue &value) override {
+            auto &[id, smiles] = value;
             _binaryReader->read((char *) &id, sizeof id);
-            std::string smiles;
             char symbol;
             while ((symbol = (char) _binaryReader->get()) != '\n') {
                 smiles += symbol;
             }
-            return {id, smiles};
+            return *this;
         }
 
-        bool eof() const override {
-            return _smilesInStream == 0;
-        }
+        using BaseReader::operator>>;
     };
 
 
