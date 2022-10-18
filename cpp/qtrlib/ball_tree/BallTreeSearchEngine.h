@@ -22,9 +22,6 @@ namespace qtr {
         template<typename BinaryReader>
         BallTreeSearchEngine(BinaryReader &nodesReader, std::vector<std::filesystem::path> dataDirectories);
 
-    protected:
-        void initLeafDataPaths();
-
         struct QueryData {
             const IndigoFingerprint &query;
             std::vector<size_t> &result;
@@ -37,6 +34,9 @@ namespace qtr {
 
             void addAnswer(size_t value);
         };
+
+    protected:
+        void initLeafDataPaths();
 
         void searchInSubtree(size_t nodeId, QueryData &queryData) const;
 

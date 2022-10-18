@@ -16,7 +16,7 @@ namespace qtr {
         if (!extension.empty() && extension[0] != '.')
             extension = "." + extension;
         for (const auto &entry: std::filesystem::recursive_directory_iterator(pathToDir)) {
-            if (entry.path().extension() == extension) {
+            if (entry.path().stem() != ".DS_Store" && entry.path().extension() == extension) {
                 sdfFiles.push_back(entry.path());
             }
         }

@@ -147,7 +147,7 @@ public:
     }
 
     static std::vector<uint64_t> getAnswers(const DataTable &data, const qtr::IndigoFingerprint &query) {
-        std::vector<size_t> result;
+        std::vector<uint64_t> result;
         for (const auto &[id, fp]: data) {
             if (query <= fp) {
                 result.emplace_back(id);

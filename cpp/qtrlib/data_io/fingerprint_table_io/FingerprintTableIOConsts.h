@@ -6,7 +6,7 @@
 
 namespace qtr {
 
-    using fingerprint_table_value_t = typename std::pair<size_t, IndigoFingerprint>;
+    using fingerprint_table_value_t = typename std::pair<uint64_t, IndigoFingerprint>;
 
     const std::string fingerprintTableExtension = ".ft";
 

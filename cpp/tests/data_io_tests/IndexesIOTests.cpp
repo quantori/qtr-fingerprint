@@ -9,12 +9,12 @@
 
 class IndexesIOTests : public ::testing::Test {
 protected:
-    void writeTmpIndexes(const std::vector<size_t> &values) {
+    void writeTmpIndexes(const std::vector<uint64_t> &values) {
         qtr::IndexesWriter writer(_tmpIndexesFilePath);
         writer << values;
     }
 
-    std::vector<size_t> readTmpIndexes() {
+    std::vector<uint64_t> readTmpIndexes() {
         qtr::IndexesReader reader(_tmpIndexesFilePath);
         std::vector<qtr::IndexesReader::ReadValue> result;
         reader >> result;
@@ -31,7 +31,7 @@ protected:
     }
 
     std::filesystem::path _tmpIndexesFilePath;
-    std::vector<size_t> expected, actual;
+    std::vector<uint64_t> expected, actual;
 };
 
 

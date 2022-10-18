@@ -42,7 +42,7 @@ namespace qtr {
         return bucket;
     }
 
-    static void saveColumns(const std::vector<size_t> &columns, const std::filesystem::path &rawBucketDirPath) {
+    static void saveColumns(const std::vector<uint64_t> &columns, const std::filesystem::path &rawBucketDirPath) {
         std::filesystem::path columnsPath = rawBucketDirPath / ("columns.col");
         IndexesWriter(columnsPath) << columns;
     }
