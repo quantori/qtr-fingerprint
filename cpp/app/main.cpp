@@ -25,9 +25,8 @@ int main(int argc, char *argv[]) {
     emptyArgument(databasePath, "Please specify database_path option");
 
     crow::SimpleApp app;
-
-    CROW_ROUTE(app, "/")([&databasePath](){
-        return databasePath;
+    CROW_ROUTE(app,"/query/<string>")([](std::string smiles) {
+        return crow::response(smiles);
     });
 
     app.port(servicePort).multithreaded().run();
