@@ -1,6 +1,12 @@
 #include <filesystem>
+#include <functional>
 #include <string>
 #include <numeric>
+#include <future>
+#include <unordered_map>
+#include <mutex>
+
+#include "crow.h"
 
 #include <glog/logging.h>
 #include <absl/flags/flag.h>
@@ -29,13 +35,15 @@ ABSL_FLAG(uint64_t, start_search_depth, -1,
           "Depth for start search from. There will be 2^start_search_depth threads.");
 
 ABSL_FLAG(std::string, mode, "",
-          "possible modes: interactive, from_file");
+          "possible modes: interactive, from_file, web");
 
 ABSL_FLAG(std::string, input_file, "",
           "file to load test molecules from");
 
 ABSL_FLAG(std::uint64_t, ans_count, -1,
           "how many answers program will find");
+
+using SmilesTable = std::vector<qtr::smiles_table_value_t>;
 
 void initLogging(int argc, char *argv[]) {
     google::InitGoogleLogging(argv[0]);
@@ -97,6 +105,9 @@ struct Args {
         if (modeStr == "interactive") {
             mode = Mode::Interactive;
             LOG(INFO) << "mode: interactive";
+        } else if (modeStr == "web") {
+            mode = Mode::PseudoRest;
+            LOG(INFO) << "mode: web server";
         } else if (modeStr == "from_file") {
             mode = Mode::FromFile;
             LOG(INFO) << "mode: fromFile";
@@ -128,39 +139,40 @@ struct Args {
 };
 
 template<typename SmilesTable>
-std::vector<std::string>
+std::vector<qtr::smiles_table_value_t>
 getSmiles(const std::vector<size_t> &smilesIndexes, SmilesTable &smilesTable, uint64_t ansCount) {
-    std::vector<std::string> result;
+    std::vector<qtr::smiles_table_value_t> result;
     for (size_t i = 0; i < smilesIndexes.size() && i < ansCount; i++) {
         result.emplace_back(smilesTable[smilesIndexes[i]]);
     }
     return result;
 }
 
-void printSmiles(const std::vector<std::string> &smiles) {
+void printSmiles(const std::vector<qtr::smiles_table_value_t> &smiles) {
     size_t answersToPrint = std::min(size_t(10), smiles.size());
     for (size_t i = 0; i < answersToPrint; i++) {
         if (i == 0)
             std::cout << "[";
-        std::cout << '\"' << smiles[i] << '\"';
+        std::cout << '\"' << smiles[i].first << '\"';
+        std::cout << ", \"" << smiles[i].second << '\"';
         std::cout << (i + 1 == answersToPrint ? "]\n" : ", ");
     }
 }
 
-template<typename SmilesTable>
-bool doSearch(const std::string &querySmiles, const qtr::BallTreeSearchEngine &ballTree,
-              SmilesTable &smilesTable, const Args &args) {
+std::pair<bool, SmilesTable>
+doSearch(const std::string &querySmiles, const qtr::BallTreeSearchEngine &ballTree,
+         const SmilesTable &smilesTable, const Args &args) {
     qtr::IndigoFingerprint fingerprint;
     try {
         fingerprint = qtr::IndigoFingerprintFromSmiles(querySmiles);
     }
     catch (std::exception &exception) {
         std::cout << "skip query:" << exception.what() << std::endl;
-        return false;
+        return {true, {}};
     }
 
     auto filter = [&smilesTable, &querySmiles](size_t ansId) {
-        auto ansSmiles = smilesTable[ansId];
+        auto [cid, ansSmiles] = smilesTable[ansId];
         auto indigoSessionPtr = indigo_cpp::IndigoSession::create();
         auto queryMol = indigoSessionPtr->loadQueryMolecule(querySmiles);
         queryMol.aromatize();
@@ -181,7 +193,7 @@ bool doSearch(const std::string &querySmiles, const qtr::BallTreeSearchEngine &b
     auto answerSmiles = getSmiles(candidateIndexes, smilesTable, args.ansCount);
     LOG(INFO) << "found answers: " << answerSmiles.size();
     printSmiles(answerSmiles);
-    return true;
+    return {false, answerSmiles};
 }
 
 
@@ -195,7 +207,8 @@ void runInteractive(const qtr::BallTreeSearchEngine &ballTree, SmilesTable &smil
         if (smiles.empty())
             break;
         timeTicker.tick();
-        if (!doSearch(smiles, ballTree, smilesTable, args))
+        const auto result = doSearch(smiles, ballTree, smilesTable, args);
+        if (result.first)
             continue;
         std::cout << "Search time: " << timeTicker.tick("Search time") << std::endl;
     }
@@ -219,7 +232,8 @@ void runFromFile(const qtr::BallTreeSearchEngine &ballTree, SmilesTable &smilesT
     for (size_t i = 0; i < queries.size(); i++) {
         LOG(INFO) << "Start search for " << i << ": " << queries[i];
         timeTicker.tick();
-        if (!doSearch(queries[i], ballTree, smilesTable, args)) {
+        const auto result = doSearch(queries[i], ballTree, smilesTable, args);
+        if (result.first) {
             skipped++;
             continue;
         }
@@ -244,19 +258,65 @@ void runFromFile(const qtr::BallTreeSearchEngine &ballTree, SmilesTable &smilesT
     LOG(INFO) << "60%: " << p60 << " | 70%: " << p70 << " | 80%: " << p80 << " | 90%: " << p90 << " | 95%: " << p95;
 }
 
-void loadSmilesTable(std::vector<std::string> &smilesTable, const std::filesystem::path &smilesTablePath) {
+void
+loadSmilesTable(std::vector<qtr::smiles_table_value_t> &smilesTable, const std::filesystem::path &smilesTablePath) {
     LOG(INFO) << "Start smiles table loading";
-    for (const auto &[id, smiles]: qtr::SmilesTableReader(smilesTablePath)) {
-        assert(id == smilesTable.size());
-        smilesTable.emplace_back(smiles);
+    for (const auto &value: qtr::SmilesTableReader(smilesTablePath)) {
+        smilesTable.emplace_back(value);
     }
     LOG(INFO) << "Finish smiles table loading";
 }
 
-template<typename SmilesTable>
-void runPseudoRest(const qtr::BallTreeSearchEngine &ballTree, SmilesTable &smilesTable,
-                   qtr::TimeTicker &timeTicker, const Args &args) {
+crow::json::wvalue prepareResponse(const SmilesTable &smilesTable, size_t minOffset, size_t maxOffset) {
+    crow::json::wvalue response;
+    for (auto ind = minOffset; ind < maxOffset; ind += 1)
+        response[std::to_string(smilesTable[ind].first)] = smilesTable[ind].second;
+    return response;
+}
 
+void runPseudoRest(const qtr::BallTreeSearchEngine &ballTree, const SmilesTable &smilesTable,
+                   qtr::TimeTicker &timeTicker, const Args &args) {
+    crow::SimpleApp app;
+    std::mutex newTaskMutex;
+    uint64_t _queryIdTicker = 0;
+
+    std::unordered_map<uint64_t, std::future<std::pair<bool, SmilesTable>>> tasks;
+    std::unordered_map<uint64_t, SmilesTable> resultTable;
+    std::unordered_map<std::string, uint64_t> queryToId;
+
+    CROW_ROUTE(app, "/query").methods(crow::HTTPMethod::POST)([&tasks, &_queryIdTicker, &queryToId,
+                                                                        &ballTree, &smilesTable, &args, &newTaskMutex](
+            const crow::request& req) {
+        std::string smiles = req.url_params.get("smiles");
+        std::lock_guard<std::mutex> lock(newTaskMutex);
+        if (!queryToId.contains(smiles)) {
+            _queryIdTicker += 1;
+            tasks[_queryIdTicker] = std::async(std::launch::async, doSearch, smiles,
+                                               std::ref(ballTree), std::ref(smilesTable), args);
+            queryToId[smiles] = _queryIdTicker;
+        }
+        return crow::response(std::to_string(queryToId[smiles]));
+    });
+
+    CROW_ROUTE(app, "/query").methods(crow::HTTPMethod::GET)([&tasks, &resultTable](const crow::request& req) {
+        auto searchId = crow::utility::lexical_cast<uint64_t>(req.url_params.get("searchId"));
+        auto minOffset = crow::utility::lexical_cast<int>(req.url_params.get("minOffset"));
+        auto maxOffset = crow::utility::lexical_cast<int>(req.url_params.get("maxOffset"));
+
+        if (resultTable.contains(searchId))
+            return prepareResponse(resultTable[searchId], minOffset, maxOffset);
+        if (!tasks.contains(searchId))
+            return crow::json::wvalue();
+
+        const auto &task = tasks[searchId];
+        if (task.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+            const auto [isSkipped, result] = tasks[searchId].get();
+            resultTable[searchId] = result;
+        }
+        return prepareResponse(resultTable[searchId], minOffset, maxOffset);
+    });
+
+    app.port(8080).multithreaded().run();
 }
 
 int main(int argc, char *argv[]) {
@@ -266,7 +326,7 @@ int main(int argc, char *argv[]) {
     qtr::TimeTicker timeTicker;
     qtr::BufferedReader ballTreeReader(args.ballTreePath);
 
-    std::vector<std::string> smilesTable;
+    SmilesTable smilesTable;
     auto loadSmilesTableTask = std::async(std::launch::async, loadSmilesTable, std::ref(smilesTable),
                                           std::cref(args.smilesTablePath));
     LOG(INFO) << "Start ball tree loading";
