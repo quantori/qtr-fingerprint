@@ -300,11 +300,11 @@ void runPseudoRest(const qtr::BallTreeSearchEngine &ballTree, const SmilesTable 
 
     CROW_ROUTE(app, "/query").methods(crow::HTTPMethod::GET)([&tasks, &resultTable](const crow::request& req) {
         auto searchId = crow::utility::lexical_cast<uint64_t>(req.url_params.get("searchId"));
-        auto minOffset = crow::utility::lexical_cast<int>(req.url_params.get("minOffset"));
-        auto maxOffset = crow::utility::lexical_cast<int>(req.url_params.get("maxOffset"));
+        auto offset = crow::utility::lexical_cast<int>(req.url_params.get("offset"));
+        auto limit = crow::utility::lexical_cast<int>(req.url_params.get("limit"));
 
         if (resultTable.contains(searchId))
-            return prepareResponse(resultTable[searchId], minOffset, maxOffset);
+            return prepareResponse(resultTable[searchId], offset, offset + limit);
         if (!tasks.contains(searchId))
             return crow::json::wvalue();
 
@@ -313,7 +313,7 @@ void runPseudoRest(const qtr::BallTreeSearchEngine &ballTree, const SmilesTable 
             const auto [isSkipped, result] = tasks[searchId].get();
             resultTable[searchId] = result;
         }
-        return prepareResponse(resultTable[searchId], minOffset, maxOffset);
+        return prepareResponse(resultTable[searchId], offset, offset + limit);
     });
 
     app.port(8080).multithreaded().run();
