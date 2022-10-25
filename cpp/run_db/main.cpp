@@ -5,6 +5,7 @@
 #include <future>
 #include <unordered_map>
 #include <mutex>
+#include <iterator>
 
 #include "crow.h"
 
@@ -267,11 +268,10 @@ loadSmilesTable(std::vector<qtr::smiles_table_value_t> &smilesTable, const std::
     LOG(INFO) << "Finish smiles table loading";
 }
 
-crow::json::wvalue prepareResponse(const SmilesTable &smilesTable, size_t minOffset, size_t maxOffset) {
-    crow::json::wvalue response;
-    for (auto ind = minOffset; ind < maxOffset; ind += 1)
-        response[std::to_string(smilesTable[ind].first)] = smilesTable[ind].second;
-    return response;
+crow::json::wvalue prepareResponse(const std::vector<uint64_t> &ids, size_t minOffset, size_t maxOffset) {
+    crow::json::wvalue::list response;
+    std::copy(ids.begin() + minOffset, ids.end() + maxOffset, std::back_inserter(response));
+    return crow::json::wvalue{response};
 }
 
 void runPseudoRest(const qtr::BallTreeSearchEngine &ballTree, const SmilesTable &smilesTable,
@@ -281,12 +281,12 @@ void runPseudoRest(const qtr::BallTreeSearchEngine &ballTree, const SmilesTable 
     uint64_t _queryIdTicker = 0;
 
     std::unordered_map<uint64_t, std::future<std::pair<bool, SmilesTable>>> tasks;
-    std::unordered_map<uint64_t, SmilesTable> resultTable;
+    std::unordered_map<uint64_t, std::vector<uint64_t>> resultTable;
     std::unordered_map<std::string, uint64_t> queryToId;
 
     CROW_ROUTE(app, "/query").methods(crow::HTTPMethod::POST)([&tasks, &_queryIdTicker, &queryToId,
-                                                                        &ballTree, &smilesTable, &args, &newTaskMutex](
-            const crow::request& req) {
+                                                                      &ballTree, &smilesTable, &args, &newTaskMutex](
+            const crow::request &req) {
         std::string smiles = req.url_params.get("smiles");
         std::lock_guard<std::mutex> lock(newTaskMutex);
         if (!queryToId.contains(smiles)) {
@@ -298,7 +298,7 @@ void runPseudoRest(const qtr::BallTreeSearchEngine &ballTree, const SmilesTable 
         return crow::response(std::to_string(queryToId[smiles]));
     });
 
-    CROW_ROUTE(app, "/query").methods(crow::HTTPMethod::GET)([&tasks, &resultTable](const crow::request& req) {
+    CROW_ROUTE(app, "/query").methods(crow::HTTPMethod::GET)([&tasks, &resultTable](const crow::request &req) {
         auto searchId = crow::utility::lexical_cast<uint64_t>(req.url_params.get("searchId"));
         auto offset = crow::utility::lexical_cast<int>(req.url_params.get("offset"));
         auto limit = crow::utility::lexical_cast<int>(req.url_params.get("limit"));
@@ -307,11 +307,16 @@ void runPseudoRest(const qtr::BallTreeSearchEngine &ballTree, const SmilesTable 
             return prepareResponse(resultTable[searchId], offset, offset + limit);
         if (!tasks.contains(searchId))
             return crow::json::wvalue();
-
         const auto &task = tasks[searchId];
         if (task.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
             const auto [isSkipped, result] = tasks[searchId].get();
-            resultTable[searchId] = result;
+            std::vector<uint64_t> ids;
+            std::transform(result.begin(), result.end(), std::back_inserter(ids),
+                           [](const qtr::smiles_table_value_t &v) { return v.first; });
+            resultTable[searchId] = std::move(ids);
+        }
+        else {
+            return crow::json::wvalue();
         }
         return prepareResponse(resultTable[searchId], offset, offset + limit);
     });
