@@ -270,7 +270,11 @@ loadSmilesTable(std::vector<qtr::smiles_table_value_t> &smilesTable, const std::
 
 crow::json::wvalue prepareResponse(const std::vector<uint64_t> &ids, size_t minOffset, size_t maxOffset) {
     crow::json::wvalue::list response;
-    std::copy(ids.begin() + minOffset, ids.end() + maxOffset, std::back_inserter(response));
+    if (!ids.empty()) {
+        std::copy(ids.begin() + std::min(ids.size(), minOffset),
+                  ids.end() + std::min(ids.size(), maxOffset),
+                  std::back_inserter(response));
+    }
     return crow::json::wvalue{response};
 }
 
@@ -287,7 +291,11 @@ void runPseudoRest(const qtr::BallTreeSearchEngine &ballTree, const SmilesTable 
     CROW_ROUTE(app, "/query").methods(crow::HTTPMethod::POST)([&tasks, &_queryIdTicker, &queryToId,
                                                                       &ballTree, &smilesTable, &args, &newTaskMutex](
             const crow::request &req) {
-        std::string smiles = req.url_params.get("smiles");
+        auto body = crow::json::load(req.body);
+        if (!body)
+            return crow::response(400);
+        std::cout << body["smiles"] << std::endl;
+        std::string smiles = body["smiles"].s();
         std::lock_guard<std::mutex> lock(newTaskMutex);
         if (!queryToId.contains(smiles)) {
             _queryIdTicker += 1;
