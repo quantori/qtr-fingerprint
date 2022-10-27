@@ -326,7 +326,7 @@ void runPseudoRest(const qtr::BallTreeSearchEngine &ballTree, const SmilesTable 
         return prepareResponse(resultTable[searchId], offset, offset + limit);
     });
 
-    app.port(8080).multithreaded().run();
+    app.port(8080).concurrency(2).run();
 }
 
 int main(int argc, char *argv[]) {
