@@ -44,7 +44,8 @@ ABSL_FLAG(std::string, input_file, "",
 ABSL_FLAG(std::uint64_t, ans_count, -1,
           "how many answers program will find");
 
-using SmilesTable = std::vector<qtr::smiles_table_value_t>;
+using SmilesTable = std::unordered_map<uint64_t, std::string>;
+//using SmilesTable = std::vector<qtr::smiles_table_value_t>;
 
 void initLogging(int argc, char *argv[]) {
     google::InitGoogleLogging(argv[0]);
@@ -139,15 +140,15 @@ struct Args {
     }
 };
 
-template<typename SmilesTable>
-std::vector<qtr::smiles_table_value_t>
-getSmiles(const std::vector<size_t> &smilesIndexes, SmilesTable &smilesTable, uint64_t ansCount) {
-    std::vector<qtr::smiles_table_value_t> result;
-    for (size_t i = 0; i < smilesIndexes.size() && i < ansCount; i++) {
-        result.emplace_back(smilesTable[smilesIndexes[i]]);
-    }
-    return result;
-}
+//template<typename SmilesTable>
+//std::vector<qtr::smiles_table_value_t>
+//getSmiles(const std::vector<size_t> &smilesIndexes, SmilesTable &smilesTable, uint64_t ansCount) {
+//    std::vector<qtr::smiles_table_value_t> result;
+//    for (size_t i = 0; i < smilesIndexes.size() && i < ansCount; i++) {
+//        result.emplace_back({smilesIndexes[i], smilesTable[smilesIndexes[i]]});
+//    }
+//    return result;
+//}
 
 void printSmiles(const std::vector<qtr::smiles_table_value_t> &smiles) {
     size_t answersToPrint = std::min(size_t(10), smiles.size());
@@ -160,7 +161,7 @@ void printSmiles(const std::vector<qtr::smiles_table_value_t> &smiles) {
     }
 }
 
-std::pair<bool, SmilesTable>
+std::pair<bool, std::vector<uint64_t>>
 doSearch(const std::string &querySmiles, const qtr::BallTreeSearchEngine &ballTree,
          const SmilesTable &smilesTable, const Args &args) {
     qtr::IndigoFingerprint fingerprint;
@@ -173,7 +174,7 @@ doSearch(const std::string &querySmiles, const qtr::BallTreeSearchEngine &ballTr
     }
 
     auto filter = [&smilesTable, &querySmiles](size_t ansId) {
-        auto [cid, ansSmiles] = smilesTable[ansId];
+        auto ansSmiles = smilesTable.at(ansId);
         auto indigoSessionPtr = indigo_cpp::IndigoSession::create();
         auto queryMol = indigoSessionPtr->loadQueryMolecule(querySmiles);
         queryMol.aromatize();
@@ -191,10 +192,9 @@ doSearch(const std::string &querySmiles, const qtr::BallTreeSearchEngine &ballTr
         }
     };
     auto candidateIndexes = ballTree.search(fingerprint, args.ansCount, args.startSearchDepth, filter);
-    auto answerSmiles = getSmiles(candidateIndexes, smilesTable, args.ansCount);
-    LOG(INFO) << "found answers: " << answerSmiles.size();
-    printSmiles(answerSmiles);
-    return {false, answerSmiles};
+    LOG(INFO) << "found answers: " << candidateIndexes.size();
+//    printSmiles(answerSmiles);
+    return {false, candidateIndexes};
 }
 
 
@@ -260,19 +260,20 @@ void runFromFile(const qtr::BallTreeSearchEngine &ballTree, SmilesTable &smilesT
 }
 
 void
-loadSmilesTable(std::vector<qtr::smiles_table_value_t> &smilesTable, const std::filesystem::path &smilesTablePath) {
+loadSmilesTable(SmilesTable &smilesTable, const std::filesystem::path &smilesTablePath) {
     LOG(INFO) << "Start smiles table loading";
     for (const auto &value: qtr::SmilesTableReader(smilesTablePath)) {
-        smilesTable.emplace_back(value);
+        smilesTable[value.first] = value.second;
     }
     LOG(INFO) << "Finish smiles table loading";
 }
 
 crow::json::wvalue prepareResponse(const std::vector<uint64_t> &ids, size_t minOffset, size_t maxOffset) {
     crow::json::wvalue::list response;
+    std::cout << minOffset << " " << maxOffset << std::endl;
     if (!ids.empty()) {
         std::copy(ids.begin() + std::min(ids.size(), minOffset),
-                  ids.end() + std::min(ids.size(), maxOffset),
+                  ids.begin() + std::min(ids.size(), maxOffset),
                   std::back_inserter(response));
     }
     return crow::json::wvalue{response};
@@ -284,7 +285,7 @@ void runPseudoRest(const qtr::BallTreeSearchEngine &ballTree, const SmilesTable 
     std::mutex newTaskMutex;
     uint64_t _queryIdTicker = 0;
 
-    std::unordered_map<uint64_t, std::future<std::pair<bool, SmilesTable>>> tasks;
+    std::unordered_map<uint64_t, std::future<std::pair<bool, std::vector<uint64_t>>>> tasks;
     std::unordered_map<uint64_t, std::vector<uint64_t>> resultTable;
     std::unordered_map<std::string, uint64_t> queryToId;
 
@@ -310,18 +311,14 @@ void runPseudoRest(const qtr::BallTreeSearchEngine &ballTree, const SmilesTable 
         auto searchId = crow::utility::lexical_cast<uint64_t>(req.url_params.get("searchId"));
         auto offset = crow::utility::lexical_cast<int>(req.url_params.get("offset"));
         auto limit = crow::utility::lexical_cast<int>(req.url_params.get("limit"));
-
         if (resultTable.contains(searchId))
             return prepareResponse(resultTable[searchId], offset, offset + limit);
         if (!tasks.contains(searchId))
             return crow::json::wvalue();
         const auto &task = tasks[searchId];
         if (task.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
-            const auto [isSkipped, result] = tasks[searchId].get();
-            std::vector<uint64_t> ids;
-            std::transform(result.begin(), result.end(), std::back_inserter(ids),
-                           [](const qtr::smiles_table_value_t &v) { return v.first; });
-            resultTable[searchId] = std::move(ids);
+            auto [isSkipped, result] = tasks[searchId].get();
+            resultTable[searchId] = std::move(result);
         }
         else {
             return crow::json::wvalue();

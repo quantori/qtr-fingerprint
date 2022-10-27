@@ -10,9 +10,10 @@
 
 
 namespace qtr {
+    using CIDType = uint64_t;
 
     namespace {
-        auto noFiltering = [](size_t) {
+        auto noFiltering = [](CIDType) {
             return true;
         };
     }
@@ -24,15 +25,15 @@ namespace qtr {
 
         struct QueryData {
             const IndigoFingerprint &query;
-            std::vector<size_t> &result;
+            std::vector<CIDType> &result;
             std::mutex &resultLock;
             size_t ansCount;
             bool isTerminate;
-            const std::function<bool(size_t)> &filter;
+            const std::function<bool(CIDType)> &filter;
 
             void updateIsTerminate();
 
-            void addAnswer(size_t value);
+            void addAnswer(CIDType value);
         };
 
     protected:
@@ -49,13 +50,13 @@ namespace qtr {
 
         std::vector<size_t> getLeafIds() const;
 
-        static void putAnswer(size_t ansValue, QueryData& queryData);
+        static void putAnswer(CIDType ansValue, QueryData& queryData);
 
         virtual void searchInLeaf(size_t leafId, QueryData &queryData) const = 0;
 
     public:
-        std::vector<size_t> search(const IndigoFingerprint &query, size_t ansCount, size_t startDepth,
-                                   const std::function<bool(size_t)> &filter = noFiltering) const;
+        std::vector<CIDType> search(const IndigoFingerprint &query, size_t ansCount, size_t startDepth,
+                                   const std::function<bool(CIDType)> &filter = noFiltering) const;
 
     protected:
         std::vector<std::filesystem::path> _leafDataPaths;

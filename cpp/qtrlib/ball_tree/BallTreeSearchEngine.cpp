@@ -43,11 +43,11 @@ namespace qtr {
         searchInSubtree(rightChild(nodeId), queryData);
     }
 
-    std::vector<size_t>
+    std::vector<CIDType>
     BallTreeSearchEngine::search(const IndigoFingerprint &query, size_t ansCount, size_t startDepth,
-                                 const std::function<bool(size_t)> &filter) const {
+                                 const std::function<bool(CIDType)> &filter) const {
         std::vector<std::future<void>> tasks;
-        std::vector<size_t> result;
+        std::vector<CIDType> result;
         std::mutex resultsLock;
         QueryData queryData = {query, result, resultsLock, ansCount, false, filter};
         for (size_t i = (1ull << (startDepth)) - 1; i < (1ull << (startDepth + 1)) - 1; i++) {
@@ -62,7 +62,7 @@ namespace qtr {
         return result;
     }
 
-    void BallTreeSearchEngine::putAnswer(size_t ansValue, qtr::BallTreeSearchEngine::QueryData &queryData) {
+    void BallTreeSearchEngine::putAnswer(CIDType ansValue, qtr::BallTreeSearchEngine::QueryData &queryData) {
         queryData.updateIsTerminate();
         if (queryData.isTerminate || !queryData.filter(ansValue)) {
             return;
@@ -80,7 +80,7 @@ namespace qtr {
         isTerminate |= result.size() >= ansCount;
     }
 
-    void BallTreeSearchEngine::QueryData::addAnswer(size_t value) {
+    void BallTreeSearchEngine::QueryData::addAnswer(CIDType value) {
         std::lock_guard<std::mutex> lock(resultLock);
         if (result.size() < ansCount) {
             result.emplace_back(value);
