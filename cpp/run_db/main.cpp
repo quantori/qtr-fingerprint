@@ -340,7 +340,7 @@ int main(int argc, char *argv[]) {
     auto loadSmilesTableTask = std::async(std::launch::async, loadSmilesTable, std::ref(smilesTable),
                                           std::cref(args.smilesTablePath));
     LOG(INFO) << "Start ball tree loading";
-    qtr::BallTreeNoChecksSearchEngine ballTree(ballTreeReader, args.dbDataDirsPaths);
+    qtr::BallTreeRAMSearchEngine ballTree(ballTreeReader, args.dbDataDirsPaths);
     LOG(INFO) << "Finish ball tree loading";
     loadSmilesTableTask.get();
     timeTicker.tick("DB initialization");
