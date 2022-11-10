@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <glog/logging.h>
+#include "glog/log_severity.h"
 
 namespace qtr {
 
@@ -115,6 +116,8 @@ namespace qtr {
     std::vector<std::filesystem::path>
     findFiles(const std::filesystem::path &pathToDir, std::string extension);
 
-
-
+    /**
+     * Initialize google logging
+     */
+    void initLogging(int argc, char *argv[], google::LogSeverity severity, const char* base_filename, bool alsoLogToStderr);
 } // namespace qtr

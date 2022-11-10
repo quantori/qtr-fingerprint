@@ -17,7 +17,6 @@ SET(WITH_STATIC ON CACHE BOOL "WITH_STATIC Indigo option")
 SET(ABSL_PROPAGATE_CXX_STD ON)
 
 
-add_subdirectory(app)
 add_subdirectory(run_db)
 add_subdirectory(parse_sdf)
 add_subdirectory(splitter_tree)
