@@ -1,7 +1,9 @@
 #pragma once
 
-#include <filesystem>
 #include <vector>
+#include <map>
+#include <string>
+#include <numeric>
 
 namespace qtr {
     class HuffmanCoder {
@@ -20,16 +22,35 @@ namespace qtr {
         size_t _treeRoot;
         std::vector<bool> _symbolsMap[std::numeric_limits<uint8_t>::max() + 1];
 
-        void createTree(const std::filesystem::path &prioritiesFile);
+        void createTree(const std::map<char, uint64_t>& symbolsFrequency);
 
         void createSymbolsMap();
 
         const std::vector<bool> &getSymbolCode(char symbol) const;
 
-        std::vector<bool>& getSymbolCode(char symbol);
+        std::vector<bool> &getSymbolCode(char symbol);
+
+        HuffmanCoder(const std::map<char, uint64_t>& symbolsFrequency);
+
     public:
 
-        HuffmanCoder(const std::filesystem::path &prioritiesFile);
+        class Builder {
+        private:
+            std::map<char, uint64_t> symbolsFrequency;
+
+        public:
+            Builder() = default;
+
+            Builder &operator+=(const std::string &s);
+
+            Builder &operator+=(const Builder &other);
+
+            HuffmanCoder build() const;
+        };
+
+        friend HuffmanCoder Builder::build() const;
+
+        HuffmanCoder() = delete;
 
         std::vector<bool> encode(const std::string &string) const;
 

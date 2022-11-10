@@ -2,27 +2,22 @@
 
 #include <glog/logging.h>
 
-#include <fstream>
 #include <queue>
 #include <functional>
 #include <cassert>
 
 namespace qtr {
 
-    HuffmanCoder::HuffmanCoder(const std::filesystem::path &prioritiesFile) {
-        LOG(INFO) << "Init huffman using priorities from " << prioritiesFile;
-        createTree(prioritiesFile);
+    HuffmanCoder::HuffmanCoder(const std::map<char, uint64_t>& symbolsFrequency) {
+        createTree(symbolsFrequency);
         createSymbolsMap();
     }
 
-    void HuffmanCoder::createTree(const std::filesystem::path &prioritiesFile) {
-        std::ifstream in(prioritiesFile);
+    void HuffmanCoder::createTree(const std::map<char, uint64_t>& symbolsFrequency) {
         std::priority_queue<std::pair<uint64_t, size_t>,
                 std::vector<std::pair<uint64_t, size_t>>,
                 std::greater<>> freeNodes;
-        int symbol;
-        uint64_t priority;
-        while (in >> symbol >> priority) {
+        for (auto& [symbol, priority] : symbolsFrequency) {
             freeNodes.emplace(priority, _treeNodes.size());
             _treeNodes.emplace_back(symbol);
         }
@@ -93,5 +88,21 @@ namespace qtr {
         );
     }
 
+    HuffmanCoder::Builder &HuffmanCoder::Builder::operator+=(const std::string &s) {
+        for (char symbol: s) {
+            symbolsFrequency[symbol]++;
+        }
+        return *this;
+    }
 
+    HuffmanCoder::Builder &HuffmanCoder::Builder::operator+=(const HuffmanCoder::Builder &other) {
+        for (auto &[symbol, frequency]: other.symbolsFrequency) {
+            symbolsFrequency[symbol] += frequency;
+        }
+        return *this;
+    }
+
+    HuffmanCoder HuffmanCoder::Builder::build() const {
+        return { symbolsFrequency };
+    }
 } // qtr

@@ -14,7 +14,7 @@ sys.path.append(str(Path(__file__).absolute().parent.parent))
 from scripts import build_and_run
 
 url = "https://ftp.ncbi.nlm.nih.gov/pubchem/Compound/CURRENT-Full/SDF/"
-processed_file = Path(__file__).absolute().parent / '../../data/pubchem/processed.txt'
+processed_list_path = "not initialized path"
 sdf_dir_path = "not initialized path"
 dest_dir_path = "not initialized path"
 parse_mode = "not initialized mode"
@@ -27,6 +27,7 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument("--sdf_dir_path", type=str, required=True)
     parser.add_argument("--dest_dir_path", type=str, required=True)
     parser.add_argument("--parse_mode", type=str, required=True)
+    parser.add_argument("--processed_list_path", type=str, required=True)
     return parser
 
 
@@ -38,7 +39,7 @@ def get_urls(url, ext):
 
 
 def tag_processed(file_name):
-    with open(processed_file, 'a') as f:
+    with open(processed_list_path, 'a') as f:
         f.write(str(file_name) + '\n')
     print(f'processed: {file_name}', file=sys.stderr)
 
@@ -51,7 +52,7 @@ def check_processed(file_name, processed):
 
 
 def remove_unprocessed():
-    with processed_file.open('r') as f:
+    with processed_list_path.open('r') as f:
         processed = f.read().split()
     for file in os.listdir(sdf_dir_path):
         if check_processed(file, processed):
@@ -100,13 +101,14 @@ if __name__ == "__main__":
     sdf_dir_path = Path(args.sdf_dir_path)
     dest_dir_path = Path(args.dest_dir_path)
     parse_mode = args.parse_mode
+    processed_list_path = Path(args.processed_list_path)
+    build_and_run.run_command(f'touch {processed_list_path}')
 
     remove_unprocessed()
+
     dest_dir_path.mkdir(parents=True, exist_ok=True)
     sdf_dir_path.mkdir(parents=True, exist_ok=True)
-    with processed_file.open('a'):  # ensure that file exists
-        pass
-    with open(processed_file, 'r') as f:
+    with open(processed_list_path, 'r') as f:
         processed_before = set(f.read().split())
     sdfs = get_urls(url, ".sdf.gz")
     file_names = pd.Series(list(sorted(sdfs)))
