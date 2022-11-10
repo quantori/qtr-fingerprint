@@ -3,7 +3,10 @@
 ## Requirements
 
 * `CMake 3.13 or higher`
-* `libfreetype6-dev` and `libfontconfig1-dev` libs
+* `libfreetype6-dev`, `libfontconfig1-dev`, `libasio-dev` libs
+
+```apt-get install libfreetype6-dev libfontconfig1-dev libasio-dev```
+to install them all
 * `g++ 9.4 or higher`
 
 ## Build
