@@ -301,7 +301,7 @@ void runPseudoRest(const qtr::BallTreeSearchEngine &ballTree, const SmilesTable 
 }
 
 int main(int argc, char *argv[]) {
-    qtr::initLogging(argc, argv, google::INFO, "run_db.info", true);
+    qtr::initLogging(argv, google::INFO, "run_db.info", true);
     Args args(argc, argv);
 
     qtr::TimeTicker timeTicker;

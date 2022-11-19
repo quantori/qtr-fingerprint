@@ -132,5 +132,5 @@ TEST_F(PearsonCorrelationChoiceFuncTests, ChoiceFuncTest) {
     for (size_t i = 4; i < columns.size(); i++) { // check all other columns
         EXPECT_TRUE(columns[i] == 0 || columns[i] >= 5);
     }
-};
+}
 

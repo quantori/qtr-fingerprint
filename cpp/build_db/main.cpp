@@ -10,8 +10,6 @@
 #include "Utils.h"
 #include "smiles_table_io/SmilesTableWriter.h"
 #include "smiles_table_io/SmilesTableReader.h"
-#include "smiles_table_io/SmilesRandomAccessTable.h"
-#include "raw_bucket_io/RawBucketReader.h"
 #include "fingerprint_table_io/FingerprintTableWriter.h"
 #include "BallTreeBuilder.h"
 #include "ball_tree/split_bit_selection/MaxDispersionBitSelector.h"
@@ -171,7 +169,7 @@ size_t mergeSmilesTables(const Args &args) {
 }
 
 int main(int argc, char *argv[]) {
-    qtr::initLogging(argc, argv, google::INFO, "build_db.log", true);
+    qtr::initLogging(argv, google::INFO, "build_db.log", true);
     Args args(argc, argv);
 
     qtr::TimeTicker timeTicker;

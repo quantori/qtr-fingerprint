@@ -1,6 +1,5 @@
 #include "ColumnsSelectionUtils.h"
 
-#include <numeric>
 #include <algorithm>
 #include <map>
 

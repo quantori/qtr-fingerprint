@@ -156,11 +156,11 @@ public:
         return result;
     }
 
-    std::filesystem::path getTreePath() const {
+    [[nodiscard]] std::filesystem::path getTreePath() const {
         return getTmpDir() / "tree";
     }
 
-    std::vector<std::filesystem::path> getTreeDirs() const {
+    [[nodiscard]] std::vector<std::filesystem::path> getTreeDirs() const {
         std::vector<std::filesystem::path> result;
         for (size_t i = 1; i <= _drivesNumber; i++) {
             auto dir = getTmpDir() / std::to_string(i);
@@ -170,7 +170,7 @@ public:
         return result;
     }
 
-    void prepareTreeDirs(const DataTable &data) {
+    void prepareTreeDirs(const DataTable &data) const {
         auto treeDirs = getTreeDirs();
         for (size_t i = 0; i < treeDirs.size(); i++) {
             auto writerPath = treeDirs[i] / "0" / "_data.ft";

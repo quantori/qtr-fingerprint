@@ -3,7 +3,6 @@
 #include <cassert>
 #include <cstdint>
 #include <cmath>
-#include <algorithm>
 #include <numeric>
 #include <stdexcept>
 #include <random>

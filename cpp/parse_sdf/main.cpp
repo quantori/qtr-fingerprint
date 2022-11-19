@@ -1,7 +1,4 @@
-#include "indigo.h"
-
 #include "IndigoMolecule.h"
-#include "IndigoSession.h"
 #include "IndigoWriteBuffer.h"
 #include "IndigoSDFileIterator.h"
 
@@ -9,7 +6,6 @@
 
 #include <chrono>
 #include <unordered_map>
-#include <fstream>
 #include <iostream>
 #include <future>
 #include <functional>

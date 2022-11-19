@@ -18,7 +18,7 @@ namespace qtr {
 
         double tick(const std::string &message = "");
 
-        double elapsedTime() const;
+        [[nodiscard]] double elapsedTime() const;
 
         void logResults() const;
 
@@ -119,5 +119,5 @@ namespace qtr {
     /**
      * Initialize google logging
      */
-    void initLogging(int argc, char *argv[], google::LogSeverity severity, const char* base_filename, bool alsoLogToStderr);
+    void initLogging(char **argv, google::LogSeverity severity, const char *base_filename, bool alsoLogToStderr);
 } // namespace qtr

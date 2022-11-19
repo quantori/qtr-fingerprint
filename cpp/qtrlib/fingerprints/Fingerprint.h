@@ -52,7 +52,7 @@ namespace qtr {
                     this->operator[](i * CHAR_BIT + j) = bool((bytes[i] >> j) & std::byte(1));
         }
 
-        std::vector<std::byte> getBytes() const {
+        [[nodiscard]] std::vector<std::byte> getBytes() const {
             std::vector<std::byte> result(sizeInBytes, std::byte(0));
             for (size_t i = 0; i < result.size(); i++)
                 for (size_t j = 0; j < CHAR_BIT; j++)

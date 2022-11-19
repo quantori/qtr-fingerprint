@@ -56,7 +56,7 @@ namespace qtr {
     }
 
     void
-    initLogging(int argc, char **argv, google::LogSeverity severity, const char *base_filename, bool alsoLogToStderr) {
+    initLogging(char **argv, google::LogSeverity severity, const char *base_filename, bool alsoLogToStderr) {
         google::InitGoogleLogging(argv[0]);
         google::SetLogDestination(severity, base_filename);
         FLAGS_alsologtostderr = alsoLogToStderr;

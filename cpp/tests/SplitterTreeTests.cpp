@@ -67,7 +67,7 @@ protected:
         return rawBucketsDirPath / std::to_string(i) / "data.rb";
     }
 
-    void dumpBucket(const std::filesystem::path &bucketPath, const std::vector<raw_bucket_value_t> &bucket) {
+    static void dumpBucket(const std::filesystem::path &bucketPath, const std::vector<raw_bucket_value_t> &bucket) {
         RawBucketWriter writer(bucketPath);
         writer << bucket;
     }
@@ -78,14 +78,14 @@ protected:
         }
     }
 
-    std::vector<raw_bucket_value_t> loadBucket(const std::filesystem::path &bucketPath) {
+    static std::vector<raw_bucket_value_t> loadBucket(const std::filesystem::path &bucketPath) {
         RawBucketReader reader(bucketPath);
         std::vector<raw_bucket_value_t> bucket;
         reader >> bucket;
         return bucket;
     }
 
-    void
+    static void
     checkBucketsEqual(const std::vector<raw_bucket_value_t> &bucket1, const std::vector<raw_bucket_value_t> &bucket2) {
         EXPECT_TRUE(std::is_permutation(bucket1.begin(), bucket1.end(), bucket2.begin(), bucket2.end()));
     }
