@@ -17,11 +17,12 @@ namespace qtr {
         std::priority_queue<std::pair<uint64_t, size_t>,
                 std::vector<std::pair<uint64_t, size_t>>,
                 std::greater<>> freeNodes;
+        assert(!symbolsFrequency.empty() && "can't build tree for empty alphabet");
         for (auto& [symbol, priority] : symbolsFrequency) {
             freeNodes.emplace(priority, _treeNodes.size());
             _treeNodes.emplace_back(symbol);
         }
-        assert(freeNodes.size() >= 1);
+        assert(!freeNodes.empty());
         while (freeNodes.size() > 1) {
             auto [priority1, id1] = freeNodes.top();
             freeNodes.pop();
