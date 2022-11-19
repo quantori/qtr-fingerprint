@@ -39,6 +39,7 @@ namespace qtr {
         DFS = [this, &DFS](size_t nodeId, std::vector<bool> &code) {
             if (_treeNodes[nodeId].symbol != '\0') {
                 getSymbolCode(_treeNodes[nodeId].symbol) = code;
+                getSymbolCode(_treeNodes[nodeId].symbol).shrink_to_fit();
                 return;
             }
             code.push_back(false);
@@ -59,6 +60,7 @@ namespace qtr {
             assert(!symbolCode.empty());
             result.insert(result.end(), symbolCode.begin(), symbolCode.end());
         }
+        result.shrink_to_fit();
         return result;
     }
 

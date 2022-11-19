@@ -22,6 +22,7 @@
 #include "IndigoQueryMolecule.h"
 #include "smiles_table_io/SmilesTableReader.h"
 #include "HuffmanCoder.h"
+#include "SmilesTable.h"
 
 ABSL_FLAG(std::vector<std::string>, data_dir_paths, {},
           "Path to directories where data are stored");
@@ -43,9 +44,6 @@ ABSL_FLAG(std::string, input_file, "",
 
 ABSL_FLAG(std::uint64_t, ans_count, -1,
           "how many answers program will find");
-
-using SmilesTable = std::unordered_map<uint64_t, std::vector<bool>>;
-//using SmilesTable = std::vector<qtr::smiles_table_value_t>;
 
 void initLogging(int argc, char *argv[]) {
     google::InitGoogleLogging(argv[0]);
@@ -140,30 +138,9 @@ struct Args {
     }
 };
 
-//template<typename SmilesTable>
-//std::vector<qtr::smiles_table_value_t>
-//getSmiles(const std::vector<size_t> &smilesIndexes, SmilesTable &smilesTable, uint64_t ansCount) {
-//    std::vector<qtr::smiles_table_value_t> result;
-//    for (size_t i = 0; i < smilesIndexes.size() && i < ansCount; i++) {
-//        result.emplace_back({smilesIndexes[i], smilesTable[smilesIndexes[i]]});
-//    }
-//    return result;
-//}
-
-void printSmiles(const std::vector<qtr::smiles_table_value_t> &smiles) {
-    size_t answersToPrint = std::min(size_t(10), smiles.size());
-    for (size_t i = 0; i < answersToPrint; i++) {
-        if (i == 0)
-            std::cout << "[";
-        std::cout << '\"' << smiles[i].first << '\"';
-        std::cout << ", \"" << smiles[i].second << '\"';
-        std::cout << (i + 1 == answersToPrint ? "]\n" : ", ");
-    }
-}
-
 std::pair<bool, std::vector<uint64_t>>
-doSearch(const std::string &querySmiles, const qtr::BallTreeSearchEngine &ballTree, const SmilesTable &smilesTable,
-         const Args &args, const qtr::HuffmanCoder &huffmanCoder) {
+doSearch(const std::string &querySmiles, const qtr::BallTreeSearchEngine &ballTree, const qtr::SmilesTable &smilesTable,
+         const Args &args) {
     qtr::IndigoFingerprint fingerprint;
     try {
         fingerprint = qtr::IndigoFingerprintFromSmiles(querySmiles);
@@ -173,9 +150,8 @@ doSearch(const std::string &querySmiles, const qtr::BallTreeSearchEngine &ballTr
         return {true, {}};
     }
 
-    auto filter = [&smilesTable, &querySmiles, &huffmanCoder](size_t ansId) {
-        const auto& ansCode = smilesTable.at(ansId);
-        auto ansSmiles = huffmanCoder.decode(ansCode);
+    auto filter = [&smilesTable, &querySmiles](size_t ansId) {
+        auto ansSmiles = smilesTable.at(ansId);
         auto indigoSessionPtr = indigo_cpp::IndigoSession::create();
         auto queryMol = indigoSessionPtr->loadQueryMolecule(querySmiles);
         queryMol.aromatize();
@@ -201,7 +177,7 @@ doSearch(const std::string &querySmiles, const qtr::BallTreeSearchEngine &ballTr
 
 template<typename SmilesTable>
 void runInteractive(const qtr::BallTreeSearchEngine &ballTree, SmilesTable &smilesTable, qtr::TimeTicker &timeTicker,
-                    const Args &args, const qtr::HuffmanCoder &huffmanCoder) {
+                    const Args &args) {
     while (true) {
         std::cout << "Enter smiles: ";
         std::string smiles;
@@ -209,7 +185,7 @@ void runInteractive(const qtr::BallTreeSearchEngine &ballTree, SmilesTable &smil
         if (smiles.empty())
             break;
         timeTicker.tick();
-        const auto result = doSearch(smiles, ballTree, smilesTable, args, huffmanCoder);
+        const auto result = doSearch(smiles, ballTree, smilesTable, args);
         if (result.first)
             continue;
         std::cout << "Search time: " << timeTicker.tick("Search time") << std::endl;
@@ -218,7 +194,7 @@ void runInteractive(const qtr::BallTreeSearchEngine &ballTree, SmilesTable &smil
 
 template<typename SmilesTable>
 void runFromFile(const qtr::BallTreeSearchEngine &ballTree, SmilesTable &smilesTable, qtr::TimeTicker &timeTicker,
-                 const Args &args, const qtr::HuffmanCoder &huffmanCoder) {
+                 const Args &args) {
     std::ifstream input(args.inputFile);
     std::vector<std::string> queries;
     while (input.peek() != EOF) {
@@ -234,7 +210,7 @@ void runFromFile(const qtr::BallTreeSearchEngine &ballTree, SmilesTable &smilesT
     for (size_t i = 0; i < queries.size(); i++) {
         LOG(INFO) << "Start search for " << i << ": " << queries[i];
         timeTicker.tick();
-        const auto result = doSearch(queries[i], ballTree, smilesTable, args, huffmanCoder);
+        const auto result = doSearch(queries[i], ballTree, smilesTable, args);
         if (result.first) {
             skipped++;
             continue;
@@ -270,15 +246,21 @@ qtr::HuffmanCoder buildHuffmanCoder(const std::filesystem::path &smilesTablePath
     return huffmanBuilder.build();
 }
 
-qtr::HuffmanCoder
-loadSmilesTable(SmilesTable &smilesTable, const std::filesystem::path &smilesTablePath) {
-    auto huffmanCoder = buildHuffmanCoder(smilesTablePath);
+qtr::SmilesTable
+loadSmilesTable(const std::filesystem::path &smilesTablePath, const qtr::HuffmanCoder &huffmanCoder) {
     LOG(INFO) << "Start smiles table loading";
-    for (const auto &[id, smiles]: qtr::SmilesTableReader(smilesTablePath)) {
-        smilesTable[id] = huffmanCoder.encode(smiles);
+    qtr::SmilesTable::Builder builder(huffmanCoder);
+    for (const auto &pair: qtr::SmilesTableReader(smilesTablePath)) {
+        builder += pair;
     }
     LOG(INFO) << "Finish smiles table loading";
-    return huffmanCoder;
+    return builder.build();
+}
+
+std::pair<qtr::HuffmanCoder, qtr::SmilesTable> loadCoderAndTable(const std::filesystem::path &smilesTablePath) {
+    auto coder = buildHuffmanCoder(smilesTablePath);
+    auto table = loadSmilesTable(smilesTablePath, coder);
+    return {coder, table};
 }
 
 crow::json::wvalue prepareResponse(const std::vector<uint64_t> &ids, size_t minOffset, size_t maxOffset) {
@@ -293,8 +275,9 @@ crow::json::wvalue prepareResponse(const std::vector<uint64_t> &ids, size_t minO
 }
 
 void
-runPseudoRest(const qtr::BallTreeSearchEngine &ballTree, const SmilesTable &smilesTable, qtr::TimeTicker &timeTicker,
-              const Args &args, const qtr::HuffmanCoder &huffmanCoder) {
+runPseudoRest(const qtr::BallTreeSearchEngine &ballTree, const qtr::SmilesTable &smilesTable,
+              qtr::TimeTicker &timeTicker,
+              const Args &args) {
     crow::SimpleApp app;
     std::mutex newTaskMutex;
     uint64_t _queryIdTicker = 0;
@@ -304,7 +287,7 @@ runPseudoRest(const qtr::BallTreeSearchEngine &ballTree, const SmilesTable &smil
     std::unordered_map<std::string, uint64_t> queryToId;
 
     CROW_ROUTE(app, "/query").methods(crow::HTTPMethod::POST)(
-            [&tasks, &_queryIdTicker, &queryToId, &ballTree, &smilesTable, &args, &huffmanCoder, &newTaskMutex](
+            [&tasks, &_queryIdTicker, &queryToId, &ballTree, &smilesTable, &args, &newTaskMutex](
                     const crow::request &req) {
                 auto body = crow::json::load(req.body);
                 if (!body)
@@ -315,8 +298,7 @@ runPseudoRest(const qtr::BallTreeSearchEngine &ballTree, const SmilesTable &smil
                 if (!queryToId.contains(smiles)) {
                     _queryIdTicker += 1;
                     tasks[_queryIdTicker] = std::async(std::launch::async, doSearch, smiles, std::cref(ballTree),
-                                                       std::cref(smilesTable), std::cref(args),
-                                                       std::cref(huffmanCoder));
+                                                       std::cref(smilesTable), std::cref(args));
                     queryToId[smiles] = _queryIdTicker;
                 }
                 return crow::response(std::to_string(queryToId[smiles]));
@@ -350,20 +332,19 @@ int main(int argc, char *argv[]) {
     qtr::TimeTicker timeTicker;
     qtr::BufferedReader ballTreeReader(args.ballTreePath);
 
-    SmilesTable smilesTable;
-    auto loadSmilesTableTask = std::async(std::launch::async, loadSmilesTable, std::ref(smilesTable),
-                                          std::cref(args.smilesTablePath));
+
+    auto loadSmilesTableTask = std::async(std::launch::async, loadCoderAndTable, std::cref(args.smilesTablePath));
     LOG(INFO) << "Start ball tree loading";
     qtr::BallTreeRAMSearchEngine ballTree(ballTreeReader, args.dbDataDirsPaths);
     LOG(INFO) << "Finish ball tree loading";
-    auto huffmanCoder = loadSmilesTableTask.get();
+    auto [huffmanCoder, smilesTable] = loadSmilesTableTask.get();
     timeTicker.tick("DB initialization");
     if (args.mode == Args::Mode::Interactive)
-        runInteractive(ballTree, smilesTable, timeTicker, args, huffmanCoder);
+        runInteractive(ballTree, smilesTable, timeTicker, args);
     else if (args.mode == Args::Mode::FromFile)
-        runFromFile(ballTree, smilesTable, timeTicker, args, huffmanCoder);
+        runFromFile(ballTree, smilesTable, timeTicker, args);
     else if (args.mode == Args::Mode::PseudoRest)
-        runPseudoRest(ballTree, smilesTable, timeTicker, args, huffmanCoder);
+        runPseudoRest(ballTree, smilesTable, timeTicker, args);
 
     return 0;
 }
