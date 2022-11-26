@@ -6,7 +6,8 @@
 
 #include "Utils.h"
 #include "BallTreeRAMSearchEngine.h"
-
+#include "HuffmanCoder.h"
+#include "SmilesTable.h"
 
 using namespace std;
 using namespace qtr;
@@ -133,13 +134,11 @@ int main(int argc, char *argv[]) {
     TimeTicker timeTicker;
     BufferedReader ballTreeReader(args.ballTreePath);
 
-    SmilesTable smilesTable;
-    auto loadSmilesTableTask = async(launch::async, loadSmilesTable, ref(smilesTable),
-                                          cref(args.smilesTablePath));
+    auto loadSmilesTableTask = std::async(std::launch::async, loadCoderAndTable, std::cref(args.smilesTablePath));
     LOG(INFO) << "Start ball tree loading";
     BallTreeRAMSearchEngine ballTree(ballTreeReader, args.dbDataDirsPaths);
     LOG(INFO) << "Finish ball tree loading";
-    loadSmilesTableTask.get();
+    auto [huffmanCoder, smilesTable] = loadSmilesTableTask.get();
     timeTicker.tick("DB initialization");
     RunMode *mode = nullptr;
     if (args.mode == Args::Mode::Interactive)
