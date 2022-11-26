@@ -17,7 +17,7 @@ namespace qtr {
         size_t _bufPtr;
 
     public:
-        BufferedWriter(const char *filePath) : _bufPtr(0) {
+        explicit BufferedWriter(const char *filePath) : _bufPtr(0) {
             std::ifstream kek(filePath);
             _file = std::fopen(filePath, "w");
             if (_file == nullptr) {
@@ -25,9 +25,7 @@ namespace qtr {
             }
         }
 
-        BufferedWriter(const std::filesystem::path &filePath) : BufferedWriter(filePath.c_str()) {}
-
-        BufferedWriter(const std::string &filePath) : BufferedWriter(filePath.c_str()) {}
+        explicit BufferedWriter(const std::filesystem::path &filePath) : BufferedWriter(filePath.c_str()) {}
 
         void flush() {
             fwrite(_buf, 1, _bufPtr, _file);

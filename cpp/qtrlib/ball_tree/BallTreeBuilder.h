@@ -25,7 +25,7 @@ namespace qtr {
         void
         splitNodeOneFile(size_t nodeId, const BitSelector &bitSelector, const std::filesystem::path &dataDirectory);
 
-        std::vector<std::filesystem::path> getNodeFiles(size_t nodeId) const;
+        [[nodiscard]] std::vector<std::filesystem::path> getNodeFiles(size_t nodeId) const;
 
         void calculateCentroid(size_t nodeId);
 

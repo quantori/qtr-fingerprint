@@ -41,22 +41,20 @@ namespace qtr {
 
         void searchInSubtree(size_t nodeId, QueryData &queryData) const;
 
-        const std::filesystem::path &getLeafFile(size_t nodeId) const;
-
-        std::filesystem::path &getLeafFile(size_t nodeId);
+        [[nodiscard]] const std::filesystem::path &getLeafFile(size_t nodeId) const;
 
         template<typename BinaryReader>
         void loadNodes(BinaryReader &reader);
 
-        std::vector<size_t> getLeafIds() const;
+        [[nodiscard]] std::vector<size_t> getLeafIds() const;
 
-        static void putAnswer(CIDType ansValue, QueryData& queryData);
+        static void putAnswer(CIDType ansValue, QueryData &queryData);
 
         virtual void searchInLeaf(size_t leafId, QueryData &queryData) const = 0;
 
     public:
         std::vector<CIDType> search(const IndigoFingerprint &query, size_t ansCount, size_t startDepth,
-                                   const std::function<bool(CIDType)> &filter = noFiltering) const;
+                                    const std::function<bool(CIDType)> &filter = noFiltering) const;
 
     protected:
         std::vector<std::filesystem::path> _leafDataPaths;

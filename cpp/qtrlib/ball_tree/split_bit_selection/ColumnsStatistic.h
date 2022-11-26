@@ -13,11 +13,11 @@ namespace qtr {
 
         explicit ColumnsStatistic(const std::vector<std::filesystem::path>& filePaths);
 
-        size_t zeros(size_t i) const;
+        [[nodiscard]] size_t zeros(size_t i) const;
 
-        size_t ones(size_t i) const;
+        [[nodiscard]] size_t ones(size_t i) const;
 
-        size_t size() const;
+        [[nodiscard]] size_t size() const;
 
         void collectStatistic(const std::filesystem::path &filePath);
 

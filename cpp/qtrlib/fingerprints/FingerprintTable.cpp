@@ -2,24 +2,21 @@
 
 #include "QtrIndigoFingerprint.h"
 
-#include "IndigoSession.h"
-#include "IndigoSDFileIterator.h"
-
 namespace qtr {
 
-template <>
-IndigoFingerprintTable::FingerprintTable(const std::string &sdfFile) {
+    template<>
+    IndigoFingerprintTable::FingerprintTable(const std::string &sdfFile) {
 
-    using namespace indigo_cpp;
+        using namespace indigo_cpp;
 
-    IndigoSessionPtr indigoSessionPtr = IndigoSession::create();
-    IndigoSDFileIterator iterator = indigoSessionPtr->iterateSDFile(sdfFile);
+        IndigoSessionPtr indigoSessionPtr = IndigoSession::create();
+        IndigoSDFileIterator iterator = indigoSessionPtr->iterateSDFile(sdfFile);
 
-    for(IndigoMoleculeSPtr &molecule : iterator) {
-        molecule->aromatize();
-        QtrIndigoFingerprint fingerprint(*molecule, "sub");
-        this->emplace_back(fingerprint);
+        for (IndigoMoleculeSPtr &molecule: iterator) {
+            molecule->aromatize();
+            QtrIndigoFingerprint fingerprint(*molecule, "sub");
+            this->emplace_back(fingerprint);
+        }
     }
-}
 
 } // namespace qtr

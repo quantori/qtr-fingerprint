@@ -3,9 +3,6 @@
 #include "Fingerprint.h"
 #include "QtrIndigoFingerprint.h"
 
-#include "IndigoMolecule.h"
-#include "IndigoSession.h"
-
 #include <gtest/gtest.h>
 
 #include <memory>

@@ -10,8 +10,6 @@
 #include "Utils.h"
 #include "smiles_table_io/SmilesTableWriter.h"
 #include "smiles_table_io/SmilesTableReader.h"
-#include "smiles_table_io/SmilesRandomAccessTable.h"
-#include "raw_bucket_io/RawBucketReader.h"
 #include "fingerprint_table_io/FingerprintTableWriter.h"
 #include "BallTreeBuilder.h"
 #include "ball_tree/split_bit_selection/MaxDispersionBitSelector.h"
@@ -39,12 +37,6 @@ ABSL_FLAG(std::string, db_name, "",
 
 namespace {
     std::mt19937 randomGenerator(0);
-}
-
-void initLogging(int argc, char *argv[]) {
-    google::InitGoogleLogging(argv[0]);
-    google::SetLogDestination(google::INFO, "build_db.log");
-    FLAGS_alsologtostderr = true;
 }
 
 struct Args {
@@ -177,7 +169,7 @@ size_t mergeSmilesTables(const Args &args) {
 }
 
 int main(int argc, char *argv[]) {
-    initLogging(argc, argv);
+    qtr::initLogging(argv, google::INFO, "build_db.log", true);
     Args args(argc, argv);
 
     qtr::TimeTicker timeTicker;
