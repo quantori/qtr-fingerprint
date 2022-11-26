@@ -47,7 +47,7 @@ namespace qtr {
     HuffmanCoder buildHuffmanCoder(const filesystem::path &smilesTablePath) {
         LOG(INFO) << "Start huffman coder building";
         qtr::HuffmanCoder::Builder huffmanBuilder;
-        for (const auto &[_, smiles]: qtr::SmilesTableReader(smilesTablePath)) {
+        for (const auto &[_, smiles]: SmilesTableReader(smilesTablePath)) {
             huffmanBuilder += smiles;
         }
         LOG(INFO) << "Finish huffman coder building";
@@ -57,7 +57,7 @@ namespace qtr {
     SmilesTable loadSmilesTable(const filesystem::path &smilesTablePath, const HuffmanCoder &huffmanCoder) {
         LOG(INFO) << "Start smiles table loading";
         SmilesTable::Builder builder(huffmanCoder);
-        for (const auto &pair: qtr::SmilesTableReader(smilesTablePath)) {
+        for (const auto &pair: SmilesTableReader(smilesTablePath)) {
             builder += pair;
         }
         LOG(INFO) << "Finish smiles table loading";
