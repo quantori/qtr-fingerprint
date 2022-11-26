@@ -81,9 +81,11 @@ namespace qtr {
     }
 
     void BallTreeSearchEngine::QueryData::addAnswer(CIDType value) {
-        std::lock_guard<std::mutex> lock(resultLock);
         if (result.size() < ansCount) {
-            result.emplace_back(value);
+            std::lock_guard<std::mutex> lock(resultLock);
+            if (result.size() < ansCount) {
+                result.emplace_back(value);
+            }
         }
     }
 } // qtr
