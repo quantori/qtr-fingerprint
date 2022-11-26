@@ -20,9 +20,9 @@ namespace qtr {
 
         static size_t parent(size_t nodeId);
 
-        bool isLeaf(size_t nodeId) const;
+        [[nodiscard]] bool isLeaf(size_t nodeId) const;
 
-        size_t leafNumberById(size_t leafId) const;
+        [[nodiscard]] size_t leafNumberById(size_t leafId) const;
 
         static size_t root();
 

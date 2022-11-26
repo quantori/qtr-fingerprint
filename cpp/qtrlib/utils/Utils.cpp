@@ -55,6 +55,13 @@ namespace qtr {
         }
     }
 
+    void
+    initLogging(char **argv, google::LogSeverity severity, const char *base_filename, bool alsoLogToStderr) {
+        google::InitGoogleLogging(argv[0]);
+        google::SetLogDestination(severity, base_filename);
+        FLAGS_alsologtostderr = alsoLogToStderr;
+    }
+
     double TimeTicker::tick(const std::string &message) {
         _timePoints.emplace_back(std::chrono::high_resolution_clock::now());
         std::chrono::duration<double> t = _timePoints.back() - _timePoints[_timePoints.size() - 2];

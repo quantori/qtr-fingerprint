@@ -11,7 +11,7 @@ public:
 
     void TearDown() override;
 
-    const std::filesystem::path& getTmpDir() const;
+    [[nodiscard]] const std::filesystem::path& getTmpDir() const;
 private:
     std::filesystem::path _dir;
 

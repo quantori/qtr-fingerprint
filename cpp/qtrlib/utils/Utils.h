@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <glog/logging.h>
+#include "glog/log_severity.h"
 
 namespace qtr {
 
@@ -17,7 +18,7 @@ namespace qtr {
 
         double tick(const std::string &message = "");
 
-        double elapsedTime() const;
+        [[nodiscard]] double elapsedTime() const;
 
         void logResults() const;
 
@@ -115,6 +116,8 @@ namespace qtr {
     std::vector<std::filesystem::path>
     findFiles(const std::filesystem::path &pathToDir, std::string extension);
 
-
-
+    /**
+     * Initialize google logging
+     */
+    void initLogging(char **argv, google::LogSeverity severity, const char *base_filename, bool alsoLogToStderr);
 } // namespace qtr

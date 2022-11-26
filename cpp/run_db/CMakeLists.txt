@@ -1,7 +1,9 @@
 set(CMAKE_CXX_STANDARD 20)
 find_package(OpenMP REQUIRED)
 
-add_executable(run_db main.cpp)
+file(GLOB_RECURSE sources *.cpp *.h)
+
+add_executable(run_db main.cpp ${sources})
 
 target_include_directories(run_db
         PUBLIC .
