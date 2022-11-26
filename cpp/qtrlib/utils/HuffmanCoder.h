@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <numeric>
+#include <filesystem>
 
 namespace qtr {
     class HuffmanCoder {
@@ -18,6 +19,7 @@ namespace qtr {
             Node(char symbol, size_t left, size_t right) : symbol(symbol), left(left), right(right) {}
         };
 
+        std::map<char, uint64_t> _symbolsFrequency;
         std::vector<Node> _treeNodes;
         size_t _treeRoot;
         std::vector<bool> _symbolsMap[std::numeric_limits<uint8_t>::max() + 1];
@@ -55,6 +57,10 @@ namespace qtr {
         std::vector<bool> encode(const std::string &string) const;
 
         std::string decode(const std::vector<bool> &code) const;
+
+        void dump(const std::filesystem::path& filePath) const;
+
+        static HuffmanCoder load(const std::filesystem::path& filePath);
 
     };
 

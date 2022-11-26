@@ -61,6 +61,8 @@ struct Args {
 
     filesystem::path ballTreePath;
     filesystem::path smilesTablePath;
+    filesystem::path huffmanCoderPath;
+
 
     Args(int argc, char *argv[]) {
         absl::ParseCommandLine(argc, argv);
@@ -124,6 +126,9 @@ struct Args {
 
         smilesTablePath = dbOtherDataPath / "smilesTable";
         LOG(INFO) << "smilesTablePath: " << smilesTablePath;
+
+        huffmanCoderPath = dbOtherDataPath / "huffman";
+        LOG(INFO) << "huffmanCoderPath: " << huffmanCoderPath;
     }
 };
 
