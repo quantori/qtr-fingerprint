@@ -39,11 +39,14 @@ namespace qtr {
             for (size_t i = 0; i < queries.size(); i++) {
                 LOG(INFO) << "Start search for " << i << ": " << queries[i];
                 timeTicker.tick();
-                const auto result = doSearch(queries[i], ballTree, smilesTable, ansCount, startSearchDepth);
+                std::unique_ptr<BallTreeSearchEngine::QueryData> queryData;
+                const auto result = doSearch(queries[i], *queryData, ballTree, smilesTable, startSearchDepth);
                 if (result.first) {
-                    skipped++;
+                    ++skipped;
                     continue;
                 }
+                for (auto &task : result.second)
+                    task.wait();
                 times.emplace_back(timeTicker.tick("search molecule " + std::to_string(i) + ": " + queries[i]));
             }
 

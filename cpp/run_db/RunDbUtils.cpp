@@ -9,18 +9,20 @@ using namespace std;
 
 namespace qtr {
 
-    pair<bool, vector<uint64_t>>
-    doSearch(const string &querySmiles, const qtr::BallTreeSearchEngine &ballTree,
-             const SmilesTable &smilesTable, uint64_t ansCount, uint64_t startSearchDepth) {
+    std::pair<bool, vector < future < void>>>
+
+    doSearch(const std::string &querySmiles, BallTreeDriveSearchEngine::QueryData &queryData,
+             const qtr::BallTreeSearchEngine &ballTree,
+             const SmilesTable &smilesTable, uint64_t startSearchDepth) {
         qtr::IndigoFingerprint fingerprint;
         try {
             fingerprint = qtr::IndigoFingerprintFromSmiles(querySmiles);
         }
         catch (exception &exception) {
             cout << "skip query:" << exception.what() << endl;
-            return {true, {}};
+            return {true, std::vector<future<void>>{}};
         }
-
+        queryData.query = fingerprint;
         auto filter = [&smilesTable, &querySmiles](size_t ansId) {
             const auto &ansSmiles = smilesTable.at(ansId);
             auto indigoSessionPtr = indigo_cpp::IndigoSession::create();
@@ -39,9 +41,8 @@ namespace qtr {
                 return false;
             }
         };
-        auto candidateIndexes = ballTree.search(fingerprint, ansCount, startSearchDepth, filter);
-        LOG(INFO) << "found answers: " << candidateIndexes.size();
-        return {false, candidateIndexes};
+        queryData.filter = filter;
+        return {false, ballTree.search(queryData, startSearchDepth)};
     }
 
     HuffmanCoder buildHuffmanCoder(const filesystem::path &smilesTablePath) {
@@ -64,7 +65,7 @@ namespace qtr {
         return builder.build();
     }
 
-    pair<HuffmanCoder, SmilesTable> loadCoderAndTable(const filesystem::path &smilesTablePath) {
+    pair <HuffmanCoder, SmilesTable> loadCoderAndTable(const filesystem::path &smilesTablePath) {
         auto coder = buildHuffmanCoder(smilesTablePath);
         auto table = loadSmilesTable(smilesTablePath, coder);
         return {coder, table};

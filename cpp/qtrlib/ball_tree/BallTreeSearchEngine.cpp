@@ -6,12 +6,14 @@
 #include "fingerprint_table_io/FingerprintTableReader.h"
 #include "Utils.h"
 
+using namespace std;
+
 namespace qtr {
 
     void BallTreeSearchEngine::initLeafDataPaths() {
         size_t expectedFilesNumber = (_nodes.size() + 1) / 2;
         _leafDataPaths.resize(expectedFilesNumber);
-        std::vector<bool> isInit(expectedFilesNumber, false);
+        vector<bool> isInit(expectedFilesNumber, false);
         for (auto &dataDir: _dataDirectories) {
             for (auto &filePath: findFiles(dataDir, "")) {
                 size_t nodeId = atoll(filePath.filename().c_str());
@@ -20,13 +22,13 @@ namespace qtr {
                 assert(!isInit[index]);
                 isInit[index] = true;
                 _leafDataPaths[index] = filePath / ("data" + qtr::fingerprintTableExtension);
-                assert(std::filesystem::is_regular_file(_leafDataPaths[index]));
+                assert(filesystem::is_regular_file(_leafDataPaths[index]));
             }
         }
-        assert(std::count(isInit.begin(), isInit.end(), false) == 0);
+        assert(count(isInit.begin(), isInit.end(), false) == 0);
     }
 
-    const std::filesystem::path &BallTreeSearchEngine::getLeafFile(size_t nodeId) const {
+    const filesystem::path &BallTreeSearchEngine::getLeafFile(size_t nodeId) const {
         assert((1ull << _depth) - 1 <= nodeId);
         return _leafDataPaths[nodeId - (1ull << _depth) + 1];
     }
@@ -43,23 +45,16 @@ namespace qtr {
         searchInSubtree(rightChild(nodeId), queryData);
     }
 
-    std::vector<CIDType>
-    BallTreeSearchEngine::search(const IndigoFingerprint &query, size_t ansCount, size_t startDepth,
-                                 const std::function<bool(CIDType)> &filter) const {
-        std::vector<std::future<void>> tasks;
-        std::vector<CIDType> result;
-        std::mutex resultsLock;
-        QueryData queryData = {query, result, resultsLock, ansCount, false, filter};
+    vector<future<void>>
+    BallTreeSearchEngine::search(QueryData &queryData, size_t startDepth) const {
+        vector<future<void>> tasks;
         for (size_t i = (1ull << (startDepth)) - 1; i < (1ull << (startDepth + 1)) - 1; i++) {
             tasks.emplace_back(
-                    std::async(std::launch::async, &BallTreeSearchEngine::searchInSubtree, this, i,
-                               std::ref(queryData))
+                    async(launch::async, &BallTreeSearchEngine::searchInSubtree, this, i,
+                               ref(queryData))
             );
         }
-        for (auto &task: tasks) {
-            task.get();
-        }
-        return result;
+        return tasks;
     }
 
     void BallTreeSearchEngine::putAnswer(CIDType ansValue, qtr::BallTreeSearchEngine::QueryData &queryData) {
@@ -70,9 +65,9 @@ namespace qtr {
         queryData.addAnswer(ansValue);
     }
 
-    std::vector<size_t> BallTreeSearchEngine::getLeafIds() const {
-        std::vector<size_t> result((1ull << _depth));
-        std::iota(result.begin(), result.end(), (1ull << _depth) - 1);
+    vector<size_t> BallTreeSearchEngine::getLeafIds() const {
+        vector<size_t> result((1ull << _depth));
+        iota(result.begin(), result.end(), (1ull << _depth) - 1);
         return result;
     }
 
@@ -82,10 +77,19 @@ namespace qtr {
 
     void BallTreeSearchEngine::QueryData::addAnswer(CIDType value) {
         if (result.size() < ansCount) {
-            std::lock_guard<std::mutex> lock(resultLock);
+            lock_guard<mutex> lock(resultLock);
             if (result.size() < ansCount) {
                 result.emplace_back(value);
             }
         }
+    }
+
+    BallTreeSearchEngine::QueryData::QueryData(size_t ansCount,
+                                               IndigoFingerprint query,
+                                               function<bool(CIDType)> filter) :
+            ansCount(ansCount),
+            query(query),
+            filter(move(filter)),
+            isTerminate(false) {
     }
 } // qtr
