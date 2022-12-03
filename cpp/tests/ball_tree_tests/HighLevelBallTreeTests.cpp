@@ -231,7 +231,11 @@ public:
         BallTreeType ballTree(treeReader, getTreeDirs());
         for (const auto &query: queries) {
             auto expectedAnswer = getAnswers(data, query);
-            auto actualAnswer = ballTree.search(query, -1, _startSearchDepth);
+            qtr::BallTreeSearchEngine::QueryData queryData(-1, query);
+            auto tasks = ballTree.search(queryData, _startSearchDepth);
+            for (auto &u : tasks)
+                u.wait();
+            auto actualAnswer = queryData.result;
             EXPECT_TRUE(std::is_permutation(expectedAnswer.begin(), expectedAnswer.end(),
                                             actualAnswer.begin(), actualAnswer.end()));
         }

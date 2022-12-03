@@ -32,6 +32,7 @@ namespace qtr {
         void run() override;
 
     private:
-        crow::json::wvalue prepareResponse(const std::vector<uint64_t> &ids, size_t minOffset, size_t maxOffset);
+        static crow::json::wvalue
+        prepareResponse(BallTreeSearchEngine::QueryData &queryData, size_t minOffset, size_t maxOffset);
     };
 } // namespace qtr

@@ -24,12 +24,15 @@ namespace qtr {
         BallTreeSearchEngine(BinaryReader &nodesReader, std::vector<std::filesystem::path> dataDirectories);
 
         struct QueryData {
-            const IndigoFingerprint &query;
-            std::vector<CIDType> &result;
-            std::mutex &resultLock;
+            IndigoFingerprint query;
+            std::vector<CIDType> result;
+            std::mutex resultLock;
             size_t ansCount;
             bool isTerminate;
-            const std::function<bool(CIDType)> &filter;
+            std::function<bool(CIDType)> filter;
+
+            explicit QueryData(size_t ansCount, IndigoFingerprint query = IndigoFingerprint(),
+                      std::function<bool(CIDType)> filter = noFiltering);
 
             void updateIsTerminate();
 
@@ -53,8 +56,7 @@ namespace qtr {
         virtual void searchInLeaf(size_t leafId, QueryData &queryData) const = 0;
 
     public:
-        std::vector<CIDType> search(const IndigoFingerprint &query, size_t ansCount, size_t startDepth,
-                                    const std::function<bool(CIDType)> &filter = noFiltering) const;
+        std::vector<std::future<void>> search(QueryData &queryData, size_t startDepth) const;
 
     protected:
         std::vector<std::filesystem::path> _leafDataPaths;
