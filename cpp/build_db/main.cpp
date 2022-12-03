@@ -24,6 +24,9 @@ ABSL_FLAG(string, smiles_dir_path, "",
 ABSL_FLAG(string, fingerprints_dir_path, "",
           "Path to directory where fingerprint tables are stored");
 
+ABSL_FLAG(string, id_to_string_dir_path, "",
+          "Path to directory where id to string tables are stored");
+
 ABSL_FLAG(vector<string>, data_dir_paths, {},
           "Path to directories where data should be stored");
 
@@ -46,6 +49,8 @@ namespace {
 struct Args {
     filesystem::path smilesDirPath;
     filesystem::path fingerprintsDirPath;
+    filesystem::path idToStringSourceDirPath;
+
     vector<filesystem::path> dataDirPaths;
     filesystem::path otherDataPath;
     uint64_t subtreeParallelDepth;
@@ -57,6 +62,7 @@ struct Args {
 
     filesystem::path ballTreePath;
     filesystem::path smilesTablePath;
+    filesystem::path idToStringDestinationDirPath;
     filesystem::path huffmanCoderPath;
 
     Args(int argc, char *argv[]) {
@@ -69,6 +75,9 @@ struct Args {
         fingerprintsDirPath = absl::GetFlag(FLAGS_fingerprints_dir_path);
         emptyArgument(fingerprintsDirPath, "Please specify fingerprints_dir_path option");
         LOG(INFO) << "fingerprintsDirPath" << fingerprintsDirPath;
+
+        idToStringSourceDirPath = absl::GetFlag(FLAGS_id_to_string_dir_path);
+        emptyArgument(idToStringSourceDirPath, "Please specify id_to_string_dir_path option");
 
         vector<string> dataDirPathsStrings = absl::GetFlag(FLAGS_data_dir_paths);
         copy(dataDirPathsStrings.begin(), dataDirPathsStrings.end(), back_inserter(dataDirPaths));
@@ -115,6 +124,9 @@ struct Args {
 
         huffmanCoderPath = dbOtherDataPath / "huffman";
         LOG(INFO) << "huffmanCoderPath: " << huffmanCoderPath;
+
+        idToStringDestinationDirPath = dbOtherDataPath / "id_string";
+        LOG(INFO) << "idToStringDestinationDirPath: " << idToStringDestinationDirPath;
     }
 };
 
@@ -142,6 +154,7 @@ void initFileSystem(const Args &args) {
         filesystem::create_directory(dbDirPath / "0");
     }
     filesystem::create_directory(args.dbOtherDataPath);
+    filesystem::create_directory(args.idToStringDestinationDirPath);
 }
 
 void distributeFingerprintTables(const Args &args) {
@@ -158,24 +171,19 @@ void distributeFingerprintTables(const Args &args) {
     }
 }
 
-HuffmanCoder buildHuffman(const Args &args, const vector<filesystem::path> &smilesTablePaths) {
-    HuffmanCoder::Builder huffmanBuilder;
-    for (auto &stFile: smilesTablePaths) {
-        for (const auto &[_, smiles]: SmilesTableReader(stFile)) {
-            huffmanBuilder += smiles;
-        }
-    }
-    HuffmanCoder huffmanCoder = huffmanBuilder.build();
-    huffmanCoder.dump(args.huffmanCoderPath);
-    return huffmanBuilder.build();
-}
+size_t mergeSmilesTablesAndBuildHuffman(const Args &args) {
+    LOG(INFO) << "Start merging smiles tables and building huffman";
+    vector<filesystem::path> smilesTablePaths = findFiles(args.smilesDirPath, smilesTableExtension);
 
-size_t mergeSmilesTables(const Args &args, const vector<filesystem::path> &smilesTablePaths) {
     vector<smiles_table_value_t> smilesTable;
+    HuffmanCoder::Builder huffmanBuilder;
 
     for (auto &stFile: smilesTablePaths) {
         SmilesTableReader reader(stFile);
-        copy(reader.begin(), reader.end(), back_inserter(smilesTable));
+        for (const auto &value: reader) {
+            smilesTable.emplace_back(value);
+            huffmanBuilder += value.second;
+        }
     }
 
     sort(smilesTable.begin(), smilesTable.end(),
@@ -184,7 +192,34 @@ size_t mergeSmilesTables(const Args &args, const vector<filesystem::path> &smile
          });
     SmilesTableWriter writer(args.smilesTablePath);
     copy(smilesTable.begin(), smilesTable.end(), writer.begin());
+
+    auto huffmanCoder = huffmanBuilder.build();
+    huffmanCoder.dump(args.huffmanCoderPath);
+    LOG(INFO) << "Finish merging smiles tables and building huffman";
+
     return smilesTable.size();
+}
+
+void copyIdToStringTables(const filesystem::path &source, const filesystem::path &destination) {
+    LOG(INFO) << "Start copying from " << source << " to " << destination;
+    for (const filesystem::path &filePath: findFiles(source, ".csv")) {
+        LOG(INFO) << "copy file" << filePath << " to " << destination / filePath.filename();
+        filesystem::copy_file(filePath, destination / filePath.filename());
+    }
+    LOG(INFO) << "Finish copying from " << source << " to " << destination;
+}
+
+size_t processTables(const Args& args) {
+    auto copyIdToStrTablesTask = std::async(std::launch::async, copyIdToStringTables, cref(args.idToStringSourceDirPath),
+                                            cref(args.idToStringDestinationDirPath));
+    auto mergeSmilesTablesTask = async(launch::async, mergeSmilesTablesAndBuildHuffman, cref(args));
+    auto fingerprintsTask = async(launch::async, distributeFingerprintTables, cref(args));
+
+    size_t moleculesNumber = mergeSmilesTablesTask.get();
+    copyIdToStrTablesTask.get();
+    fingerprintsTask.get();
+
+    return moleculesNumber;
 }
 
 void buildDB(const Args &args) {
@@ -192,27 +227,14 @@ void buildDB(const Args &args) {
 
     initFileSystem(args);
     timeTicker.tick("Filesystem initialization");
-
-    std::vector<std::filesystem::path> smilesTablePaths = qtr::findFiles(args.smilesDirPath, qtr::smilesTableExtension);
-
-    auto mergeSmilesTask = async(launch::async, mergeSmilesTables, cref(args), cref(smilesTablePaths));
-    auto fingerprintsTask = async(launch::async, distributeFingerprintTables, cref(args));
-    fingerprintsTask.get();
-    size_t moleculesNumber = mergeSmilesTask.get();
-
-    auto huffmanTask = async(launch::async, buildHuffman, cref(args), cref(smilesTablePaths));
-
+    size_t moleculesNumber = processTables(args);
     timeTicker.tick("Fingerprint table files distribution + smiles merge + huffman build");
     BallTreeBuilder ballTree(args.treeDepth, args.subtreeParallelDepth, args.dbDataDirsPaths,
                              MaxDispersionBitSelector());
-
     timeTicker.tick("Ball tree building");
     ofstream ballTreeWriter(args.ballTreePath);
-
     ballTree.dumpNodes(ballTreeWriter);
     timeTicker.tick("Ball tree dumping");
-
-    huffmanTask.get();
 
     LOG(INFO) << "Molecules number: " << moleculesNumber;
 

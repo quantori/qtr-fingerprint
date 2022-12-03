@@ -14,7 +14,7 @@ namespace qtr {
              const SmilesTable &smilesTable, uint64_t ansCount, uint64_t startSearchDepth) {
         qtr::IndigoFingerprint fingerprint;
         try {
-            fingerprint = qtr::IndigoFingerprintFromSmiles(querySmiles);
+            fingerprint = qtr::indigoFingerprintFromSmiles(querySmiles);
         }
         catch (exception &exception) {
             cout << "skip query:" << exception.what() << endl;
