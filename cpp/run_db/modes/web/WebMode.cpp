@@ -6,10 +6,12 @@ namespace qtr {
 
 
     WebMode::WebMode(const BallTreeSearchEngine &ballTree, const SmilesTable &smilesTable, TimeTicker &timeTicker,
-                     uint64_t ansCount, uint64_t startSearchDepth) : ballTree(ballTree),
-                                                                     smilesTable(smilesTable),
-                                                                     ansCount(ansCount),
-                                                                     startSearchDepth(startSearchDepth) {}
+                     uint64_t ansCount, uint64_t startSearchDepth,
+                     std::filesystem::path &idToStringDirPath) : ballTree(ballTree),
+                                                                 smilesTable(smilesTable),
+                                                                 ansCount(ansCount),
+                                                                 startSearchDepth(startSearchDepth),
+                                                                 idConverter(idToStringDirPath) {}
 
 
     crow::json::wvalue
@@ -17,9 +19,14 @@ namespace qtr {
         crow::json::wvalue::list response;
         std::cout << minOffset << " " << maxOffset << std::endl;
         if (!ids.empty()) {
-            std::copy(ids.begin() + std::min(ids.size(), minOffset),
-                      ids.begin() + std::min(ids.size(), maxOffset),
-                      std::back_inserter(response));
+            auto rightBorder = std::min(ids.size(), maxOffset);
+            auto leftBorder = std::min(ids.size(), minOffset);
+            response.reserve(rightBorder - leftBorder);
+            for (size_t i = leftBorder; i < rightBorder; ++i) {
+                auto [id, libraryId] = idConverter.fromDbId(ids[i]);
+                response.emplace_back(crow::json::wvalue{{"id",        id},
+                                                         {"libraryId", libraryId}});
+            }
         }
         return crow::json::wvalue{response};
     }

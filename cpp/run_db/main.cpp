@@ -61,6 +61,7 @@ struct Args {
 
     filesystem::path ballTreePath;
     filesystem::path smilesTablePath;
+    filesystem::path idToStringDirPath;
 
     Args(int argc, char *argv[]) {
         absl::ParseCommandLine(argc, argv);
@@ -124,6 +125,9 @@ struct Args {
 
         smilesTablePath = dbOtherDataPath / "smilesTable";
         LOG(INFO) << "smilesTablePath: " << smilesTablePath;
+
+        idToStringDirPath = dbOtherDataPath / "id_string";
+        LOG(INFO) << "idToStringDirPath: " << idToStringDirPath;
     }
 };
 
@@ -150,7 +154,7 @@ int main(int argc, char *argv[]) {
                                                         args.startSearchDepth));
     else if (args.mode == Args::Mode::Web)
         mode = dynamic_cast<RunMode *>(new WebMode(ballTree, smilesTable, timeTicker, args.ansCount,
-                                                   args.startSearchDepth));
+                                                   args.startSearchDepth, args.idToStringDirPath));
 
     mode->run();
 

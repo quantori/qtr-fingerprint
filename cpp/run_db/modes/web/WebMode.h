@@ -11,6 +11,7 @@
 #include "IndigoQueryMolecule.h"
 #include "smiles_table_io/SmilesTableReader.h"
 #include "RunDbUtils.h"
+#include "IdConverter.h"
 
 #include "modes/RunMode.h"
 
@@ -21,9 +22,12 @@ namespace qtr {
         const SmilesTable &smilesTable;
         const uint64_t ansCount;
         const uint64_t startSearchDepth;
+        IdConverter idConverter;
+
     public:
         WebMode(const qtr::BallTreeSearchEngine &ballTree, const SmilesTable &smilesTable,
-                qtr::TimeTicker &timeTicker, uint64_t ansCount, uint64_t startSearchDepth);
+                qtr::TimeTicker &timeTicker, uint64_t ansCount, uint64_t startSearchDepth,
+                std::filesystem::path &idToStringDirPath);
 
         void run() override;
 
