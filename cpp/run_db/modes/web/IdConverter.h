@@ -18,7 +18,7 @@ public:
             qtr::IdToStringReader reader(filename);
             for (const auto &[dbId, outerId]: reader)
                 _fromDbId[dbId] = {outerId, _libraryIds.size()};
-            _libraryIds.emplace_back(filename);
+            _libraryIds.emplace_back(filename.stem());
         }
     }
 
