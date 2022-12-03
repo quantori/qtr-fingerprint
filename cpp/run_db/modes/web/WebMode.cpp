@@ -7,11 +7,11 @@ namespace qtr {
 
     WebMode::WebMode(const BallTreeSearchEngine &ballTree, const SmilesTable &smilesTable, TimeTicker &timeTicker,
                      uint64_t ansCount, uint64_t startSearchDepth,
-                     std::filesystem::path &idToStringDirPath) : ballTree(ballTree),
-                                                                 smilesTable(smilesTable),
-                                                                 ansCount(ansCount),
-                                                                 startSearchDepth(startSearchDepth),
-                                                                 idConverter(idToStringDirPath) {}
+                     std::filesystem::path &idToStringDirPath) : _ballTree(ballTree),
+                                                                 _smilesTable(smilesTable),
+                                                                 _ansCount(ansCount),
+                                                                 _startSearchDepth(startSearchDepth),
+                                                                 _idConverter(idToStringDirPath) {}
 
 
     crow::json::wvalue
@@ -23,7 +23,7 @@ namespace qtr {
             auto leftBorder = std::min(ids.size(), minOffset);
             response.reserve(rightBorder - leftBorder);
             for (size_t i = leftBorder; i < rightBorder; ++i) {
-                auto [id, libraryId] = idConverter.fromDbId(ids[i]);
+                auto [id, libraryId] = _idConverter.fromDbId(ids[i]);
                 response.emplace_back(crow::json::wvalue{{"id",        id},
                                                          {"libraryId", libraryId}});
             }
@@ -53,8 +53,8 @@ namespace qtr {
                     if (!queryToId.contains(smiles)) {
                         _queryIdTicker += 1;
                         tasks[_queryIdTicker] = std::async(std::launch::async, doSearch, smiles,
-                                                           std::ref(ballTree), std::ref(smilesTable), ansCount,
-                                                           startSearchDepth);
+                                                           std::ref(_ballTree), std::ref(_smilesTable), _ansCount,
+                                                           _startSearchDepth);
                         queryToId[smiles] = _queryIdTicker;
                     }
                     return crow::response(std::to_string(queryToId[smiles]));

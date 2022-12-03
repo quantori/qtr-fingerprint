@@ -86,7 +86,7 @@ struct Args {
             LOG(INFO) << "Please specify start_search_depth option";
             exit(-1);
         }
-        LOG(INFO) << "startSearchDepth: " << startSearchDepth;
+        LOG(INFO) << "_startSearchDepth: " << startSearchDepth;
 
         string modeStr = absl::GetFlag(FLAGS_mode);
         emptyArgument(modeStr, "Please specify mode option");
@@ -108,7 +108,7 @@ struct Args {
         }
 
         ansCount = absl::GetFlag(FLAGS_ans_count);
-        LOG(INFO) << "ansCount: " << ansCount;
+        LOG(INFO) << "_ansCount: " << ansCount;
 
         for (auto &dir: dataDirPaths) {
             dbDataDirsPaths.emplace_back(dir / dbName);
@@ -123,7 +123,7 @@ struct Args {
         ballTreePath = dbOtherDataPath / "tree";
         LOG(INFO) << "ballTreePath: " << ballTreePath;
 
-        smilesTablePath = dbOtherDataPath / "smilesTable";
+        smilesTablePath = dbOtherDataPath / "_smilesTable";
         LOG(INFO) << "smilesTablePath: " << smilesTablePath;
 
         idToStringDirPath = dbOtherDataPath / "id_string";

@@ -105,7 +105,7 @@ struct Args {
         ballTreePath = dbOtherDataPath / "tree";
         LOG(INFO) << "splitterTreePath: " << ballTreePath;
 
-        smilesTablePath = dbOtherDataPath / "smilesTable";
+        smilesTablePath = dbOtherDataPath / "_smilesTable";
         LOG(INFO) << "smilesTablePath: " << smilesTablePath;
     }
 };

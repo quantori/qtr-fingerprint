@@ -18,11 +18,11 @@
 namespace qtr {
     class WebMode : public RunMode {
     private:
-        const qtr::BallTreeSearchEngine &ballTree;
-        const SmilesTable &smilesTable;
-        const uint64_t ansCount;
-        const uint64_t startSearchDepth;
-        IdConverter idConverter;
+        const qtr::BallTreeSearchEngine &_ballTree;
+        const SmilesTable &_smilesTable;
+        const uint64_t _ansCount;
+        const uint64_t _startSearchDepth;
+        IdConverter _idConverter;
 
     public:
         WebMode(const qtr::BallTreeSearchEngine &ballTree, const SmilesTable &smilesTable,

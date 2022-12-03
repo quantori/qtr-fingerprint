@@ -11,7 +11,7 @@ public:
     }
 
     std::filesystem::path getSmilesTablePath() const {
-        return getTmpDir() / ("smilesTable" + qtr::smilesTableExtension);
+        return getTmpDir() / ("_smilesTable" + qtr::smilesTableExtension);
     }
 
     void generateSmilesTable() {
