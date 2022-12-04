@@ -19,6 +19,7 @@ SET(ABSL_PROPAGATE_CXX_STD ON)
 
 add_subdirectory(run_db)
 add_subdirectory(parse_sdf)
+add_subdirectory(parse_csv)
 add_subdirectory(build_db)
 add_subdirectory(qtrlib)
 add_subdirectory(third_party/Indigo)

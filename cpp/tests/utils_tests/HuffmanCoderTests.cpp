@@ -1,8 +1,9 @@
 #include "gtest/gtest.h"
 
 #include "HuffmanCoder.h"
+#include "../utils/TmpDirFixture.h"
 
-class HuffmanTests : public ::testing::Test {
+class HuffmanTests : public TmpDirFixture {
 protected:
 
     void testStrings(const std::vector<std::string> &strings) {
@@ -11,10 +12,17 @@ protected:
             builder += s;
         }
         auto coder = builder.build();
+        auto filePath = getTmpDir() / "huffman.txt";
+        coder.dump(filePath);
+        auto coder_loaded = qtr::HuffmanCoder::load(filePath);
         for (auto &s: strings) {
             auto code = coder.encode(s);
+            auto code2 = coder_loaded.encode(s);
+            EXPECT_EQ(code, code2);
             EXPECT_LE(code.size(), s.size() * CHAR_BIT);
             auto t = coder.decode(code);
+            auto t2 = coder_loaded.decode(code);
+            EXPECT_EQ(t, t2);
             EXPECT_EQ(s, t);
         }
     }

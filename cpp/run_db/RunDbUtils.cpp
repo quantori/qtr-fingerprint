@@ -14,7 +14,7 @@ namespace qtr {
              const SmilesTable &smilesTable, uint64_t ansCount, uint64_t startSearchDepth) {
         qtr::IndigoFingerprint fingerprint;
         try {
-            fingerprint = qtr::IndigoFingerprintFromSmiles(querySmiles);
+            fingerprint = qtr::indigoFingerprintFromSmiles(querySmiles);
         }
         catch (exception &exception) {
             cout << "skip query:" << exception.what() << endl;
@@ -44,30 +44,14 @@ namespace qtr {
         return {false, candidateIndexes};
     }
 
-    HuffmanCoder buildHuffmanCoder(const filesystem::path &smilesTablePath) {
-        LOG(INFO) << "Start huffman coder building";
-        qtr::HuffmanCoder::Builder huffmanBuilder;
-        for (const auto &[_, smiles]: qtr::SmilesTableReader(smilesTablePath)) {
-            huffmanBuilder += smiles;
-        }
-        LOG(INFO) << "Finish huffman coder building";
-        return huffmanBuilder.build();
-    }
-
     SmilesTable loadSmilesTable(const filesystem::path &smilesTablePath, const HuffmanCoder &huffmanCoder) {
         LOG(INFO) << "Start smiles table loading";
-        SmilesTable::Builder builder(huffmanCoder);
-        for (const auto &pair: qtr::SmilesTableReader(smilesTablePath)) {
-            builder += pair;
+        SmilesTable::Builder smilesTableBuilder(huffmanCoder);
+        for (const auto &pair: SmilesTableReader(smilesTablePath)) {
+            smilesTableBuilder += pair;
         }
         LOG(INFO) << "Finish smiles table loading";
-        return builder.build();
-    }
-
-    pair<HuffmanCoder, SmilesTable> loadCoderAndTable(const filesystem::path &smilesTablePath) {
-        auto coder = buildHuffmanCoder(smilesTablePath);
-        auto table = loadSmilesTable(smilesTablePath, coder);
-        return {coder, table};
+        return smilesTableBuilder.build();
     }
 
 } // namespace qtr

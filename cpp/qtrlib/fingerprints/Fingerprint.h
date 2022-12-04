@@ -90,7 +90,7 @@ namespace qtr {
         return fingerprint;
     }
 
-    inline IndigoFingerprint IndigoFingerprintFromSmiles(const std::string &smiles) {
+    inline IndigoFingerprint indigoFingerprintFromSmiles(const std::string &smiles) {
         auto indigoSessionPtr = indigo_cpp::IndigoSession::create();
         auto mol = indigoSessionPtr->loadMolecule(smiles);
         mol.aromatize();
