@@ -70,7 +70,7 @@ namespace qtr {
                     if (!tasks.contains(searchId))
                         return crow::json::wvalue();
                     const auto &task = tasks[searchId];
-                    if (task.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+                    if (task.wait_for(std::chrono::seconds(300)) == std::future_status::ready) {
                         auto [isSkipped, result] = tasks[searchId].get();
                         resultTable[searchId] = std::move(result);
                     } else {
