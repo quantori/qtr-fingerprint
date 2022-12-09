@@ -5,20 +5,22 @@
 #include <queue>
 #include <functional>
 #include <cassert>
+#include <fstream>
 
 namespace qtr {
 
-    HuffmanCoder::HuffmanCoder(const std::map<char, uint64_t>& symbolsFrequency) {
+    HuffmanCoder::HuffmanCoder(const std::map<char, uint64_t> &symbolsFrequency) {
+        _symbolsFrequency = symbolsFrequency;
         createTree(symbolsFrequency);
         createSymbolsMap();
     }
 
-    void HuffmanCoder::createTree(const std::map<char, uint64_t>& symbolsFrequency) {
+    void HuffmanCoder::createTree(const std::map<char, uint64_t> &symbolsFrequency) {
         std::priority_queue<std::pair<uint64_t, size_t>,
                 std::vector<std::pair<uint64_t, size_t>>,
                 std::greater<>> freeNodes;
         assert(!symbolsFrequency.empty() && "can't build tree for empty alphabet");
-        for (auto& [symbol, priority] : symbolsFrequency) {
+        for (auto &[symbol, priority]: symbolsFrequency) {
             freeNodes.emplace(priority, _treeNodes.size());
             _treeNodes.emplace_back(symbol);
         }
@@ -91,6 +93,24 @@ namespace qtr {
         );
     }
 
+    void HuffmanCoder::dump(const std::filesystem::path &filePath) const {
+        std::ofstream out(filePath);
+        for (auto &[symbol, frequency]: _symbolsFrequency) {
+            out << int(symbol) << ' ' << frequency << '\n';
+        }
+    }
+
+    HuffmanCoder HuffmanCoder::load(const std::filesystem::path &filePath) {
+        std::ifstream in(filePath);
+        std::map<char, uint64_t> symbolsFrequency;
+        int symbol;
+        uint64_t frequency;
+        while (in >> symbol >> frequency) {
+            symbolsFrequency.emplace(char(symbol), frequency);
+        }
+        return {symbolsFrequency};
+    }
+
     HuffmanCoder::Builder &HuffmanCoder::Builder::operator+=(const std::string &s) {
         for (char symbol: s) {
             symbolsFrequency[symbol]++;
@@ -106,6 +126,6 @@ namespace qtr {
     }
 
     HuffmanCoder HuffmanCoder::Builder::build() const {
-        return { symbolsFrequency };
+        return {symbolsFrequency};
     }
 } // qtr

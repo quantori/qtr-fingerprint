@@ -19,8 +19,8 @@ namespace qtr {
 
         using BaseWriter::operator<<;
 
-        size_t _writtenColumns;
     private:
+        size_t _writtenColumns;
     };
 
 } // namespace qtr

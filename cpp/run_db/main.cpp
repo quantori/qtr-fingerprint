@@ -8,6 +8,7 @@
 #include "BallTreeRAMSearchEngine.h"
 #include "HuffmanCoder.h"
 #include "SmilesTable.h"
+#include "RunDbUtils.h"
 
 using namespace std;
 using namespace qtr;
@@ -61,6 +62,8 @@ struct Args {
 
     filesystem::path ballTreePath;
     filesystem::path smilesTablePath;
+    filesystem::path huffmanCoderPath;
+    filesystem::path idToStringDirPath;
 
     Args(int argc, char *argv[]) {
         absl::ParseCommandLine(argc, argv);
@@ -124,6 +127,12 @@ struct Args {
 
         smilesTablePath = dbOtherDataPath / "smilesTable";
         LOG(INFO) << "smilesTablePath: " << smilesTablePath;
+
+        huffmanCoderPath = dbOtherDataPath / "huffman";
+        LOG(INFO) << "huffmanCoderPath: " << huffmanCoderPath;
+
+        idToStringDirPath = dbOtherDataPath / "id_string";
+        LOG(INFO) << "idToStringDirPath: " << idToStringDirPath;
     }
 };
 
@@ -134,11 +143,13 @@ int main(int argc, char *argv[]) {
     TimeTicker timeTicker;
     BufferedReader ballTreeReader(args.ballTreePath);
 
-    auto loadSmilesTableTask = std::async(std::launch::async, loadCoderAndTable, std::cref(args.smilesTablePath));
+    HuffmanCoder huffmanCoder = HuffmanCoder::load(args.huffmanCoderPath);
+
+    auto loadSmilesTableTask = async(launch::async, loadSmilesTable, cref(args.smilesTablePath), cref(huffmanCoder));
     LOG(INFO) << "Start ball tree loading";
     BallTreeRAMSearchEngine ballTree(ballTreeReader, args.dbDataDirsPaths);
     LOG(INFO) << "Finish ball tree loading";
-    auto [huffmanCoder, smilesTable] = loadSmilesTableTask.get();
+    SmilesTable smilesTable = loadSmilesTableTask.get();
     timeTicker.tick("DB initialization");
     RunMode *mode = nullptr;
     if (args.mode == Args::Mode::Interactive)
@@ -150,7 +161,7 @@ int main(int argc, char *argv[]) {
                                                         args.startSearchDepth));
     else if (args.mode == Args::Mode::Web)
         mode = dynamic_cast<RunMode *>(new WebMode(ballTree, smilesTable, timeTicker, args.ansCount,
-                                                   args.startSearchDepth));
+                                                   args.startSearchDepth, args.idToStringDirPath));
 
     mode->run();
 

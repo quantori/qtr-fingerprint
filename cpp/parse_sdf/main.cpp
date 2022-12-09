@@ -87,7 +87,7 @@ void sdfToRb(const std::filesystem::path &sdFilePath, const Args &args) {
 
     processSDF(sdFilePath, [&writer](const indigo_cpp::IndigoMoleculeSPtr &mol) {
         mol->aromatize();
-        qtr::IndigoFingerprint fingerprint = qtr::IndigoFingerprintFromSmiles(mol->smiles());
+        qtr::IndigoFingerprint fingerprint = qtr::indigoFingerprintFromSmiles(mol->smiles());
         writer << std::make_pair(mol->smiles(), fingerprint);
     });
 }
@@ -107,7 +107,7 @@ void sdfToTables(const std::filesystem::path &sdFilePath, const Args &args) {
     processSDF(sdFilePath, [&smilesTableWriter, &fingerprintTableWriter](const indigo_cpp::IndigoMoleculeSPtr &mol) {
         mol->aromatize();
         std::string smiles = mol->smiles();
-        qtr::IndigoFingerprint fingerprint = qtr::IndigoFingerprintFromSmiles(smiles);
+        qtr::IndigoFingerprint fingerprint = qtr::indigoFingerprintFromSmiles(smiles);
         uint64_t cid = std::stoull(mol->name());
 
         smilesTableWriter << std::make_pair(cid, smiles);
