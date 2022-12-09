@@ -10,7 +10,6 @@ using namespace std;
 namespace qtr {
 
     std::pair<bool, vector < future < void>>>
-
     doSearch(const std::string &querySmiles, BallTreeDriveSearchEngine::QueryData &queryData,
              const qtr::BallTreeSearchEngine &ballTree,
              const SmilesTable &smilesTable, uint64_t startSearchDepth) {

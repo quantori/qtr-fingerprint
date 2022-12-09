@@ -57,10 +57,9 @@ namespace qtr {
                     if (!queryToId.contains(currSmiles)) {
                         queryToId[currSmiles] = queries.size();
                         queries.emplace_back(make_unique<BallTreeSearchEngine::QueryData>(_ansCount));
-                        tasks.resize(queries.size());
-                        tasks.back() = doSearch(currSmiles,
-                                                *queries.back(), _ballTree,
-                                                _smilesTable, _startSearchDepth).second;
+                        tasks.emplace_back(doSearch(currSmiles,
+                                                    *queries.back(), _ballTree,
+                                                    _smilesTable, _startSearchDepth).second);
                     }
                     return crow::response(to_string(queryToId[currSmiles]));
                 });

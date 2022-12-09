@@ -29,13 +29,12 @@ namespace qtr {
                 if (smiles.empty())
                     break;
                 timeTicker.tick();
-                try {
-                    BallTreeSearchEngine::QueryData queryData(ansCount);
-                    const auto result = doSearch(smiles, queryData, ballTree, smilesTable, startSearchDepth);
-                    std::cout << "Search time: " << timeTicker.tick("Search time") << std::endl;
-                } catch(std::exception& e) {
-                    continue;
+                BallTreeSearchEngine::QueryData queryData(ansCount);
+                const auto result = doSearch(smiles, queryData, ballTree, smilesTable, startSearchDepth);
+                for (auto& task : result.second) {
+                    task.wait();
                 }
+                std::cout << "Search time: " << timeTicker.tick("Search time") << std::endl;
             }
         }
 
