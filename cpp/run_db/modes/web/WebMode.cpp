@@ -50,13 +50,12 @@ namespace qtr {
                     std::cout << body["smiles"] << std::endl;
                     std::string smiles = body["smiles"].s();
                     std::lock_guard<std::mutex> lock(newTaskMutex);
-                    if (!queryToId.contains(smiles)) {
-                        _queryIdTicker += 1;
-                        tasks[_queryIdTicker] = std::async(std::launch::async, doSearch, smiles,
-                                                           std::ref(_ballTree), std::ref(_smilesTable), _ansCount,
-                                                           _startSearchDepth);
-                        queryToId[smiles] = _queryIdTicker;
-                    }
+                    //if (!queryToId.contains(smiles))
+                    _queryIdTicker += 1;
+                    tasks[_queryIdTicker] = std::async(std::launch::async, doSearch, smiles,
+                                                       std::ref(_ballTree), std::ref(_smilesTable), _ansCount,
+                                                       _startSearchDepth);
+                    queryToId[smiles] = _queryIdTicker;
                     return crow::response(std::to_string(queryToId[smiles]));
                 });
 
