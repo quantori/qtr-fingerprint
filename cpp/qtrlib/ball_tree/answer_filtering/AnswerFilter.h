@@ -1,12 +1,22 @@
 #pragma once
 
-#include "Fingerprint.h"
+#include <memory>
+
+#include "BallTreeTypes.h"
 
 namespace qtr {
     class AnswerFilter {
     public:
-        virtual bool operator()(const IndigoFingerprint &fingerprint) = 0;
 
-        virtual static AnswerFilter prepare() = 0;
+        /// this class should be copied via method @copy
+        AnswerFilter(const AnswerFilter &answerFilter) = delete;
+
+        AnswerFilter() = default;
+
+        virtual bool operator()(CIDType id) = 0;
+
+        virtual std::unique_ptr<AnswerFilter> copy() = 0;
+
+        virtual ~AnswerFilter() = default;
     };
 }
