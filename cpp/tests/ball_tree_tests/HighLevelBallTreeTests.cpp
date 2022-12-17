@@ -232,10 +232,10 @@ public:
         for (const auto &query: queries) {
             auto expectedAnswer = getAnswers(data, query);
             qtr::BallTreeSearchEngine::QueryData queryData(-1, query);
-            auto tasks = ballTree.search(queryData, _startSearchDepth);
+            auto tasks = ballTree.search(queryData, 0);
             for (auto &u : tasks)
                 u.wait();
-            auto actualAnswer = queryData.result;
+            auto actualAnswer = queryData._result;
             EXPECT_TRUE(std::is_permutation(expectedAnswer.begin(), expectedAnswer.end(),
                                             actualAnswer.begin(), actualAnswer.end()));
         }

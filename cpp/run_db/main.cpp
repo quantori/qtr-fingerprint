@@ -110,7 +110,7 @@ struct Args {
         }
 
         ansCount = absl::GetFlag(FLAGS_ans_count);
-        LOG(INFO) << "ansCount: " << ansCount;
+        LOG(INFO) << "_stopAnswersNumber: " << ansCount;
 
         for (auto &dir: dataDirPaths) {
             dbDataDirsPaths.emplace_back(dir / dbName);
@@ -150,17 +150,18 @@ int main(int argc, char *argv[]) {
     BallTreeRAMSearchEngine ballTree(ballTreeReader, args.dbDataDirsPaths);
     LOG(INFO) << "Finish ball tree loading";
     SmilesTable smilesTable = loadSmilesTableTask.get();
+    auto smilesTablePtr = std::shared_ptr<const SmilesTable>((const SmilesTable *) &smilesTable);
     timeTicker.tick("DB initialization");
     RunMode *mode = nullptr;
     if (args.mode == Args::Mode::Interactive)
-        mode = dynamic_cast<RunMode *>(new InteractiveMode(ballTree, smilesTable, timeTicker, args.ansCount,
+        mode = dynamic_cast<RunMode *>(new InteractiveMode(ballTree, smilesTablePtr, timeTicker, args.ansCount,
                                                            args.startSearchDepth));
     else if (args.mode == Args::Mode::FromFile)
-        mode = dynamic_cast<RunMode *>(new FromFileMode(ballTree, smilesTable, timeTicker, args.inputFile,
+        mode = dynamic_cast<RunMode *>(new FromFileMode(ballTree, smilesTablePtr, timeTicker, args.inputFile,
                                                         args.ansCount,
                                                         args.startSearchDepth));
     else if (args.mode == Args::Mode::Web)
-        mode = dynamic_cast<RunMode *>(new WebMode(ballTree, smilesTable, timeTicker, args.ansCount,
+        mode = dynamic_cast<RunMode *>(new WebMode(ballTree, smilesTablePtr, timeTicker, args.ansCount,
                                                    args.startSearchDepth, args.idToStringDirPath));
 
     mode->run();

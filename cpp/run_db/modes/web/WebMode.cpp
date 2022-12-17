@@ -1,36 +1,37 @@
 #include "WebMode.h"
 
+#include <utility>
+
 using namespace qtr;
 using namespace std;
 
 namespace qtr {
 
 
-    WebMode::WebMode(const BallTreeSearchEngine &ballTree, const SmilesTable &smilesTable, TimeTicker &timeTicker,
+    WebMode::WebMode(const BallTreeSearchEngine &ballTree, shared_ptr<const SmilesTable> smilesTable,
+                     TimeTicker &timeTicker,
                      uint64_t ansCount, uint64_t startSearchDepth,
                      std::filesystem::path &idToStringDirPath) : _ballTree(ballTree),
-                                                                 _smilesTable(smilesTable),
+                                                                 _smilesTable(std::move(smilesTable)),
                                                                  _ansCount(ansCount),
                                                                  _startSearchDepth(startSearchDepth),
-                                                                 _idConverter(idToStringDirPath){}
+                                                                 _idConverter(idToStringDirPath) {}
 
 
     crow::json::wvalue
-    WebMode::prepareResponse(BallTreeSearchEngine::QueryData &queryData, size_t minOffset, size_t maxOffset) {
+    WebMode::prepareResponse(BallTreeQueryData &queryData, size_t minOffset, size_t maxOffset) {
         crow::json::wvalue::list response;
         cout << minOffset << " " << maxOffset << endl;
-        lock_guard<mutex> lock(queryData.resultLock);
-        LOG(INFO) << "found " << queryData.result.size() << " results";
-        if (!queryData.result.empty()) {
-            auto rightBorder = std::min(queryData.result.size(), maxOffset);
-            auto leftBorder = std::min(queryData.result.size(), minOffset);
-            response.reserve(rightBorder - leftBorder);
-            for (size_t i = leftBorder; i < rightBorder; ++i) {
-                auto [id, libraryId] = _idConverter.fromDbId(queryData.result[i]);
-                response.emplace_back(crow::json::wvalue{{"id",        id},
-                                                         {"libraryId", libraryId}});
-            }
+        auto [isFinish, result] = queryData.getAnswers(minOffset, maxOffset);
+        LOG(INFO) << "found " << result.size() << " results";
+        response.reserve(result.size());
+        response.emplace_back(crow::json::wvalue{{"isFinished", isFinish}});
+        for (auto res: result) {
+            auto [id, libraryId] = _idConverter.fromDbId(res);
+            response.emplace_back(crow::json::wvalue{{"id",        id},
+                                                     {"libraryId", libraryId}});
         }
+
         return crow::json::wvalue{response};
     }
 
@@ -39,13 +40,12 @@ namespace qtr {
         crow::SimpleApp app;
         mutex newTaskMutex;
 
-        vector<vector<future<void>>> tasks;
         vector<string> smiles;
-        vector<unique_ptr<BallTreeSearchEngine::QueryData>> queries;
+        vector<unique_ptr<BallTreeQueryData>> queries;
         unordered_map<string, uint64_t> queryToId;
 
         CROW_ROUTE(app, "/query").methods(crow::HTTPMethod::POST)(
-                [&queryToId, &queries, &tasks, &newTaskMutex, this, &smiles](
+                [&queryToId, &queries, &newTaskMutex, this, &smiles](
                         const crow::request &req) {
                     auto body = crow::json::load(req.body);
                     if (!body)
@@ -56,10 +56,8 @@ namespace qtr {
                     string &currSmiles = smiles.back();
                     if (!queryToId.contains(currSmiles)) {
                         queryToId[currSmiles] = queries.size();
-                        queries.emplace_back(make_unique<BallTreeSearchEngine::QueryData>(_ansCount));
-                        tasks.emplace_back(doSearch(currSmiles,
-                                                    *queries.back(), _ballTree,
-                                                    _smilesTable, _startSearchDepth).second);
+                        auto [error, queryData] = doSearch(currSmiles, _ballTree, _smilesTable, _ansCount);
+                        queries.emplace_back(std::move(queryData));
                     }
                     return crow::response(to_string(queryToId[currSmiles]));
                 });
@@ -77,4 +75,5 @@ namespace qtr {
         app.port(8080).concurrency(2).run();
 
     }
+
 } // namespace qtr

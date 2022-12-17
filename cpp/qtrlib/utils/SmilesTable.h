@@ -34,6 +34,8 @@ namespace qtr {
 
             SmilesTable build();
 
+            std::shared_ptr<SmilesTable> buildPtr();
+
             Builder &operator+=(const std::pair<KeyType, ValueType> &item);
 
             Builder &operator+=(const std::pair<KeyType, std::string> &item);

@@ -4,8 +4,8 @@
 
 #include "Utils.h"
 #include "io/BufferedReader.h"
+#include "BallTreeSearchEngine.h"
 #include "BallTreeRAMSearchEngine.h"
-#include "BallTreeNoChecksSearchEngine.h"
 #include "fingerprint_table_io/FingerprintTableReader.h"
 #include "IndigoSubstructureMatcher.h"
 #include "IndigoQueryMolecule.h"
@@ -19,13 +19,13 @@ namespace qtr {
     class WebMode : public RunMode {
     private:
         const qtr::BallTreeSearchEngine &_ballTree;
-        const SmilesTable &_smilesTable;
+        std::shared_ptr<const SmilesTable> _smilesTable;
         const uint64_t _ansCount;
         const uint64_t _startSearchDepth;
         IdConverter _idConverter;
 
     public:
-        WebMode(const qtr::BallTreeSearchEngine &ballTree, const SmilesTable &smilesTable,
+        WebMode(const qtr::BallTreeSearchEngine &ballTree, std::shared_ptr<const SmilesTable> smilesTable,
                 qtr::TimeTicker &timeTicker, uint64_t ansCount, uint64_t startSearchDepth,
                 std::filesystem::path &idToStringDirPath);
 
@@ -33,6 +33,6 @@ namespace qtr {
 
     private:
         crow::json::wvalue
-        prepareResponse(BallTreeSearchEngine::QueryData &queryData, size_t minOffset, size_t maxOffset);
+        prepareResponse(BallTreeQueryData &queryData, size_t minOffset, size_t maxOffset);
     };
 } // namespace qtr

@@ -1,22 +1,24 @@
 #pragma once
 
+#include <utility>
+
 #include "RunMode.h"
 #include "RunDbUtils.h"
 
 namespace qtr {
     class FromFileMode : public RunMode {
         const qtr::BallTreeSearchEngine &ballTree;
-        SmilesTable &smilesTable;
+        std::shared_ptr<const SmilesTable> smilesTable;
         qtr::TimeTicker &timeTicker;
         const std::filesystem::path &inputFile;
         uint64_t ansCount;
         uint64_t startSearchDepth;
     public:
-        inline FromFileMode(const qtr::BallTreeSearchEngine &ballTree, SmilesTable &smilesTable,
+        inline FromFileMode(const qtr::BallTreeSearchEngine &ballTree, std::shared_ptr<const SmilesTable> smilesTable,
                             qtr::TimeTicker &timeTicker, const std::filesystem::path &inputFile, uint64_t ansCount,
                             uint64_t startSearchDepth) :
                 ballTree(ballTree),
-                smilesTable(smilesTable),
+                smilesTable(std::move(smilesTable)),
                 timeTicker(timeTicker),
                 inputFile(inputFile),
                 ansCount(ansCount),
@@ -39,14 +41,12 @@ namespace qtr {
             for (size_t i = 0; i < queries.size(); i++) {
                 LOG(INFO) << "Start search for " << i << ": " << queries[i];
                 timeTicker.tick();
-                std::unique_ptr<BallTreeSearchEngine::QueryData> queryData;
-                const auto result = doSearch(queries[i], *queryData, ballTree, smilesTable, startSearchDepth);
-                if (result.first) {
+                auto [error, queryData] = doSearch(queries[i], ballTree, smilesTable, startSearchDepth);
+                if (error) {
                     ++skipped;
                     continue;
                 }
-                for (auto &task : result.second)
-                    task.wait();
+                queryData->waitAllTasks();
                 times.emplace_back(timeTicker.tick("search molecule " + std::to_string(i) + ": " + queries[i]));
             }
 

@@ -15,19 +15,13 @@ namespace qtr {
     }
 
     SmilesTable SmilesTable::Builder::build() {
-        std::vector<size_t> indexes(_storage.size());
-        std::iota(indexes.begin(), indexes.end(), 0);
-        std::sort(indexes.begin(), indexes.end(), [this](size_t a, size_t b) {
-            return _storage[a].first < _storage[b].first;
-        });
-        for (size_t i = 0; i < _storage.size(); i++) {
-            size_t j = indexes[i];
-            if (i == j)
-                continue;
-            std::swap(indexes[i], indexes[j]);
-            std::swap(_storage[i], _storage[j]);
-        }
+        assert(std::is_sorted(_storage.begin(), _storage.end()));
         return {_storage, _huffmanCoder};
+    }
+
+    std::shared_ptr<SmilesTable> SmilesTable::Builder::buildPtr() {
+        assert(std::is_sorted(_storage.begin(), _storage.end()));
+        return std::shared_ptr<SmilesTable>(new SmilesTable(_storage, _huffmanCoder));
     }
 
     SmilesTable::Builder &SmilesTable::Builder::operator+=(const std::pair<KeyType, ValueType> &item) {

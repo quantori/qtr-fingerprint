@@ -1,47 +1,32 @@
 #include "RunDbUtils.h"
 
 #include "smiles_table_io/SmilesTableReader.h"
-
+#include "BallTreeQueryData.h"
 #include "IndigoQueryMolecule.h"
 #include "IndigoSubstructureMatcher.h"
+#include "answer_filtering/IndigoFilter.h"
 
 using namespace std;
 
 namespace qtr {
 
-    pair<bool, vector<future < void>>>
-    doSearch(const string &querySmiles, BallTreeDriveSearchEngine::QueryData &queryData,
-             const qtr::BallTreeSearchEngine &ballTree,
-             const SmilesTable &smilesTable, uint64_t startSearchDepth) {
+    pair<bool, std::unique_ptr<BallTreeQueryData>> doSearch(const string &querySmiles,
+                                                            const qtr::BallTreeSearchEngine &ballTree,
+                                                            const shared_ptr<const SmilesTable> &smilesTable,
+                                                            size_t ansCount) {
         qtr::IndigoFingerprint fingerprint;
         try {
             fingerprint = qtr::indigoFingerprintFromSmiles(querySmiles);
         }
         catch (exception &exception) {
             cout << "skip query:" << exception.what() << endl;
-            return {true, std::vector<future<void>>{}};
+            return {true, unique_ptr<BallTreeQueryData>(nullptr)};
         }
-        queryData.query = fingerprint;
-        auto filter = [&smilesTable, &querySmiles](size_t ansId) {
-            const auto &ansSmiles = smilesTable.at(ansId);
-            auto indigoSessionPtr = indigo_cpp::IndigoSession::create();
-            auto queryMol = indigoSessionPtr->loadQueryMolecule(querySmiles);
-            queryMol.aromatize();
-            try {
-                auto candidateMol = indigoSessionPtr->loadMolecule(ansSmiles);
-                candidateMol.aromatize();
-                auto matcher = indigoSessionPtr->substructureMatcher(candidateMol);
-                return bool(indigoMatch(matcher.id(), queryMol.id()));
-            }
-            catch (exception &e) {
-                LOG(ERROR) << "Error while filtering answer. "
-                              "Query: " << querySmiles << ", candidate: " << ansId << " " << ansSmiles << ", error: "
-                           << e.what();
-                return false;
-            }
-        };
-        queryData.filter = filter;
-        return {false, ballTree.search(queryData, startSearchDepth)};
+        auto queryData = make_unique<BallTreeQueryData>(ansCount, fingerprint,
+                                                        std::make_unique<IndigoFilter>(smilesTable,
+                                                                                       querySmiles));
+        ballTree.search(*queryData, 16); // todo: fix hardcode: pass number of threads as variable
+        return {false, std::move(queryData)};
     }
 
     SmilesTable loadSmilesTable(const filesystem::path &smilesTablePath, const HuffmanCoder &huffmanCoder) {

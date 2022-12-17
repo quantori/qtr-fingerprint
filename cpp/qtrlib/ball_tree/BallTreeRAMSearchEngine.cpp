@@ -24,11 +24,13 @@ namespace qtr {
         LOG(INFO) << "Finish loading leaf content from drive " << leafsList.front().second.parent_path().parent_path();
     }
 
-    void BallTreeRAMSearchEngine::searchInLeaf(size_t leafId, BallTreeSearchEngine::QueryData &queryData) const {
+    std::vector<CIDType> BallTreeRAMSearchEngine::searchInLeaf(size_t leafId, const IndigoFingerprint &query) const {
+        std::vector<CIDType> answers;
         for (const auto &[id, fingerprint]: _buckets[leafNumberById((leafId))]) {
-            if (queryData.query <= fingerprint)
-                putAnswer(id, queryData);
+            if (query <= fingerprint)
+                answers.emplace_back(id);
         }
+        return answers;
     }
 
 } // qtr

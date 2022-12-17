@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 #include "RunMode.h"
 #include "iostream"
 #include "RunDbUtils.h"
@@ -7,15 +9,15 @@
 namespace qtr {
     class InteractiveMode : public RunMode {
         const qtr::BallTreeSearchEngine &ballTree;
-        SmilesTable &smilesTable;
+        std::shared_ptr<const SmilesTable> smilesTable;
         qtr::TimeTicker &timeTicker;
         uint64_t ansCount;
         uint64_t startSearchDepth;
     public:
-        inline InteractiveMode(const qtr::BallTreeSearchEngine &ballTree, SmilesTable &smilesTable,
+        inline InteractiveMode(const qtr::BallTreeSearchEngine &ballTree, shared_ptr<const SmilesTable> smilesTable,
                                qtr::TimeTicker &timeTicker, uint64_t ansCount, uint64_t startSearchDepth) :
                 ballTree(ballTree),
-                smilesTable(smilesTable),
+                smilesTable(std::move(smilesTable)),
                 timeTicker(timeTicker),
                 ansCount(ansCount),
                 startSearchDepth(startSearchDepth) {}
@@ -30,11 +32,12 @@ namespace qtr {
                     break;
                 timeTicker.tick();
                 try {
-                    BallTreeSearchEngine::QueryData queryData(ansCount);
-                    const auto result = doSearch(smiles, queryData, ballTree, smilesTable, startSearchDepth);
-                    for (auto &task: result.second) {
-                        task.wait();
+                    auto [error, queryData] = doSearch(smiles, ballTree, smilesTable, startSearchDepth);
+                    if (error) {
+                        LOG(ERROR) << "Can not parse given smiles";
+                        continue;
                     }
+                    queryData->waitAllTasks();
                     std::cout << "Search time: " << timeTicker.tick("Search time") << std::endl;
                 } catch (std::exception &e) {
                     LOG(ERROR) << e.what() << " while processing " << smiles;
