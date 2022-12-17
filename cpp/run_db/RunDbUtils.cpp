@@ -10,7 +10,6 @@ using namespace std;
 namespace qtr {
 
     pair<bool, vector<future < void>>>
-
     doSearch(const string &querySmiles, BallTreeDriveSearchEngine::QueryData &queryData,
              const qtr::BallTreeSearchEngine &ballTree,
              const SmilesTable &smilesTable, uint64_t startSearchDepth) {
@@ -20,7 +19,7 @@ namespace qtr {
         }
         catch (exception &exception) {
             cout << "skip query:" << exception.what() << endl;
-            return {true, {}};
+            return {true, std::vector<future<void>>{}};
         }
         queryData.query = fingerprint;
         auto filter = [&smilesTable, &querySmiles](size_t ansId) {
@@ -45,16 +44,6 @@ namespace qtr {
         return {false, ballTree.search(queryData, startSearchDepth)};
     }
 
-    HuffmanCoder buildHuffmanCoder(const filesystem::path &smilesTablePath) {
-        LOG(INFO) << "Start huffman coder building";
-        qtr::HuffmanCoder::Builder huffmanBuilder;
-        for (const auto &[_, smiles]: qtr::SmilesTableReader(smilesTablePath)) {
-            huffmanBuilder += smiles;
-        }
-        LOG(INFO) << "Finish huffman coder building";
-        return huffmanBuilder.build();
-    }
-
     SmilesTable loadSmilesTable(const filesystem::path &smilesTablePath, const HuffmanCoder &huffmanCoder) {
         LOG(INFO) << "Start smiles table loading";
         SmilesTable::Builder builder(huffmanCoder);
@@ -63,12 +52,6 @@ namespace qtr {
         }
         LOG(INFO) << "Finish smiles table loading";
         return builder.build();
-    }
-
-    pair <HuffmanCoder, SmilesTable> loadCoderAndTable(const filesystem::path &smilesTablePath) {
-        auto coder = buildHuffmanCoder(smilesTablePath);
-        auto table = loadSmilesTable(smilesTablePath, coder);
-        return {coder, table};
     }
 
 } // namespace qtr

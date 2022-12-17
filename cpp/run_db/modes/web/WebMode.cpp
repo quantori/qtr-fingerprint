@@ -8,10 +8,11 @@ namespace qtr {
 
     WebMode::WebMode(const BallTreeSearchEngine &ballTree, const SmilesTable &smilesTable, TimeTicker &timeTicker,
                      uint64_t ansCount, uint64_t startSearchDepth,
-                     std::filesystem::path &idToStringDirPath) : ballTree(ballTree),
-                                                                 smilesTable(smilesTable),
-                                                                 ansCount(ansCount),
-                                                                 startSearchDepth(startSearchDepth) {}
+                     std::filesystem::path &idToStringDirPath) : _ballTree(ballTree),
+                                                                 _smilesTable(smilesTable),
+                                                                 _ansCount(ansCount),
+                                                                 _startSearchDepth(startSearchDepth),
+                                                                 _idConverter(idToStringDirPath){}
 
 
     crow::json::wvalue
@@ -21,9 +22,14 @@ namespace qtr {
         lock_guard<mutex> lock(queryData.resultLock);
         LOG(INFO) << "found " << queryData.result.size() << " results";
         if (!queryData.result.empty()) {
-            copy(queryData.result.begin() + min(queryData.result.size(), minOffset),
-                 queryData.result.begin() + min(queryData.result.size(), maxOffset),
-                 back_inserter(response));
+            auto rightBorder = std::min(queryData.result.size(), maxOffset);
+            auto leftBorder = std::min(queryData.result.size(), minOffset);
+            response.reserve(rightBorder - leftBorder);
+            for (size_t i = leftBorder; i < rightBorder; ++i) {
+                auto [id, libraryId] = _idConverter.fromDbId(queryData.result[i]);
+                response.emplace_back(crow::json::wvalue{{"id",        id},
+                                                         {"libraryId", libraryId}});
+            }
         }
         return crow::json::wvalue{response};
     }
@@ -50,17 +56,16 @@ namespace qtr {
                     string &currSmiles = smiles.back();
                     if (!queryToId.contains(currSmiles)) {
                         queryToId[currSmiles] = queries.size();
-                        queries.emplace_back(make_unique<BallTreeSearchEngine::QueryData>(ansCount));
-                        tasks.resize(queries.size());
-                        tasks.back() = doSearch(currSmiles,
-                                                *queries.back(), ballTree,
-                                                smilesTable, startSearchDepth).second;
+                        queries.emplace_back(make_unique<BallTreeSearchEngine::QueryData>(_ansCount));
+                        tasks.emplace_back(doSearch(currSmiles,
+                                                    *queries.back(), _ballTree,
+                                                    _smilesTable, _startSearchDepth).second);
                     }
                     return crow::response(to_string(queryToId[currSmiles]));
                 });
 
         CROW_ROUTE(app, "/query").methods(crow::HTTPMethod::GET)(
-                [&queries](const crow::request &req) {
+                [&queries, this](const crow::request &req) {
                     auto searchId = crow::utility::lexical_cast<uint64_t>(req.url_params.get("searchId"));
                     auto offset = crow::utility::lexical_cast<int>(req.url_params.get("offset"));
                     auto limit = crow::utility::lexical_cast<int>(req.url_params.get("limit"));
