@@ -36,6 +36,8 @@ namespace qtr {
 
         void tagStartTask();
 
+        [[nodiscard]] size_t getCurrentAnswersCount() const;
+
         [[nodiscard]] const IndigoFingerprint &getQueryFingerprint() const;
 
     private:

@@ -38,6 +38,11 @@ namespace qtr {
                         continue;
                     }
                     queryData->waitAllTasks();
+                    LOG(INFO) << "Found " << queryData->getCurrentAnswersCount() << " answers";
+                    auto answers = queryData->getAnswers(0, 5).second;
+                    for (auto& i : answers) {
+                        LOG(INFO) << (*smilesTable)[i];
+                    }
                     std::cout << "Search time: " << timeTicker.tick("Search time") << std::endl;
                 } catch (std::exception &e) {
                     LOG(ERROR) << e.what() << " while processing " << smiles;

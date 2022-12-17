@@ -44,6 +44,10 @@ namespace qtr {
         return _result.size() >= _stopAnswersNumber;
     }
 
+    size_t BallTreeQueryData::getCurrentAnswersCount() const {
+        return _result.size();
+    }
+
     void BallTreeQueryData::filterAndAddAnswers(const vector <CIDType> &answers) {
         vector<CIDType> filteredAnswers;
         for (auto &ans: answers) {
