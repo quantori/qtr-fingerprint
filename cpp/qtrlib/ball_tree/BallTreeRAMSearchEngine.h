@@ -6,6 +6,9 @@
 
 #include "fingerprint_table_io/FingerprintTableReader.h"
 
+#include "IndigoQueryMolecule.h"
+#include "IndigoSubstructureMatcher.h"
+
 namespace qtr {
 
     class BallTreeRAMSearchEngine : public BallTreeSearchEngine {
@@ -15,7 +18,9 @@ namespace qtr {
                                 std::vector<std::filesystem::path> dataDirectories);
 
         virtual void searchInLeaf(size_t leafId, QueryData &queryData) const override;
-        virtual std::vector<CIDType> searchInLeafIds(size_t leafId, QueryData &queryData) const override;
+        virtual void searchInLeafIds(const indigo_cpp::IndigoSessionPtr &indigoSessionPtr,
+                                     const indigo_cpp::IndigoQueryMolecule &queryMol,
+                                     size_t leafId, QueryData &queryData) const override;
     protected:
         std::map<std::string, std::vector<std::pair<size_t, std::filesystem::path>>> groupedByDriveLeafFiles() const;
 

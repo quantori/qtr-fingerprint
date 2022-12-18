@@ -74,25 +74,7 @@ namespace qtr {
         for (size_t i = group; i < leafs.size(); i += totalGroups) {
             if (queryData.isTerminate)
                 break;
-            auto ids = searchInLeafIds(leafs[i], queryData);
-            for (const auto& id: ids)
-            {
-                if (queryData.isTerminate)
-                    break;
-                const auto &ansSmiles = queryData.smilesTable.at(id);
-                try {
-                    auto candidateMol = indigoSessionPtr->loadMolecule(ansSmiles);
-                    candidateMol.aromatize();
-                    auto matcher = indigoSessionPtr->substructureMatcher(candidateMol);
-                    if (bool(indigoMatch(matcher.id(), queryMol.id())))
-                        queryData.addAnswer(id);
-                }
-                catch (std::exception &e) {
-                    LOG(ERROR) << "Error while filtering answer. "
-                                  "Query: " << queryData.querySmiles << ", candidate: " << id << " " << ansSmiles << ", error: "
-                               << e.what();
-                }
-            }
+            searchInLeafIds(indigoSessionPtr, queryMol, leafs[i], queryData);
         }
     }
 

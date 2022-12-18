@@ -56,7 +56,10 @@ namespace qtr {
         void findLeafs(const IndigoFingerprint &fingerprint, size_t currentNode, std::vector<CIDType> &leafs) const;
 
         virtual void searchInLeaf(size_t leafId, QueryData &queryData) const = 0;
-        virtual std::vector<CIDType> searchInLeafIds(size_t leafId, QueryData &queryData) const = 0;
+
+        virtual void searchInLeafIds(const indigo_cpp::IndigoSessionPtr &indigoSessionPtr,
+                                     const indigo_cpp::IndigoQueryMolecule &queryMol,
+                                     size_t leafId, QueryData &queryData) const = 0;
 
         void processLeafGroup(QueryData &queryData, std::vector<uint64_t> leafs, size_t group,
                               size_t totalGroups) const;
