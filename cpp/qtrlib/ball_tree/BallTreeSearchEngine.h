@@ -50,8 +50,12 @@ namespace qtr {
 
         static void putAnswer(CIDType ansValue, QueryData &queryData);
 
+        void findLeafs(const IndigoFingerprint &fingerprint, size_t currentNode, std::vector<CIDType> &leafs) const;
+
         virtual void searchInLeaf(size_t leafId, QueryData &queryData) const = 0;
 
+        void processLeafGroup(QueryData &queryData, std::vector<uint64_t> leafs, size_t group,
+                              size_t totalGroups) const;
     public:
         std::vector<CIDType> search(const IndigoFingerprint &query, size_t ansCount, size_t startDepth,
                                     const std::function<bool(CIDType)> &filter = noFiltering) const;

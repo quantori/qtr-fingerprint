@@ -2,11 +2,16 @@
 
 #include <cassert>
 #include <numeric>
+#include <random>
 
 #include "fingerprint_table_io/FingerprintTableReader.h"
 #include "Utils.h"
 
 namespace qtr {
+
+    namespace {
+        std::mt19937 random_generator(0);
+    }
 
     void BallTreeSearchEngine::initLeafDataPaths() {
         size_t expectedFilesNumber = (_nodes.size() + 1) / 2;
@@ -43,18 +48,44 @@ namespace qtr {
         searchInSubtree(rightChild(nodeId), queryData);
     }
 
+    void
+    BallTreeSearchEngine::findLeafs(const IndigoFingerprint &fingerprint, size_t currentNode,
+                                    std::vector <CIDType> &leafs) const {
+        if (!(fingerprint <= _nodes[currentNode].centroid))
+            return;
+        if (isLeaf(currentNode)) {
+            leafs.emplace_back(currentNode);
+            return;
+        }
+        findLeafs(fingerprint, leftChild(currentNode), leafs);
+        findLeafs(fingerprint, rightChild(currentNode), leafs);
+    }
+
+    void BallTreeSearchEngine::processLeafGroup(QueryData &queryData,
+                                                std::vector <uint64_t> leafs, size_t group,
+                                                size_t totalGroups) const {
+        for (size_t i = group; i < leafs.size(); i += totalGroups) {
+            searchInLeaf(leafs[i], queryData);
+        }
+    }
+
     std::vector<CIDType>
     BallTreeSearchEngine::search(const IndigoFingerprint &query, size_t ansCount, size_t startDepth,
                                  const std::function<bool(CIDType)> &filter) const {
+
+        std::vector<uint64_t> leafs;
+        findLeafs(query, root(), leafs);
+        LOG(INFO) << "Search in " << leafs.size() << " leafs";
+        shuffle(leafs.begin(), leafs.end(), random_generator);
+
         std::vector<std::future<void>> tasks;
         std::vector<CIDType> result;
         std::mutex resultsLock;
+        const size_t threads = 16;
         QueryData queryData = {query, result, resultsLock, ansCount, false, filter};
-        for (size_t i = (1ull << (startDepth)) - 1; i < (1ull << (startDepth + 1)) - 1; i++) {
-            tasks.emplace_back(
-                    std::async(std::launch::async, &BallTreeSearchEngine::searchInSubtree, this, i,
-                               std::ref(queryData))
-            );
+        for (size_t i = 0; i < threads; i++) {
+            tasks.emplace_back(std::async(std::launch::async, &BallTreeSearchEngine::processLeafGroup, this,
+                                          std::ref(queryData), leafs, i, threads));
         }
         for (auto &task: tasks) {
             task.get();
@@ -82,8 +113,6 @@ namespace qtr {
 
     void BallTreeSearchEngine::QueryData::addAnswer(CIDType value) {
         std::lock_guard<std::mutex> lock(resultLock);
-        if (result.size() < ansCount) {
-            result.emplace_back(value);
-        }
+        result.emplace_back(value);
     }
 } // qtr
