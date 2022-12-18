@@ -7,6 +7,9 @@
 #include "fingerprint_table_io/FingerprintTableReader.h"
 #include "Utils.h"
 
+#include "IndigoQueryMolecule.h"
+#include "IndigoSubstructureMatcher.h"
+
 namespace qtr {
 
     namespace {
@@ -64,15 +67,38 @@ namespace qtr {
     void BallTreeSearchEngine::processLeafGroup(QueryData &queryData,
                                                 std::vector <uint64_t> leafs, size_t group,
                                                 size_t totalGroups) const {
+        auto indigoSessionPtr = indigo_cpp::IndigoSession::create();
+        auto queryMol = indigoSessionPtr->loadQueryMolecule(queryData.querySmiles);
+        queryMol.aromatize();
+
         for (size_t i = group; i < leafs.size(); i += totalGroups) {
             if (queryData.isTerminate)
                 break;
-            searchInLeaf(leafs[i], queryData);
+            auto ids = searchInLeafIds(leafs[i], queryData);
+            for (const auto& id: ids)
+            {
+                if (queryData.isTerminate)
+                    break;
+                const auto &ansSmiles = queryData.smilesTable.at(id);
+                try {
+                    auto candidateMol = indigoSessionPtr->loadMolecule(ansSmiles);
+                    candidateMol.aromatize();
+                    auto matcher = indigoSessionPtr->substructureMatcher(candidateMol);
+                    if (bool(indigoMatch(matcher.id(), queryMol.id())))
+                        queryData.addAnswer(id);
+                }
+                catch (std::exception &e) {
+                    LOG(ERROR) << "Error while filtering answer. "
+                                  "Query: " << queryData.querySmiles << ", candidate: " << id << " " << ansSmiles << ", error: "
+                               << e.what();
+                }
+            }
         }
     }
 
     std::vector<CIDType>
-    BallTreeSearchEngine::search(const IndigoFingerprint &query, size_t ansCount, size_t startDepth,
+    BallTreeSearchEngine::search(const std::string &querySmiles, const IndigoFingerprint &query, size_t ansCount,
+                                 size_t startDepth, const SmilesTable &smilesTable,
                                  const std::function<bool(CIDType)> &filter) const {
 
         std::vector<uint64_t> leafs;
@@ -84,7 +110,7 @@ namespace qtr {
         std::vector<CIDType> result;
         std::mutex resultsLock;
         const size_t threads = 16;
-        QueryData queryData = {query, result, resultsLock, ansCount, false, filter};
+        QueryData queryData = {querySmiles, smilesTable, query, result, resultsLock, ansCount, false, filter};
         for (size_t i = 0; i < threads; i++) {
             tasks.emplace_back(std::async(std::launch::async, &BallTreeSearchEngine::processLeafGroup, this,
                                           std::ref(queryData), leafs, i, threads));
@@ -116,5 +142,6 @@ namespace qtr {
     void BallTreeSearchEngine::QueryData::addAnswer(CIDType value) {
         std::lock_guard<std::mutex> lock(resultLock);
         result.emplace_back(value);
+        updateIsTerminate();
     }
 } // qtr

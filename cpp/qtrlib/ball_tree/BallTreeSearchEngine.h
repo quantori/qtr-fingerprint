@@ -7,6 +7,7 @@
 
 #include "BallTree.h"
 #include "Fingerprint.h"
+#include "SmilesTable.h"
 
 
 namespace qtr {
@@ -24,6 +25,8 @@ namespace qtr {
         BallTreeSearchEngine(BinaryReader &nodesReader, std::vector<std::filesystem::path> dataDirectories);
 
         struct QueryData {
+            const std::string &querySmiles;
+            const SmilesTable &smilesTable;
             const IndigoFingerprint &query;
             std::vector<CIDType> &result;
             std::mutex &resultLock;
@@ -53,11 +56,13 @@ namespace qtr {
         void findLeafs(const IndigoFingerprint &fingerprint, size_t currentNode, std::vector<CIDType> &leafs) const;
 
         virtual void searchInLeaf(size_t leafId, QueryData &queryData) const = 0;
+        virtual std::vector<CIDType> searchInLeafIds(size_t leafId, QueryData &queryData) const = 0;
 
         void processLeafGroup(QueryData &queryData, std::vector<uint64_t> leafs, size_t group,
                               size_t totalGroups) const;
     public:
-        std::vector<CIDType> search(const IndigoFingerprint &query, size_t ansCount, size_t startDepth,
+        std::vector<CIDType> search(const std::string &querySmiles, const IndigoFingerprint &query, size_t ansCount,
+                                    size_t startDepth, const SmilesTable &smilesTable,
                                     const std::function<bool(CIDType)> &filter = noFiltering) const;
 
     protected:

@@ -24,6 +24,15 @@ namespace qtr {
         LOG(INFO) << "Finish loading leaf content from drive " << leafsList.front().second.parent_path().parent_path();
     }
 
+    std::vector<CIDType> BallTreeRAMSearchEngine::searchInLeafIds(size_t leafId, BallTreeSearchEngine::QueryData &queryData) const {
+        std::vector<CIDType> ids;
+        for (const auto &[id, fingerprint]: _buckets[leafNumberById((leafId))]) {
+            if (queryData.query <= fingerprint)
+                ids.emplace_back(id);
+        }
+        return ids;
+    }
+
     void BallTreeRAMSearchEngine::searchInLeaf(size_t leafId, BallTreeSearchEngine::QueryData &queryData) const {
         for (const auto &[id, fingerprint]: _buckets[leafNumberById((leafId))]) {
             if (queryData.query <= fingerprint)

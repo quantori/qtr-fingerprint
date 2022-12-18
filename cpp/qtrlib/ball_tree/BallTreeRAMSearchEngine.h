@@ -15,7 +15,7 @@ namespace qtr {
                                 std::vector<std::filesystem::path> dataDirectories);
 
         virtual void searchInLeaf(size_t leafId, QueryData &queryData) const override;
-
+        virtual std::vector<CIDType> searchInLeafIds(size_t leafId, QueryData &queryData) const override;
     protected:
         std::map<std::string, std::vector<std::pair<size_t, std::filesystem::path>>> groupedByDriveLeafFiles() const;
 

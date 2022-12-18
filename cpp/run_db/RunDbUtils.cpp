@@ -39,7 +39,7 @@ namespace qtr {
                 return false;
             }
         };
-        auto candidateIndexes = ballTree.search(fingerprint, ansCount, startSearchDepth, filter);
+        auto candidateIndexes = ballTree.search(querySmiles, fingerprint, ansCount, startSearchDepth, smilesTable, filter);
         LOG(INFO) << "found answers: " << candidateIndexes.size();
         return {false, candidateIndexes};
     }
