@@ -65,6 +65,8 @@ namespace qtr {
                                                 std::vector <uint64_t> leafs, size_t group,
                                                 size_t totalGroups) const {
         for (size_t i = group; i < leafs.size(); i += totalGroups) {
+            if (queryData.isTerminate)
+                break;
             searchInLeaf(leafs[i], queryData);
         }
     }
