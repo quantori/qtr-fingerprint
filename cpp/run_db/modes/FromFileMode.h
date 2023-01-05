@@ -47,6 +47,7 @@ namespace qtr {
                     continue;
                 }
                 queryData->waitAllTasks();
+                LOG(INFO) << "Found " << queryData->getCurrentAnswersCount() << " answers";
                 times.emplace_back(_timeTicker.tick("search molecule " + std::to_string(i) + ": " + queries[i]));
             }
 
