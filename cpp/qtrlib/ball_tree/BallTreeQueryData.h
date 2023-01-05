@@ -22,7 +22,7 @@ namespace qtr {
 
         [[nodiscard]] bool isFinished() const;
 
-        [[nodiscard]] bool shouldStop() const;
+        [[nodiscard]] bool checkFoundEnoughAnswers() const;
 
         void stopProcess();
 
@@ -41,6 +41,8 @@ namespace qtr {
         [[nodiscard]] size_t getCurrentAnswersCount() const;
 
         [[nodiscard]] const IndigoFingerprint &getQueryFingerprint() const;
+
+        [[nodiscard]] bool checkShouldStop() const;
 
     private:
         IndigoFingerprint _queryFingerprint;

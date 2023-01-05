@@ -40,11 +40,11 @@ namespace qtr {
     }
 
     void BallTreeSearchEngine::processLeafGroup(BallTreeQueryData &queryData,
-                                                vector<uint64_t> leafs, size_t group,
+                                                vector <uint64_t> leafs, size_t group,
                                                 size_t totalGroups) const {
         queryData.tagStartTask();
         auto filterObject = queryData.getFilterObject();
-        for (size_t i = group; i < leafs.size(); i += totalGroups) {
+        for (size_t i = group; i < leafs.size() && !queryData.checkShouldStop(); i += totalGroups) {
             auto res = searchInLeaf(leafs[i], queryData.getQueryFingerprint());
             queryData.filterAndAddAnswers(res, *filterObject);
         }

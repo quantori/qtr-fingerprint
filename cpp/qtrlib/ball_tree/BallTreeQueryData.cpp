@@ -16,7 +16,8 @@ namespace qtr {
     void BallTreeQueryData::addAnswers(const vector <CIDType> &answers) {
         lock_guard<mutex> lock(_resultLock);
         copy(answers.begin(), answers.end(), back_inserter(_result));
-        _shouldStopProcess |= _result.size() > _stopAnswersNumber;
+        if (checkFoundEnoughAnswers())
+            stopProcess();
     }
 
     BallTreeQueryData::BallTreeQueryData(size_t stopAnswersCount, const IndigoFingerprint &query,
@@ -40,8 +41,8 @@ namespace qtr {
         return {isFinished(), result};
     }
 
-    bool BallTreeQueryData::shouldStop() const {
-        return _result.size() >= _stopAnswersNumber;
+    bool BallTreeQueryData::checkFoundEnoughAnswers() const {
+        return getCurrentAnswersCount() >= _stopAnswersNumber;
     }
 
     size_t BallTreeQueryData::getCurrentAnswersCount() const {
@@ -80,5 +81,9 @@ namespace qtr {
 
     std::unique_ptr<AnswerFilter> BallTreeQueryData::getFilterObject() const {
         return _filter->copy();
+    }
+
+    bool BallTreeQueryData::checkShouldStop() const {
+        return _shouldStopProcess;
     }
 } // namespace qtr
