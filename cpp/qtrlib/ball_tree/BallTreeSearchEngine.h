@@ -42,6 +42,8 @@ namespace qtr {
     public:
         void search(BallTreeQueryData &queryData, size_t threads) const;
 
+        virtual ~BallTreeSearchEngine() = default;
+
     protected:
         std::vector<std::filesystem::path> _leafDataPaths;
     };

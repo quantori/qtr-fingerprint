@@ -151,19 +151,18 @@ int main(int argc, char *argv[]) {
     LOG(INFO) << "Finish ball tree loading";
     auto smilesTablePtr = loadSmilesTableTask.get();
     timeTicker.tick("DB initialization");
-    RunMode *mode = nullptr;
+    shared_ptr<RunMode> mode = nullptr;
     if (args.mode == Args::Mode::Interactive)
-        mode = dynamic_cast<RunMode *>(new InteractiveMode(ballTree, smilesTablePtr, timeTicker, args.ansCount,
-                                                           args.startSearchDepth));
+        mode = shared_ptr<RunMode>(dynamic_cast<RunMode *>(new InteractiveMode(ballTree, smilesTablePtr, timeTicker, args.ansCount,
+                                                           args.startSearchDepth)));
     else if (args.mode == Args::Mode::FromFile)
-        mode = dynamic_cast<RunMode *>(new FromFileMode(ballTree, smilesTablePtr, timeTicker, args.inputFile,
+        mode = shared_ptr<RunMode>(dynamic_cast<RunMode *>(new FromFileMode(ballTree, smilesTablePtr, timeTicker, args.inputFile,
                                                         args.ansCount,
-                                                        args.startSearchDepth));
+                                                        args.startSearchDepth)));
     else if (args.mode == Args::Mode::Web)
-        mode = dynamic_cast<RunMode *>(new WebMode(ballTree, smilesTablePtr, timeTicker, args.ansCount,
-                                                   args.startSearchDepth, args.idToStringDirPath));
+        mode = shared_ptr<RunMode>(dynamic_cast<RunMode *>(new WebMode(ballTree, smilesTablePtr, timeTicker, args.ansCount,
+                                                   args.startSearchDepth, args.idToStringDirPath)));
 
     mode->run();
-
     return 0;
 }
