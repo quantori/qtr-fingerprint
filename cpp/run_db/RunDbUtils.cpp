@@ -31,7 +31,7 @@ namespace qtr {
 
     std::shared_ptr<SmilesTable> loadSmilesTable(const filesystem::path &smilesTablePath, const HuffmanCoder &huffmanCoder) {
         LOG(INFO) << "Start smiles table loading";
-        SmilesTable::Builder builder(huffmanCoder);
+        HuffmanSmilesTable::Builder builder(huffmanCoder);
         for (const auto &pair: SmilesTableReader(smilesTablePath)) {
             builder += pair;
         }

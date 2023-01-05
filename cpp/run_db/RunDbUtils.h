@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SmilesTable.h"
+#include "HuffmanSmilesTable.h"
 #include "BallTreeSearchEngine.h"
 
 namespace qtr {
@@ -9,7 +9,8 @@ namespace qtr {
                                                                  const std::shared_ptr<const SmilesTable> &smilesTable,
                                                                  size_t ansCount);
 
-    std::shared_ptr<SmilesTable> loadSmilesTable(const std::filesystem::path &smilesTablePath, const HuffmanCoder &huffmanCoder);
+    std::shared_ptr<SmilesTable>
+    loadSmilesTable(const std::filesystem::path &smilesTablePath, const HuffmanCoder &huffmanCoder);
 
 
 } // namespace qtr

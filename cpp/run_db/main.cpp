@@ -33,8 +33,6 @@ ABSL_FLAG(uint64_t, start_search_depth, -1,
 ABSL_FLAG(string, mode, "",
           "possible modes: interactive, from_file, web");
 
-
-
 ABSL_FLAG(string, input_file, "",
           "file to load test molecules from");
 
