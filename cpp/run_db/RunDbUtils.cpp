@@ -23,8 +23,7 @@ namespace qtr {
             return {true, unique_ptr<BallTreeQueryData>(nullptr)};
         }
         auto queryData = make_unique<BallTreeQueryData>(ansCount, fingerprint,
-                                                        std::make_unique<IndigoFilter>(smilesTable,
-                                                                                       querySmiles));
+                                                        std::make_unique<IndigoFilter>(smilesTable, querySmiles));
         ballTree.search(*queryData, 16); // todo: fix hardcode: pass number of threads as variable
         return {false, std::move(queryData)};
     }

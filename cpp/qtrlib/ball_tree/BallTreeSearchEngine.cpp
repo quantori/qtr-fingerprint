@@ -45,7 +45,7 @@ namespace qtr {
         queryData.tagStartTask();
         for (size_t i = group; i < leafs.size(); i += totalGroups) {
             auto res = searchInLeaf(leafs[i], queryData.getQueryFingerprint());
-            queryData.filterAndAddAnswers(res);
+            queryData.filterAndAddAnswers(res, queryData.getFilterObject());
         }
         queryData.tagFinishTask();
     }

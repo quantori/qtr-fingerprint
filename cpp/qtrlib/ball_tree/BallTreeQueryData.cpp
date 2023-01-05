@@ -48,10 +48,11 @@ namespace qtr {
         return _result.size();
     }
 
-    void BallTreeQueryData::filterAndAddAnswers(const vector <CIDType> &answers) {
+    void
+    BallTreeQueryData::filterAndAddAnswers(const vector<CIDType> &answers, std::unique_ptr<AnswerFilter> filterObject) {
         vector<CIDType> filteredAnswers;
         for (auto &ans: answers) {
-            if ((*_filter)(ans)) {
+            if ((*filterObject)(ans)) {
                 filteredAnswers.emplace_back(ans);
             }
         }
@@ -75,5 +76,9 @@ namespace qtr {
 
     void BallTreeQueryData::tagStartTask() {
         _startedTasksCount++;
+    }
+
+    std::unique_ptr<AnswerFilter> BallTreeQueryData::getFilterObject() const {
+        return _filter->copy();
     }
 } // namespace qtr

@@ -18,7 +18,7 @@ namespace qtr {
 
         void addAnswers(const std::vector<CIDType> &answers);
 
-        void filterAndAddAnswers(const std::vector<CIDType> &answers);
+        void filterAndAddAnswers(const std::vector<CIDType> &answers, std::unique_ptr<AnswerFilter> filterObject);
 
         [[nodiscard]] bool isFinished() const;
 
@@ -35,6 +35,8 @@ namespace qtr {
         void tagFinishTask();
 
         void tagStartTask();
+
+        [[nodiscard]] std::unique_ptr<AnswerFilter> getFilterObject() const;
 
         [[nodiscard]] size_t getCurrentAnswersCount() const;
 
