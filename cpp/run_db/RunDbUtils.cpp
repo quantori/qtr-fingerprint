@@ -22,20 +22,21 @@ namespace qtr {
             cout << "skip query:" << exception.what() << endl;
             return {true, unique_ptr<BallTreeQueryData>(nullptr)};
         }
+        auto querySmilesPtr = make_shared<string>(querySmiles);
         auto queryData = make_unique<BallTreeQueryData>(ansCount, fingerprint,
-                                                        std::make_unique<IndigoFilter>(smilesTable, querySmiles));
+                                                        std::make_unique<IndigoFilter>(smilesTable, querySmilesPtr));
         ballTree.search(*queryData, 16); // todo: fix hardcode: pass number of threads as variable
         return {false, std::move(queryData)};
     }
 
-    SmilesTable loadSmilesTable(const filesystem::path &smilesTablePath, const HuffmanCoder &huffmanCoder) {
+    std::shared_ptr<SmilesTable> loadSmilesTable(const filesystem::path &smilesTablePath, const HuffmanCoder &huffmanCoder) {
         LOG(INFO) << "Start smiles table loading";
         SmilesTable::Builder builder(huffmanCoder);
         for (const auto &pair: SmilesTableReader(smilesTablePath)) {
             builder += pair;
         }
         LOG(INFO) << "Finish smiles table loading";
-        return builder.build();
+        return builder.buildPtr();
     }
 
 } // namespace qtr

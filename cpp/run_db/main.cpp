@@ -149,8 +149,7 @@ int main(int argc, char *argv[]) {
     LOG(INFO) << "Start ball tree loading";
     BallTreeRAMSearchEngine ballTree(ballTreeReader, args.dbDataDirsPaths);
     LOG(INFO) << "Finish ball tree loading";
-    SmilesTable smilesTable = loadSmilesTableTask.get();
-    auto smilesTablePtr = std::shared_ptr<const SmilesTable>((const SmilesTable *) &smilesTable);
+    auto smilesTablePtr = loadSmilesTableTask.get();
     timeTicker.tick("DB initialization");
     RunMode *mode = nullptr;
     if (args.mode == Args::Mode::Interactive)

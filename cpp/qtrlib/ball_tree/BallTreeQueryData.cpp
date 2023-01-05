@@ -49,10 +49,10 @@ namespace qtr {
     }
 
     void
-    BallTreeQueryData::filterAndAddAnswers(const vector<CIDType> &answers, std::unique_ptr<AnswerFilter> filterObject) {
+    BallTreeQueryData::filterAndAddAnswers(const vector<CIDType> &answers, AnswerFilter &filterObject) {
         vector<CIDType> filteredAnswers;
         for (auto &ans: answers) {
-            if ((*filterObject)(ans)) {
+            if (filterObject(ans)) {
                 filteredAnswers.emplace_back(ans);
             }
         }

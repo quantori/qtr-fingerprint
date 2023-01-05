@@ -28,10 +28,11 @@ namespace qtr {
         return std::make_unique<IndigoFilter>(_smilesTable, _querySmiles);
     }
 
-    IndigoFilter::IndigoFilter(std::shared_ptr<const SmilesTable> smilesTable, std::string querySmiles) :
+    IndigoFilter::IndigoFilter(std::shared_ptr<const SmilesTable> smilesTable,
+                               std::shared_ptr<const std::string> querySmiles) :
             _smilesTable(std::move(smilesTable)), _querySmiles(std::move(querySmiles)),
             _indigoSessionPtr(indigo_cpp::IndigoSession::create()),
-            _queryMolecule(_indigoSessionPtr->loadQueryMolecule(_querySmiles)) {
+            _queryMolecule(_indigoSessionPtr->loadQueryMolecule(*_querySmiles)) {
         _queryMolecule.aromatize();
     }
 

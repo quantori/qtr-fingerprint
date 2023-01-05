@@ -18,7 +18,7 @@ namespace qtr {
 
         void addAnswers(const std::vector<CIDType> &answers);
 
-        void filterAndAddAnswers(const std::vector<CIDType> &answers, std::unique_ptr<AnswerFilter> filterObject);
+        void filterAndAddAnswers(const std::vector<CIDType> &answers, AnswerFilter &filterObject);
 
         [[nodiscard]] bool isFinished() const;
 

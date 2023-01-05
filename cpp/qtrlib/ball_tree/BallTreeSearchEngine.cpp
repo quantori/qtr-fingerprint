@@ -40,12 +40,13 @@ namespace qtr {
     }
 
     void BallTreeSearchEngine::processLeafGroup(BallTreeQueryData &queryData,
-                                                vector <uint64_t> leafs, size_t group,
+                                                vector<uint64_t> leafs, size_t group,
                                                 size_t totalGroups) const {
         queryData.tagStartTask();
+        auto filterObject = queryData.getFilterObject();
         for (size_t i = group; i < leafs.size(); i += totalGroups) {
             auto res = searchInLeaf(leafs[i], queryData.getQueryFingerprint());
-            queryData.filterAndAddAnswers(res, queryData.getFilterObject());
+            queryData.filterAndAddAnswers(res, *filterObject);
         }
         queryData.tagFinishTask();
     }
@@ -68,9 +69,8 @@ namespace qtr {
         return result;
     }
 
-    void
-    BallTreeSearchEngine::findLeafs(const IndigoFingerprint &fingerprint, size_t currentNode,
-                                    vector <CIDType> &leafs) const {
+    void BallTreeSearchEngine::findLeafs(const IndigoFingerprint &fingerprint, size_t currentNode,
+                                         vector <CIDType> &leafs) const {
         if (!(fingerprint <= _nodes[currentNode].centroid))
             return;
         if (isLeaf(currentNode)) {
