@@ -2,7 +2,6 @@
 
 #include <utility>
 
-using namespace qtr;
 using namespace std;
 
 namespace qtr {
@@ -10,11 +9,11 @@ namespace qtr {
 
     WebMode::WebMode(const BallTreeSearchEngine &ballTree, shared_ptr<const SmilesTable> smilesTable,
                      TimeTicker &timeTicker,
-                     uint64_t ansCount, uint64_t startSearchDepth,
+                     uint64_t ansCount, uint64_t threadsCount,
                      std::filesystem::path &idToStringDirPath) : _ballTree(ballTree),
                                                                  _smilesTable(std::move(smilesTable)),
                                                                  _ansCount(ansCount),
-                                                                 _startSearchDepth(startSearchDepth),
+                                                                 _threadsCount(threadsCount),
                                                                  _idConverter(idToStringDirPath) {}
 
 
@@ -56,7 +55,8 @@ namespace qtr {
                     string &currSmiles = smiles.back();
                     if (!queryToId.contains(currSmiles)) {
                         queryToId[currSmiles] = queries.size();
-                        auto [error, queryData] = doSearch(currSmiles, _ballTree, _smilesTable, _ansCount);
+                        auto [error, queryData] = doSearch(currSmiles, _ballTree, _smilesTable, _ansCount,
+                                                           _threadsCount);
                         queries.emplace_back(std::move(queryData));
                     }
                     return crow::response(to_string(queryToId[currSmiles]));

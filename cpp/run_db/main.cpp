@@ -27,8 +27,8 @@ ABSL_FLAG(string, other_data_path, "",
 ABSL_FLAG(string, db_name, "",
           "Name of folders with data base's files");
 
-ABSL_FLAG(uint64_t, start_search_depth, -1,
-          "Depth for start search from. There will be 2^start_search_depth threads.");
+ABSL_FLAG(uint64_t, threads_count, -1,
+          "Number of threads to process leafs.");
 
 ABSL_FLAG(string, mode, "",
           "possible modes: interactive, from_file, web");
@@ -50,7 +50,7 @@ struct Args {
     vector<filesystem::path> dataDirPaths;
     filesystem::path otherDataPath;
     string dbName;
-    uint64_t startSearchDepth;
+    uint64_t threadsCount;
     Mode mode;
     filesystem::path inputFile;
     uint64_t ansCount;
@@ -81,12 +81,12 @@ struct Args {
         emptyArgument(dbName, "Please specify db_name option");
         LOG(INFO) << "dbName: " << dbName;
 
-        startSearchDepth = absl::GetFlag(FLAGS_start_search_depth);
-        if (startSearchDepth == -1) {
-            LOG(INFO) << "Please specify start_search_depth option";
+        threadsCount = absl::GetFlag(FLAGS_threads_count);
+        if (threadsCount == -1) {
+            LOG(INFO) << "Please specify threads_count option";
             exit(-1);
         }
-        LOG(INFO) << "startSearchDepth: " << startSearchDepth;
+        LOG(INFO) << "threadsCount: " << threadsCount;
 
         string modeStr = absl::GetFlag(FLAGS_mode);
         emptyArgument(modeStr, "Please specify mode option");
@@ -151,15 +151,17 @@ int main(int argc, char *argv[]) {
     timeTicker.tick("DB initialization");
     shared_ptr<RunMode> mode = nullptr;
     if (args.mode == Args::Mode::Interactive)
-        mode = shared_ptr<RunMode>(dynamic_cast<RunMode *>(new InteractiveMode(ballTree, smilesTablePtr, timeTicker, args.ansCount,
-                                                           args.startSearchDepth)));
+        mode = shared_ptr<RunMode>(
+                dynamic_cast<RunMode *>(new InteractiveMode(ballTree, smilesTablePtr, timeTicker, args.ansCount,
+                                                            args.threadsCount)));
     else if (args.mode == Args::Mode::FromFile)
-        mode = shared_ptr<RunMode>(dynamic_cast<RunMode *>(new FromFileMode(ballTree, smilesTablePtr, timeTicker, args.inputFile,
-                                                        args.ansCount,
-                                                        args.startSearchDepth)));
+        mode = shared_ptr<RunMode>(
+                dynamic_cast<RunMode *>(new FromFileMode(ballTree, smilesTablePtr, timeTicker, args.inputFile,
+                                                         args.ansCount, args.threadsCount)));
     else if (args.mode == Args::Mode::Web)
-        mode = shared_ptr<RunMode>(dynamic_cast<RunMode *>(new WebMode(ballTree, smilesTablePtr, timeTicker, args.ansCount,
-                                                   args.startSearchDepth, args.idToStringDirPath)));
+        mode = shared_ptr<RunMode>(
+                dynamic_cast<RunMode *>(new WebMode(ballTree, smilesTablePtr, timeTicker, args.ansCount,
+                                                    args.threadsCount, args.idToStringDirPath)));
 
     mode->run();
     return 0;

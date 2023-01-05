@@ -7,26 +7,26 @@
 
 namespace qtr {
     class FromFileMode : public RunMode {
-        const qtr::BallTreeSearchEngine &ballTree;
-        std::shared_ptr<const SmilesTable> smilesTable;
-        qtr::TimeTicker &timeTicker;
-        const std::filesystem::path &inputFile;
-        uint64_t ansCount;
-        uint64_t startSearchDepth;
+        const qtr::BallTreeSearchEngine &_ballTree;
+        std::shared_ptr<const SmilesTable> _smilesTable;
+        qtr::TimeTicker &_timeTicker;
+        const std::filesystem::path &_inputFile;
+        uint64_t _ansCount;
+        uint64_t _threadsCount;
     public:
         inline FromFileMode(const qtr::BallTreeSearchEngine &ballTree, std::shared_ptr<const SmilesTable> smilesTable,
                             qtr::TimeTicker &timeTicker, const std::filesystem::path &inputFile, uint64_t ansCount,
-                            uint64_t startSearchDepth) :
-                ballTree(ballTree),
-                smilesTable(std::move(smilesTable)),
-                timeTicker(timeTicker),
-                inputFile(inputFile),
-                ansCount(ansCount),
-                startSearchDepth(startSearchDepth) {}
+                            uint64_t threadsCount) :
+                _ballTree(ballTree),
+                _smilesTable(std::move(smilesTable)),
+                _timeTicker(timeTicker),
+                _inputFile(inputFile),
+                _ansCount(ansCount),
+                _threadsCount(threadsCount) {}
 
 
         inline void run() override {
-            std::ifstream input(inputFile);
+            std::ifstream input(_inputFile);
             std::vector<std::string> queries;
             while (input.peek() != EOF) {
                 std::string query;
@@ -40,14 +40,14 @@ namespace qtr {
             LOG(INFO) << "Loaded " << queries.size() << " queries";
             for (size_t i = 0; i < queries.size(); i++) {
                 LOG(INFO) << "Start search for " << i << ": " << queries[i];
-                timeTicker.tick();
-                auto [error, queryData] = doSearch(queries[i], ballTree, smilesTable, startSearchDepth);
+                _timeTicker.tick();
+                auto [error, queryData] = doSearch(queries[i], _ballTree, _smilesTable, _ansCount, _threadsCount);
                 if (error) {
                     ++skipped;
                     continue;
                 }
                 queryData->waitAllTasks();
-                times.emplace_back(timeTicker.tick("search molecule " + std::to_string(i) + ": " + queries[i]));
+                times.emplace_back(_timeTicker.tick("search molecule " + std::to_string(i) + ": " + queries[i]));
             }
 
             double mean = std::accumulate(times.begin(), times.end(), 0.0) / double(times.size());

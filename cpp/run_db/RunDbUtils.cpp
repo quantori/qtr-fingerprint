@@ -10,10 +10,9 @@ using namespace std;
 
 namespace qtr {
 
-    pair<bool, std::unique_ptr<BallTreeQueryData>> doSearch(const string &querySmiles,
-                                                            const qtr::BallTreeSearchEngine &ballTree,
-                                                            const shared_ptr<const SmilesTable> &smilesTable,
-                                                            size_t ansCount) {
+    pair<bool, std::unique_ptr<BallTreeQueryData>>
+    doSearch(const string &querySmiles, const qtr::BallTreeSearchEngine &ballTree,
+             const shared_ptr<const SmilesTable> &smilesTable, size_t ansCount, size_t threadsCount) {
         qtr::IndigoFingerprint fingerprint;
         try {
             fingerprint = qtr::indigoFingerprintFromSmiles(querySmiles);
@@ -25,11 +24,12 @@ namespace qtr {
         auto querySmilesPtr = make_shared<string>(querySmiles);
         auto queryData = make_unique<BallTreeQueryData>(ansCount, fingerprint,
                                                         std::make_unique<IndigoFilter>(smilesTable, querySmilesPtr));
-        ballTree.search(*queryData, 16); // todo: fix hardcode: pass number of threads as variable
+        ballTree.search(*queryData, threadsCount);
         return {false, std::move(queryData)};
     }
 
-    std::shared_ptr<SmilesTable> loadSmilesTable(const filesystem::path &smilesTablePath, const HuffmanCoder &huffmanCoder) {
+    std::shared_ptr<SmilesTable>
+    loadSmilesTable(const filesystem::path &smilesTablePath, const HuffmanCoder &huffmanCoder) {
         LOG(INFO) << "Start smiles table loading";
         HuffmanSmilesTable::Builder builder(huffmanCoder);
         for (const auto &pair: SmilesTableReader(smilesTablePath)) {

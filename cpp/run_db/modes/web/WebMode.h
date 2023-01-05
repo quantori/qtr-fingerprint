@@ -21,12 +21,12 @@ namespace qtr {
         const qtr::BallTreeSearchEngine &_ballTree;
         std::shared_ptr<const SmilesTable> _smilesTable;
         const uint64_t _ansCount;
-        const uint64_t _startSearchDepth;
+        const uint64_t _threadsCount;
         IdConverter _idConverter;
 
     public:
         WebMode(const qtr::BallTreeSearchEngine &ballTree, std::shared_ptr<const SmilesTable> smilesTable,
-                qtr::TimeTicker &timeTicker, uint64_t ansCount, uint64_t startSearchDepth,
+                qtr::TimeTicker &timeTicker, uint64_t ansCount, uint64_t threadsCount,
                 std::filesystem::path &idToStringDirPath);
 
         void run() override;
