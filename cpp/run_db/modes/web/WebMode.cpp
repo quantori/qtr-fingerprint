@@ -19,19 +19,20 @@ namespace qtr {
 
     crow::json::wvalue
     WebMode::prepareResponse(BallTreeQueryData &queryData, size_t minOffset, size_t maxOffset) {
-        crow::json::wvalue::list response;
         cout << minOffset << " " << maxOffset << endl;
         auto [isFinish, result] = queryData.getAnswers(minOffset, maxOffset);
         LOG(INFO) << "found " << result.size() << " results";
-        response.reserve(result.size());
-        response.emplace_back(crow::json::wvalue{{"isFinished", isFinish}});
+        crow::json::wvalue::list molecules;
+        molecules.reserve(result.size());
         for (auto res: result) {
             auto [id, libraryId] = _idConverter.fromDbId(res);
-            response.emplace_back(crow::json::wvalue{{"id",        id},
-                                                     {"libraryId", libraryId}});
+            molecules.emplace_back(crow::json::wvalue{{"id",        id},
+                                                      {"libraryId", libraryId}});
         }
-
-        return crow::json::wvalue{response};
+        return crow::json::wvalue {
+                {"molecules", molecules},
+                {"isFinished", isFinish}
+        };
     }
 
 
