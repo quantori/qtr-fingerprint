@@ -12,6 +12,8 @@ namespace qtr {
     class BitSelector {
     public:
         virtual size_t operator()(const ColumnsStatistic &statistic) const = 0;
+
+        virtual ~BitSelector() = default;
     };
 
 } // qtr

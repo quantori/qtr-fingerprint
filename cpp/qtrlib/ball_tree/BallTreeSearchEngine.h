@@ -3,43 +3,26 @@
 #include <vector>
 #include <filesystem>
 #include <future>
-#include <functional>
+#include <atomic>
+#include <type_traits>
+
 
 #include "BallTree.h"
 #include "Fingerprint.h"
-
+#include "BallTreeTypes.h"
+#include "BallTreeQueryData.h"
+#include "answer_filtering/AnswerFilter.h"
+#include "answer_filtering/AlwaysTrueFilter.h"
 
 namespace qtr {
-    using CIDType = uint64_t;
-
-    namespace {
-        auto noFiltering = [](CIDType) {
-            return true;
-        };
-    }
 
     class BallTreeSearchEngine : public BallTree {
     public:
         template<typename BinaryReader>
         BallTreeSearchEngine(BinaryReader &nodesReader, std::vector<std::filesystem::path> dataDirectories);
 
-        struct QueryData {
-            const IndigoFingerprint &query;
-            std::vector<CIDType> &result;
-            std::mutex &resultLock;
-            size_t ansCount;
-            bool isTerminate;
-            const std::function<bool(CIDType)> &filter;
-
-            void updateIsTerminate();
-
-            void addAnswer(CIDType value);
-        };
-
     protected:
         void initLeafDataPaths();
-
-        void searchInSubtree(size_t nodeId, QueryData &queryData) const;
 
         [[nodiscard]] const std::filesystem::path &getLeafFile(size_t nodeId) const;
 
@@ -48,13 +31,18 @@ namespace qtr {
 
         [[nodiscard]] std::vector<size_t> getLeafIds() const;
 
-        static void putAnswer(CIDType ansValue, QueryData &queryData);
+        void findLeafs(const IndigoFingerprint &fingerprint, size_t currentNode, std::vector<CIDType> &leafs) const;
 
-        virtual void searchInLeaf(size_t leafId, QueryData &queryData) const = 0;
+        virtual std::vector<CIDType> searchInLeaf(size_t leafId, const IndigoFingerprint &query) const = 0;
+
+        void processLeafGroup(BallTreeQueryData &queryData, std::vector<uint64_t> leafs, size_t group,
+                              size_t totalGroups) const;
+
 
     public:
-        std::vector<CIDType> search(const IndigoFingerprint &query, size_t ansCount, size_t startDepth,
-                                    const std::function<bool(CIDType)> &filter = noFiltering) const;
+        void search(BallTreeQueryData &queryData, size_t threads) const;
+
+        virtual ~BallTreeSearchEngine() = default;
 
     protected:
         std::vector<std::filesystem::path> _leafDataPaths;

@@ -19,12 +19,10 @@ target_include_directories(${This}
         PUBLIC search_engine
         PUBLIC utils
         PUBLIC fingerprints
-        PUBLIC splitter_tree
-        PUBLIC splitter_tree/columns_selection
         PUBLIC data_io
         PUBLIC io
         PUBLIC ball_tree
-        PUBLIC ball_tree/split_bit_selection
+        PUBLIC smiles_table
         )
 
 target_link_libraries(${This} glog::glog)

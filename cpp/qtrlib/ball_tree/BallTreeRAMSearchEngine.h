@@ -14,10 +14,11 @@ namespace qtr {
         BallTreeRAMSearchEngine(BinaryReader &nodesReader,
                                 std::vector<std::filesystem::path> dataDirectories);
 
-        virtual void searchInLeaf(size_t leafId, QueryData &queryData) const override;
+        [[nodiscard]] std::vector<CIDType> searchInLeaf(size_t leafId, const IndigoFingerprint &query) const override;
 
     protected:
-        std::map<std::string, std::vector<std::pair<size_t, std::filesystem::path>>> groupedByDriveLeafFiles() const;
+        [[nodiscard]] std::map<std::string, std::vector<std::pair<size_t, std::filesystem::path>>>
+        groupedByDriveLeafFiles() const;
 
         void loadLeafFiles(const std::vector<std::pair<size_t, std::filesystem::path>> &leafsList);
 

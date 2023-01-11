@@ -89,7 +89,6 @@ namespace qtr {
             return *this;
         }
 
-        // todo: test this function
         Bitset &set() {
             std::memset(_data, 255, sizeof _data);
             _data[DataLength - 1] &= T(1) << (size() % TypeSizeInBits) - 1;
