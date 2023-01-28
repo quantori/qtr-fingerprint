@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "answer_filtering/AnswerFilter.h"
+#include "AnswerFilter.h"
 #include "SmilesTable.h"
 
 #include "IndigoQueryMolecule.h"
