@@ -22,7 +22,7 @@ namespace qtr {
 
         ~SmilesTableWriter() override {
             _binaryWriter->seekp(0, std::ios::beg);
-            _binaryWriter->write((char *) &_writtenSmiles, sizeof _writtenSmiles); // write bucket size
+            _binaryWriter->write((char *) &_writtenSmiles, sizeof _writtenSmiles);
             LOG(INFO) << "Delete SMILES table writer with " << _writtenSmiles << " molecules (" << _binaryWriter << ")";
         }
 
