@@ -56,9 +56,5 @@ namespace qtr {
         return arr[i];
     }
 
-    constexpr size_t PropertiesFilter::Properties::size() {
-        return sizeof(PropertiesFilter::Properties) / sizeof(property_t);
-    }
-
 
 } // qtr

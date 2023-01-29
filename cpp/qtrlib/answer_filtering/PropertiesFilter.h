@@ -65,7 +65,9 @@ namespace qtr {
 
             property_t &operator[](size_t i);
 
-            static constexpr size_t size();
+            static constexpr size_t size() {
+                return sizeof(PropertiesFilter::Properties) / sizeof(property_t);
+            }
         };
 
         struct Bounds {
