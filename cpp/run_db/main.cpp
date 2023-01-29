@@ -9,6 +9,7 @@
 #include "HuffmanCoder.h"
 #include "SmilesTable.h"
 #include "RunDbUtils.h"
+#include "properties_table_io/PropertiesTableReader.h"
 
 using namespace std;
 using namespace qtr;
@@ -62,6 +63,7 @@ struct Args {
     filesystem::path smilesTablePath;
     filesystem::path huffmanCoderPath;
     filesystem::path idToStringDirPath;
+    filesystem::path propertiesTablePath;
 
     Args(int argc, char *argv[]) {
         absl::ParseCommandLine(argc, argv);
@@ -131,37 +133,63 @@ struct Args {
 
         idToStringDirPath = dbOtherDataPath / "id_string";
         LOG(INFO) << "idToStringDirPath: " << idToStringDirPath;
+
+        propertiesTablePath = dbOtherDataPath / "propertiesTable";
+        LOG(INFO) << "propertiesTablePath: " << propertiesTablePath;
     }
 };
+
+shared_ptr<BallTreeSearchEngine> loadBallTree(const Args &args) {
+    BufferedReader ballTreeReader(args.ballTreePath);
+    LOG(INFO) << "Start ball tree loading";
+    auto res = make_shared<BallTreeRAMSearchEngine>(ballTreeReader, args.dbDataDirsPaths);
+    LOG(INFO) << "Finish ball tree loading";
+    return res;
+}
+
+shared_ptr<IdConverter> loadIdConverter(const std::filesystem::path &idToStringDirPath) {
+    return std::make_shared<IdConverter>(idToStringDirPath);
+}
+
+shared_ptr<vector<PropertiesFilter::Properties>> loadPropertiesTable(const std::filesystem::path &propertiesTablePath) {
+    auto res = make_shared<vector<PropertiesFilter::Properties>>();
+    auto reader = PropertiesTableReader(propertiesTablePath);
+    for (const auto &[id, properties]: reader) {
+        assert(id == res->size());
+        res->emplace_back(properties);
+    }
+    return res;
+}
+
 
 int main(int argc, char *argv[]) {
     initLogging(argv, google::INFO, "run_db.info", true);
     Args args(argc, argv);
 
     TimeTicker timeTicker;
-    BufferedReader ballTreeReader(args.ballTreePath);
 
     HuffmanCoder huffmanCoder = HuffmanCoder::load(args.huffmanCoderPath);
-
+    auto loadBallTreeTask = async(launch::async, loadBallTree, cref(args));
     auto loadSmilesTableTask = async(launch::async, loadSmilesTable, cref(args.smilesTablePath), cref(huffmanCoder));
-    LOG(INFO) << "Start ball tree loading";
-    BallTreeRAMSearchEngine ballTree(ballTreeReader, args.dbDataDirsPaths);
-    LOG(INFO) << "Finish ball tree loading";
+    auto loadIdConverterTask = async(launch::async, loadIdConverter, cref(args.idToStringDirPath));
+    auto loadPropertiesTableTask = async(launch::async, loadPropertiesTable, cref(args.propertiesTablePath));
+
+    auto ballTreePtr = loadBallTreeTask.get();
     auto smilesTablePtr = loadSmilesTableTask.get();
+    auto idConverterPtr = loadIdConverterTask.get();
+    auto propertiesTablePtr = loadPropertiesTableTask.get();
     timeTicker.tick("DB initialization");
+
     shared_ptr<RunMode> mode = nullptr;
     if (args.mode == Args::Mode::Interactive)
-        mode = shared_ptr<RunMode>(
-                dynamic_cast<RunMode *>(new InteractiveMode(ballTree, smilesTablePtr, timeTicker, args.ansCount,
-                                                            args.threadsCount)));
+        mode = make_shared<InteractiveMode>(*ballTreePtr, smilesTablePtr, timeTicker, args.ansCount, args.threadsCount,
+                                            propertiesTablePtr);
     else if (args.mode == Args::Mode::FromFile)
-        mode = shared_ptr<RunMode>(
-                dynamic_cast<RunMode *>(new FromFileMode(ballTree, smilesTablePtr, timeTicker, args.inputFile,
-                                                         args.ansCount, args.threadsCount)));
+        mode = make_shared<FromFileMode>(*ballTreePtr, smilesTablePtr, timeTicker, args.inputFile, args.ansCount,
+                                         args.threadsCount, propertiesTablePtr);
     else if (args.mode == Args::Mode::Web)
-        mode = shared_ptr<RunMode>(
-                dynamic_cast<RunMode *>(new WebMode(ballTree, smilesTablePtr, timeTicker, args.ansCount,
-                                                    args.threadsCount, args.idToStringDirPath)));
+        mode = make_shared<WebMode>(*ballTreePtr, smilesTablePtr, timeTicker, args.ansCount, args.threadsCount,
+                                    idConverterPtr, propertiesTablePtr);
 
     mode->run();
     return 0;

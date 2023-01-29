@@ -13,14 +13,18 @@ namespace qtr {
         qtr::TimeTicker &_timeTicker;
         uint64_t _ansCount;
         uint64_t _threadsCount;
+        std::shared_ptr<const std::vector<PropertiesFilter::Properties>> _molPropertiesTable;
+
     public:
         inline InteractiveMode(const qtr::BallTreeSearchEngine &ballTree, shared_ptr<const SmilesTable> smilesTable,
-                               qtr::TimeTicker &timeTicker, uint64_t ansCount, uint64_t threadsCount) :
+                               qtr::TimeTicker &timeTicker, uint64_t ansCount, uint64_t threadsCount,
+                               std::shared_ptr<const std::vector<PropertiesFilter::Properties>> molPropertiesTable) :
                 _ballTree(ballTree),
                 _smilesTable(std::move(smilesTable)),
                 _timeTicker(timeTicker),
                 _ansCount(ansCount),
-                _threadsCount(threadsCount) {}
+                _threadsCount(threadsCount),
+                _molPropertiesTable(std::move(molPropertiesTable)){}
 
 
         inline void run() override {
@@ -32,7 +36,8 @@ namespace qtr {
                     break;
                 _timeTicker.tick();
                 try {
-                    auto [error, queryData] = doSearch(smiles, _ballTree, _smilesTable, _ansCount, _threadsCount);
+                    auto [error, queryData] = doSearch(smiles, _ballTree, _smilesTable, _ansCount, _threadsCount,
+                                                       PropertiesFilter::Bounds(), _molPropertiesTable);
                     if (error) {
                         LOG(ERROR) << "Can not parse given smiles";
                         continue;

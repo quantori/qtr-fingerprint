@@ -22,12 +22,14 @@ namespace qtr {
         std::shared_ptr<const SmilesTable> _smilesTable;
         const uint64_t _ansCount;
         const uint64_t _threadsCount;
-        IdConverter _idConverter;
+        std::shared_ptr<const IdConverter> _idConverter;
+        std::shared_ptr<const std::vector<PropertiesFilter::Properties>> _molPropertiesTable;
 
     public:
         WebMode(const qtr::BallTreeSearchEngine &ballTree, std::shared_ptr<const SmilesTable> smilesTable,
                 qtr::TimeTicker &timeTicker, uint64_t ansCount, uint64_t threadsCount,
-                std::filesystem::path &idToStringDirPath);
+                std::shared_ptr<const IdConverter> idConverter,
+                std::shared_ptr<const std::vector<PropertiesFilter::Properties>> molPropertiesTable);
 
         void run() override;
 

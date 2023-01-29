@@ -13,16 +13,20 @@ namespace qtr {
         const std::filesystem::path &_inputFile;
         uint64_t _ansCount;
         uint64_t _threadsCount;
+        std::shared_ptr<const std::vector<PropertiesFilter::Properties>> _molPropertiesTable;
+
     public:
         inline FromFileMode(const qtr::BallTreeSearchEngine &ballTree, std::shared_ptr<const SmilesTable> smilesTable,
                             qtr::TimeTicker &timeTicker, const std::filesystem::path &inputFile, uint64_t ansCount,
-                            uint64_t threadsCount) :
+                            uint64_t threadsCount,
+                            std::shared_ptr<const std::vector<PropertiesFilter::Properties>> molPropertiesTable) :
                 _ballTree(ballTree),
                 _smilesTable(std::move(smilesTable)),
                 _timeTicker(timeTicker),
                 _inputFile(inputFile),
                 _ansCount(ansCount),
-                _threadsCount(threadsCount) {}
+                _threadsCount(threadsCount),
+                _molPropertiesTable(std::move(molPropertiesTable)) {}
 
 
         inline void run() override {
@@ -41,7 +45,8 @@ namespace qtr {
             for (size_t i = 0; i < queries.size(); i++) {
                 LOG(INFO) << "Start search for " << i << ": " << queries[i];
                 _timeTicker.tick();
-                auto [error, queryData] = doSearch(queries[i], _ballTree, _smilesTable, _ansCount, _threadsCount);
+                auto [error, queryData] = doSearch(queries[i], _ballTree, _smilesTable, _ansCount, _threadsCount,
+                                                   PropertiesFilter::Bounds(), _molPropertiesTable);
                 if (error) {
                     ++skipped;
                     continue;

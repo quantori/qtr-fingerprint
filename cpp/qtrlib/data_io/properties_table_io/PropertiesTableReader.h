@@ -9,7 +9,7 @@
 namespace qtr {
 
     class PropertiesTableReader :
-            public BasicDataReader<std::pair<uint64_t, PropertiesFilter::property_list_t>, PropertiesTableReader, BufferedReader<>> {
+            public BasicDataReader<std::pair<uint64_t, PropertiesFilter::Properties>, PropertiesTableReader, BufferedReader<>> {
     private:
         uint64_t _propertiesInStream;
 

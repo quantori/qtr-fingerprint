@@ -34,27 +34,58 @@ namespace qtr {
         };
 
         using property_t = float;
-        static const size_t propertiesCount = std::size(propertyNames);
-        using property_list_t = property_t[propertiesCount];
 
-        class Bounds {
-        public:
+        struct Properties {
+            property_t pubchemComponentCount;
+            property_t pubchemXlogp3;
+            property_t pubchemAtomUdefStereoCount;
+            property_t pubchemHeavyAtomCount;
+            property_t pubchemCactvsTautoCount;
+            property_t pubchemIsotopicAtomCount;
+            property_t pubchemCactvsHbondDonor;
+            property_t pubchemCactvsRotatableBond;
+            property_t pubchemMonoisotopicWeight;
+            property_t pubchemCactvsHbondAcceptor;
+            property_t pubchemAtomDefStereoCount;
+            property_t pubchemCompoundCid;
+            property_t pubchemMolecularWeight;
+            property_t pubchemBondDefStereoCount;
+            property_t pubchemTotalCharge;
+            property_t pubchemExactMass;
+            property_t pubchemCactvsComplexity;
+            property_t pubchemBondUdefStereoCount;
+            property_t pubchemCactvsTpsa;
+            property_t pubchemCompoundCanonicalized;
+
+            Properties() = default;
+
+            Properties(const Properties &) = default;
+
+            property_t operator[](size_t i) const;
+
+            property_t &operator[](size_t i);
+
+            static constexpr size_t size();
+        };
+
+        struct Bounds {
             Bounds();
 
             Bounds(const Bounds &) = default;
 
-            [[nodiscard]] bool Check(const property_list_t &properties) const;
+            [[nodiscard]] bool Check(const Properties &properties) const;
 
-        private:
-            property_list_t _minBounds{};
-            property_list_t _maxBounds{};
+            Properties minBounds{};
+            Properties maxBounds{};
         };
 
         bool operator()(CIDType id) override;
 
         std::unique_ptr<AnswerFilter> copy() override;
 
-        explicit PropertiesFilter(std::shared_ptr<const std::vector<property_list_t>> propertiesTable);
+        explicit PropertiesFilter(std::shared_ptr<const std::vector<Properties>> propertiesTable);
+
+        PropertiesFilter(std::shared_ptr<const std::vector<Properties>> propertiesTable, Bounds bounds);
 
         void setBounds(Bounds bounds);
 
@@ -62,7 +93,7 @@ namespace qtr {
 
     private:
         std::shared_ptr<const Bounds> _bounds;
-        std::shared_ptr<const std::vector<property_list_t>> _propertiesTable;
+        std::shared_ptr<const std::vector<Properties>> _propertiesTable;
     };
 
 

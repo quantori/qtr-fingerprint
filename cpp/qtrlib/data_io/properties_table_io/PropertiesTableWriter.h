@@ -8,7 +8,7 @@
 namespace qtr {
 
     class PropertiesTableWriter
-            : public BasicDataWriter<std::pair<uint64_t, PropertiesFilter::property_list_t>, PropertiesTableWriter, std::ofstream> {
+            : public BasicDataWriter<std::pair<uint64_t, PropertiesFilter::Properties>, PropertiesTableWriter, std::ofstream> {
     private:
         uint64_t _writtenProperties;
 

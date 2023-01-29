@@ -5,17 +5,19 @@
 #include <utility>
 
 namespace qtr {
-    bool PropertiesFilter::Bounds::Check(const PropertiesFilter::property_list_t &properties) const {
-        for (size_t i = 0; i < propertiesCount; i++) {
-            if (!(_minBounds[i] <= properties[i] && properties[i] <= _maxBounds[i]))
+    PropertiesFilter::Bounds::Bounds() {
+        for (size_t i = 0; i < PropertiesFilter::Properties::size(); i++) {
+            minBounds[i] = std::numeric_limits<property_t>::min();
+            maxBounds[i] = std::numeric_limits<property_t>::max();
+        }
+    }
+
+    bool PropertiesFilter::Bounds::Check(const PropertiesFilter::Properties &properties) const {
+        for (size_t i = 0; i < PropertiesFilter::Properties::size(); i++) {
+            if (!(minBounds[i] <= properties[i] && properties[i] <= maxBounds[i]))
                 return false;
         }
         return true;
-    }
-
-    PropertiesFilter::Bounds::Bounds() {
-        std::fill(std::begin(_minBounds), std::end(_minBounds), std::numeric_limits<property_t>::min());
-        std::fill(std::begin(_maxBounds), std::end(_maxBounds), std::numeric_limits<property_t>::max());
     }
 
     bool PropertiesFilter::operator()(CIDType id) {
@@ -28,8 +30,13 @@ namespace qtr {
         return result;
     }
 
-    PropertiesFilter::PropertiesFilter(std::shared_ptr<const std::vector<property_list_t>> propertiesTable)
+    PropertiesFilter::PropertiesFilter(std::shared_ptr<const std::vector<PropertiesFilter::Properties>> propertiesTable)
             : _propertiesTable(std::move(propertiesTable)), _bounds() {}
+
+    PropertiesFilter::PropertiesFilter(std::shared_ptr<const std::vector<PropertiesFilter::Properties>> propertiesTable,
+                                       PropertiesFilter::Bounds bounds) : PropertiesFilter(std::move(propertiesTable)) {
+        setBounds(bounds);
+    }
 
     void PropertiesFilter::setBounds(PropertiesFilter::Bounds bounds) {
         _bounds = std::make_shared<Bounds>(bounds);
@@ -38,5 +45,20 @@ namespace qtr {
     void PropertiesFilter::setBounds(std::shared_ptr<const Bounds> bounds) {
         _bounds = std::move(bounds);
     }
+
+    PropertiesFilter::property_t PropertiesFilter::Properties::operator[](size_t i) const {
+        auto *arr = (property_t *) this;
+        return arr[i];
+    }
+
+    PropertiesFilter::property_t &PropertiesFilter::Properties::operator[](size_t i) {
+        auto *arr = (property_t *) this;
+        return arr[i];
+    }
+
+    constexpr size_t PropertiesFilter::Properties::size() {
+        return sizeof(PropertiesFilter::Properties) / sizeof(property_t);
+    }
+
 
 } // qtr
