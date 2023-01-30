@@ -22,9 +22,10 @@ namespace qtr {
             fingerprint = qtr::indigoFingerprintFromSmiles(querySmiles);
         }
         catch (exception &exception) {
-            cout << "skip query:" << exception.what() << endl;
+            LOG(WARNING) << "Skip query:" << exception.what();
             return {true, unique_ptr<BallTreeQueryData>(nullptr)};
         }
+        LOG(INFO) << "Start search: " << querySmiles;
         auto querySmilesPtr = make_shared<string>(querySmiles);
         auto indigoFilter = std::make_unique<IndigoFilter>(smilesTable, querySmilesPtr);
         auto propertiesFilter = std::make_unique<PropertiesFilter>(propertiesTable, queryBounds);

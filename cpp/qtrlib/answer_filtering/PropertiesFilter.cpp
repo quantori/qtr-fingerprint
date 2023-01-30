@@ -15,8 +15,10 @@ namespace qtr {
     }
 
     bool PropertiesFilter::Bounds::Check(const PropertiesFilter::Properties &properties) const {
+        const static auto eps = (float) 1e-6;
         for (size_t i = 0; i < PropertiesFilter::Properties::size(); i++) {
-            if (!(minBounds[i] <= properties[i] && properties[i] <= maxBounds[i]) && !std::isnan(properties[i])) {
+            if (!std::isnan(properties[i]) &&
+                (properties[i] < minBounds[i] - eps || properties[i] > maxBounds[i] + eps)) {
                 return false;
             }
         }

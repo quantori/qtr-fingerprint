@@ -11,8 +11,7 @@
 #include "properties_table_io/PropertiesTableWriter.h"
 #include "PropertiesFilter.h"
 
-ABSL_FLAG(std::string, source_dir_path, "",
-          "Path to dir with csv files");
+ABSL_FLAG(std::string, source_dir_path, "", "Path to dir with csv files");
 
 ABSL_FLAG(std::string, dest_dir_path, "",
           "Path to directory where parsed data should be stored");
@@ -53,18 +52,18 @@ parseCSV(const std::filesystem::path &csvFilePath, const Args &args, std::atomic
             args.destDirPath / "fingerprintTables" / (csvFilePath.stem().string() + qtr::fingerprintTableExtension);
     std::filesystem::path idToStringTablePath =
             args.destDirPath / "idToStringTables" / (csvFilePath.stem().string() + ".csv");
-    std::filesystem::path propertiesTablePath =
-            args.destDirPath / "propertyTable" / csvFilePath.stem();
+    std::filesystem::path propertyTablesPath =
+            args.destDirPath / "propertyTables" / csvFilePath.stem();
 
     std::filesystem::create_directory(smilesTablePath.parent_path());
     std::filesystem::create_directory(fingerprintTablePath.parent_path());
     std::filesystem::create_directory(idToStringTablePath.parent_path());
-    std::filesystem::create_directory(propertiesTablePath.parent_path());
+    std::filesystem::create_directory(propertyTablesPath.parent_path());
 
     qtr::SmilesTableWriter smilesTableWriter(smilesTablePath);
     qtr::FingerprintTableWriter fingerprintTableWriter(fingerprintTablePath);
     qtr::IdToStringWriter idToStringWriter(idToStringTablePath);
-    qtr::PropertiesTableWriter propertiesTableWriter(propertiesTablePath);
+    qtr::PropertiesTableWriter propertiesTableWriter(propertyTablesPath);
 
     std::ifstream in(csvFilePath);
     std::string line;
@@ -82,8 +81,8 @@ parseCSV(const std::filesystem::path &csvFilePath, const Args &args, std::atomic
         std::string smiles = lineElements[1];
         qtr::PropertiesFilter::Properties properties{};
         try {
-            for (size_t i = 2, j = 0; j < qtr::PropertiesFilter::Properties::size(); i++, j++) {
-                properties[i] = std::stof(lineElements[i]);
+            for (size_t i = 0; i < qtr::PropertiesFilter::Properties::size(); i++) {
+                properties[i] = std::stof(lineElements[i + 2]);
             }
         }
         catch (const std::invalid_argument &e) {

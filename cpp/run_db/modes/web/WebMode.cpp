@@ -42,10 +42,12 @@ namespace qtr {
             std::string maxKey = PropertiesFilter::propertyNames[i] + "_MAX";
 
             if (json.has(minKey)) {
-                bounds.minBounds[i] = (float)json[minKey].d();
+                bounds.minBounds[i] = (float)json[minKey].d() - (float)1e-8;
+                LOG(INFO) << "set bound " << minKey << ": " << bounds.minBounds[i];
             }
             if (json.has(maxKey)) {
-                bounds.maxBounds[i] = (float)json[maxKey].d();
+                bounds.maxBounds[i] = (float)json[maxKey].d() + (float)1e-8;
+                LOG(INFO) << "set bound " << maxKey << ": " << bounds.maxBounds[i];
             }
         }
 
@@ -74,6 +76,10 @@ namespace qtr {
                     size_t queryId = queries.size();
                     auto [error, queryData] = doSearch(currSmiles, _ballTree, _smilesTable, _ansCount,
                                                        _threadsCount, bounds, _molPropertiesTable);
+                    if (error) {
+                        LOG(WARNING) << "Cannot start search for smiles: " << currSmiles;
+                        return crow::response(to_string(-1));
+                    }
                     queries.emplace_back(std::move(queryData));
 
                     return crow::response(to_string(queryId));

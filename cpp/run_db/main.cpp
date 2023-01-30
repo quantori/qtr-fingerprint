@@ -172,12 +172,12 @@ int main(int argc, char *argv[]) {
     auto loadBallTreeTask = async(launch::async, loadBallTree, cref(args));
     auto loadSmilesTableTask = async(launch::async, loadSmilesTable, cref(args.smilesTablePath), cref(huffmanCoder));
     auto loadIdConverterTask = async(launch::async, loadIdConverter, cref(args.idToStringDirPath));
-    auto loadPropertiesTableTask = async(launch::async, loadPropertiesTable, cref(args.propertyTableDestinationPath));
+    auto loadPropertyTableTask = async(launch::async, loadPropertiesTable, cref(args.propertyTableDestinationPath));
 
     auto ballTreePtr = loadBallTreeTask.get();
     auto smilesTablePtr = loadSmilesTableTask.get();
     auto idConverterPtr = loadIdConverterTask.get();
-    auto propertiesTablePtr = loadPropertiesTableTask.get();
+    auto propertiesTablePtr = loadPropertyTableTask.get();
     timeTicker.tick("DB initialization");
 
     shared_ptr<RunMode> mode = nullptr;
