@@ -24,7 +24,7 @@ namespace qtr {
     }
 
     template<>
-    void emptyArgument<uint64_t>(const uint64_t &argument, const std::string &message) {
+    void checkEmptyArgument<uint64_t>(const uint64_t &argument, const std::string &message) {
         if (argument == 0) {
             LOG(ERROR) << message;
             exit(-1);

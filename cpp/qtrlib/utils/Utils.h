@@ -42,7 +42,7 @@ namespace qtr {
      * @param message
      */
     template<typename T>
-    void emptyArgument(const T &argument, const std::string &message) {
+    void checkEmptyArgument(const T &argument, const std::string &message) {
         if (argument.empty()) {
             LOG(ERROR) << message;
             exit(-1);
@@ -55,7 +55,7 @@ namespace qtr {
     void askAboutContinue(const std::string &question);
 
     template<>
-    void emptyArgument<uint64_t>(const uint64_t &argument, const std::string &message);
+    void checkEmptyArgument<uint64_t>(const uint64_t &argument, const std::string &message);
 
     /**
      * Return converted hex char to decimal

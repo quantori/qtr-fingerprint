@@ -25,10 +25,10 @@ struct Args {
         absl::ParseCommandLine(argc, argv);
 
         sourceDirPath = absl::GetFlag(FLAGS_source_dir_path);
-        qtr::emptyArgument(sourceDirPath, "Please specify source_dir_path option");
+        qtr::checkEmptyArgument(sourceDirPath, "Please specify source_dir_path option");
 
         destDirPath = absl::GetFlag(FLAGS_dest_dir_path);
-        qtr::emptyArgument(destDirPath, "Please specify dest_dir_path option");
+        qtr::checkEmptyArgument(destDirPath, "Please specify dest_dir_path option");
     }
 };
 
@@ -54,7 +54,7 @@ parseCSV(const std::filesystem::path &csvFilePath, const Args &args, std::atomic
     std::filesystem::path idToStringTablePath =
             args.destDirPath / "idToStringTables" / (csvFilePath.stem().string() + ".csv");
     std::filesystem::path propertiesTablePath =
-            args.destDirPath / "propertiesTable" / csvFilePath.stem();
+            args.destDirPath / "propertyTable" / csvFilePath.stem();
 
     std::filesystem::create_directory(smilesTablePath.parent_path());
     std::filesystem::create_directory(fingerprintTablePath.parent_path());

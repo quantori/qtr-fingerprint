@@ -43,10 +43,10 @@ struct Args {
         absl::ParseCommandLine(argc, argv);
 
         sourceDirPath = absl::GetFlag(FLAGS_source_dir_path);
-        qtr::emptyArgument(sourceDirPath, "Please specify source_dir_path option");
+        qtr::checkEmptyArgument(sourceDirPath, "Please specify source_dir_path option");
 
         destDirPath = absl::GetFlag(FLAGS_dest_dir_path);
-        qtr::emptyArgument(destDirPath, "Please specify dest_dir_path option");
+        qtr::checkEmptyArgument(destDirPath, "Please specify dest_dir_path option");
 
         std::string parseModeStr = absl::GetFlag(FLAGS_parse_mode);
         if (parseModeStr == "rb") {

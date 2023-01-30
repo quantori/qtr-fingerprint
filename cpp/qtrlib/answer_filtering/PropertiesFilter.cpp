@@ -1,21 +1,24 @@
 #include "PropertiesFilter.h"
+#include "glog/logging.h"
 
 #include <algorithm>
 #include <numeric>
 #include <utility>
+#include <cmath>
 
 namespace qtr {
     PropertiesFilter::Bounds::Bounds() {
         for (size_t i = 0; i < PropertiesFilter::Properties::size(); i++) {
-            minBounds[i] = std::numeric_limits<property_t>::min();
-            maxBounds[i] = std::numeric_limits<property_t>::max();
+            minBounds[i] = -std::numeric_limits<property_t>::infinity();
+            maxBounds[i] = std::numeric_limits<property_t>::infinity();
         }
     }
 
     bool PropertiesFilter::Bounds::Check(const PropertiesFilter::Properties &properties) const {
         for (size_t i = 0; i < PropertiesFilter::Properties::size(); i++) {
-            if (!(minBounds[i] <= properties[i] && properties[i] <= maxBounds[i]))
+            if (!(minBounds[i] <= properties[i] && properties[i] <= maxBounds[i]) && !std::isnan(properties[i])) {
                 return false;
+            }
         }
         return true;
     }

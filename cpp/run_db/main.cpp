@@ -48,8 +48,8 @@ struct Args {
         Web
     };
 
-    vector<filesystem::path> dataDirPaths;
-    filesystem::path otherDataPath;
+    vector<filesystem::path> destDirPaths;
+    filesystem::path otherDestDirPath;
     string dbName;
     uint64_t threadsCount;
     Mode mode;
@@ -63,24 +63,24 @@ struct Args {
     filesystem::path smilesTablePath;
     filesystem::path huffmanCoderPath;
     filesystem::path idToStringDirPath;
-    filesystem::path propertiesTablePath;
+    filesystem::path propertyTableDestinationPath;
 
     Args(int argc, char *argv[]) {
         absl::ParseCommandLine(argc, argv);
 
         vector<string> dataDirPathsStrings = absl::GetFlag(FLAGS_data_dir_paths);
-        copy(dataDirPathsStrings.begin(), dataDirPathsStrings.end(), back_inserter(dataDirPaths));
-        emptyArgument(dataDirPaths, "Please specify data_dir_paths option");
-        for (size_t i = 0; i < dataDirPaths.size(); i++) {
-            LOG(INFO) << "dataDirPaths[" << i << "]: " << dataDirPaths[i];
+        copy(dataDirPathsStrings.begin(), dataDirPathsStrings.end(), back_inserter(destDirPaths));
+        checkEmptyArgument(destDirPaths, "Please specify data_dir_paths option");
+        for (size_t i = 0; i < destDirPaths.size(); i++) {
+            LOG(INFO) << "destDirPaths[" << i << "]: " << destDirPaths[i];
         }
 
-        otherDataPath = absl::GetFlag(FLAGS_other_data_path);
-        emptyArgument(otherDataPath, "Please specify other_data_path option");
-        LOG(INFO) << "otherDataPath: " << otherDataPath;
+        otherDestDirPath = absl::GetFlag(FLAGS_other_data_path);
+        checkEmptyArgument(otherDestDirPath, "Please specify other_data_path option");
+        LOG(INFO) << "otherDestDirPath: " << otherDestDirPath;
 
         dbName = absl::GetFlag(FLAGS_db_name);
-        emptyArgument(dbName, "Please specify db_name option");
+        checkEmptyArgument(dbName, "Please specify db_name option");
         LOG(INFO) << "dbName: " << dbName;
 
         threadsCount = absl::GetFlag(FLAGS_threads_count);
@@ -91,7 +91,7 @@ struct Args {
         LOG(INFO) << "threadsCount: " << threadsCount;
 
         string modeStr = absl::GetFlag(FLAGS_mode);
-        emptyArgument(modeStr, "Please specify mode option");
+        checkEmptyArgument(modeStr, "Please specify mode option");
         inputFile = absl::GetFlag(FLAGS_input_file);
         LOG(INFO) << "inputFile: " << inputFile;
         if (modeStr == "interactive") {
@@ -103,7 +103,7 @@ struct Args {
         } else if (modeStr == "from_file") {
             mode = Mode::FromFile;
             LOG(INFO) << "mode: fromFile";
-            emptyArgument(inputFile, "Please specify input_file option");
+            checkEmptyArgument(inputFile, "Please specify input_file option");
         } else {
             LOG(ERROR) << "Bad mode option value";
             exit(-1);
@@ -112,14 +112,14 @@ struct Args {
         ansCount = absl::GetFlag(FLAGS_ans_count);
         LOG(INFO) << "_stopAnswersNumber: " << ansCount;
 
-        for (auto &dir: dataDirPaths) {
+        for (auto &dir: destDirPaths) {
             dbDataDirsPaths.emplace_back(dir / dbName);
         }
         for (size_t i = 0; i < dbDataDirsPaths.size(); i++) {
             LOG(INFO) << "dbDataDirPaths[" << i << "]: " << dbDataDirsPaths[i];
         }
 
-        dbOtherDataPath = otherDataPath / dbName;
+        dbOtherDataPath = otherDestDirPath / dbName;
         LOG(INFO) << "dbOtherDataPath" << dbOtherDataPath;
 
         ballTreePath = dbOtherDataPath / "tree";
@@ -131,11 +131,11 @@ struct Args {
         huffmanCoderPath = dbOtherDataPath / "huffman";
         LOG(INFO) << "huffmanCoderPath: " << huffmanCoderPath;
 
-        idToStringDirPath = dbOtherDataPath / "id_string";
+        idToStringDirPath = dbOtherDataPath / "idToString";
         LOG(INFO) << "idToStringDirPath: " << idToStringDirPath;
 
-        propertiesTablePath = dbOtherDataPath / "propertiesTable";
-        LOG(INFO) << "propertiesTablePath: " << propertiesTablePath;
+        propertyTableDestinationPath = dbOtherDataPath / "propertyTable";
+        LOG(INFO) << "propertyTableDestinationPath: " << propertyTableDestinationPath;
     }
 };
 
@@ -172,7 +172,7 @@ int main(int argc, char *argv[]) {
     auto loadBallTreeTask = async(launch::async, loadBallTree, cref(args));
     auto loadSmilesTableTask = async(launch::async, loadSmilesTable, cref(args.smilesTablePath), cref(huffmanCoder));
     auto loadIdConverterTask = async(launch::async, loadIdConverter, cref(args.idToStringDirPath));
-    auto loadPropertiesTableTask = async(launch::async, loadPropertiesTable, cref(args.propertiesTablePath));
+    auto loadPropertiesTableTask = async(launch::async, loadPropertiesTable, cref(args.propertyTableDestinationPath));
 
     auto ballTreePtr = loadBallTreeTask.get();
     auto smilesTablePtr = loadSmilesTableTask.get();
