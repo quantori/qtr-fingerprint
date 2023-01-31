@@ -38,16 +38,18 @@ namespace qtr {
         PropertiesFilter::Bounds bounds;
 
         for (size_t i = 0; i < std::size(PropertiesFilter::propertyNames); ++i) {
-            std::string minKey = PropertiesFilter::propertyNames[i] + "_MIN";
-            std::string maxKey = PropertiesFilter::propertyNames[i] + "_MAX";
+            auto& propertyName = PropertiesFilter::propertyNames[i];
+            if (!json.has(propertyName))
+                continue;
+            auto& jsonBounds = json[propertyName];
 
-            if (json.has(minKey)) {
-                bounds.minBounds[i] = (float)json[minKey].d() - (float)1e-8;
-                LOG(INFO) << "set bound " << minKey << ": " << bounds.minBounds[i];
+            if (jsonBounds.has("min")) {
+                bounds.minBounds[i] = (float)jsonBounds["min"].d();
+                LOG(INFO) << "Set min bound " << propertyName << ": " << bounds.minBounds[i];
             }
-            if (json.has(maxKey)) {
-                bounds.maxBounds[i] = (float)json[maxKey].d() + (float)1e-8;
-                LOG(INFO) << "set bound " << maxKey << ": " << bounds.maxBounds[i];
+            if (jsonBounds.has("max")) {
+                bounds.maxBounds[i] = (float)jsonBounds["max"].d();
+                LOG(INFO) << "Set max bound " << propertyName << ": " << bounds.maxBounds[i];
             }
         }
 
