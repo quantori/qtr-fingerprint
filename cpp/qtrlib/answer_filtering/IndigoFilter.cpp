@@ -9,19 +9,24 @@
 namespace qtr {
 
     bool IndigoFilter::operator()(CIDType id) {
+        auto startTime = std::chrono::high_resolution_clock::now();
         const std::string &smiles = _smilesTable->at(id);
+        bool result;
         try {
             auto candidateMol = _indigoSessionPtr->loadMolecule(smiles);
             candidateMol.aromatize();
             auto matcher = _indigoSessionPtr->substructureMatcher(candidateMol);
-            return bool(indigoMatch(matcher.id(), _queryMolecule.id()));
+            result = bool(indigoMatch(matcher.id(), _queryMolecule.id()));
         }
         catch (std::exception &e) {
             LOG(ERROR) << "Indigo error while filtering. "
                           "Query: " << _querySmiles << ", candidate: " << id << " " << smiles << ", error: "
                        << e.what();
-            return false;
+            result = false;
         }
+        std::chrono::duration<double> duration = std::chrono::high_resolution_clock::now() - startTime;
+        _timer += duration.count();
+        return result;
     }
 
     std::unique_ptr<AnswerFilter> IndigoFilter::copy() {
@@ -34,6 +39,10 @@ namespace qtr {
             _indigoSessionPtr(indigo_cpp::IndigoSession::create()),
             _queryMolecule(_indigoSessionPtr->loadQueryMolecule(*_querySmiles)) {
         _queryMolecule.aromatize();
+    }
+
+    IndigoFilter::~IndigoFilter() {
+        indigoFilteringTimer += _timer;
     }
 
 } // namespace qtr

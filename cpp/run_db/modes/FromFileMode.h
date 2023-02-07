@@ -4,6 +4,7 @@
 
 #include "RunMode.h"
 #include "RunDbUtils.h"
+#include "IndigoFilter.h"
 
 namespace qtr {
     class FromFileMode : public RunMode {
@@ -56,6 +57,7 @@ namespace qtr {
                 times.emplace_back(_timeTicker.tick("search molecule " + std::to_string(i) + ": " + queries[i]));
             }
 
+
             double mean = std::accumulate(times.begin(), times.end(), 0.0) / double(times.size());
             double min = *std::min_element(times.begin(), times.end());
             double max = *std::max_element(times.begin(), times.end());
@@ -73,6 +75,10 @@ namespace qtr {
             LOG(INFO) << "median: " << median;
             LOG(INFO) << "60%: " << p60 << " | 70%: " << p70 << " | 80%: " << p80 << " | 90%: " << p90 << " | 95%: "
                       << p95;
+            LOG(INFO) << "Total search time: " << BallTreeSearchEngine::ballTreeSearchTimer;
+            LOG(INFO) << "Total indigo time: " << IndigoFilter::indigoFilteringTimer;
+            LOG(INFO) << "indigo percentage: " << IndigoFilter::indigoFilteringTimer /
+                                                  BallTreeSearchEngine::ballTreeSearchTimer * 100 << "%";
         }
 
     };
