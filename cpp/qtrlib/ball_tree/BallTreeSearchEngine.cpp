@@ -57,6 +57,7 @@ namespace qtr {
 
     void BallTreeSearchEngine::search(BallTreeQueryData &queryData, size_t threads) const {
         vector<uint64_t> leafs;
+        auto startTime = std::chrono::high_resolution_clock::now();
         findLeafs(queryData.getQueryFingerprint(), root(), leafs);
         LOG(INFO) << "Search in " << leafs.size() << " leafs";
         shuffle(leafs.begin(), leafs.end(), random_generator);
@@ -65,6 +66,8 @@ namespace qtr {
                                    std::ref(queryData), leafs, i, threads);
             queryData.addTask(std::move(task));
         }
+        std::chrono::duration<double> duration = std::chrono::high_resolution_clock::now() - startTime;
+        ballTreeSearchTimer += duration.count();
     }
 
     vector <size_t> BallTreeSearchEngine::getLeafIds() const {
