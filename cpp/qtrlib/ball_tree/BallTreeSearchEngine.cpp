@@ -67,7 +67,8 @@ namespace qtr {
             queryData.addTask(std::move(task));
         }
         std::chrono::duration<double> duration = std::chrono::high_resolution_clock::now() - startTime;
-        ballTreeSearchTimer += duration.count();
+        // multiply duration and threads to make time consumption percentage more accurate
+        ballTreeSearchTimer += duration.count() * (double)threads;
     }
 
     vector <size_t> BallTreeSearchEngine::getLeafIds() const {
