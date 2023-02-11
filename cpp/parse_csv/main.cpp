@@ -8,9 +8,10 @@
 #include "smiles_table_io/SmilesTableWriter.h"
 #include "fingerprint_table_io/FingerprintTableWriter.h"
 #include "id_to_string_io/IdToStringWriter.h"
+#include "properties_table_io/PropertiesTableWriter.h"
+#include "PropertiesFilter.h"
 
-ABSL_FLAG(std::string, source_dir_path, "",
-          "Path to dir with csv files");
+ABSL_FLAG(std::string, source_dir_path, "", "Path to dir with csv files");
 
 ABSL_FLAG(std::string, dest_dir_path, "",
           "Path to directory where parsed data should be stored");
@@ -23,54 +24,84 @@ struct Args {
         absl::ParseCommandLine(argc, argv);
 
         sourceDirPath = absl::GetFlag(FLAGS_source_dir_path);
-        qtr::emptyArgument(sourceDirPath, "Please specify source_dir_path option");
+        qtr::checkEmptyArgument(sourceDirPath, "Please specify source_dir_path option");
 
         destDirPath = absl::GetFlag(FLAGS_dest_dir_path);
-        qtr::emptyArgument(destDirPath, "Please specify dest_dir_path option");
+        qtr::checkEmptyArgument(destDirPath, "Please specify dest_dir_path option");
     }
 };
 
-void parseCSV(const std::filesystem::path &csvFilePath, const Args &args, std::atomic_uint64_t &counter) {
+std::vector<std::string> splitString(const std::string &str, char delimiter) {
+    std::vector<std::string> substrings;
+    std::size_t start = 0;
+    std::size_t end = str.find(delimiter);
+    while (end != std::string::npos) {
+        substrings.push_back(str.substr(start, end - start));
+        start = end + 1;
+        end = str.find(delimiter, start);
+    }
+    substrings.push_back(str.substr(start, end));
+    return substrings;
+}
+
+void
+parseCSV(const std::filesystem::path &csvFilePath, const Args &args, std::atomic_uint64_t &counter, std::mutex &mutex) {
     std::filesystem::path smilesTablePath =
             args.destDirPath / "smilesTables" / (csvFilePath.stem().string() + qtr::smilesTableExtension);
     std::filesystem::path fingerprintTablePath =
             args.destDirPath / "fingerprintTables" / (csvFilePath.stem().string() + qtr::fingerprintTableExtension);
     std::filesystem::path idToStringTablePath =
             args.destDirPath / "idToStringTables" / (csvFilePath.stem().string() + ".csv");
+    std::filesystem::path propertyTablesPath =
+            args.destDirPath / "propertyTables" / csvFilePath.stem();
 
     std::filesystem::create_directory(smilesTablePath.parent_path());
     std::filesystem::create_directory(fingerprintTablePath.parent_path());
     std::filesystem::create_directory(idToStringTablePath.parent_path());
+    std::filesystem::create_directory(propertyTablesPath.parent_path());
 
     qtr::SmilesTableWriter smilesTableWriter(smilesTablePath);
     qtr::FingerprintTableWriter fingerprintTableWriter(fingerprintTablePath);
     qtr::IdToStringWriter idToStringWriter(idToStringTablePath);
-
+    qtr::PropertiesTableWriter propertiesTableWriter(propertyTablesPath);
 
     std::ifstream in(csvFilePath);
     std::string line;
     uint64_t skipped = 0, processed = 0;
     while (std::getline(in, line)) {
-        size_t spaceSepPosReversed = std::find(line.rbegin(), line.rend(), ' ') - line.rbegin();
-        size_t tabSepPosReversed = std::find(line.rbegin(), line.rend(), '\t') - line.rbegin();
-        size_t sepPosReversed = std::min(spaceSepPosReversed, tabSepPosReversed);
-        if (sepPosReversed == line.size()) {
-            LOG(WARNING) << "Skip invalid line: " << line;
+        auto lineElements = splitString(line, '\t');
+        if (lineElements.size() != 2 + qtr::PropertiesFilter::Properties::size()) {
+            LOG(WARNING) << "Skip line with invalid (" << lineElements.size() << ") number of arguments elements: "
+                         << line;
+            skipped++;
             continue;
         }
-        size_t sepPos = line.size() - 1 - sepPosReversed;
-        std::string strId = line.substr(sepPos + 1);
 
-        std::string smiles = line.substr(0, sepPos);
+        std::string strId = lineElements[0];
+        std::string smiles = lineElements[1];
+        qtr::PropertiesFilter::Properties properties{};
+        try {
+            for (size_t i = 0; i < qtr::PropertiesFilter::Properties::size(); i++) {
+                properties[i] = std::stof(lineElements[i + 2]);
+            }
+        }
+        catch (const std::invalid_argument &e) {
+            LOG(WARNING) << "Skip line with invalid property: " << line;
+            skipped++;
+            continue;
+        }
 
         try {
             qtr::IndigoFingerprint fingerprint = qtr::indigoFingerprintFromSmiles(smiles);
-
-            uint64_t id = counter++;
-            smilesTableWriter << std::make_pair(id, smiles);
-            fingerprintTableWriter << std::make_pair(id, fingerprint);
-            idToStringWriter << std::make_pair(id, strId);
-            processed++;
+            {
+                std::lock_guard lock(mutex);
+                uint64_t id = counter++;
+                smilesTableWriter << std::make_pair(id, smiles);
+                fingerprintTableWriter << std::make_pair(id, fingerprint);
+                idToStringWriter << std::make_pair(id, strId);
+                propertiesTableWriter << std::make_pair(id, properties);
+                processed++;
+            }
         }
         catch (std::exception &e) {
             LOG(ERROR) << "Fail to parse molecule from " << csvFilePath << " -- " << e.what();
@@ -91,9 +122,11 @@ int main(int argc, char *argv[]) {
     std::vector<std::filesystem::path> csvPaths = qtr::findFiles(args.sourceDirPath, ".csv");
     std::vector<std::future<void>> tasks;
     std::atomic_uint64_t counter = 0;
+    std::mutex mutex;
     for (auto &csvFile: csvPaths) {
         tasks.emplace_back(
-                std::async(std::launch::async, parseCSV, std::cref(csvFile), std::cref(args), std::ref(counter)));
+                std::async(std::launch::async, parseCSV, std::cref(csvFile), std::cref(args), std::ref(counter),
+                           std::ref(mutex)));
     }
     for (auto &task: tasks) {
         task.get();

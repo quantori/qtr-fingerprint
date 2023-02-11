@@ -4,6 +4,7 @@
 #include <numeric>
 #include <random>
 #include <future>
+#include <chrono>
 
 #include "fingerprint_table_io/FingerprintTableReader.h"
 #include "Utils.h"
@@ -42,17 +43,21 @@ namespace qtr {
     void BallTreeSearchEngine::processLeafGroup(BallTreeQueryData &queryData,
                                                 vector <uint64_t> leafs, size_t group,
                                                 size_t totalGroups) const {
+        auto startTime = std::chrono::high_resolution_clock::now();
         queryData.tagStartTask();
         auto filterObject = queryData.getFilterObject();
         for (size_t i = group; i < leafs.size() && !queryData.checkShouldStop(); i += totalGroups) {
             auto res = searchInLeaf(leafs[i], queryData.getQueryFingerprint());
             queryData.filterAndAddAnswers(res, *filterObject);
         }
+        std::chrono::duration<double> duration = std::chrono::high_resolution_clock::now() - startTime;
+        ballTreeSearchTimer += duration.count();
         queryData.tagFinishTask();
     }
 
     void BallTreeSearchEngine::search(BallTreeQueryData &queryData, size_t threads) const {
         vector<uint64_t> leafs;
+        auto startTime = std::chrono::high_resolution_clock::now();
         findLeafs(queryData.getQueryFingerprint(), root(), leafs);
         LOG(INFO) << "Search in " << leafs.size() << " leafs";
         shuffle(leafs.begin(), leafs.end(), random_generator);
@@ -61,6 +66,9 @@ namespace qtr {
                                    std::ref(queryData), leafs, i, threads);
             queryData.addTask(std::move(task));
         }
+        std::chrono::duration<double> duration = std::chrono::high_resolution_clock::now() - startTime;
+        // multiply duration and threads to make time consumption percentage more accurate
+        ballTreeSearchTimer += duration.count() * (double)threads;
     }
 
     vector <size_t> BallTreeSearchEngine::getLeafIds() const {

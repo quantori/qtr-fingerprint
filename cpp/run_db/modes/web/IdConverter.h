@@ -13,7 +13,7 @@ class IdConverter {
     std::unordered_map<uint64_t, std::pair<std::string, size_t>> _fromDbId; // from our db id to a pair of id and index in _libraryIds
 
 public:
-    inline explicit IdConverter(std::filesystem::path &idToStringDirPath) {
+    inline explicit IdConverter(const std::filesystem::path &idToStringDirPath) {
         for (auto &filename: qtr::findFiles(idToStringDirPath, ".csv")) {
             qtr::IdToStringReader reader(filename);
             for (const auto &[dbId, outerId]: reader)
@@ -22,7 +22,8 @@ public:
         }
     }
 
-    inline std::pair<std::string &, std::string &> fromDbId(uint64_t dbId) {
-        return {_fromDbId.at(dbId).first, _libraryIds[_fromDbId.at(dbId).second]};
+    inline std::pair<const std::string &, const std::string &> fromDbId(uint64_t innerId) const {
+        const auto& [outerId, library] = _fromDbId.find(innerId)->second;
+        return {outerId, _libraryIds[library]};
     }
 };

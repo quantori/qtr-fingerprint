@@ -24,7 +24,7 @@ def build(target: str):
     run_command(init_cmake_command)
 
     print('Build project:')
-    build_project_command = f'cmake --build {build_dir} --target {target} -j 6'
+    build_project_command = f'cmake --build {build_dir} --target {target} -j 16'
     run_command(build_project_command)
 
 

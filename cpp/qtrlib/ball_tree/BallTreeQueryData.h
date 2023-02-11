@@ -49,10 +49,10 @@ namespace qtr {
         std::vector<CIDType> _result;
         std::mutex _resultLock;
         size_t _stopAnswersNumber;
-        size_t _startedTasksCount;
+        std::atomic_size_t _startedTasksCount;
         std::atomic_size_t _finishedTasksCount;
         std::unique_ptr<AnswerFilter> _filter;
-        bool _shouldStopProcess;
+        std::atomic_bool _shouldStopProcess;
         std::vector<std::future<void>> _tasks;
     };
 

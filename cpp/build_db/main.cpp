@@ -14,24 +14,21 @@
 #include "BallTreeBuilder.h"
 #include "ball_tree/split_bit_selection/MaxDispersionBitSelector.h"
 #include "HuffmanCoder.h"
+#include "properties_table_io/PropertiesTableReader.h"
+#include "properties_table_io/PropertiesTableWriter.h"
+#include "PropertiesFilter.h"
 
 using namespace std;
 using namespace qtr;
 
-ABSL_FLAG(string, smiles_dir_path, "",
-          "Path to directory where smiles tables are stored");
+ABSL_FLAG(string, source_dir_path, "",
+          "Path to directory where source data are stored");
 
-ABSL_FLAG(string, fingerprints_dir_path, "",
-          "Path to directory where fingerprint tables are stored");
-
-ABSL_FLAG(string, id_to_string_dir_path, "",
-          "Path to directory where id to string tables are stored");
-
-ABSL_FLAG(vector<string>, data_dir_paths, {},
+ABSL_FLAG(vector<string>, dest_dir_paths, {},
           "Path to directories where data should be stored");
 
-ABSL_FLAG(string, other_data_path, "",
-          "Path to file where splitter tree should be stored");
+ABSL_FLAG(string, other_dest_dir_path, "",
+          "Path to directory where other data should be stored");
 
 ABSL_FLAG(uint64_t, subtree_parallel_depth, 0,
           "Depth on which subtree parallelization starts");
@@ -47,12 +44,13 @@ namespace {
 }
 
 struct Args {
-    filesystem::path smilesDirPath;
-    filesystem::path fingerprintsDirPath;
+    filesystem::path smilesSourceDirPath;
+    filesystem::path fingerprintTablesSourceDirPath;
     filesystem::path idToStringSourceDirPath;
+    filesystem::path propertyTablesSourceDirPath;
 
-    vector<filesystem::path> dataDirPaths;
-    filesystem::path otherDataPath;
+    vector<filesystem::path> destDirPaths;
+    filesystem::path otherDestDirPath;
     uint64_t subtreeParallelDepth;
     uint64_t treeDepth;
     string dbName;
@@ -64,69 +62,63 @@ struct Args {
     filesystem::path smilesTablePath;
     filesystem::path idToStringDestinationDirPath;
     filesystem::path huffmanCoderPath;
+    filesystem::path propertyTableDestinationPath;
+
 
     Args(int argc, char *argv[]) {
         absl::ParseCommandLine(argc, argv);
 
-        smilesDirPath = absl::GetFlag(FLAGS_smiles_dir_path);
-        emptyArgument(smilesDirPath, "Please specify smiles_dir_path option");
-        LOG(INFO) << "smilesDirPath: " << smilesDirPath;
-
-        fingerprintsDirPath = absl::GetFlag(FLAGS_fingerprints_dir_path);
-        emptyArgument(fingerprintsDirPath, "Please specify fingerprints_dir_path option");
-        LOG(INFO) << "fingerprintsDirPath" << fingerprintsDirPath;
-
-        idToStringSourceDirPath = absl::GetFlag(FLAGS_id_to_string_dir_path);
-        emptyArgument(idToStringSourceDirPath, "Please specify id_to_string_dir_path option");
-
-        vector<string> dataDirPathsStrings = absl::GetFlag(FLAGS_data_dir_paths);
-        copy(dataDirPathsStrings.begin(), dataDirPathsStrings.end(), back_inserter(dataDirPaths));
-        emptyArgument(dataDirPaths, "Please specify data_dir_paths option");
-        for (size_t i = 0; i < dataDirPaths.size(); i++) {
-            LOG(INFO) << "dataDirPaths[" << i << "]: " << dataDirPaths[i];
-        }
-
-        otherDataPath = absl::GetFlag(FLAGS_other_data_path);
-        emptyArgument(otherDataPath, "Please specify other_data_path option");
-        LOG(INFO) << "otherDataPath: " << otherDataPath;
-
+        filesystem::path sourceDirPath = absl::GetFlag(FLAGS_source_dir_path);
+        vector<string> tmpDestDirPaths = absl::GetFlag(FLAGS_dest_dir_paths);
+        otherDestDirPath = absl::GetFlag(FLAGS_other_dest_dir_path);
         subtreeParallelDepth = absl::GetFlag(FLAGS_subtree_parallel_depth);
-        emptyArgument(subtreeParallelDepth, "Please specify subtree_parallel_depth option");
-        LOG(INFO) << "subtreeParallelDepth: " << subtreeParallelDepth;
-
         treeDepth = absl::GetFlag(FLAGS_tree_depth);
-        emptyArgument(treeDepth, "Please specify tree_depth option");
-        LOG(INFO) << "treeDepth: " << treeDepth;
-
         dbName = absl::GetFlag(FLAGS_db_name);
-        if (dbName.empty()) {
-            LOG(INFO) << "db_name option is not specified";
-            dbName = generateDbName(dataDirPaths, otherDataPath);
-            LOG(INFO) << "Generated name for data base: " << dbName;
-        }
-        LOG(INFO) << "dbName: " << dbName;
 
-        for (auto &dir: dataDirPaths) {
+        checkEmptyArgument(sourceDirPath, "Please specify source_dir_path option");
+        checkEmptyArgument(tmpDestDirPaths, "Please specify dest_dir_paths option");
+        checkEmptyArgument(otherDestDirPath, "Please specify other_dest_dir_path option");
+        checkEmptyArgument(subtreeParallelDepth, "Please specify subtree_parallel_depth option");
+        checkEmptyArgument(treeDepth, "Please specify tree_depth option");
+
+        smilesSourceDirPath = sourceDirPath / "smilesTables";
+        fingerprintTablesSourceDirPath = sourceDirPath / "fingerprintTables";
+        idToStringSourceDirPath = sourceDirPath / "idToStringTables";
+        propertyTablesSourceDirPath = sourceDirPath / "propertyTables";
+        copy(tmpDestDirPaths.begin(), tmpDestDirPaths.end(), back_inserter(destDirPaths));
+        if (dbName.empty()) {
+            dbName = generateDbName(destDirPaths, otherDestDirPath);
+        }
+        for (auto &dir: destDirPaths) {
             dbDataDirsPaths.emplace_back(dir / dbName);
         }
+        dbOtherDataPath = otherDestDirPath / dbName;
+        ballTreePath = dbOtherDataPath / "tree";
+        smilesTablePath = dbOtherDataPath / "smilesTable";
+        huffmanCoderPath = dbOtherDataPath / "huffman";
+        idToStringDestinationDirPath = dbOtherDataPath / "idToString";
+        propertyTableDestinationPath = dbOtherDataPath / "propertyTable";
+
+        LOG(INFO) << "smilesSourceDirPath: " << smilesSourceDirPath;
+        LOG(INFO) << "fingerprintTablesSourceDirPath" << fingerprintTablesSourceDirPath;
+        LOG(INFO) << "idToStringSourceDirPath" << idToStringSourceDirPath;
+        for (size_t i = 0; i < destDirPaths.size(); i++) {
+            LOG(INFO) << "destDirPaths[" << i << "]: " << destDirPaths[i];
+        }
+        LOG(INFO) << "otherDestDirPath: " << otherDestDirPath;
+        LOG(INFO) << "subtreeParallelDepth: " << subtreeParallelDepth;
+        LOG(INFO) << "treeDepth: " << treeDepth;
+        LOG(INFO) << "dbName: " << dbName;
         for (size_t i = 0; i < dbDataDirsPaths.size(); i++) {
             LOG(INFO) << "dbDataDirPaths[" << i << "]: " << dbDataDirsPaths[i];
         }
-
-        dbOtherDataPath = otherDataPath / dbName;
         LOG(INFO) << "dbOtherDataPath: " << dbOtherDataPath;
-
-        ballTreePath = dbOtherDataPath / "tree";
         LOG(INFO) << "splitterTreePath: " << ballTreePath;
-
-        smilesTablePath = dbOtherDataPath / "smilesTable";
         LOG(INFO) << "smilesTablePath: " << smilesTablePath;
-
-        huffmanCoderPath = dbOtherDataPath / "huffman";
         LOG(INFO) << "huffmanCoderPath: " << huffmanCoderPath;
-
-        idToStringDestinationDirPath = dbOtherDataPath / "id_string";
         LOG(INFO) << "idToStringDestinationDirPath: " << idToStringDestinationDirPath;
+        LOG(INFO) << "propertyTableDestinationPath: " << propertyTableDestinationPath;
+
     }
 };
 
@@ -158,7 +150,7 @@ void initFileSystem(const Args &args) {
 }
 
 void distributeFingerprintTables(const Args &args) {
-    vector<filesystem::path> ftFilePaths = findFiles(args.fingerprintsDirPath,
+    vector<filesystem::path> ftFilePaths = findFiles(args.fingerprintTablesSourceDirPath,
                                                      fingerprintTableExtension);
     shuffle(ftFilePaths.begin(), ftFilePaths.end(), randomGenerator);
     size_t drivesCount = args.dbDataDirsPaths.size();
@@ -173,7 +165,7 @@ void distributeFingerprintTables(const Args &args) {
 
 size_t mergeSmilesTablesAndBuildHuffman(const Args &args) {
     LOG(INFO) << "Start merging smiles tables and building huffman";
-    vector<filesystem::path> smilesTablePaths = findFiles(args.smilesDirPath, smilesTableExtension);
+    vector<filesystem::path> smilesTablePaths = findFiles(args.smilesSourceDirPath, smilesTableExtension);
 
     vector<smiles_table_value_t> smilesTable;
     HuffmanCoder::Builder huffmanBuilder;
@@ -200,6 +192,34 @@ size_t mergeSmilesTablesAndBuildHuffman(const Args &args) {
     return smilesTable.size();
 }
 
+size_t mergePropertyTables(const Args &args) {
+    LOG(INFO) << "Start merging property tables";
+    vector<filesystem::path> propertyTablePaths = findFiles(args.propertyTablesSourceDirPath, "");
+
+    vector<pair<uint64_t, PropertiesFilter::Properties>> propertyTable;
+
+    for (auto &file: propertyTablePaths) {
+        PropertiesTableReader reader(file);
+        for (const auto &value: reader) {
+            propertyTable.emplace_back(value);
+        }
+    }
+
+    sort(propertyTable.begin(), propertyTable.end(),
+         [](const pair<uint64_t, PropertiesFilter::Properties> &a,
+            const pair<uint64_t, PropertiesFilter::Properties> &b) {
+             return a.first < b.first;
+         });
+    for (size_t i = 0; i < propertyTable.size(); i++) {
+        assert(propertyTable[i].first == i);
+    }
+    PropertiesTableWriter writer(args.propertyTableDestinationPath);
+    copy(propertyTable.begin(), propertyTable.end(), writer.begin());
+    LOG(INFO) << "Finish merging property tables";
+
+    return propertyTable.size();
+}
+
 void copyIdToStringTables(const filesystem::path &source, const filesystem::path &destination) {
     LOG(INFO) << "Start copying from " << source << " to " << destination;
     for (const filesystem::path &filePath: findFiles(source, ".csv")) {
@@ -209,15 +229,20 @@ void copyIdToStringTables(const filesystem::path &source, const filesystem::path
     LOG(INFO) << "Finish copying from " << source << " to " << destination;
 }
 
-size_t processTables(const Args& args) {
-    auto copyIdToStrTablesTask = std::async(std::launch::async, copyIdToStringTables, cref(args.idToStringSourceDirPath),
+size_t processTables(const Args &args) {
+    auto copyIdToStrTablesTask = std::async(std::launch::async, copyIdToStringTables,
+                                            cref(args.idToStringSourceDirPath),
                                             cref(args.idToStringDestinationDirPath));
     auto mergeSmilesTablesTask = async(launch::async, mergeSmilesTablesAndBuildHuffman, cref(args));
     auto fingerprintsTask = async(launch::async, distributeFingerprintTables, cref(args));
+    auto mergePropertyTablesTask = async(launch::async, mergePropertyTables, cref(args));
 
     size_t moleculesNumber = mergeSmilesTablesTask.get();
     copyIdToStrTablesTask.get();
     fingerprintsTask.get();
+    size_t moleculesNumber2 = mergePropertyTablesTask.get();
+
+    assert(moleculesNumber == moleculesNumber2);
 
     return moleculesNumber;
 }
