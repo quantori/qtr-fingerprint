@@ -8,8 +8,8 @@
 #include <absl/flags/parse.h>
 
 #include "Utils.h"
-#include "smiles_table_io/SmilesTableWriter.h"
-#include "smiles_table_io/SmilesTableReader.h"
+#include "string_table_io/StringTableWriter.h"
+#include "string_table_io/StringTableReader.h"
 #include "fingerprint_table_io/FingerprintTableWriter.h"
 #include "BallTreeBuilder.h"
 #include "ball_tree/split_bit_selection/MaxDispersionBitSelector.h"
@@ -165,13 +165,13 @@ void distributeFingerprintTables(const Args &args) {
 
 size_t mergeSmilesTablesAndBuildHuffman(const Args &args) {
     LOG(INFO) << "Start merging smiles tables and building huffman";
-    vector<filesystem::path> smilesTablePaths = findFiles(args.smilesSourceDirPath, smilesTableExtension);
+    vector<filesystem::path> smilesTablePaths = findFiles(args.smilesSourceDirPath, stringTableExtension);
 
-    vector<smiles_table_value_t> smilesTable;
+    vector<string_table_value_t> smilesTable;
     HuffmanCoder::Builder huffmanBuilder;
 
     for (auto &stFile: smilesTablePaths) {
-        SmilesTableReader reader(stFile);
+        StringTableReader reader(stFile);
         for (const auto &value: reader) {
             smilesTable.emplace_back(value);
             huffmanBuilder += value.second;
@@ -179,10 +179,10 @@ size_t mergeSmilesTablesAndBuildHuffman(const Args &args) {
     }
 
     sort(smilesTable.begin(), smilesTable.end(),
-         [](const smiles_table_value_t &a, const smiles_table_value_t &b) {
+         [](const string_table_value_t &a, const string_table_value_t &b) {
              return a.first < b.first;
          });
-    SmilesTableWriter writer(args.smilesTablePath);
+    StringTableWriter writer(args.smilesTablePath);
     copy(smilesTable.begin(), smilesTable.end(), writer.begin());
 
     auto huffmanCoder = huffmanBuilder.build();

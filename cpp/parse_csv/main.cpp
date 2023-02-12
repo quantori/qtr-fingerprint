@@ -5,7 +5,7 @@
 #include <future>
 
 #include "Utils.h"
-#include "smiles_table_io/SmilesTableWriter.h"
+#include "string_table_io/StringTableWriter.h"
 #include "fingerprint_table_io/FingerprintTableWriter.h"
 #include "id_to_string_io/IdToStringWriter.h"
 #include "properties_table_io/PropertiesTableWriter.h"
@@ -47,7 +47,7 @@ std::vector<std::string> splitString(const std::string &str, char delimiter) {
 void
 parseCSV(const std::filesystem::path &csvFilePath, const Args &args, std::atomic_uint64_t &counter, std::mutex &mutex) {
     std::filesystem::path smilesTablePath =
-            args.destDirPath / "smilesTables" / (csvFilePath.stem().string() + qtr::smilesTableExtension);
+            args.destDirPath / "smilesTables" / (csvFilePath.stem().string() + qtr::stringTableExtension);
     std::filesystem::path fingerprintTablePath =
             args.destDirPath / "fingerprintTables" / (csvFilePath.stem().string() + qtr::fingerprintTableExtension);
     std::filesystem::path idToStringTablePath =
@@ -60,7 +60,7 @@ parseCSV(const std::filesystem::path &csvFilePath, const Args &args, std::atomic
     std::filesystem::create_directory(idToStringTablePath.parent_path());
     std::filesystem::create_directory(propertyTablesPath.parent_path());
 
-    qtr::SmilesTableWriter smilesTableWriter(smilesTablePath);
+    qtr::StringTableWriter smilesTableWriter(smilesTablePath);
     qtr::FingerprintTableWriter fingerprintTableWriter(fingerprintTablePath);
     qtr::IdToStringWriter idToStringWriter(idToStringTablePath);
     qtr::PropertiesTableWriter propertiesTableWriter(propertyTablesPath);
@@ -70,7 +70,7 @@ parseCSV(const std::filesystem::path &csvFilePath, const Args &args, std::atomic
     uint64_t skipped = 0, processed = 0;
     while (std::getline(in, line)) {
         auto lineElements = splitString(line, '\t');
-        if (lineElements.size() != 2 + qtr::PropertiesFilter::Properties::size()) {
+        if (lineElements.size() != 2 + qtr::PropertiesFilter::Properties().size()) {
             LOG(WARNING) << "Skip line with invalid (" << lineElements.size() << ") number of arguments elements: "
                          << line;
             skipped++;
@@ -81,7 +81,7 @@ parseCSV(const std::filesystem::path &csvFilePath, const Args &args, std::atomic
         std::string smiles = lineElements[1];
         qtr::PropertiesFilter::Properties properties{};
         try {
-            for (size_t i = 0; i < qtr::PropertiesFilter::Properties::size(); i++) {
+            for (size_t i = 0; i < properties.size(); i++) {
                 properties[i] = std::stof(lineElements[i + 2]);
             }
         }

@@ -9,7 +9,7 @@
 #include "fingerprint_table_io/FingerprintTableReader.h"
 #include "IndigoSubstructureMatcher.h"
 #include "IndigoQueryMolecule.h"
-#include "smiles_table_io/SmilesTableReader.h"
+#include "string_table_io/StringTableReader.h"
 #include "RunDbUtils.h"
 #include "IdConverter.h"
 

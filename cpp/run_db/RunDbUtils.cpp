@@ -1,6 +1,6 @@
 #include "RunDbUtils.h"
 
-#include "smiles_table_io/SmilesTableReader.h"
+#include "string_table_io/StringTableReader.h"
 #include "BallTreeQueryData.h"
 #include "IndigoQueryMolecule.h"
 #include "IndigoSubstructureMatcher.h"
@@ -40,7 +40,7 @@ namespace qtr {
     loadSmilesTable(const filesystem::path &smilesTablePath, const HuffmanCoder &huffmanCoder) {
         LOG(INFO) << "Start smiles table loading";
         HuffmanSmilesTable::Builder builder(huffmanCoder);
-        for (const auto &pair: SmilesTableReader(smilesTablePath)) {
+        for (const auto &pair: StringTableReader(smilesTablePath)) {
             builder += pair;
         }
         LOG(INFO) << "Finish smiles table loading";

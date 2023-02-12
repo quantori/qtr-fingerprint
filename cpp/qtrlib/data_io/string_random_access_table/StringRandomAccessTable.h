@@ -8,9 +8,9 @@
 
 namespace qtr {
 
-    class SmilesRandomAccessTable {
+    class StringRandomAccessTable {
     public:
-        static inline std::filesystem::path getSmilesStoragePath(const std::filesystem::path &tableDir) {
+        static inline std::filesystem::path getStoragePath(const std::filesystem::path &tableDir) {
             return tableDir / "storage";
         }
 
@@ -18,15 +18,15 @@ namespace qtr {
             return tableDir / "seeks.txt";
         }
 
-        SmilesRandomAccessTable(const std::filesystem::path& smilesTablePath, const std::filesystem::path &tableDir);
+        StringRandomAccessTable(const std::filesystem::path& tablePath, const std::filesystem::path &tableDir);
 
-        explicit SmilesRandomAccessTable(const std::filesystem::path &tableDir);
+        explicit StringRandomAccessTable(const std::filesystem::path &tableDir);
 
         std::string operator[](size_t i);
 
     private:
         std::vector<uint64_t> _seeks;
-        std::ifstream _smilesFile;
+        std::ifstream _tableFile;
     };
 
 }
