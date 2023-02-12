@@ -33,29 +33,75 @@ namespace qtr {
                 "PUBCHEM_COMPOUND_CANONICALIZED"
         };
 
+        enum PropertiesIndex {
+            ComponentCount,
+            Xlogp3,
+            AtomUdefStereoCount,
+            HeavyAtomCount,
+            CactvsTautoCount,
+            IsotopicAtomCount,
+            CactvsHbondDonor,
+            CactvsRotatableBond,
+            MonoisotopicWeight,
+            CactvsHbondAcceptor,
+            AtomDefStereoCount,
+            CompoundCid,
+            MolecularWeight,
+            BondDefStereoCount,
+            TotalCharge,
+            ExactMass,
+            CactvsComplexity,
+            BondUdefStereoCount,
+            CactvsTpsa,
+            CompoundCanonicalized
+        };
+
         using property_t = float;
 
-        struct Properties {
-            property_t pubchemComponentCount;
-            property_t pubchemXlogp3;
-            property_t pubchemAtomUdefStereoCount;
-            property_t pubchemHeavyAtomCount;
-            property_t pubchemCactvsTautoCount;
-            property_t pubchemIsotopicAtomCount;
-            property_t pubchemCactvsHbondDonor;
-            property_t pubchemCactvsRotatableBond;
-            property_t pubchemMonoisotopicWeight;
-            property_t pubchemCactvsHbondAcceptor;
-            property_t pubchemAtomDefStereoCount;
-            property_t pubchemCompoundCid;
-            property_t pubchemMolecularWeight;
-            property_t pubchemBondDefStereoCount;
-            property_t pubchemTotalCharge;
-            property_t pubchemExactMass;
-            property_t pubchemCactvsComplexity;
-            property_t pubchemBondUdefStereoCount;
-            property_t pubchemCactvsTpsa;
-            property_t pubchemCompoundCanonicalized;
+        class Properties {
+        private:
+            property_t _propertiesArr[20] = {};
+
+        public:
+            [[nodiscard]] property_t pubchemComponentCount() const;
+
+            [[nodiscard]] property_t pubchemXlogp3() const;
+
+            [[nodiscard]] property_t pubchemAtomUdefStereoCount() const;
+
+            [[nodiscard]] property_t pubchemHeavyAtomCount() const;
+
+            [[nodiscard]] property_t pubchemCactvsTautoCount() const;
+
+            [[nodiscard]] property_t pubchemIsotopicAtomCount() const;
+
+            [[nodiscard]] property_t pubchemCactvsHbondDonor() const;
+
+            [[nodiscard]] property_t pubchemCactvsRotatableBond() const;
+
+            [[nodiscard]] property_t pubchemMonoisotopicWeight() const;
+
+            [[nodiscard]] property_t pubchemCactvsHbondAcceptor() const;
+
+            [[nodiscard]] property_t pubchemAtomDefStereoCount() const;
+
+            [[nodiscard]] property_t pubchemCompoundCid() const;
+
+            [[nodiscard]] property_t pubchemMolecularWeight() const;
+
+            [[nodiscard]] property_t pubchemBondDefStereoCount() const;
+
+            [[nodiscard]] property_t pubchemTotalCharge() const;
+
+            [[nodiscard]] property_t pubchemExactMass() const;
+
+            [[nodiscard]] property_t pubchemCactvsComplexity() const;
+
+            [[nodiscard]] property_t pubchemBondUdefStereoCount() const;
+
+            [[nodiscard]] property_t pubchemCactvsTpsa() const;
+
+            [[nodiscard]] property_t pubchemCompoundCanonicalized() const;
 
             Properties() = default;
 
@@ -65,8 +111,8 @@ namespace qtr {
 
             property_t &operator[](size_t i);
 
-            static constexpr size_t size() {
-                return sizeof(PropertiesFilter::Properties) / sizeof(property_t);
+            [[nodiscard]] constexpr size_t size() const {
+                return std::size(_propertiesArr);
             }
         };
 
