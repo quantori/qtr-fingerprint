@@ -68,74 +68,73 @@ struct Args {
     Args(int argc, char *argv[]) {
         absl::ParseCommandLine(argc, argv);
 
+        // get flags
+        ansCount = absl::GetFlag(FLAGS_ans_count);
         vector<string> dataDirPathsStrings = absl::GetFlag(FLAGS_data_dir_paths);
-        copy(dataDirPathsStrings.begin(), dataDirPathsStrings.end(), back_inserter(destDirPaths));
-        checkEmptyArgument(destDirPaths, "Please specify data_dir_paths option");
-        for (size_t i = 0; i < destDirPaths.size(); i++) {
-            LOG(INFO) << "destDirPaths[" << i << "]: " << destDirPaths[i];
-        }
-
         otherDestDirPath = absl::GetFlag(FLAGS_other_data_path);
-        checkEmptyArgument(otherDestDirPath, "Please specify other_data_path option");
-        LOG(INFO) << "otherDestDirPath: " << otherDestDirPath;
-
         dbName = absl::GetFlag(FLAGS_db_name);
-        checkEmptyArgument(dbName, "Please specify db_name option");
-        LOG(INFO) << "dbName: " << dbName;
-
         threadsCount = absl::GetFlag(FLAGS_threads_count);
+        string modeStr = absl::GetFlag(FLAGS_mode);
+        inputFile = absl::GetFlag(FLAGS_input_file);
+
+        // check empty flags
+        checkEmptyArgument(inputFile, "Please specify input_file option");
+        checkEmptyArgument(destDirPaths, "Please specify data_dir_paths option");
+        checkEmptyArgument(otherDestDirPath, "Please specify other_data_path option");
+        checkEmptyArgument(dbName, "Please specify db_name option");
+        checkEmptyArgument(modeStr, "Please specify mode option");
         if (threadsCount == -1) {
             LOG(INFO) << "Please specify threads_count option";
             exit(-1);
         }
-        LOG(INFO) << "threadsCount: " << threadsCount;
 
-        string modeStr = absl::GetFlag(FLAGS_mode);
-        checkEmptyArgument(modeStr, "Please specify mode option");
-        inputFile = absl::GetFlag(FLAGS_input_file);
-        LOG(INFO) << "inputFile: " << inputFile;
+        // init values
+        copy(dataDirPathsStrings.begin(), dataDirPathsStrings.end(), back_inserter(destDirPaths));
+        for (auto &dir: destDirPaths) {
+            dbDataDirsPaths.emplace_back(dir / dbName);
+        }
+        dbOtherDataPath = otherDestDirPath / dbName;
+        ballTreePath = dbOtherDataPath / "tree";
+        smilesTablePath = dbOtherDataPath / "smilesTable";
+        huffmanCoderPath = dbOtherDataPath / "huffman";
+        idToStringDirPath = dbOtherDataPath / "idToString";
+        propertyTableDestinationPath = dbOtherDataPath / "propertyTable";
         if (modeStr == "interactive") {
             mode = Mode::Interactive;
-            LOG(INFO) << "mode: interactive";
         } else if (modeStr == "web") {
             mode = Mode::Web;
-            LOG(INFO) << "mode: web server";
         } else if (modeStr == "from_file") {
             mode = Mode::FromFile;
-            LOG(INFO) << "mode: fromFile";
-            checkEmptyArgument(inputFile, "Please specify input_file option");
         } else {
             LOG(ERROR) << "Bad mode option value";
             exit(-1);
         }
 
-        ansCount = absl::GetFlag(FLAGS_ans_count);
-        LOG(INFO) << "_stopAnswersNumber: " << ansCount;
-
-        for (auto &dir: destDirPaths) {
-            dbDataDirsPaths.emplace_back(dir / dbName);
-        }
+        // log
+        LOG(INFO) << "inputFile: " << inputFile;
+        LOG(INFO) << "otherDestDirPath: " << otherDestDirPath;
+        LOG(INFO) << "dbName: " << dbName;
+        LOG(INFO) << "threadsCount: " << threadsCount;
+        LOG(INFO) << "dbOtherDataPath" << dbOtherDataPath;
+        LOG(INFO) << "ballTreePath: " << ballTreePath;
+        LOG(INFO) << "smilesTablePath: " << smilesTablePath;
+        LOG(INFO) << "huffmanCoderPath: " << huffmanCoderPath;
+        LOG(INFO) << "idToStringDirPath: " << idToStringDirPath;
+        LOG(INFO) << "propertyTableDestinationPath: " << propertyTableDestinationPath;
         for (size_t i = 0; i < dbDataDirsPaths.size(); i++) {
             LOG(INFO) << "dbDataDirPaths[" << i << "]: " << dbDataDirsPaths[i];
         }
-
-        dbOtherDataPath = otherDestDirPath / dbName;
-        LOG(INFO) << "dbOtherDataPath" << dbOtherDataPath;
-
-        ballTreePath = dbOtherDataPath / "tree";
-        LOG(INFO) << "ballTreePath: " << ballTreePath;
-
-        smilesTablePath = dbOtherDataPath / "smilesTable";
-        LOG(INFO) << "smilesTablePath: " << smilesTablePath;
-
-        huffmanCoderPath = dbOtherDataPath / "huffman";
-        LOG(INFO) << "huffmanCoderPath: " << huffmanCoderPath;
-
-        idToStringDirPath = dbOtherDataPath / "idToString";
-        LOG(INFO) << "idToStringDirPath: " << idToStringDirPath;
-
-        propertyTableDestinationPath = dbOtherDataPath / "propertyTable";
-        LOG(INFO) << "propertyTableDestinationPath: " << propertyTableDestinationPath;
+        LOG(INFO) << "stopAnswersNumber: " << ansCount;
+        for (size_t i = 0; i < destDirPaths.size(); i++) {
+            LOG(INFO) << "destDirPaths[" << i << "]: " << destDirPaths[i];
+        }
+        if (mode == Mode::FromFile) {
+            LOG(INFO) << "mode: from file";
+        } else if (mode == Mode::Interactive) {
+            LOG(INFO) << "mode: interactive";
+        } else if (mode == Mode::Web) {
+            LOG(INFO) << "mode: web server";
+        }
     }
 };
 
