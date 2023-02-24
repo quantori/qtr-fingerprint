@@ -52,7 +52,7 @@ struct Args {
     filesystem::path propertyTablesSourceDirPath;
 
     vector<filesystem::path> destDirPaths;
-    filesystem::path otherDestDirPath;
+    filesystem::path otherDataPath;
     uint64_t subtreeParallelDepth;
     uint64_t treeDepth;
     string dbName;
@@ -80,7 +80,7 @@ struct Args {
         // get flags
         filesystem::path sourceDirPath = absl::GetFlag(FLAGS_source_dir_path);
         vector<string> tmpDestDirPaths = absl::GetFlag(FLAGS_dest_dir_paths);
-        otherDestDirPath = absl::GetFlag(FLAGS_other_dest_dir_path);
+        otherDataPath = absl::GetFlag(FLAGS_other_dest_dir_path);
         subtreeParallelDepth = absl::GetFlag(FLAGS_subtree_parallel_depth);
         treeDepth = absl::GetFlag(FLAGS_tree_depth);
         dbName = absl::GetFlag(FLAGS_db_name);
@@ -89,7 +89,7 @@ struct Args {
         // check empty flags
         checkEmptyArgument(sourceDirPath, "Please specify source_dir_path option");
         checkEmptyArgument(tmpDestDirPaths, "Please specify dest_dir_paths option");
-        checkEmptyArgument(otherDestDirPath, "Please specify other_dest_dir_path option");
+        checkEmptyArgument(otherDataPath, "Please specify other_dest_dir_path option");
         checkEmptyArgument(subtreeParallelDepth, "Please specify subtree_parallel_depth option");
         checkEmptyArgument(treeDepth, "Please specify tree_depth option");
         checkEmptyArgument(dbTypeStr, "Please specify db_type option");
@@ -101,12 +101,12 @@ struct Args {
         propertyTablesSourceDirPath = sourceDirPath / "propertyTables";
         copy(tmpDestDirPaths.begin(), tmpDestDirPaths.end(), back_inserter(destDirPaths));
         if (dbName.empty()) {
-            dbName = generateDbName(destDirPaths, otherDestDirPath);
+            dbName = generateDbName(destDirPaths, otherDataPath);
         }
         for (auto &dir: destDirPaths) {
             dbDataDirsPaths.emplace_back(dir / dbName);
         }
-        dbOtherDataPath = otherDestDirPath / dbName;
+        dbOtherDataPath = otherDataPath / dbName;
         ballTreePath = dbOtherDataPath / "tree";
         smilesTablePath = dbOtherDataPath / "smilesTable";
         huffmanCoderPath = dbOtherDataPath / "huffman";
@@ -128,7 +128,7 @@ struct Args {
         for (size_t i = 0; i < destDirPaths.size(); i++) {
             LOG(INFO) << "destDirPaths[" << i << "]: " << destDirPaths[i];
         }
-        LOG(INFO) << "otherDestDirPath: " << otherDestDirPath;
+        LOG(INFO) << "otherDataPath: " << otherDataPath;
         LOG(INFO) << "subtreeParallelDepth: " << subtreeParallelDepth;
         LOG(INFO) << "treeDepth: " << treeDepth;
         LOG(INFO) << "dbName: " << dbName;
@@ -297,16 +297,50 @@ void shuffleBallTreeLeaves(const Args &args) {
 
 size_t distributeSmilesTables(const Args &args, const map<uint64_t, filesystem::path> &molLocations) {
     unordered_map<string, vector<pair<uint64_t, string>>> smilesTables;
-    // todo
+    vector<filesystem::path> smilesTablePaths = findFiles(args.smilesSourceDirPath, stringTableExtension);
+    size_t molNumber = 0;
+    for (auto &tablePath: smilesTablePaths) {
+        for (const auto &[id, smiles]: StringTableReader(tablePath)) {
+            const auto &location = molLocations.find(id)->second;
+            smilesTables[location].emplace_back(id, smiles);
+            molNumber++;
+        }
+    }
+
+    for (auto &[leafDirPath, leafTable]: smilesTables) {
+        auto leafTablePath = filesystem::path(leafDirPath) / ("smiles" + stringTableExtension);
+        StringTableWriter writer(leafTablePath);
+        writer << leafTable;
+    }
+
+    return molNumber;
 }
+
 
 size_t distributePropertyTables(const Args &args, const map<uint64_t, filesystem::path> &molLocations) {
     unordered_map<string, vector<pair<uint64_t, PropertiesFilter::Properties>>> propertyTables;
     vector<filesystem::path> propertyTablePaths = findFiles(args.propertyTablesSourceDirPath, "");
-    // todo
+    size_t molNumber = 0;
+    for (auto &tablePath: propertyTablePaths) {
+        for (const auto &[id, properties]: PropertiesTableReader(tablePath)) {
+            const auto &location = molLocations.find(id)->second;
+            propertyTables[location].emplace_back(id, properties);
+            molNumber++;
+        }
+    }
+
+    for (auto &[leafDirStr, leafTable]: propertyTables) {
+        auto leafTablePath = filesystem::path(leafDirStr) / "properties";
+        PropertiesTableWriter writer(leafTablePath);
+        writer << leafTable;
+    }
+
+    return molNumber;
 }
 
 size_t distributeTablesToLeafDirectories(const Args &args) {
+    TimeMeasurer::FunctionTimeMeasurer timer(statisticCollector, "smiles+properties tables distribution");
+
     auto leafLocations = getLeafDirLocations(args);
 
     map<uint64_t, filesystem::path> molLocations;

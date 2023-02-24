@@ -49,7 +49,7 @@ struct Args {
     };
 
     vector<filesystem::path> destDirPaths;
-    filesystem::path otherDestDirPath;
+    filesystem::path otherDataPath;
     string dbName;
     uint64_t threadsCount;
     Mode mode;
@@ -71,7 +71,7 @@ struct Args {
         // get flags
         ansCount = absl::GetFlag(FLAGS_ans_count);
         vector<string> dataDirPathsStrings = absl::GetFlag(FLAGS_data_dir_paths);
-        otherDestDirPath = absl::GetFlag(FLAGS_other_data_path);
+        otherDataPath = absl::GetFlag(FLAGS_other_data_path);
         dbName = absl::GetFlag(FLAGS_db_name);
         threadsCount = absl::GetFlag(FLAGS_threads_count);
         string modeStr = absl::GetFlag(FLAGS_mode);
@@ -79,8 +79,8 @@ struct Args {
 
         // check empty flags
         checkEmptyArgument(inputFile, "Please specify input_file option");
-        checkEmptyArgument(destDirPaths, "Please specify data_dir_paths option");
-        checkEmptyArgument(otherDestDirPath, "Please specify other_data_path option");
+        checkEmptyArgument(dataDirPathsStrings, "Please specify data_dir_paths option");
+        checkEmptyArgument(otherDataPath, "Please specify other_data_path option");
         checkEmptyArgument(dbName, "Please specify db_name option");
         checkEmptyArgument(modeStr, "Please specify mode option");
         if (threadsCount == -1) {
@@ -93,7 +93,7 @@ struct Args {
         for (auto &dir: destDirPaths) {
             dbDataDirsPaths.emplace_back(dir / dbName);
         }
-        dbOtherDataPath = otherDestDirPath / dbName;
+        dbOtherDataPath = otherDataPath / dbName;
         ballTreePath = dbOtherDataPath / "tree";
         smilesTablePath = dbOtherDataPath / "smilesTable";
         huffmanCoderPath = dbOtherDataPath / "huffman";
@@ -112,7 +112,7 @@ struct Args {
 
         // log
         LOG(INFO) << "inputFile: " << inputFile;
-        LOG(INFO) << "otherDestDirPath: " << otherDestDirPath;
+        LOG(INFO) << "otherDataPath: " << otherDataPath;
         LOG(INFO) << "dbName: " << dbName;
         LOG(INFO) << "threadsCount: " << threadsCount;
         LOG(INFO) << "dbOtherDataPath" << dbOtherDataPath;
