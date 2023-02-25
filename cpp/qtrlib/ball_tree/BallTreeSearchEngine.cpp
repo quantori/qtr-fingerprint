@@ -22,8 +22,8 @@ namespace qtr {
         _leafDirPaths.resize(expectedFilesNumber);
         vector<bool> isInit(expectedFilesNumber, false);
         for (auto &dataDir: _dataDirectories) {
-            for (auto &dirPath: findFiles(dataDir, "")) {
-                size_t nodeId = atoll(dirPath.filename().c_str());
+            for (auto &dirPath: filesystem::directory_iterator(dataDir)) {
+                size_t nodeId = atoll(dirPath.path().filename().c_str());
                 size_t index = nodeId - (1ull << _depth) + 1;
                 assert(index < expectedFilesNumber);
                 assert(!isInit[index]);
@@ -70,7 +70,7 @@ namespace qtr {
         }
         std::chrono::duration<double> duration = std::chrono::high_resolution_clock::now() - startTime;
         // multiply duration and threads to make time consumption percentage more accurate
-        ballTreeSearchTimer += duration.count() * (double)threads;
+        ballTreeSearchTimer += duration.count() * (double) threads;
     }
 
     vector <size_t> BallTreeSearchEngine::getLeafIds() const {

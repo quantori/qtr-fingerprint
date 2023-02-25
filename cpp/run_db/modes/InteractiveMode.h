@@ -34,9 +34,16 @@ namespace qtr {
                     LOG(INFO) << "Found " << queryData->getCurrentAnswersCount() << " answers";
                     auto answers = queryData->getAnswers(0, 5).second;
                     if (_searchData->getClass() == SearchData::DerivedClasses::RamSearchData) {
+                        LOG(INFO) << "Answer examples:";
                         const auto *ramSearchData = dynamic_cast<const RamSearchData *>(_searchData.get());
                         for (auto &i: answers) {
                             LOG(INFO) << (*ramSearchData->smilesTable)[i];
+                        }
+                    }
+                    else if (_searchData->getClass() == SearchData::DerivedClasses::DriveSearchData) {
+                        LOG(INFO) << "Answer examples:";
+                        for (auto& i : answers) {
+                            LOG(INFO) << i;
                         }
                     }
                     std::cout << "Search time: " << _searchData->timeTicker.tick("Search time") << std::endl;
