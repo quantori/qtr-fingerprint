@@ -11,7 +11,10 @@ namespace qtr {
     private:
         std::map<KeyType, ValueType> _map;
     public:
-        MapSmilesTable(const std::vector<std::pair<KeyType, ValueType>>& values);
+        template<class InputIterator>
+        MapSmilesTable(InputIterator first, InputIterator last) : _map(first, last) {}
+
+        MapSmilesTable() = default;
 
         ValueType operator[](const KeyType &key) const override;
 

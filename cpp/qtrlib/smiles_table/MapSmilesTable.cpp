@@ -14,7 +14,4 @@ namespace qtr {
         return it->second;
     }
 
-    MapSmilesTable::MapSmilesTable(const std::vector<std::pair<KeyType, ValueType>> &values)
-            : _map(values.begin(), values.end()) {}
-
 } // qtr
