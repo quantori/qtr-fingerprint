@@ -7,14 +7,7 @@ using namespace std;
 namespace qtr {
 
 
-    WebMode::WebMode(const qtr::BallTreeSearchEngine &ballTree, std::shared_ptr<const SmilesTable> smilesTable,
-                     qtr::TimeTicker &timeTicker, uint64_t ansCount, uint64_t threadsCount,
-                     std::shared_ptr<const IdConverter> idConverter,
-                     std::shared_ptr<const std::vector<PropertiesFilter::Properties>> molPropertiesTable)
-            : _ballTree(ballTree), _smilesTable(std::move(smilesTable)), _ansCount(ansCount),
-              _threadsCount(threadsCount), _idConverter(std::move(idConverter)),
-              _molPropertiesTable(std::move(molPropertiesTable)) {}
-
+    WebMode::WebMode(std::shared_ptr<const SearchData> searchData) : _searchData(std::move(searchData)) {}
 
     crow::json::wvalue
     WebMode::prepareResponse(BallTreeQueryData &queryData, size_t minOffset, size_t maxOffset) {
@@ -24,7 +17,7 @@ namespace qtr {
         crow::json::wvalue::list molecules;
         molecules.reserve(result.size());
         for (auto res: result) {
-            auto [id, libraryId] = _idConverter->fromDbId(res);
+            auto [id, libraryId] = _searchData->idConverter->fromDbId(res);
             molecules.emplace_back(crow::json::wvalue{{"id",        id},
                                                       {"libraryId", libraryId}});
         }
@@ -38,17 +31,17 @@ namespace qtr {
         PropertiesFilter::Bounds bounds;
 
         for (size_t i = 0; i < std::size(PropertiesFilter::propertyNames); ++i) {
-            auto& propertyName = PropertiesFilter::propertyNames[i];
+            auto &propertyName = PropertiesFilter::propertyNames[i];
             if (!json.has(propertyName))
                 continue;
-            auto& jsonBounds = json[propertyName];
+            auto &jsonBounds = json[propertyName];
 
             if (jsonBounds.has("min")) {
-                bounds.minBounds[i] = (float)jsonBounds["min"].d();
+                bounds.minBounds[i] = (float) jsonBounds["min"].d();
                 LOG(INFO) << "Set min bound " << propertyName << ": " << bounds.minBounds[i];
             }
             if (jsonBounds.has("max")) {
-                bounds.maxBounds[i] = (float)jsonBounds["max"].d();
+                bounds.maxBounds[i] = (float) jsonBounds["max"].d();
                 LOG(INFO) << "Set max bound " << propertyName << ": " << bounds.maxBounds[i];
             }
         }
@@ -61,25 +54,24 @@ namespace qtr {
         crow::SimpleApp app;
         mutex newTaskMutex;
 
-        vector<string> smiles;
+        vector<string> smilesList;
         vector<unique_ptr<BallTreeQueryData>> queries;
 
         CROW_ROUTE(app, "/query")
-                .methods(crow::HTTPMethod::POST)([&queries, &newTaskMutex, this, &smiles](const crow::request &req) {
+                .methods(crow::HTTPMethod::POST)([&queries, &newTaskMutex, this, &smilesList](const crow::request &req) {
                     auto json = crow::json::load(req.body);
                     if (!json)
                         return crow::response(400);
 
                     lock_guard<mutex> lock(newTaskMutex);
-                    smiles.emplace_back(json["smiles"].s());
-                    string &currSmiles = smiles.back();
+                    smilesList.emplace_back(json["smiles"].s());
+                    string &currSmiles = smilesList.back();
 
                     auto bounds = extractBounds(json);
                     size_t queryId = queries.size();
-                    auto [error, queryData] = doSearch(currSmiles, _ballTree, _smilesTable, _ansCount,
-                                                       _threadsCount, bounds, _molPropertiesTable);
+                    auto [error, queryData] = runSearch(*_searchData, currSmiles, bounds);
                     if (error) {
-                        LOG(WARNING) << "Cannot start search for smiles: " << currSmiles;
+                        LOG(WARNING) << "Cannot start search for smilesList: " << currSmiles;
                         return crow::response(to_string(-1));
                     }
                     queries.emplace_back(std::move(queryData));

@@ -4,30 +4,18 @@
 
 #include "RunMode.h"
 #include "RunDbUtils.h"
-#include "IndigoFilter.h"
+#include "IndigoRamFilter.h"
+#include "IndigoDriveFilter.h"
 
 namespace qtr {
     class FromFileMode : public RunMode {
-        const qtr::BallTreeSearchEngine &_ballTree;
-        std::shared_ptr<const SmilesTable> _smilesTable;
-        qtr::TimeTicker &_timeTicker;
-        const std::filesystem::path &_inputFile;
-        uint64_t _ansCount;
-        uint64_t _threadsCount;
-        std::shared_ptr<const std::vector<PropertiesFilter::Properties>> _molPropertiesTable;
+    private:
+        std::shared_ptr<const SearchData> _searchData;
+        std::filesystem::path _inputFile;
 
     public:
-        inline FromFileMode(const qtr::BallTreeSearchEngine &ballTree, std::shared_ptr<const SmilesTable> smilesTable,
-                            qtr::TimeTicker &timeTicker, const std::filesystem::path &inputFile, uint64_t ansCount,
-                            uint64_t threadsCount,
-                            std::shared_ptr<const std::vector<PropertiesFilter::Properties>> molPropertiesTable) :
-                _ballTree(ballTree),
-                _smilesTable(std::move(smilesTable)),
-                _timeTicker(timeTicker),
-                _inputFile(inputFile),
-                _ansCount(ansCount),
-                _threadsCount(threadsCount),
-                _molPropertiesTable(std::move(molPropertiesTable)) {}
+        inline FromFileMode(std::shared_ptr<const SearchData> searchData, std::filesystem::path inputFile)
+                : _searchData(std::move(searchData)), _inputFile(std::move(inputFile)) {}
 
 
         inline void run() override {
@@ -45,16 +33,16 @@ namespace qtr {
             LOG(INFO) << "Loaded " << queries.size() << " queries";
             for (size_t i = 0; i < queries.size(); i++) {
                 LOG(INFO) << "Start search for " << i << ": " << queries[i];
-                _timeTicker.tick();
-                auto [error, queryData] = doSearch(queries[i], _ballTree, _smilesTable, _ansCount, _threadsCount,
-                                                   PropertiesFilter::Bounds(), _molPropertiesTable);
+                _searchData->timeTicker.tick();
+                auto [error, queryData] = runSearch(*_searchData, queries[i], PropertiesFilter::Bounds());
                 if (error) {
                     ++skipped;
                     continue;
                 }
                 queryData->waitAllTasks();
                 LOG(INFO) << "Found " << queryData->getCurrentAnswersCount() << " answers";
-                times.emplace_back(_timeTicker.tick("search molecule " + std::to_string(i) + ": " + queries[i]));
+                times.emplace_back(
+                        _searchData->timeTicker.tick("search molecule " + std::to_string(i) + ": " + queries[i]));
             }
 
 
@@ -76,9 +64,11 @@ namespace qtr {
             LOG(INFO) << "60%: " << p60 << " | 70%: " << p70 << " | 80%: " << p80 << " | 90%: " << p90 << " | 95%: "
                       << p95;
             LOG(INFO) << "Total search time: " << BallTreeSearchEngine::ballTreeSearchTimer;
-            LOG(INFO) << "Total indigo time: " << IndigoFilter::indigoFilteringTimer;
-            LOG(INFO) << "indigo percentage: " << IndigoFilter::indigoFilteringTimer /
-                                                  BallTreeSearchEngine::ballTreeSearchTimer * 100 << "%";
+            LOG(INFO) << "Total indigo time: "
+                      << IndigoRamFilter::indigoFilteringTimer + IndigoDriveFilter::indigoFilteringTimer;
+            LOG(INFO) << "indigo percentage: "
+                      << (IndigoRamFilter::indigoFilteringTimer + IndigoDriveFilter::indigoFilteringTimer) /
+                         BallTreeSearchEngine::ballTreeSearchTimer * 100 << "%";
         }
 
     };

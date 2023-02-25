@@ -18,18 +18,10 @@
 namespace qtr {
     class WebMode : public RunMode {
     private:
-        const qtr::BallTreeSearchEngine &_ballTree;
-        std::shared_ptr<const SmilesTable> _smilesTable;
-        const uint64_t _ansCount;
-        const uint64_t _threadsCount;
-        std::shared_ptr<const IdConverter> _idConverter;
-        std::shared_ptr<const std::vector<PropertiesFilter::Properties>> _molPropertiesTable;
+        std::shared_ptr<const SearchData> _searchData;
 
     public:
-        WebMode(const qtr::BallTreeSearchEngine &ballTree, std::shared_ptr<const SmilesTable> smilesTable,
-                qtr::TimeTicker &timeTicker, uint64_t ansCount, uint64_t threadsCount,
-                std::shared_ptr<const IdConverter> idConverter,
-                std::shared_ptr<const std::vector<PropertiesFilter::Properties>> molPropertiesTable);
+        explicit WebMode(std::shared_ptr<const SearchData> searchData);
 
         void run() override;
 

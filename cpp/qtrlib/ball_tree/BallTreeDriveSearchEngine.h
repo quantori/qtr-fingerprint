@@ -9,6 +9,9 @@ namespace qtr {
         [[nodiscard]] std::filesystem::path getFingerprintTablePath(size_t nodeId) const;
 
     public:
+
+        using BallTreeSearchEngine::BallTreeSearchEngine;
+
         [[nodiscard]] std::vector<CIDType> searchInLeaf(size_t leafId, const IndigoFingerprint &query) const override;
     };
 

@@ -8,23 +8,12 @@
 
 namespace qtr {
     class InteractiveMode : public RunMode {
-        const qtr::BallTreeSearchEngine &_ballTree;
-        std::shared_ptr<const SmilesTable> _smilesTable;
-        qtr::TimeTicker &_timeTicker;
-        uint64_t _ansCount;
-        uint64_t _threadsCount;
-        std::shared_ptr<const std::vector<PropertiesFilter::Properties>> _molPropertiesTable;
+    private:
+        std::shared_ptr<const SearchData> _searchData;
 
     public:
-        inline InteractiveMode(const qtr::BallTreeSearchEngine &ballTree, shared_ptr<const SmilesTable> smilesTable,
-                               qtr::TimeTicker &timeTicker, uint64_t ansCount, uint64_t threadsCount,
-                               std::shared_ptr<const std::vector<PropertiesFilter::Properties>> molPropertiesTable) :
-                _ballTree(ballTree),
-                _smilesTable(std::move(smilesTable)),
-                _timeTicker(timeTicker),
-                _ansCount(ansCount),
-                _threadsCount(threadsCount),
-                _molPropertiesTable(std::move(molPropertiesTable)){}
+        inline explicit InteractiveMode(std::shared_ptr<const SearchData> searchData)
+                : _searchData(std::move(searchData)) {}
 
 
         inline void run() override {
@@ -34,10 +23,9 @@ namespace qtr {
                 std::cin >> smiles;
                 if (smiles.empty())
                     break;
-                _timeTicker.tick();
+                _searchData->timeTicker.tick();
                 try {
-                    auto [error, queryData] = doSearch(smiles, _ballTree, _smilesTable, _ansCount, _threadsCount,
-                                                       PropertiesFilter::Bounds(), _molPropertiesTable);
+                    auto [error, queryData] = runSearch(*_searchData, smiles, PropertiesFilter::Bounds());
                     if (error) {
                         LOG(ERROR) << "Can not parse given smiles";
                         continue;
@@ -45,10 +33,13 @@ namespace qtr {
                     queryData->waitAllTasks();
                     LOG(INFO) << "Found " << queryData->getCurrentAnswersCount() << " answers";
                     auto answers = queryData->getAnswers(0, 5).second;
-                    for (auto& i : answers) {
-                        LOG(INFO) << (*_smilesTable)[i];
+                    if (_searchData->getClass() == SearchData::DerivedClasses::RamSearchData) {
+                        const auto *ramSearchData = dynamic_cast<const RamSearchData *>(_searchData.get());
+                        for (auto &i: answers) {
+                            LOG(INFO) << (*ramSearchData->smilesTable)[i];
+                        }
                     }
-                    std::cout << "Search time: " << _timeTicker.tick("Search time") << std::endl;
+                    std::cout << "Search time: " << _searchData->timeTicker.tick("Search time") << std::endl;
                 } catch (std::exception &e) {
                     LOG(ERROR) << e.what() << " while processing " << smiles;
                     continue;
