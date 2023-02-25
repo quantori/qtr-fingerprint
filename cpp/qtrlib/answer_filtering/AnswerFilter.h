@@ -18,7 +18,7 @@ namespace qtr {
 
         virtual std::unique_ptr<AnswerFilter> copy() = 0;
 
-        virtual void initBallTreeLeaf(const std::filesystem::path &leafDir) {};
+        virtual void initBallTreeLeaf(const std::filesystem::path &leafDirPath) {};
 
         virtual ~AnswerFilter() = default;
     };

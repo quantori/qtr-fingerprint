@@ -1,6 +1,6 @@
-#include "IndigoDriveFilter.h"
-
 #include <utility>
+
+#include "IndigoDriveFilter.h"
 #include "string_table_io/StringTableReader.h"
 
 using namespace std;
