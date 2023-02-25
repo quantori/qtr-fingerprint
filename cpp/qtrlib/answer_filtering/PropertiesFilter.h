@@ -129,19 +129,18 @@ namespace qtr {
 
         bool operator()(CIDType id) override;
 
-        std::unique_ptr<AnswerFilter> copy() override;
+        PropertiesFilter();
 
-        explicit PropertiesFilter(std::shared_ptr<const std::vector<Properties>> propertiesTable);
-
-        PropertiesFilter(std::shared_ptr<const std::vector<Properties>> propertiesTable, Bounds bounds);
+        explicit PropertiesFilter(Bounds bounds);
 
         void setBounds(Bounds bounds);
 
         void setBounds(std::shared_ptr<const Bounds> bounds);
 
-    private:
+    protected:
+        virtual const Properties &getProperties(CIDType id) = 0;
+
         std::shared_ptr<const Bounds> _bounds;
-        std::shared_ptr<const std::vector<Properties>> _propertiesTable;
     };
 
 

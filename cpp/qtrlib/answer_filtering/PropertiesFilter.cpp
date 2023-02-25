@@ -26,21 +26,7 @@ namespace qtr {
     }
 
     bool PropertiesFilter::operator()(CIDType id) {
-        return _bounds->Check(_propertiesTable->operator[](id));
-    }
-
-    std::unique_ptr<AnswerFilter> PropertiesFilter::copy() {
-        std::unique_ptr<PropertiesFilter> result = std::make_unique<PropertiesFilter>(_propertiesTable);
-        result->setBounds(_bounds);
-        return result;
-    }
-
-    PropertiesFilter::PropertiesFilter(std::shared_ptr<const std::vector<PropertiesFilter::Properties>> propertiesTable)
-            : _propertiesTable(std::move(propertiesTable)), _bounds() {}
-
-    PropertiesFilter::PropertiesFilter(std::shared_ptr<const std::vector<PropertiesFilter::Properties>> propertiesTable,
-                                       PropertiesFilter::Bounds bounds) : PropertiesFilter(std::move(propertiesTable)) {
-        setBounds(bounds);
+        return _bounds->Check(getProperties(id));
     }
 
     void PropertiesFilter::setBounds(PropertiesFilter::Bounds bounds) {
@@ -49,6 +35,12 @@ namespace qtr {
 
     void PropertiesFilter::setBounds(std::shared_ptr<const Bounds> bounds) {
         _bounds = std::move(bounds);
+    }
+
+    PropertiesFilter::PropertiesFilter() : _bounds() {}
+
+    PropertiesFilter::PropertiesFilter(PropertiesFilter::Bounds bounds) : PropertiesFilter() {
+        setBounds(bounds);
     }
 
     PropertiesFilter::property_t PropertiesFilter::Properties::operator[](size_t i) const {
@@ -95,7 +87,7 @@ namespace qtr {
         return _propertiesArr[MonoisotopicWeight];
     }
 
-    PropertiesFilter::property_t PropertiesFilter::Properties:: pubchemCactvsHbondAcceptor() const {
+    PropertiesFilter::property_t PropertiesFilter::Properties::pubchemCactvsHbondAcceptor() const {
         return _propertiesArr[CactvsHbondAcceptor];
     }
 
