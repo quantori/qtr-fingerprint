@@ -1,16 +1,15 @@
-#include <utility>
-
 #include "IndigoFilter.h"
 
 #include "glog/logging.h"
 #include "IndigoMolecule.h"
 #include "indigo.h"
 
-namespace qtr {
+using namespace std;
 
+namespace qtr {
     bool IndigoFilter::operator()(CIDType id) {
+        const auto &smiles = getSmiles(id);
         auto startTime = std::chrono::high_resolution_clock::now();
-        const std::string &smiles = _smilesTable->at(id);
         bool result;
         try {
             auto candidateMol = _indigoSessionPtr->loadMolecule(smiles);
@@ -29,14 +28,8 @@ namespace qtr {
         return result;
     }
 
-    std::unique_ptr<AnswerFilter> IndigoFilter::copy() {
-        return std::make_unique<IndigoFilter>(_smilesTable, _querySmiles);
-    }
-
-    IndigoFilter::IndigoFilter(std::shared_ptr<const SmilesTable> smilesTable,
-                               std::shared_ptr<const std::string> querySmiles) :
-            _smilesTable(std::move(smilesTable)), _querySmiles(std::move(querySmiles)),
-            _indigoSessionPtr(indigo_cpp::IndigoSession::create()),
+    IndigoFilter::IndigoFilter(std::shared_ptr<const std::string> querySmiles) :
+            _querySmiles(std::move(querySmiles)), _indigoSessionPtr(indigo_cpp::IndigoSession::create()),
             _queryMolecule(_indigoSessionPtr->loadQueryMolecule(*_querySmiles)) {
         _queryMolecule.aromatize();
     }
@@ -44,5 +37,4 @@ namespace qtr {
     IndigoFilter::~IndigoFilter() {
         indigoFilteringTimer += _timer;
     }
-
-} // namespace qtr
+} // qtr
