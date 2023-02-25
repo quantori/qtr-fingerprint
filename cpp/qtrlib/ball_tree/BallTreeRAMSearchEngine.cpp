@@ -8,8 +8,8 @@ namespace qtr {
     BallTreeRAMSearchEngine::groupedByDriveLeafFiles() const {
         std::map<std::string, std::vector<std::pair<size_t, std::filesystem::path>>> result;
         for (size_t leafId: getLeafIds()) {
-            auto leafFilePath = getLeafFile(leafId);
-            result[leafFilePath.parent_path().parent_path().string()].emplace_back(leafId, leafFilePath);
+            auto leafFilePath = getLeafDir(leafId);
+            result[leafFilePath.parent_path().string()].emplace_back(leafId, leafFilePath);
         }
         return result;
     }

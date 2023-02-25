@@ -19,25 +19,24 @@ namespace qtr {
 
     void BallTreeSearchEngine::initLeafDataPaths() {
         size_t expectedFilesNumber = (_nodes.size() + 1) / 2;
-        _leafDataPaths.resize(expectedFilesNumber);
+        _leafDirPaths.resize(expectedFilesNumber);
         vector<bool> isInit(expectedFilesNumber, false);
         for (auto &dataDir: _dataDirectories) {
-            for (auto &filePath: findFiles(dataDir, "")) {
-                size_t nodeId = atoll(filePath.filename().c_str());
+            for (auto &dirPath: findFiles(dataDir, "")) {
+                size_t nodeId = atoll(dirPath.filename().c_str());
                 size_t index = nodeId - (1ull << _depth) + 1;
                 assert(index < expectedFilesNumber);
                 assert(!isInit[index]);
                 isInit[index] = true;
-                _leafDataPaths[index] = filePath / ("data" + qtr::fingerprintTableExtension);
-                assert(filesystem::is_regular_file(_leafDataPaths[index]));
+                _leafDirPaths[index] = dirPath;
             }
         }
         assert(count(isInit.begin(), isInit.end(), false) == 0);
     }
 
-    const filesystem::path &BallTreeSearchEngine::getLeafFile(size_t nodeId) const {
+    const filesystem::path &BallTreeSearchEngine::getLeafDir(size_t nodeId) const {
         assert((1ull << _depth) - 1 <= nodeId);
-        return _leafDataPaths[nodeId - (1ull << _depth) + 1];
+        return _leafDirPaths[nodeId - (1ull << _depth) + 1];
     }
 
     void BallTreeSearchEngine::processLeafGroup(BallTreeQueryData &queryData,
@@ -48,6 +47,9 @@ namespace qtr {
         auto filterObject = queryData.getFilterObject();
         for (size_t i = group; i < leafs.size() && !queryData.checkShouldStop(); i += totalGroups) {
             auto res = searchInLeaf(leafs[i], queryData.getQueryFingerprint());
+            if (res.empty())
+                continue;
+            filterObject->initBallTreeLeaf(getLeafDir(leafs[i]));
             queryData.filterAndAddAnswers(res, *filterObject);
         }
         std::chrono::duration<double> duration = std::chrono::high_resolution_clock::now() - startTime;

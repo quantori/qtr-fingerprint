@@ -1,7 +1,5 @@
 #include "HuffmanCoder.h"
 
-#include <glog/logging.h>
-
 #include <queue>
 #include <functional>
 #include <cassert>

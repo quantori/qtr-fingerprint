@@ -24,10 +24,14 @@ namespace qtr {
         template<typename BinaryReader>
         BallTreeSearchEngine(BinaryReader &nodesReader, std::vector<std::filesystem::path> dataDirectories);
 
-    protected:
-        void initLeafDataPaths();
+        void search(BallTreeQueryData &queryData, size_t threads) const;
 
-        [[nodiscard]] const std::filesystem::path &getLeafFile(size_t nodeId) const;
+        virtual ~BallTreeSearchEngine() = default;
+
+    protected:
+        [[nodiscard]] const std::filesystem::path &getLeafDir(size_t nodeId) const;
+
+        void initLeafDataPaths();
 
         template<typename BinaryReader>
         void loadNodes(BinaryReader &reader);
@@ -41,14 +45,7 @@ namespace qtr {
         void processLeafGroup(BallTreeQueryData &queryData, std::vector<uint64_t> leafs, size_t group,
                               size_t totalGroups) const;
 
-
-    public:
-        void search(BallTreeQueryData &queryData, size_t threads) const;
-
-        virtual ~BallTreeSearchEngine() = default;
-
-    protected:
-        std::vector<std::filesystem::path> _leafDataPaths;
+        std::vector<std::filesystem::path> _leafDirPaths;
     };
 
     template<typename BinaryReader>
