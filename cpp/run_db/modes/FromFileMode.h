@@ -65,9 +65,9 @@ namespace qtr {
                       << p95;
             LOG(INFO) << "Total search time: " << BallTreeSearchEngine::ballTreeSearchTimer;
             LOG(INFO) << "Total indigo time: "
-                      << IndigoRamFilter::indigoFilteringTimer + IndigoDriveFilter::indigoFilteringTimer;
+                      << IndigoFilter::indigoFilteringTimer;
             LOG(INFO) << "indigo percentage: "
-                      << (IndigoRamFilter::indigoFilteringTimer + IndigoDriveFilter::indigoFilteringTimer) /
+                      << IndigoFilter::indigoFilteringTimer /
                          BallTreeSearchEngine::ballTreeSearchTimer * 100 << "%";
         }
 
