@@ -41,7 +41,7 @@ namespace qtr {
         std::shuffle(shuffledLeaves.begin(), shuffledLeaves.end(), random_generator);
         std::vector<std::vector<uint64_t>> result(threads);
         for (size_t i = 0; i < shuffledLeaves.size(); i++) {
-            result[i % shuffledLeaves.size()].emplace_back(shuffledLeaves[i]);
+            result[i % result.size()].emplace_back(shuffledLeaves[i]);
         }
         return result;
     }

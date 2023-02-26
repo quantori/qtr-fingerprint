@@ -69,7 +69,7 @@ namespace qtr {
     }
 
     vector <size_t> BallTreeSearchEngine::getLeafIds() const {
-        vector<size_t> result((1ull << _depth));:
+        vector<size_t> result((1ull << _depth));
         iota(result.begin(), result.end(), (1ull << _depth) - 1);
         return result;
     }
