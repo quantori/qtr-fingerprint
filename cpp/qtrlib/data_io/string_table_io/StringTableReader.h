@@ -17,11 +17,6 @@ namespace qtr {
         explicit StringTableReader(const std::filesystem::path &fileName)
                 : BaseReader(fileName), _inStream(0) {
             _binaryReader->read((char *) &_inStream, sizeof _inStream);
-            LOG(INFO) << "Create string table reader with " << _inStream << " string (" << _binaryReader << ")";
-        }
-
-        ~StringTableReader() override {
-            LOG(INFO) << "Delete string table reader (" << _binaryReader << ")";
         }
 
         StringTableReader &operator>>(ReadValue &value) override {

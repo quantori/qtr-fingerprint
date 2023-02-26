@@ -17,12 +17,6 @@ namespace qtr {
         explicit PropertiesTableReader(const std::filesystem::path &fileName) : BaseReader(fileName),
                                                                                 _propertiesInStream(0) {
             _binaryReader->read((char *) &_propertiesInStream, sizeof _propertiesInStream);
-            LOG(INFO) << "Create properties table reader with " << _propertiesInStream << " SMILES (" << _binaryReader
-                      << ")";
-        }
-
-        ~PropertiesTableReader() override {
-            LOG(INFO) << "Delete properties table reader (" << _binaryReader << ")";
         }
 
         PropertiesTableReader &operator>>(ReadValue &value) override {
