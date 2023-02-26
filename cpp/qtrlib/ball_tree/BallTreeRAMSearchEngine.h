@@ -22,7 +22,9 @@ namespace qtr {
 
         void loadLeafFiles(const std::vector<std::pair<size_t, std::filesystem::path>> &leafsList);
 
-    protected:
+        [[nodiscard]] std::vector<std::vector<uint64_t>>
+        divideLeavesIntoGroups(const std::vector<uint64_t> &leaves, size_t threads) const override;
+
         std::vector<std::vector<fingerprint_table_value_t>> _buckets;
     };
 

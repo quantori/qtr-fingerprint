@@ -8,6 +8,9 @@ namespace qtr {
     protected:
         [[nodiscard]] std::filesystem::path getFingerprintTablePath(size_t nodeId) const;
 
+        [[nodiscard]] std::vector<std::vector<uint64_t>>
+        divideLeavesIntoGroups(const std::vector<uint64_t> &leaves, size_t threads) const override;
+
     public:
 
         using BallTreeSearchEngine::BallTreeSearchEngine;
