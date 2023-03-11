@@ -1,4 +1,5 @@
 #include <string>
+#include <stdexcept>
 
 #include <glog/logging.h>
 #include <absl/flags/flag.h>
@@ -12,13 +13,13 @@
 #include "properties_table_io/PropertiesTableReader.h"
 #include "search_data/RamSearchData.h"
 #include "search_data/DriveSearchData.h"
-
-using namespace std;
-using namespace qtr;
-
 #include "modes/web/WebMode.h"
 #include "modes/InteractiveMode.h"
 #include "modes/FromFileMode.h"
+
+
+using namespace std;
+using namespace qtr;
 
 
 ABSL_FLAG(vector<string>, data_dir_paths, {},
@@ -223,9 +224,8 @@ shared_ptr<SearchData> loadSearchData(const Args &args, TimeTicker &timeTicker) 
         return loadRamSearchData(args, timeTicker);
     } else if (args.dbType == qtr::DbType::OnDrive) {
         return loadDriveSearchData(args, timeTicker);
-    } else {
-        assert(false && "Undefined db type");
     }
+    throw std::logic_error("Undefined db type");
 }
 
 void runDb(const Args &args) {
