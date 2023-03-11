@@ -77,11 +77,11 @@ namespace qtr {
         }
 
         bool operator<=(const Bitset &other) const {
-            bool answer = true;
-            for (size_t i = 0; i < DataLength && answer; i++) {
-                answer &= (_data[i] & other._data[i]) == _data[i];
+            for (size_t i = 0; i < DataLength; i++) {
+                if (_data[i] & ~other._data[i])
+                    return false;
             }
-            return answer;
+            return true;
         }
 
         Bitset &reset() {

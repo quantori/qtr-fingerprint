@@ -1,8 +1,12 @@
 #include "Utils.h"
 
+#include <stdexcept>
+
+using namespace std;
+
 namespace qtr {
 
-    bool endsWith(const std::string &a, const std::string &b) {
+    bool endsWith(const string &a, const string &b) {
         return a.size() >= b.size() &&
                (0 == a.compare(a.size() - b.size(), b.size(), b));
     }
@@ -11,45 +15,45 @@ namespace qtr {
         return letter >= '0' && letter <= '9' ? letter - '0' : letter - 'a' + 10;
     }
 
-    std::vector<std::filesystem::path> findFiles(const std::filesystem::path &pathToDir, std::string extension) {
-        std::vector<std::filesystem::path> sdfFiles;
+    vector <filesystem::path> findFiles(const filesystem::path &pathToDir, string extension) {
+        vector<filesystem::path> files;
         if (!extension.empty() && extension[0] != '.')
             extension = "." + extension;
-        for (const auto &entry: std::filesystem::recursive_directory_iterator(pathToDir)) {
+        for (const auto &entry: filesystem::recursive_directory_iterator(pathToDir)) {
             if (entry.path().stem() != ".DS_Store" && entry.path().extension() == extension) {
-                sdfFiles.push_back(entry.path());
+                files.push_back(entry.path());
             }
         }
-        return sdfFiles;
+        return files;
     }
 
     template<>
-    void checkEmptyArgument<uint64_t>(const uint64_t &argument, const std::string &message) {
+    void checkEmptyArgument<uint64_t>(const uint64_t &argument, const string &message) {
         if (argument == 0) {
             LOG(ERROR) << message;
             exit(-1);
         }
     }
 
-    void askAboutContinue(const std::string &question) {
-        std::cout << question << ". Continue? (Y/n): ";
-        std::string userAnswer;
-        std::cin >> userAnswer;
+    void askAboutContinue(const string &question) {
+        cout << question << ". Continue? (Y/n): ";
+        string userAnswer;
+        cin >> userAnswer;
         if (userAnswer != "Y" && userAnswer != "y") {
-            std::cout << "abort\n";
+            cout << "abort\n";
             exit(-1);
         }
     }
 
-    std::string generateDbName(const std::vector<std::filesystem::path> &dataDirPaths,
-                               const std::filesystem::path &otherDataPath) {
+    string generateDbName(const vector <filesystem::path> &dataDirPaths,
+                          const filesystem::path &otherDataPath) {
         for (size_t i = 0;; i++) {
             bool ok = true;
-            std::string newDbName = "db_" + std::to_string(i);
+            string newDbName = "db_" + to_string(i);
             for (auto &dir: dataDirPaths) {
-                ok &= !std::filesystem::exists(dir / newDbName);
+                ok &= !filesystem::exists(dir / newDbName);
             }
-            ok &= !std::filesystem::exists(otherDataPath / newDbName);
+            ok &= !filesystem::exists(otherDataPath / newDbName);
             if (ok)
                 return newDbName;
         }
@@ -62,9 +66,9 @@ namespace qtr {
         FLAGS_alsologtostderr = alsoLogToStderr;
     }
 
-    double TimeTicker::tick(const std::string &message) {
-        _timePoints.emplace_back(std::chrono::high_resolution_clock::now());
-        std::chrono::duration<double> t = _timePoints.back() - _timePoints[_timePoints.size() - 2];
+    double TimeTicker::tick(const string &message) {
+        _timePoints.emplace_back(chrono::high_resolution_clock::now());
+        chrono::duration<double> t = _timePoints.back() - _timePoints[_timePoints.size() - 2];
         if (!message.empty()) {
             LOG(INFO) << message << ": " << t.count() << "sec";
             _results.emplace_back(message, t.count());
@@ -73,7 +77,7 @@ namespace qtr {
     }
 
     double TimeTicker::elapsedTime() const {
-        return std::chrono::duration<double>(_timePoints.back() - _timePoints.front()).count();
+        return chrono::duration<double>(_timePoints.back() - _timePoints.front()).count();
     }
 
     void TimeTicker::logResults() const {
@@ -84,4 +88,38 @@ namespace qtr {
     }
 
 
+    TimeMeasurer::StorageType::iterator TimeMeasurer::begin() {
+        return _measurements.begin();
+    }
+
+    unordered_map<string, double>::iterator TimeMeasurer::end() {
+        return _measurements.end();
+    }
+
+    void TimeMeasurer::start(const string &label) {
+        LOG(INFO) << "Start " << label;
+        lock_guard<mutex> lock(_lock);
+        if (_measurements.contains(label) || _startPoints.contains(label))
+            throw std::invalid_argument("Such label already exists: " + label);
+        _startPoints[label] = chrono::high_resolution_clock::now();
+    }
+
+    void TimeMeasurer::finish(const string &label) {
+        lock_guard<mutex> lock(_lock);
+        if (!_startPoints.contains(label))
+            throw std::invalid_argument("Such label does not exist: " + label);
+        chrono::duration<double> duration = chrono::high_resolution_clock::now() - _startPoints[label];
+        _measurements[label] = duration.count();
+        LOG(INFO) << "Finish " << label;
+    }
+
+    TimeMeasurer::FunctionTimeMeasurer::FunctionTimeMeasurer(TimeMeasurer &statisticCollector,
+                                                             std::string label)
+            : _statisticCollector(statisticCollector), _label(std::move(label)) {
+        _statisticCollector.start(_label);
+    }
+
+    TimeMeasurer::FunctionTimeMeasurer::~FunctionTimeMeasurer() {
+        _statisticCollector.finish(_label);
+    }
 } // namespace qtr

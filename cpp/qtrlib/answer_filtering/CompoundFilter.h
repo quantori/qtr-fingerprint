@@ -12,6 +12,8 @@ namespace qtr {
 
         std::unique_ptr<AnswerFilter> copy() override;
 
+        void initBallTreeLeaf(const std::filesystem::path& leafDirPath) override;
+
     private:
         std::unique_ptr<AnswerFilter> _filter1;
         std::unique_ptr<AnswerFilter> _filter2;

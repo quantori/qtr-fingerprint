@@ -1,8 +1,8 @@
 #include "gtest/gtest.h"
 #include "../utils/TmpDirFixture.h"
 
-#include "smiles_table_io/SmilesRandomAccessTable.h"
-#include "smiles_table_io/SmilesTableWriter.h"
+#include "data_io/string_random_access_table/StringRandomAccessTable.h"
+#include "string_table_io/StringTableWriter.h"
 
 class IndexesRandomAccessTableTests : public TmpDirFixture {
 public:
@@ -10,12 +10,12 @@ public:
         return getTmpDir() / "table";
     }
 
-    std::filesystem::path getSmilesTablePath() const {
-        return getTmpDir() / ("smilesTable" + qtr::smilesTableExtension);
+    std::filesystem::path getTablePath() const {
+        return getTmpDir() / ("stringsTable" + qtr::stringTableExtension);
     }
 
-    void generateSmilesTable() {
-        qtr::SmilesTableWriter stWriter(getSmilesTablePath());
+    void generateStringsTable() {
+        qtr::StringTableWriter stWriter(getTablePath());
         for (uint64_t i = 0; i < 10; i++) {
             stWriter << std::make_pair(i, std::string(i, char('A' + i)));
         }
@@ -24,12 +24,12 @@ public:
     void SetUp() override {
         TmpDirFixture::SetUp();
         std::filesystem::create_directory(getTableDir());
-        generateSmilesTable();
+        generateStringsTable();
     }
 };
 
 TEST_F(IndexesRandomAccessTableTests, AskAfterCreate) {
-    qtr::SmilesRandomAccessTable table(getSmilesTablePath(), getTableDir());
+    qtr::StringRandomAccessTable table(getTablePath(), getTableDir());
     for (size_t i: {9, 5, 4, 1, 0, 8, 7, 6, 2, 3, 0, 9}) {
         std::string queryAnswer = table[i];
         EXPECT_EQ(i, queryAnswer.size());
@@ -40,9 +40,9 @@ TEST_F(IndexesRandomAccessTableTests, AskAfterCreate) {
 
 TEST_F(IndexesRandomAccessTableTests, AskAfterLoad) {
     {
-        qtr::SmilesRandomAccessTable table(getSmilesTablePath(), getTableDir());
+        qtr::StringRandomAccessTable table(getTablePath(), getTableDir());
     }
-    qtr::SmilesRandomAccessTable table(getTableDir());
+    qtr::StringRandomAccessTable table(getTableDir());
     for (size_t i: {9, 5, 4, 1, 0, 8, 7, 6, 2, 3, 0, 9}) {
         std::string queryAnswer = table[i];
         EXPECT_EQ(i, queryAnswer.size());

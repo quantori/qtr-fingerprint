@@ -9,7 +9,7 @@
 #include "io/BufferedWriter.h"
 #include "fingerprint_table_io/FingerprintTableWriter.h"
 #include "fingerprint_table_io/FingerprintTableReader.h"
-#include "answer_filtering/IndigoFilter.h"
+#include "answer_filtering/IndigoRamFilter.h"
 #include "MapSmilesTable.h"
 
 class HighLevelBallTreeTests : public TmpDirFixture {
@@ -51,7 +51,8 @@ public:
         for (auto &[id, _]: data) {
             smilesList.emplace_back(id, "smiles" + std::to_string(id));
         }
-        return std::shared_ptr<qtr::SmilesTable>(dynamic_cast<qtr::SmilesTable *>(new qtr::MapSmilesTable(smilesList)));
+        return std::shared_ptr<qtr::SmilesTable>(
+                dynamic_cast<qtr::SmilesTable *>(new qtr::MapSmilesTable(smilesList.begin(), smilesList.end())));
     }
 
     static DataTable getAll5BitsMasksData() {

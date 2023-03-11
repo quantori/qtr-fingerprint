@@ -11,4 +11,9 @@ namespace qtr {
 
     CompoundFilter::CompoundFilter(std::unique_ptr<AnswerFilter> filter1, std::unique_ptr<AnswerFilter> filter2)
             : _filter1(std::move(filter1)), _filter2(std::move(filter2)) {}
+
+    void CompoundFilter::initBallTreeLeaf(const std::filesystem::path &leafDirPath) {
+        _filter1->initBallTreeLeaf(leafDirPath);
+        _filter2->initBallTreeLeaf(leafDirPath);
+    }
 } // qtr

@@ -8,9 +8,10 @@
 #include <absl/flags/parse.h>
 
 #include "Utils.h"
-#include "smiles_table_io/SmilesTableWriter.h"
-#include "smiles_table_io/SmilesTableReader.h"
+#include "string_table_io/StringTableWriter.h"
+#include "string_table_io/StringTableReader.h"
 #include "fingerprint_table_io/FingerprintTableWriter.h"
+#include "fingerprint_table_io/FingerprintTableReader.h"
 #include "BallTreeBuilder.h"
 #include "ball_tree/split_bit_selection/MaxDispersionBitSelector.h"
 #include "HuffmanCoder.h"
@@ -39,9 +40,10 @@ ABSL_FLAG(uint64_t, tree_depth, 0,
 ABSL_FLAG(string, db_name, "",
           "Name of folders with data base's files");
 
-namespace {
-    mt19937 randomGenerator(0);
-}
+ABSL_FLAG(string, db_type, "",
+          "Possible types: on_drive, in_ram");
+
+TimeMeasurer statisticCollector;
 
 struct Args {
     filesystem::path smilesSourceDirPath;
@@ -50,10 +52,17 @@ struct Args {
     filesystem::path propertyTablesSourceDirPath;
 
     vector<filesystem::path> destDirPaths;
-    filesystem::path otherDestDirPath;
+    filesystem::path otherDataPath;
     uint64_t subtreeParallelDepth;
     uint64_t treeDepth;
     string dbName;
+
+    enum class DbType {
+        OnDrive,
+        InRam
+    };
+
+    DbType dbType;
 
     vector<filesystem::path> dbDataDirsPaths;
     filesystem::path dbOtherDataPath;
@@ -68,44 +77,58 @@ struct Args {
     Args(int argc, char *argv[]) {
         absl::ParseCommandLine(argc, argv);
 
+        // get flags
         filesystem::path sourceDirPath = absl::GetFlag(FLAGS_source_dir_path);
         vector<string> tmpDestDirPaths = absl::GetFlag(FLAGS_dest_dir_paths);
-        otherDestDirPath = absl::GetFlag(FLAGS_other_dest_dir_path);
+        otherDataPath = absl::GetFlag(FLAGS_other_dest_dir_path);
         subtreeParallelDepth = absl::GetFlag(FLAGS_subtree_parallel_depth);
         treeDepth = absl::GetFlag(FLAGS_tree_depth);
         dbName = absl::GetFlag(FLAGS_db_name);
+        string dbTypeStr = absl::GetFlag(FLAGS_db_type);
 
+        // check empty flags
         checkEmptyArgument(sourceDirPath, "Please specify source_dir_path option");
         checkEmptyArgument(tmpDestDirPaths, "Please specify dest_dir_paths option");
-        checkEmptyArgument(otherDestDirPath, "Please specify other_dest_dir_path option");
+        checkEmptyArgument(otherDataPath, "Please specify other_dest_dir_path option");
         checkEmptyArgument(subtreeParallelDepth, "Please specify subtree_parallel_depth option");
         checkEmptyArgument(treeDepth, "Please specify tree_depth option");
+        checkEmptyArgument(dbTypeStr, "Please specify db_type option");
 
+        // init values
         smilesSourceDirPath = sourceDirPath / "smilesTables";
         fingerprintTablesSourceDirPath = sourceDirPath / "fingerprintTables";
         idToStringSourceDirPath = sourceDirPath / "idToStringTables";
         propertyTablesSourceDirPath = sourceDirPath / "propertyTables";
         copy(tmpDestDirPaths.begin(), tmpDestDirPaths.end(), back_inserter(destDirPaths));
         if (dbName.empty()) {
-            dbName = generateDbName(destDirPaths, otherDestDirPath);
+            dbName = generateDbName(destDirPaths, otherDataPath);
         }
         for (auto &dir: destDirPaths) {
             dbDataDirsPaths.emplace_back(dir / dbName);
         }
-        dbOtherDataPath = otherDestDirPath / dbName;
+        dbOtherDataPath = otherDataPath / dbName;
         ballTreePath = dbOtherDataPath / "tree";
         smilesTablePath = dbOtherDataPath / "smilesTable";
         huffmanCoderPath = dbOtherDataPath / "huffman";
         idToStringDestinationDirPath = dbOtherDataPath / "idToString";
         propertyTableDestinationPath = dbOtherDataPath / "propertyTable";
+        if (dbTypeStr == "in_ram") {
+            dbType = DbType::InRam;
+        } else if (dbTypeStr == "on_drive") {
+            dbType = DbType::OnDrive;
+        } else {
+            LOG(ERROR) << "Bad mode option value";
+            exit(-1);
+        }
 
+        // log
         LOG(INFO) << "smilesSourceDirPath: " << smilesSourceDirPath;
         LOG(INFO) << "fingerprintTablesSourceDirPath" << fingerprintTablesSourceDirPath;
         LOG(INFO) << "idToStringSourceDirPath" << idToStringSourceDirPath;
         for (size_t i = 0; i < destDirPaths.size(); i++) {
             LOG(INFO) << "destDirPaths[" << i << "]: " << destDirPaths[i];
         }
-        LOG(INFO) << "otherDestDirPath: " << otherDestDirPath;
+        LOG(INFO) << "otherDataPath: " << otherDataPath;
         LOG(INFO) << "subtreeParallelDepth: " << subtreeParallelDepth;
         LOG(INFO) << "treeDepth: " << treeDepth;
         LOG(INFO) << "dbName: " << dbName;
@@ -118,11 +141,12 @@ struct Args {
         LOG(INFO) << "huffmanCoderPath: " << huffmanCoderPath;
         LOG(INFO) << "idToStringDestinationDirPath: " << idToStringDestinationDirPath;
         LOG(INFO) << "propertyTableDestinationPath: " << propertyTableDestinationPath;
-
     }
 };
 
 void initFileSystem(const Args &args) {
+    TimeMeasurer::FunctionTimeMeasurer timer(statisticCollector, "filesystem initialization");
+
     vector<filesystem::path> alreadyExists;
     for (auto &dbDirPath: args.dbDataDirsPaths) {
         if (filesystem::exists(dbDirPath))
@@ -150,9 +174,11 @@ void initFileSystem(const Args &args) {
 }
 
 void distributeFingerprintTables(const Args &args) {
+    TimeMeasurer::FunctionTimeMeasurer timer(statisticCollector, "fingerprint tables distribution");
+
     vector<filesystem::path> ftFilePaths = findFiles(args.fingerprintTablesSourceDirPath,
                                                      fingerprintTableExtension);
-    shuffle(ftFilePaths.begin(), ftFilePaths.end(), randomGenerator);
+    shuffle(ftFilePaths.begin(), ftFilePaths.end(), mt19937(0));
     size_t drivesCount = args.dbDataDirsPaths.size();
     for (size_t i = 0; i < ftFilePaths.size(); i++) {
         auto sourcePath = ftFilePaths[i];
@@ -164,14 +190,15 @@ void distributeFingerprintTables(const Args &args) {
 }
 
 size_t mergeSmilesTablesAndBuildHuffman(const Args &args) {
-    LOG(INFO) << "Start merging smiles tables and building huffman";
-    vector<filesystem::path> smilesTablePaths = findFiles(args.smilesSourceDirPath, smilesTableExtension);
+    TimeMeasurer::FunctionTimeMeasurer timer(statisticCollector, "merging smiles tables and building huffman");
 
-    vector<smiles_table_value_t> smilesTable;
+    vector<filesystem::path> smilesTablePaths = findFiles(args.smilesSourceDirPath, stringTableExtension);
+
+    vector<string_table_value_t> smilesTable;
     HuffmanCoder::Builder huffmanBuilder;
 
     for (auto &stFile: smilesTablePaths) {
-        SmilesTableReader reader(stFile);
+        StringTableReader reader(stFile);
         for (const auto &value: reader) {
             smilesTable.emplace_back(value);
             huffmanBuilder += value.second;
@@ -179,10 +206,10 @@ size_t mergeSmilesTablesAndBuildHuffman(const Args &args) {
     }
 
     sort(smilesTable.begin(), smilesTable.end(),
-         [](const smiles_table_value_t &a, const smiles_table_value_t &b) {
+         [](const string_table_value_t &a, const string_table_value_t &b) {
              return a.first < b.first;
          });
-    SmilesTableWriter writer(args.smilesTablePath);
+    StringTableWriter writer(args.smilesTablePath);
     copy(smilesTable.begin(), smilesTable.end(), writer.begin());
 
     auto huffmanCoder = huffmanBuilder.build();
@@ -193,7 +220,8 @@ size_t mergeSmilesTablesAndBuildHuffman(const Args &args) {
 }
 
 size_t mergePropertyTables(const Args &args) {
-    LOG(INFO) << "Start merging property tables";
+    TimeMeasurer::FunctionTimeMeasurer timer(statisticCollector, "merging property tables");
+
     vector<filesystem::path> propertyTablePaths = findFiles(args.propertyTablesSourceDirPath, "");
 
     vector<pair<uint64_t, PropertiesFilter::Properties>> propertyTable;
@@ -215,31 +243,25 @@ size_t mergePropertyTables(const Args &args) {
     }
     PropertiesTableWriter writer(args.propertyTableDestinationPath);
     copy(propertyTable.begin(), propertyTable.end(), writer.begin());
-    LOG(INFO) << "Finish merging property tables";
 
     return propertyTable.size();
 }
 
 void copyIdToStringTables(const filesystem::path &source, const filesystem::path &destination) {
-    LOG(INFO) << "Start copying from " << source << " to " << destination;
+    TimeMeasurer::FunctionTimeMeasurer timer(statisticCollector,
+                                             "copying from " + source.string() + " to " + destination.string());
+
     for (const filesystem::path &filePath: findFiles(source, ".csv")) {
         LOG(INFO) << "copy file" << filePath << " to " << destination / filePath.filename();
         filesystem::copy_file(filePath, destination / filePath.filename());
     }
-    LOG(INFO) << "Finish copying from " << source << " to " << destination;
 }
 
-size_t processTables(const Args &args) {
-    auto copyIdToStrTablesTask = std::async(std::launch::async, copyIdToStringTables,
-                                            cref(args.idToStringSourceDirPath),
-                                            cref(args.idToStringDestinationDirPath));
+size_t mergeTables(const Args &args) {
     auto mergeSmilesTablesTask = async(launch::async, mergeSmilesTablesAndBuildHuffman, cref(args));
-    auto fingerprintsTask = async(launch::async, distributeFingerprintTables, cref(args));
     auto mergePropertyTablesTask = async(launch::async, mergePropertyTables, cref(args));
 
     size_t moleculesNumber = mergeSmilesTablesTask.get();
-    copyIdToStrTablesTask.get();
-    fingerprintsTask.get();
     size_t moleculesNumber2 = mergePropertyTablesTask.get();
 
     assert(moleculesNumber == moleculesNumber2);
@@ -247,30 +269,144 @@ size_t processTables(const Args &args) {
     return moleculesNumber;
 }
 
-void buildDB(const Args &args) {
-    TimeTicker timeTicker;
+map<uint64_t, filesystem::path> getLeafDirLocations(const Args &args) {
+    map<uint64_t, filesystem::path> leafLocations;
+    for (const auto &dirPath: args.dbDataDirsPaths) {
+        for (auto &filePath: findFiles(dirPath)) {
+            uint64_t leafId = stoi(filePath.stem());
+            leafLocations[leafId] = filePath;
+        }
+    }
+    return leafLocations;
+}
 
-    initFileSystem(args);
-    timeTicker.tick("Filesystem initialization");
-    size_t moleculesNumber = processTables(args);
-    timeTicker.tick("Fingerprint table files distribution + smiles merge + huffman build");
+void shuffleBallTreeLeaves(const Args &args) {
+    auto leafLocations = getLeafDirLocations(args);
+
+    vector<uint64_t> leafIds;
+    for (auto &[id, _]: leafLocations)
+        leafIds.push_back(id);
+    shuffle(leafIds.begin(), leafIds.end(), mt19937(0));
+
+    for (size_t i = 0; i < leafIds.size(); i++) {
+        const filesystem::path &currentLocation = leafLocations[leafIds[i]];
+        const filesystem::path &newLocation = args.dbDataDirsPaths[i % args.dbDataDirsPaths.size()];
+        filesystem::rename(currentLocation, newLocation);
+    }
+}
+
+size_t distributeSmilesTables(const Args &args, const map<uint64_t, filesystem::path> &molLocations) {
+    unordered_map<string, vector<pair<uint64_t, string>>> smilesTables;
+    vector<filesystem::path> smilesTablePaths = findFiles(args.smilesSourceDirPath, stringTableExtension);
+    size_t molNumber = 0;
+    for (auto &tablePath: smilesTablePaths) {
+        for (const auto &[id, smiles]: StringTableReader(tablePath)) {
+            const auto &location = molLocations.find(id)->second;
+            smilesTables[location].emplace_back(id, smiles);
+            molNumber++;
+        }
+    }
+
+    for (auto &[leafDirPath, leafTable]: smilesTables) {
+        auto leafTablePath = filesystem::path(leafDirPath) / ("smiles" + stringTableExtension);
+        StringTableWriter writer(leafTablePath);
+        writer << leafTable;
+    }
+
+    return molNumber;
+}
+
+
+size_t distributePropertyTables(const Args &args, const map<uint64_t, filesystem::path> &molLocations) {
+    unordered_map<string, vector<pair<uint64_t, PropertiesFilter::Properties>>> propertyTables;
+    vector<filesystem::path> propertyTablePaths = findFiles(args.propertyTablesSourceDirPath, "");
+    size_t molNumber = 0;
+    for (auto &tablePath: propertyTablePaths) {
+        for (const auto &[id, properties]: PropertiesTableReader(tablePath)) {
+            const auto &location = molLocations.find(id)->second;
+            propertyTables[location].emplace_back(id, properties);
+            molNumber++;
+        }
+    }
+
+    for (auto &[leafDirStr, leafTable]: propertyTables) {
+        auto leafTablePath = filesystem::path(leafDirStr) / "properties";
+        PropertiesTableWriter writer(leafTablePath);
+        writer << leafTable;
+    }
+
+    return molNumber;
+}
+
+size_t distributeTablesToLeafDirectories(const Args &args) {
+    TimeMeasurer::FunctionTimeMeasurer timer(statisticCollector, "smiles+properties tables distribution");
+
+    auto leafLocations = getLeafDirLocations(args);
+
+    map<uint64_t, filesystem::path> molLocations;
+    for (auto &[leafId, leafDir]: leafLocations) {
+        auto ftPath = leafDir / "data.ft";
+        assert(filesystem::is_regular_file(ftPath));
+        for (const auto &[molId, fp]: FingerprintTableReader(ftPath)) {
+            molLocations[molId] = leafDir;
+        }
+    }
+    auto distributeSmilesTablesTask = async(launch::async, distributeSmilesTables, cref(args), cref(molLocations));
+    auto distributePropertyTablesTask = async(launch::async, distributePropertyTables, cref(args), cref(molLocations));
+
+    size_t moleculesNumber = distributeSmilesTablesTask.get();
+    size_t moleculesNumber2 = distributePropertyTablesTask.get();
+    assert(moleculesNumber == moleculesNumber2);
+    return moleculesNumber;
+}
+
+void buildBallTree(const Args &args) {
+    TimeMeasurer::FunctionTimeMeasurer timer(statisticCollector, "ball tree building");
+
+    distributeFingerprintTables(args);
+
     BallTreeBuilder ballTree(args.treeDepth, args.subtreeParallelDepth, args.dbDataDirsPaths,
                              MaxDispersionBitSelector());
-    timeTicker.tick("Ball tree building");
     ofstream ballTreeWriter(args.ballTreePath);
     ballTree.dumpNodes(ballTreeWriter);
-    timeTicker.tick("Ball tree dumping");
+
+    if (args.dbType == Args::DbType::OnDrive)
+        shuffleBallTreeLeaves(args);
+}
+
+void buildDb(const Args &args) {
+    TimeMeasurer::FunctionTimeMeasurer timer(statisticCollector, "db building");
+
+    initFileSystem(args);
+
+    auto buildBallTreeTask = async(launch::async, buildBallTree, cref(args));
+    auto copyIdToStrTablesTask = async(launch::async, copyIdToStringTables,
+                                       cref(args.idToStringSourceDirPath),
+                                       cref(args.idToStringDestinationDirPath));
+    future<size_t> processTablesTask;
+    if (args.dbType == Args::DbType::InRam)
+        processTablesTask = async(launch::async, mergeTables, cref(args));
+    else {
+        buildBallTreeTask.wait(); // should distribute only after ball tree is built
+        processTablesTask = async(launch::async, distributeTablesToLeafDirectories, cref(args));
+    }
+
+    buildBallTreeTask.wait();
+    copyIdToStrTablesTask.wait();
+    size_t moleculesNumber = processTablesTask.get();
 
     LOG(INFO) << "Molecules number: " << moleculesNumber;
-
-    timeTicker.logResults();
 }
 
 int main(int argc, char *argv[]) {
-    initLogging(argv, google::INFO, "build_db.log", true);
+    initLogging(argv, google::INFO, "build_db.info", true);
     Args args(argc, argv);
 
-    buildDB(args);
+    buildDb(args);
+
+    for (auto &[label, time]: statisticCollector) {
+        LOG(INFO) << label << ": " << time;
+    }
 
     return 0;
 }

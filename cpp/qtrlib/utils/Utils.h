@@ -4,6 +4,7 @@
 #include <iostream>
 #include <filesystem>
 #include <vector>
+#include <unordered_map>
 
 #include <glog/logging.h>
 #include "glog/log_severity.h"
@@ -25,6 +26,34 @@ namespace qtr {
     private:
         std::vector<decltype(std::chrono::high_resolution_clock::now())> _timePoints;
         std::vector<std::pair<std::string, double>> _results;
+    };
+
+    class TimeMeasurer {
+    public:
+        using StorageType = std::unordered_map<std::string, double>;
+
+        StorageType::iterator begin();
+
+        StorageType::iterator end();
+
+        class FunctionTimeMeasurer {
+        public:
+            FunctionTimeMeasurer(TimeMeasurer& statisticCollector, std::string label);
+
+            ~FunctionTimeMeasurer();
+
+        private:
+            TimeMeasurer& _statisticCollector;
+            std::string _label;
+        };
+
+        void start(const std::string& label);
+
+        void finish(const std::string& label);
+    private:
+        std::unordered_map<std::string, double> _measurements;
+        std::unordered_map<std::string, decltype(std::chrono::high_resolution_clock::now())> _startPoints;
+        std::mutex _lock;
     };
 
     /**
@@ -114,7 +143,7 @@ namespace qtr {
      * @return vector of filenames
      */
     std::vector<std::filesystem::path>
-    findFiles(const std::filesystem::path &pathToDir, std::string extension);
+    findFiles(const std::filesystem::path &pathToDir, std::string extension = "");
 
     /**
      * Initialize google logging

@@ -16,7 +16,7 @@
 #include "Utils.h"
 #include "Fingerprint.h"
 #include "raw_bucket_io/RawBucketWriter.h"
-#include "smiles_table_io/SmilesTableWriter.h"
+#include "string_table_io/StringTableWriter.h"
 #include "fingerprint_table_io/FingerprintTableWriter.h"
 
 
@@ -94,14 +94,14 @@ void sdfToRb(const std::filesystem::path &sdFilePath, const Args &args) {
 
 void sdfToTables(const std::filesystem::path &sdFilePath, const Args &args) {
     std::filesystem::path smilesTablePath =
-            args.destDirPath / "smilesTables" / (sdFilePath.stem().string() + qtr::smilesTableExtension);
+            args.destDirPath / "smilesTables" / (sdFilePath.stem().string() + qtr::stringTableExtension);
     std::filesystem::path fingerprintTablePath =
             args.destDirPath / "fingerprintTables" / (sdFilePath.stem().string() + qtr::fingerprintTableExtension);
 
     std::filesystem::create_directory(smilesTablePath.parent_path());
     std::filesystem::create_directory(fingerprintTablePath.parent_path());
 
-    qtr::SmilesTableWriter smilesTableWriter(smilesTablePath);
+    qtr::StringTableWriter smilesTableWriter(smilesTablePath);
     qtr::FingerprintTableWriter fingerprintTableWriter(fingerprintTablePath);
 
     processSDF(sdFilePath, [&smilesTableWriter, &fingerprintTableWriter](const indigo_cpp::IndigoMoleculeSPtr &mol) {

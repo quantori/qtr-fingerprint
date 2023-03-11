@@ -17,12 +17,6 @@ namespace qtr {
         explicit FingerprintTableReader(const std::filesystem::path &fileName) : BaseReader(fileName),
                                                                                  _fingerprintsInStream(0) {
             _binaryReader->read((char *) &_fingerprintsInStream, sizeof _fingerprintsInStream);
-            LOG(INFO) << "Create fingerprint table reader from " << fileName << " with " << _fingerprintsInStream
-                      << " fingerprints (" << _binaryReader << ")";
-        }
-
-        ~FingerprintTableReader() override {
-            LOG(INFO) << "Delete fingerprint table reader (" << _binaryReader << ")";
         }
 
         FingerprintTableReader &operator>>(ReadValue &readValue) override {

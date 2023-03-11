@@ -24,31 +24,30 @@ namespace qtr {
         template<typename BinaryReader>
         BallTreeSearchEngine(BinaryReader &nodesReader, std::vector<std::filesystem::path> dataDirectories);
 
-    protected:
-        void initLeafDataPaths();
+        void search(BallTreeQueryData &queryData, size_t threads) const;
 
-        [[nodiscard]] const std::filesystem::path &getLeafFile(size_t nodeId) const;
+        virtual ~BallTreeSearchEngine() = default;
+
+    protected:
+        [[nodiscard]] const std::filesystem::path &getLeafDir(size_t nodeId) const;
+
+        void initLeafDataPaths();
 
         template<typename BinaryReader>
         void loadNodes(BinaryReader &reader);
 
         [[nodiscard]] std::vector<size_t> getLeafIds() const;
 
-        void findLeafs(const IndigoFingerprint &fingerprint, size_t currentNode, std::vector<CIDType> &leafs) const;
+        void findLeaves(const IndigoFingerprint &fingerprint, size_t currentNode, std::vector<CIDType> &leaves) const;
 
         virtual std::vector<CIDType> searchInLeaf(size_t leafId, const IndigoFingerprint &query) const = 0;
 
-        void processLeafGroup(BallTreeQueryData &queryData, std::vector<uint64_t> leafs, size_t group,
-                              size_t totalGroups) const;
+        [[nodiscard]] virtual std::vector<std::vector<uint64_t>>
+        divideLeavesIntoGroups(const std::vector<uint64_t> &leaves, size_t threads) const = 0;
 
+        void processLeafGroup(BallTreeQueryData &queryData, std::vector <uint64_t> leaves) const;
 
-    public:
-        void search(BallTreeQueryData &queryData, size_t threads) const;
-
-        virtual ~BallTreeSearchEngine() = default;
-
-    protected:
-        std::vector<std::filesystem::path> _leafDataPaths;
+        std::vector<std::filesystem::path> _leafDirPaths;
     };
 
     template<typename BinaryReader>
