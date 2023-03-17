@@ -28,3 +28,5 @@ add_subdirectory(third_party/glog)
 add_subdirectory(third_party/Crow)
 add_subdirectory(tests)
 add_subdirectory(third_party/abseil-cpp)
+
+add_subdirectory(playground)
