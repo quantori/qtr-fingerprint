@@ -12,7 +12,7 @@ namespace qtr {
                         TimeTicker &timeTicker, size_t ansCount,
                         size_t threadCount);
 
-        [[nodiscard]] DerivedClasses getClass() const override;
+        [[nodiscard]] DbType getDbType() const override;
 
     };
 

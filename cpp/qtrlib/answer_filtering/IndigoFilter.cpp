@@ -8,19 +8,16 @@ using namespace std;
 
 namespace qtr {
     bool IndigoFilter::operator()(CIDType id) {
-        const auto &smiles = getSmiles(id);
         auto startTime = std::chrono::high_resolution_clock::now();
         bool result;
         try {
-            auto candidateMol = _indigoSessionPtr->loadMolecule(smiles);
-            candidateMol.aromatize();
-            auto matcher = _indigoSessionPtr->substructureMatcher(candidateMol);
+            auto candidateMol = getMolecule(id);
+            auto matcher = _indigoSessionPtr->substructureMatcher(*candidateMol);
             result = bool(indigoMatch(matcher.id(), _queryMolecule.id()));
         }
         catch (std::exception &e) {
             LOG(ERROR) << "Indigo error while filtering. "
-                          "Query: " << _querySmiles << ", candidate: " << id << " " << smiles << ", error: "
-                       << e.what();
+                          "Query: " << _querySmiles << ", candidate: " << id << ", error: " << e.what();
             result = false;
         }
         std::chrono::duration<double> duration = std::chrono::high_resolution_clock::now() - startTime;

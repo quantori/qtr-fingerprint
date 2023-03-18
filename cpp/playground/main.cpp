@@ -24,7 +24,7 @@ int main() {
 
     filesystem::path filePath("/home/Vsevolod.Vaskin/qtr-fingerprint/cpp/playground/molecules.sdf");
     filesystem::path stPath("/home/Vsevolod.Vaskin/qtr-fingerprint/data/parsed_data/smilesTables/lib1.st");
-    int compressRate = 3;
+    int compressRate = 9;
 
 
     vector<pair<uint64_t, IndigoMolecule>> molecules;
@@ -42,13 +42,13 @@ int main() {
         TimeMeasurer::FunctionTimeMeasurer timer(timeMeasurer, "gzip file writing");
 
         FileOutput out(filePath.c_str());
-        GZipOutput zipOut(out, compressRate);
+//        GZipOutput zipOut(out, compressRate);
         for (auto& [id, mol] : molecules) {
-            if (zipOut.tell() != 0)
-                zipOut.writeChar('\n');
+            if (out.tell() != 0)
+                out.writeChar('\n');
             mol.aromatize();
 //            cerr << id << ' ' << mol.canonicalSmiles() << endl;
-            zipOut.printf("%d %s$$$$", id, mol.molfile().c_str());
+            out.printf("%d %s$$$$", id, mol.molfile().c_str());
         }
     }
 

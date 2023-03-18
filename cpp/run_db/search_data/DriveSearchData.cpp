@@ -3,8 +3,8 @@
 #include <utility>
 
 namespace qtr {
-    SearchData::DerivedClasses DriveSearchData::getClass() const {
-        return SearchData::DerivedClasses::DriveSearchData;
+    DbType DriveSearchData::getDbType() const {
+        return DbType::OnDrive;
     }
 
     DriveSearchData::DriveSearchData(std::shared_ptr<const BallTreeSearchEngine> ballTree,

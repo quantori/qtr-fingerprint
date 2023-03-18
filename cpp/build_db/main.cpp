@@ -18,6 +18,7 @@
 #include "properties_table_io/PropertiesTableReader.h"
 #include "properties_table_io/PropertiesTableWriter.h"
 #include "PropertiesFilter.h"
+#include "DbConfig.h"
 
 using namespace std;
 using namespace qtr;
@@ -41,7 +42,7 @@ ABSL_FLAG(string, db_name, "",
           "Name of folders with data base's files");
 
 ABSL_FLAG(string, db_type, "",
-          "Possible types: on_drive, in_ram");
+          "Possible types: on_drive, in_ram_smiles, in_ram_molecules");
 
 TimeMeasurer statisticCollector;
 
@@ -56,11 +57,6 @@ struct Args {
     uint64_t subtreeParallelDepth;
     uint64_t treeDepth;
     string dbName;
-
-    enum class DbType {
-        OnDrive,
-        InRam
-    };
 
     DbType dbType;
 
@@ -108,18 +104,12 @@ struct Args {
         }
         dbOtherDataPath = otherDataPath / dbName;
         ballTreePath = dbOtherDataPath / "tree";
-        smilesTablePath = dbOtherDataPath / "smilesTable";
+        smilesTablePath = dbOtherDataPath / "moleculesTable";
         huffmanCoderPath = dbOtherDataPath / "huffman";
         idToStringDestinationDirPath = dbOtherDataPath / "idToString";
         propertyTableDestinationPath = dbOtherDataPath / "propertyTable";
-        if (dbTypeStr == "in_ram") {
-            dbType = DbType::InRam;
-        } else if (dbTypeStr == "on_drive") {
-            dbType = DbType::OnDrive;
-        } else {
-            LOG(ERROR) << "Bad mode option value";
-            exit(-1);
-        }
+
+        dbType = parseDbType(dbTypeStr);
 
         // log
         LOG(INFO) << "smilesSourceDirPath: " << smilesSourceDirPath;
@@ -370,7 +360,7 @@ void buildBallTree(const Args &args) {
     ofstream ballTreeWriter(args.ballTreePath);
     ballTree.dumpNodes(ballTreeWriter);
 
-    if (args.dbType == Args::DbType::OnDrive)
+    if (args.dbType == DbType::OnDrive)
         shuffleBallTreeLeaves(args);
 }
 
@@ -384,7 +374,7 @@ void buildDb(const Args &args) {
                                        cref(args.idToStringSourceDirPath),
                                        cref(args.idToStringDestinationDirPath));
     future<size_t> processTablesTask;
-    if (args.dbType == Args::DbType::InRam)
+    if (args.dbType == DbType::InRamSmiles || args.dbType == DbType::InRamMolecules)
         processTablesTask = async(launch::async, mergeTables, cref(args));
     else {
         buildBallTreeTask.wait(); // should distribute only after ball tree is built

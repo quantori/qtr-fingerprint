@@ -7,11 +7,6 @@
 
 namespace qtr {
 
-    enum class DbType {
-        OnDrive,
-        InRam
-    };
-
     std::pair<bool, std::unique_ptr<BallTreeQueryData>>
     runSearch(const SearchData &searchData, const std::string &querySmiles, const PropertiesFilter::Bounds &queryBounds);
 

@@ -1,13 +1,13 @@
-#include "RamSearchData.h"
+#include "RamSmilesSearchData.h"
 
 #include <utility>
 
 namespace qtr {
-    SearchData::DerivedClasses RamSearchData::getClass() const {
-        return SearchData::DerivedClasses::RamSearchData;
+    DbType RamSmilesSearchData::getDbType() const {
+        return DbType::InRamSmiles;
     }
 
-    RamSearchData::RamSearchData(std::shared_ptr<const BallTreeSearchEngine> ballTree,
+    RamSmilesSearchData::RamSmilesSearchData(std::shared_ptr<const BallTreeSearchEngine> ballTree,
                                  std::shared_ptr<const IdConverter> idConverter, TimeTicker &timeTicker,
                                  size_t ansCount,
                                  size_t threadCount, std::shared_ptr<const SmilesTable> smilesTable,

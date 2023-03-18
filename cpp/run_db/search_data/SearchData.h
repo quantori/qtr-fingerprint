@@ -5,18 +5,14 @@
 #include "answer_filtering/PropertiesFilter.h"
 #include "BallTreeDriveSearchEngine.h"
 #include "modes/web/IdConverter.h"
+#include "DbConfig.h"
 
 namespace qtr {
 
     class SearchData {
     public:
 
-        enum class DerivedClasses {
-            RamSearchData,
-            DriveSearchData
-        };
-
-        [[nodiscard]] virtual DerivedClasses getClass() const = 0;
+        [[nodiscard]] virtual DbType getDbType() const = 0;
 
         virtual ~SearchData() = default;
 

@@ -14,7 +14,7 @@ namespace qtr {
         IndigoDriveFilter(std::shared_ptr<const std::string> querySmiles);
 
     private:
-        std::string getSmiles(CIDType id) override;
+        std::shared_ptr<indigo_cpp::IndigoMolecule> getMolecule(CIDType id) override;
 
         MapSmilesTable _smilesTable;
     };

@@ -22,7 +22,7 @@ namespace qtr {
         explicit IndigoFilter(std::shared_ptr<const std::string> querySmiles);
 
     protected:
-        virtual std::string getSmiles(CIDType id) = 0;
+        virtual std::shared_ptr<indigo_cpp::IndigoMolecule> getMolecule(CIDType id) = 0;
 
         std::shared_ptr<const std::string> _querySmiles;
         indigo_cpp::IndigoSessionPtr _indigoSessionPtr;

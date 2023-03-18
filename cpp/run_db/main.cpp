@@ -11,11 +11,12 @@
 #include "SmilesTable.h"
 #include "RunDbUtils.h"
 #include "properties_table_io/PropertiesTableReader.h"
-#include "search_data/RamSearchData.h"
+#include "search_data/RamSmilesSearchData.h"
 #include "search_data/DriveSearchData.h"
 #include "modes/web/WebMode.h"
 #include "modes/InteractiveMode.h"
 #include "modes/FromFileMode.h"
+#include "DbConfig.h"
 
 
 using namespace std;
@@ -44,21 +45,15 @@ ABSL_FLAG(uint64_t, ans_count, -1,
           "how many answers program will find");
 
 ABSL_FLAG(string, db_type, "",
-          "Possible types: on_drive, in_ram");
+          "Possible types: on_drive, in_ram_smiles, in_ram_molecules");
 
 struct Args {
-
-    enum class Mode {
-        Interactive,
-        FromFile,
-        Web
-    };
 
     vector<filesystem::path> destDirPaths;
     filesystem::path otherDataPath;
     string dbName;
     uint64_t threadsCount;
-    Mode mode;
+    RunModeType mode;
     filesystem::path inputFile;
     uint64_t ansCount;
     DbType dbType;
@@ -104,28 +99,13 @@ struct Args {
         }
         dbOtherDataPath = otherDataPath / dbName;
         ballTreePath = dbOtherDataPath / "tree";
-        smilesTablePath = dbOtherDataPath / "smilesTable";
+        smilesTablePath = dbOtherDataPath / "moleculesTable";
         huffmanCoderPath = dbOtherDataPath / "huffman";
         idToStringDirPath = dbOtherDataPath / "idToString";
         propertyTableDestinationPath = dbOtherDataPath / "propertyTable";
-        if (modeStr == "interactive") {
-            mode = Mode::Interactive;
-        } else if (modeStr == "web") {
-            mode = Mode::Web;
-        } else if (modeStr == "from_file") {
-            mode = Mode::FromFile;
-        } else {
-            LOG(ERROR) << "Bad mode option value";
-            exit(-1);
-        }
-        if (dbTypeStr == "in_ram") {
-            dbType = DbType::InRam;
-        } else if (dbTypeStr == "on_drive") {
-            dbType = DbType::OnDrive;
-        } else {
-            LOG(ERROR) << "Bad mode option value";
-            exit(-1);
-        }
+
+        mode = parseRunMode(modeStr);
+        dbType = parseDbType(dbTypeStr);
 
         // log
         LOG(INFO) << "inputFile: " << inputFile;
@@ -145,17 +125,17 @@ struct Args {
         for (size_t i = 0; i < destDirPaths.size(); i++) {
             LOG(INFO) << "destDirPaths[" << i << "]: " << destDirPaths[i];
         }
-        if (mode == Mode::FromFile) {
+        if (mode == RunModeType::FromFile) {
             LOG(INFO) << "mode: from file";
-        } else if (mode == Mode::Interactive) {
+        } else if (mode == RunModeType::Interactive) {
             LOG(INFO) << "mode: interactive";
-        } else if (mode == Mode::Web) {
+        } else if (mode == RunModeType::Web) {
             LOG(INFO) << "mode: web server";
         }
     }
 };
 
-std::shared_ptr<SmilesTable>
+shared_ptr<SmilesTable>
 loadSmilesTable(const filesystem::path &smilesTablePath, const HuffmanCoder &huffmanCoder) {
     LOG(INFO) << "Start smiles table loading";
     HuffmanSmilesTable::Builder builder(huffmanCoder);
@@ -166,11 +146,28 @@ loadSmilesTable(const filesystem::path &smilesTablePath, const HuffmanCoder &huf
     return builder.buildPtr();
 }
 
+shared_ptr<map<CIDType, indigo_cpp::IndigoMolecule>>
+loadMoleculesTable(const filesystem::path &smilesTablePath, const HuffmanCoder &huffmanCoder) {
+    LOG(INFO) << "Start molecules table loading";
+    shared_ptr<map<CIDType, indigo_cpp::IndigoMolecule>> result;
+    for (const auto& [id, smiles] : StringTableReader(smilesTablePath)) {
+        // TODO what to do with indigo session?
+        try {
+
+        }
+        catch (...) {
+            LOG(INFO) << "Skipped molecule: " << smiles;
+        }
+    }
+    LOG(INFO) << "Finish molecules table loading";
+    return result;
+}
+
 shared_ptr<BallTreeSearchEngine> loadBallTree(const Args &args) {
     BufferedReader ballTreeReader(args.ballTreePath);
     LOG(INFO) << "Start ball tree loading";
     shared_ptr<BallTreeSearchEngine> res;
-    if (args.dbType == DbType::InRam)
+    if (args.dbType == DbType::InRamSmiles)
         res = make_shared<BallTreeRAMSearchEngine>(ballTreeReader, args.dbDataDirsPaths);
     else {
         res = make_shared<BallTreeDriveSearchEngine>(ballTreeReader, args.dbDataDirsPaths);
@@ -193,7 +190,7 @@ shared_ptr<vector<PropertiesFilter::Properties>> loadPropertiesTable(const std::
     return res;
 }
 
-shared_ptr<SearchData> loadRamSearchData(const Args &args, TimeTicker &timeTicker) {
+shared_ptr<SearchData> loadRamSmilesSearchData(const Args &args, TimeTicker &timeTicker) {
     HuffmanCoder huffmanCoder = HuffmanCoder::load(args.huffmanCoderPath);
     auto loadBallTreeTask = async(launch::async, loadBallTree, cref(args));
     auto loadSmilesTableTask = async(launch::async, loadSmilesTable, cref(args.smilesTablePath), cref(huffmanCoder));
@@ -205,8 +202,12 @@ shared_ptr<SearchData> loadRamSearchData(const Args &args, TimeTicker &timeTicke
     auto idConverterPtr = loadIdConverterTask.get();
     auto propertiesTablePtr = loadPropertyTableTask.get();
 
-    return make_shared<RamSearchData>(ballTreePtr, idConverterPtr, timeTicker, args.ansCount, args.threadsCount,
-                                      smilesTablePtr, propertiesTablePtr);
+    return make_shared<RamSmilesSearchData>(ballTreePtr, idConverterPtr, timeTicker, args.ansCount, args.threadsCount,
+                                            smilesTablePtr, propertiesTablePtr);
+}
+
+shared_ptr<SearchData> loadRamMoleculesSearchData(const Args &args, TimeTicker &timeTicker) {
+    // TODO
 }
 
 shared_ptr<SearchData> loadDriveSearchData(const Args &args, TimeTicker &timeTicker) {
@@ -220,10 +221,12 @@ shared_ptr<SearchData> loadDriveSearchData(const Args &args, TimeTicker &timeTic
 }
 
 shared_ptr<SearchData> loadSearchData(const Args &args, TimeTicker &timeTicker) {
-    if (args.dbType == qtr::DbType::InRam) {
-        return loadRamSearchData(args, timeTicker);
-    } else if (args.dbType == qtr::DbType::OnDrive) {
+    if (args.dbType == DbType::InRamSmiles) {
+        return loadRamSmilesSearchData(args, timeTicker);
+    } else if (args.dbType == DbType::OnDrive) {
         return loadDriveSearchData(args, timeTicker);
+    } else if (args.dbType == DbType::InRamMolecules) {
+        return loadRamMoleculesSearchData(args, timeTicker);
     }
     throw std::logic_error("Undefined db type");
 }
@@ -235,11 +238,11 @@ void runDb(const Args &args) {
     timeTicker.tick("Db data loading");
 
     shared_ptr<RunMode> mode = nullptr;
-    if (args.mode == Args::Mode::Interactive)
+    if (args.mode == RunModeType::Interactive)
         mode = make_shared<InteractiveMode>(searchData);
-    else if (args.mode == Args::Mode::FromFile)
+    else if (args.mode == RunModeType::FromFile)
         mode = make_shared<FromFileMode>(searchData, args.inputFile);
-    else if (args.mode == Args::Mode::Web)
+    else if (args.mode == RunModeType::Web)
         mode = make_shared<WebMode>(searchData);
     mode->run();
 

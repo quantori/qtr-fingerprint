@@ -4,7 +4,7 @@
 
 #include "RunMode.h"
 #include "RunDbUtils.h"
-#include "IndigoRamFilter.h"
+#include "IndigoRamSmilesFilter.h"
 #include "IndigoDriveFilter.h"
 
 namespace qtr {

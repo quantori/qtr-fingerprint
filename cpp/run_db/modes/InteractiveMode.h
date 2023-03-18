@@ -33,18 +33,20 @@ namespace qtr {
                     queryData->waitAllTasks();
                     LOG(INFO) << "Found " << queryData->getCurrentAnswersCount() << " answers";
                     auto answers = queryData->getAnswers(0, 5).second;
-                    if (_searchData->getClass() == SearchData::DerivedClasses::RamSearchData) {
+                    if (_searchData->getDbType() == DbType::InRamSmiles) {
                         LOG(INFO) << "Answer examples:";
-                        const auto *ramSearchData = dynamic_cast<const RamSearchData *>(_searchData.get());
+                        const auto *ramSearchData = dynamic_cast<const RamSmilesSearchData *>(_searchData.get());
                         for (auto &i: answers) {
                             LOG(INFO) << (*ramSearchData->smilesTable)[i];
                         }
-                    }
-                    else if (_searchData->getClass() == SearchData::DerivedClasses::DriveSearchData) {
+                    } else if (_searchData->getDbType() == DbType::OnDrive) {
                         LOG(INFO) << "Answer examples:";
-                        for (auto& i : answers) {
+                        for (auto &i: answers) {
                             LOG(INFO) << i;
                         }
+                    }
+                    else if (_searchData->getDbType() == DbType::InRamMolecules) {
+                        // TODO
                     }
                     std::cout << "Search time: " << _searchData->timeTicker.tick("Search time") << std::endl;
                 } catch (std::exception &e) {
