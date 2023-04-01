@@ -1,7 +1,10 @@
 set(CMAKE_CXX_STANDARD 20)
 find_package(OpenMP REQUIRED)
 
-add_executable(playground main.cpp /home/Vsevolod.Vaskin/qtr-fingerprint/cpp/third_party/Indigo/core/indigo-core/common/gzip/gzip_output.cpp)
+file(GLOB RdKitSrc "../third_party/rdkit/Code/*.cpp")
+add_executable(playground main.cpp
+        ../third_party/Indigo/core/indigo-core/common/gzip/gzip_output.cpp
+        ${RdKitSrc})
 
 target_include_directories(playground
         PUBLIC .
@@ -11,7 +14,9 @@ target_include_directories(playground
         PUBLIC ../third_party/Indigo/core/indigo-core/common
         PUBLIC ../third_party/Indigo/third_party/object_threadsafe
         PUBLIC ../third_party/abseil-cpp
+        PUBLIC ../third_party/rdkit/Code
         )
+
 
 target_link_directories(playground PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../build/lib)
 target_link_libraries(playground indigo indigo-cpp OpenMP::OpenMP_CXX)

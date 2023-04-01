@@ -17,7 +17,21 @@ using namespace std;
 using namespace indigo_cpp;
 using namespace qtr;
 
+#include <string>
+
+#include <GraphMol/GraphMol.h>
+#include <GraphMol/FileParsers/MolSupplier.h>
+#include <GraphMol/FileParsers/MolWriters.h>
+
+#include <GraphMol/GraphMol.h>
+#include <GraphMol/SmilesParse/SmilesParse.h>
+#include <GraphMol/FileParsers/FileParsers.h>
+
 int main() {
+
+    {
+        std::shared_ptr<RDKit::ROMol> mol3( RDKit::SmilesToMol( "Cc1cccc" ) );
+    }
 
     auto indigoSessionPtr = IndigoSession::create();
     TimeMeasurer timeMeasurer;
