@@ -1,0 +1,45 @@
+\documentclass{article}
+
+\usepackage[T1,T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\usepackage{amstext}
+\usepackage{hyperref}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{chemfig}
+\usepackage{wrapfig}
+
+% aliases
+\newcommand{\F}{\mathbb{F}}
+\newcommand{\M}{\mathbb{M}}
+\newcommand{\T}{\mathbb{T}}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+\title{Substructure search optimizations}
+
+\begin{document}
+\maketitle
+
+\input{abstract}
+
+\section{Abount Fingerprint‑based screening}
+
+{\color{red} Что-то примерно, как описано в \href{https://jcheminf.biomedcentral.com/counter/pdf/10.1186/s13321-018-0282-y.pdf}{Sachem поиске}}
+
+
+
+
+\input{algorithm}
+\input{benchmarks}
+\input{references}
+
+\end{document}
