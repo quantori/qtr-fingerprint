@@ -12,7 +12,7 @@ namespace qtr {
     crow::json::wvalue
     WebMode::prepareResponse(BallTreeQueryData &queryData, size_t minOffset, size_t maxOffset) {
         cout << minOffset << " " << maxOffset << endl;
-        auto [isFinish, result] = queryData.getAnswers(minOffset, maxOffset);
+        auto [isFinished, result] = queryData.getAnswers(minOffset, maxOffset);
         LOG(INFO) << "found " << result.size() << " results";
         crow::json::wvalue::list molecules;
         molecules.reserve(result.size());
@@ -23,11 +23,11 @@ namespace qtr {
         }
         return crow::json::wvalue{
                 {"molecules",  molecules},
-                {"isFinished", isFinish}
+                {"isFinished", isFinished}
         };
     }
 
-    PropertiesFilter::Bounds extractBounds(const crow::json::rvalue &json) {
+    static PropertiesFilter::Bounds extractBounds(const crow::json::rvalue &json) {
         PropertiesFilter::Bounds bounds;
 
         for (size_t i = 0; i < std::size(PropertiesFilter::propertyNames); ++i) {
@@ -49,7 +49,6 @@ namespace qtr {
         return bounds;
     }
 
-
     void WebMode::run() {
         crow::SimpleApp app;
         mutex newTaskMutex;
@@ -58,37 +57,57 @@ namespace qtr {
         vector<unique_ptr<BallTreeQueryData>> queries;
 
         CROW_ROUTE(app, "/query")
-                .methods(crow::HTTPMethod::POST)([&queries, &newTaskMutex, this, &smilesList](const crow::request &req) {
-                    auto json = crow::json::load(req.body);
-                    if (!json)
-                        return crow::response(400);
+                .methods(crow::HTTPMethod::POST)(
+                        [&queries, &newTaskMutex, this, &smilesList](const crow::request &req) {
+                            auto json = crow::json::load(req.body);
+                            if (!json)
+                                return crow::response(400);
 
-                    lock_guard<mutex> lock(newTaskMutex);
-                    smilesList.emplace_back(json["smiles"].s());
-                    string &currSmiles = smilesList.back();
+                            lock_guard<mutex> lock(newTaskMutex);
+                            smilesList.emplace_back(json["smiles"].s());
+                            string &currSmiles = smilesList.back();
 
-                    auto bounds = extractBounds(json);
-                    size_t queryId = queries.size();
-                    auto [error, queryData] = runSearch(*_searchData, currSmiles, bounds);
-                    if (error) {
-                        LOG(WARNING) << "Cannot start search for smilesList: " << currSmiles;
-                        return crow::response(to_string(-1));
-                    }
-                    queries.emplace_back(std::move(queryData));
+                            auto bounds = extractBounds(json);
+                            size_t queryId = queries.size();
+                            auto [error, queryData] = runSearch(*_searchData, currSmiles, bounds);
+                            if (error) {
+                                LOG(WARNING) << "Cannot start search for smilesList: " << currSmiles;
+                                return crow::response(to_string(-1));
+                            }
+                            queries.emplace_back(std::move(queryData));
 
-                    return crow::response(to_string(queryId));
-                });
+                            return crow::response(to_string(queryId));
+                        });
 
         CROW_ROUTE(app, "/query")
                 .methods(crow::HTTPMethod::GET)([&queries, this](const crow::request &req) {
                     auto searchId = crow::utility::lexical_cast<uint64_t>(req.url_params.get("searchId"));
-                    auto offset = crow::utility::lexical_cast<int>(req.url_params.get("offset"));
-                    auto limit = crow::utility::lexical_cast<int>(req.url_params.get("limit"));
+                    auto offset = crow::utility::lexical_cast<uint64_t>(req.url_params.get("offset"));
+                    auto limit = crow::utility::lexical_cast<uint64_t>(req.url_params.get("limit"));
 
                     if (searchId >= queries.size())
                         return crow::json::wvalue();
 
                     return prepareResponse(*queries[searchId], offset, offset + limit);
+                });
+
+        CROW_ROUTE(app, "/fastquery")
+                .methods(crow::HTTPMethod::GET)([&newTaskMutex, this](const crow::request &req) {
+                    auto limit = crow::utility::lexical_cast<uint64_t>(req.url_params.get("limit"));
+                    auto json = crow::json::load(req.body);
+                    if (!json)
+                        return crow::json::wvalue(to_string(-1));
+                    auto smiles = json["smiles"].s();
+                    auto bounds = extractBounds(json);
+
+                    lock_guard<mutex> lock(newTaskMutex);
+                    auto [error, queryData] = runSearch(*_searchData, smiles, bounds);
+                    if (error) {
+                        LOG(WARNING) << "Cannot start search for smilesList: " << smiles;
+                        return crow::json::wvalue(to_string(-1));
+                    }
+                    queryData->waitAllTasks();
+                    return prepareResponse(*queryData, 0, limit);
                 });
 
         app.port(8080).concurrency(2).run();
