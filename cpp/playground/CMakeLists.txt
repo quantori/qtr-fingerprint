@@ -1,7 +1,7 @@
 set(CMAKE_CXX_STANDARD 20)
 find_package(OpenMP REQUIRED)
 
-add_executable(playground main.cpp /home/Vsevolod.Vaskin/qtr-fingerprint/cpp/third_party/Indigo/core/indigo-core/common/gzip/gzip_output.cpp)
+add_executable(playground main.cpp ../third_party/Indigo/core/indigo-core/common/gzip/gzip_output.cpp)
 
 target_include_directories(playground
         PUBLIC .
