@@ -91,7 +91,14 @@ if __name__ == "__main__":
 # pubchem
 # errors: 12, successes: 88
 # 278.009s -- Total time
+# errors: 12, successes: 88
+# 273.448s -- Total time
+
 
 # qtr search
 # errors: 0, successes: 100
 # 213.895s -- Total time
+# errors: 0, successes: 100
+# 184.636s -- Total time
+# errors: 0, successes: 100
+# 195.417s -- Total time

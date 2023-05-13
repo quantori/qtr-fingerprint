@@ -184,12 +184,14 @@ shared_ptr<IdConverter> loadIdConverter(const std::filesystem::path &idToStringD
 }
 
 shared_ptr<vector<PropertiesFilter::Properties>> loadPropertiesTable(const std::filesystem::path &propertiesTablePath) {
+    LOG(INFO) << "Start properties table loading";
     auto res = make_shared<vector<PropertiesFilter::Properties>>();
     auto reader = PropertiesTableReader(propertiesTablePath);
     for (const auto &[id, properties]: reader) {
         assert(id == res->size());
         res->emplace_back(properties);
     }
+    LOG(INFO) << "Finish properties table loading";
     return res;
 }
 

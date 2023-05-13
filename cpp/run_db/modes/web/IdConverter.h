@@ -14,12 +14,14 @@ class IdConverter {
 
 public:
     inline explicit IdConverter(const std::filesystem::path &idToStringDirPath) {
+        LOG(INFO) << "Start id converter loading";
         for (auto &filename: qtr::findFiles(idToStringDirPath, ".csv")) {
             qtr::IdToStringReader reader(filename);
             for (const auto &[dbId, outerId]: reader)
                 _fromDbId[dbId] = {outerId, _libraryIds.size()};
             _libraryIds.emplace_back(filename.stem());
         }
+        LOG(INFO) << "Finish id converter loading";
     }
 
     inline std::pair<const std::string &, const std::string &> fromDbId(uint64_t innerId) const {
