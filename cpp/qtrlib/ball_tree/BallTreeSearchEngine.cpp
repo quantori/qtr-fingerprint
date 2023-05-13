@@ -40,7 +40,6 @@ namespace qtr {
         auto startTime = chrono::high_resolution_clock::now();
         queryData.tagStartTask();
         auto filterObject = queryData.getFilterObject();
-        bool timeOuted = false;
         for (size_t i = 0; i < leaves.size() && !queryData.checkShouldStop(); i++) {
             auto res = searchInLeaf(leaves[i], queryData.getQueryFingerprint());
             if (res.empty())
@@ -48,8 +47,7 @@ namespace qtr {
             filterObject->initBallTreeLeaf(getLeafDir(leaves[i]));
             queryData.filterAndAddAnswers(res, *filterObject);
 
-            timeOuted = queryData.checkTimeOut(startTime);
-            if (timeOuted) {
+            if (queryData.checkTimeOut()) {
                 LOG(INFO) << "Search stopped due to timeout";
                 break;
             }

@@ -46,7 +46,7 @@ namespace qtr {
 
         [[nodiscard]] bool checkShouldStop() const;
 
-        [[nodiscard]] bool checkTimeOut(const decltype(std::chrono::high_resolution_clock::now()) &startPoint);
+        [[nodiscard]] bool checkTimeOut();
 
         ~BallTreeQueryData();
 
@@ -56,6 +56,7 @@ namespace qtr {
         std::mutex _resultLock;
         size_t _stopAnswersNumber;
         double _timeLimit;
+        decltype(std::chrono::high_resolution_clock::now()) _startTimePoint;
         std::atomic_size_t _startedTasksCount;
         std::atomic_size_t _finishedTasksCount;
         std::unique_ptr<AnswerFilter> _filter;
