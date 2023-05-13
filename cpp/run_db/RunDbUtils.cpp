@@ -65,7 +65,8 @@ namespace qtr {
             return {true, unique_ptr<BallTreeQueryData>(nullptr)};
         }
         auto filter = createFilter(searchData, querySmiles, queryBounds);
-        auto queryData = make_unique<BallTreeQueryData>(searchData.ansCount, fingerprint, std::move(filter));
+        auto queryData = make_unique<BallTreeQueryData>(searchData.ansCount, searchData.timeLimit, fingerprint,
+                                                        std::move(filter));
         searchData.ballTree->search(*queryData, searchData.threadsCount);
         return {false, std::move(queryData)};
     }

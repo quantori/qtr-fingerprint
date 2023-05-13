@@ -11,9 +11,11 @@
 namespace qtr {
 
     class BallTreeQueryData {
-
     public:
-        explicit BallTreeQueryData(size_t stopAnswersCount, const IndigoFingerprint &query = IndigoFingerprint(),
+        inline static std::atomic_uint64_t timedOutCounter = 0;
+
+        explicit BallTreeQueryData(size_t stopAnswersCount, double timeLimit,
+                                   const IndigoFingerprint &query = IndigoFingerprint(),
                                    std::unique_ptr<AnswerFilter> &&filter = std::make_unique<AlwaysTrueFilter>());
 
         void addAnswers(const std::vector<CIDType> &answers);
@@ -44,16 +46,22 @@ namespace qtr {
 
         [[nodiscard]] bool checkShouldStop() const;
 
+        [[nodiscard]] bool checkTimeOut(const decltype(std::chrono::high_resolution_clock::now()) &startPoint);
+
+        ~BallTreeQueryData();
+
     private:
         IndigoFingerprint _queryFingerprint;
         std::vector<CIDType> _result;
         std::mutex _resultLock;
         size_t _stopAnswersNumber;
+        double _timeLimit;
         std::atomic_size_t _startedTasksCount;
         std::atomic_size_t _finishedTasksCount;
         std::unique_ptr<AnswerFilter> _filter;
         std::atomic_bool _shouldStopProcess;
         std::vector<std::future<void>> _tasks;
+        std::atomic_bool _wasTimeOut;
     };
 
 } // namespace qtr

@@ -35,16 +35,19 @@ ABSL_FLAG(uint64_t, threads_count, -1,
           "Number of threads to process leafs.");
 
 ABSL_FLAG(string, mode, "",
-          "possible modes: interactive, from_file, web");
+          "Possible modes: interactive, from_file, web");
 
 ABSL_FLAG(string, input_file, "",
-          "file to load test molecules from");
+          "File to load test molecules from");
 
 ABSL_FLAG(uint64_t, ans_count, -1,
-          "how many answers program will find");
+          "How many answers program will find");
 
 ABSL_FLAG(string, db_type, "",
           "Possible types: on_drive, in_ram");
+
+ABSL_FLAG(double, time_limit, -1,
+          "Single request time limit in seconds");
 
 struct Args {
 
@@ -62,6 +65,7 @@ struct Args {
     filesystem::path inputFile;
     uint64_t ansCount;
     DbType dbType;
+    double timeLimit;
 
     vector<filesystem::path> dbDataDirsPaths;
     filesystem::path dbOtherDataPath;
@@ -84,6 +88,7 @@ struct Args {
         string modeStr = absl::GetFlag(FLAGS_mode);
         inputFile = absl::GetFlag(FLAGS_input_file);
         string dbTypeStr = absl::GetFlag(FLAGS_db_type);
+        timeLimit = absl::GetFlag(FLAGS_time_limit);
 
         // check empty flags
         checkEmptyArgument(inputFile, "Please specify input_file option");
@@ -93,7 +98,16 @@ struct Args {
         checkEmptyArgument(modeStr, "Please specify mode option");
         checkEmptyArgument(dbTypeStr, "Please specify db_type option");
         if (threadsCount == -1) {
-            LOG(INFO) << "Please specify threads_count option";
+            LOG(ERROR) << "Please specify threads_count option";
+            exit(-1);
+        }
+        if (timeLimit == -1) {
+            LOG(ERROR) << "Please specify time_limit option";
+            exit(-1);
+        }
+
+        if (!filesystem::exists(inputFile)) {
+            LOG(ERROR) << "Input file: " << inputFile << " does not exist";
             exit(-1);
         }
 
@@ -141,7 +155,8 @@ struct Args {
         for (size_t i = 0; i < dbDataDirsPaths.size(); i++) {
             LOG(INFO) << "dbDataDirPaths[" << i << "]: " << dbDataDirsPaths[i];
         }
-        LOG(INFO) << "stopAnswersNumber: " << ansCount;
+        LOG(INFO) << "ansCount: " << ansCount;
+        LOG(INFO) << "timeLimit: " << timeLimit;
         for (size_t i = 0; i < destDirPaths.size(); i++) {
             LOG(INFO) << "destDirPaths[" << i << "]: " << destDirPaths[i];
         }
@@ -208,7 +223,7 @@ shared_ptr<SearchData> loadRamSearchData(const Args &args, TimeTicker &timeTicke
     auto propertiesTablePtr = loadPropertyTableTask.get();
 
     return make_shared<RamSearchData>(ballTreePtr, idConverterPtr, timeTicker, args.ansCount, args.threadsCount,
-                                      smilesTablePtr, propertiesTablePtr);
+                                      args.timeLimit, smilesTablePtr, propertiesTablePtr);
 }
 
 shared_ptr<SearchData> loadDriveSearchData(const Args &args, TimeTicker &timeTicker) {
@@ -218,7 +233,8 @@ shared_ptr<SearchData> loadDriveSearchData(const Args &args, TimeTicker &timeTic
     auto ballTreePtr = loadBallTreeTask.get();
     auto idConverterPtr = loadIdConverterTask.get();
 
-    return make_shared<DriveSearchData>(ballTreePtr, idConverterPtr, timeTicker, args.ansCount, args.threadsCount);
+    return make_shared<DriveSearchData>(ballTreePtr, idConverterPtr, timeTicker, args.ansCount, args.threadsCount,
+                                        args.timeLimit);
 }
 
 shared_ptr<SearchData> loadSearchData(const Args &args, TimeTicker &timeTicker) {

@@ -20,14 +20,16 @@ namespace qtr {
             stopProcess();
     }
 
-    BallTreeQueryData::BallTreeQueryData(size_t stopAnswersCount, const IndigoFingerprint &query,
+    BallTreeQueryData::BallTreeQueryData(size_t stopAnswersCount, double timeLimit, const IndigoFingerprint &query,
                                          unique_ptr <AnswerFilter> &&filter) : _stopAnswersNumber(stopAnswersCount),
+                                                                               _timeLimit(timeLimit),
                                                                                _queryFingerprint(query),
                                                                                _filter(std::move(filter)),
                                                                                _startedTasksCount(0),
                                                                                _finishedTasksCount(0),
                                                                                _shouldStopProcess(false),
-                                                                               _tasks() {}
+                                                                               _tasks(),
+                                                                               _wasTimeOut(false) {}
 
     const IndigoFingerprint &BallTreeQueryData::getQueryFingerprint() const {
         return _queryFingerprint;
@@ -50,7 +52,7 @@ namespace qtr {
     }
 
     void
-    BallTreeQueryData::filterAndAddAnswers(const vector<CIDType> &answers, AnswerFilter &filterObject) {
+    BallTreeQueryData::filterAndAddAnswers(const vector <CIDType> &answers, AnswerFilter &filterObject) {
         vector<CIDType> filteredAnswers;
         for (auto &ans: answers) {
             if (filterObject(ans)) {
@@ -79,11 +81,25 @@ namespace qtr {
         _startedTasksCount++;
     }
 
-    std::unique_ptr<AnswerFilter> BallTreeQueryData::getFilterObject() const {
+    unique_ptr <AnswerFilter> BallTreeQueryData::getFilterObject() const {
         return _filter->copy();
     }
 
     bool BallTreeQueryData::checkShouldStop() const {
         return _shouldStopProcess;
     }
+
+    bool BallTreeQueryData::checkTimeOut(const decltype(chrono::high_resolution_clock::now()) &startPoint) {
+        auto now = chrono::high_resolution_clock::now();
+        chrono::duration<double> duration = now - startPoint;
+        bool timeOut = duration.count() > _timeLimit;
+        if (timeOut)
+            _wasTimeOut = true;
+        return timeOut;
+    }
+
+    BallTreeQueryData::~BallTreeQueryData() {
+        BallTreeQueryData::timedOutCounter += _wasTimeOut;
+    }
+
 } // namespace qtr

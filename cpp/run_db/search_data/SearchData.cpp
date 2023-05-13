@@ -6,8 +6,7 @@ namespace qtr {
 
     SearchData::SearchData(std::shared_ptr<const BallTreeSearchEngine> ballTree,
                            std::shared_ptr<const IdConverter> idConverter, TimeTicker &timeTicker,
-                           size_t ansCount,
-                           size_t threadCount) :
+                           size_t ansCount, size_t threadCount, double timeLimit) :
             ballTree(std::move(ballTree)), idConverter(std::move(idConverter)), timeTicker(timeTicker),
-            ansCount(ansCount), threadsCount(threadCount) {}
+            ansCount(ansCount), threadsCount(threadCount), timeLimit(timeLimit) {}
 } // qtr

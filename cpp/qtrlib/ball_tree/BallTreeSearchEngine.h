@@ -40,7 +40,7 @@ namespace qtr {
 
         void findLeaves(const IndigoFingerprint &fingerprint, size_t currentNode, std::vector<CIDType> &leaves) const;
 
-        virtual std::vector<CIDType> searchInLeaf(size_t leafId, const IndigoFingerprint &query) const = 0;
+        [[nodiscard]] virtual std::vector<CIDType> searchInLeaf(size_t leafId, const IndigoFingerprint &query) const = 0;
 
         [[nodiscard]] virtual std::vector<std::vector<uint64_t>>
         divideLeavesIntoGroups(const std::vector<uint64_t> &leaves, size_t threads) const = 0;

@@ -21,8 +21,7 @@ namespace qtr {
         virtual ~SearchData() = default;
 
         SearchData(std::shared_ptr<const BallTreeSearchEngine> ballTree, std::shared_ptr<const IdConverter> idConverter,
-                   TimeTicker &timeTicker, size_t ansCount,
-                   size_t threadCount);
+                   TimeTicker &timeTicker, size_t ansCount, size_t threadCount, double timeLimit);
 
 
         std::shared_ptr<const BallTreeSearchEngine> ballTree;
@@ -30,6 +29,7 @@ namespace qtr {
         TimeTicker &timeTicker;
         size_t ansCount;
         size_t threadsCount;
+        double timeLimit;
     };
 
 } // qtr
