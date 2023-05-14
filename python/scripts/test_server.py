@@ -85,7 +85,7 @@ def load_queries(filename):
 
 
 if __name__ == "__main__":
-    queries = load_queries("queries3488_sample_100.txt")
+    queries = load_queries("queries_3488_sample_100.txt")
     estimate_time(pubchem_server, queries, 10000)
 
 # pubchem
