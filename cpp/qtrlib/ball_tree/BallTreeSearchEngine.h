@@ -45,7 +45,7 @@ namespace qtr {
         [[nodiscard]] virtual std::vector<std::vector<uint64_t>>
         divideLeavesIntoGroups(const std::vector<uint64_t> &leaves, size_t threads) const = 0;
 
-        void processLeafGroup(BallTreeQueryData &queryData, std::vector <uint64_t> leaves) const;
+        void processLeafGroup(BallTreeQueryData &queryData, const std::vector <uint64_t> &leaves) const;
 
         std::vector<std::filesystem::path> _leafDirPaths;
     };

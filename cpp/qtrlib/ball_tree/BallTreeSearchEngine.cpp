@@ -36,7 +36,7 @@ namespace qtr {
     }
 
     void
-    BallTreeSearchEngine::processLeafGroup(BallTreeQueryData &queryData, vector<uint64_t> leaves) const {
+    BallTreeSearchEngine::processLeafGroup(BallTreeQueryData &queryData, const vector<uint64_t> &leaves) const {
         auto startTime = chrono::high_resolution_clock::now();
         queryData.tagStartTask();
         auto filterObject = queryData.getFilterObject();
@@ -46,11 +46,9 @@ namespace qtr {
                 continue;
             filterObject->initBallTreeLeaf(getLeafDir(leaves[i]));
             queryData.filterAndAddAnswers(res, *filterObject);
-
-            if (queryData.checkTimeOut()) {
-                LOG(INFO) << "Search stopped due to timeout";
-                break;
-            }
+        }
+        if (queryData.checkTimeOut()) {
+            LOG(INFO) << "Search stopped due to timeout";
         }
 
         chrono::duration<double> duration = chrono::high_resolution_clock::now() - startTime;

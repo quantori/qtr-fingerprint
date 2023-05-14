@@ -30,8 +30,7 @@ namespace qtr {
                                                                                _shouldStopProcess(false),
                                                                                _tasks(),
                                                                                _wasTimeOut(false),
-                                                                               _startTimePoint(
-                                                                                       chrono::high_resolution_clock::now()) {}
+                                                                               _startTimePoint(chrono::steady_clock::now()) {}
 
     const IndigoFingerprint &BallTreeQueryData::getQueryFingerprint() const {
         return _queryFingerprint;
@@ -94,11 +93,15 @@ namespace qtr {
     }
 
     bool BallTreeQueryData::checkTimeOut() {
-        auto now = chrono::high_resolution_clock::now();
+        if (_wasTimeOut)
+            return true;
+        auto now = chrono::steady_clock::now();
         chrono::duration<double> duration = now - _startTimePoint;
         bool timeOut = duration.count() > _timeLimit;
-        if (timeOut)
+        if (timeOut) {
             _wasTimeOut = true;
+            _shouldStopProcess = true;
+        }
         return timeOut;
     }
 

@@ -56,7 +56,7 @@ namespace qtr {
         std::mutex _resultLock;
         size_t _stopAnswersNumber;
         double _timeLimit;
-        decltype(std::chrono::high_resolution_clock::now()) _startTimePoint;
+        decltype(std::chrono::steady_clock::now()) _startTimePoint;
         std::atomic_size_t _startedTasksCount;
         std::atomic_size_t _finishedTasksCount;
         std::unique_ptr<AnswerFilter> _filter;
