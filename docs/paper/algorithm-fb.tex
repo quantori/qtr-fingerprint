@@ -1,0 +1,150 @@
+\section{Algorithm description}
+
+\subsection{Notation}
+
+The objective of the search is primarily to identify specific substructures within the molecules present in the 
+given database $\M$.
+
+To facilitate this search, we employ the concept of a ``fingerprint'', i.e. a binary string of a constant length 
+${\sf fl}$ corresponding to every molecule. We can perform a fingerprint using a function ${\sf fp}: \M \to \F$, 
+where $\F = \{{\sf fp}(M) \mid M \in \M\}$. This function takes a molecule from the set $\M$ and returns a binary 
+string, the fingerprint in the set $\F$. Each fingerprint $F$ has bits  $F[i]$ for $i\in\{ 1,\ldots, {\sf fl}\}$.
+
+To optimize the search process within the database $\M$, we aim to organize these fingerprints $\F$ in a 
+structured manner. We propose the construction of a binary search tree, denoted as $\T$. Each node $\tt{v}$ 
+in the tree $\T$ holds a set $\tt{v.set}$ of fingerprints. The tree is a complete binary structure, having a 
+specific depth $d$. The root of this tree is represented as $\T.\tt{root}$.
+
+The left and right subtrees of any node $\tt{v}$ are denoted as $\tt{v.left}$ and $\tt{v.right}$, respectively. 
+Each node also has a set of all leaves in its subtree, represented as $\tt{v.leaves}$. 
+
+In the next sections, we provide further details on how this tree is utilized in the substructure search process.
+
+
+
+
+
+
+\subsection{Main idea}
+Instead of working directly with molecules, we will construct a set $\F$ for a given set $\M$, and solve the problem 
+of searching for $\{F' \in \F \mid F \text{ is a submask of } F'\}$ for a given fingerprint $F$. To search for all 
+superstructures of a molecule $M$, we first find the set $\F_M$. The answer will then be 
+$$\left\{ M' \in \bigcup\limits_{F' \in \F_M} {\sf fp}^{-1}(F') \mid M' \text{ is a substructure of } M \right\},$$ 
+where ${\sf fp}^{-1}(F') = \left\{M' \in \M \mid {\sf fp}(M') = F'\right\}$, and the verification of ``$M'$ is a 
+substructure of $M$'' is performed using external algorithms.
+
+To efficiently search for $F_M$, we will use a BallTree with the Russel-Rao metric for the set of binary strings $\F$. 
+In fact, this is a fairly specific case of BallTree, so we will describe our idea below without tying it to the 
+generalized version of BallTree. The connection between our tree and BallTree is described somewhat imprecisely.
+
+\begin{itemize}
+\item For a given molecule $M$, we construct $F = {\sf fp}(M)$. Then, we launch a search in the tree for $F$.
+\item We recursively descend into both children, starting from the root. This step can be parallelized to improve 
+performance by exploring the children simultaneously.
+\item If we reach a vertex ${\tt v}$ for which $F \not\le {\tt v.centroid}$, we stop the recursive descent 
+from ${\tt v}$.
+\item If we reach a leaf $\ell$ in this manner and $F \le \ell.{\tt centroid}$, we add to $F_M$ the 
+set ${F' \in {\tt v.set} \mid {\sf fp}(M) \le F'}$ (i.e., in the leaf, we perform a regular enumeration).
+\end{itemize}
+
+The pseudocode for the fingerprint search function in the tree is described in Algorithm \ref{alg:FindInSubtree}. 
+The pseudocode for the function that searches for superstructures of a given molecule is described in 
+Algorithm \ref{alg:FindMetaStructures}.
+
+\begin{algorithm}
+  \caption{Searching for all matching fingerprints in a subtree}\label{alg:FindInSubtree}
+  \begin{algorithmic}[1]
+    \Require{${\tt v}$ is a tree vertex, $F$ is a fingerprint}
+    \Ensure{$\{F' \in \bigcup\limits_{\ell \in {\tt v.leaves}} \ell.{\tt set} \mid F \le F' \}$}
+    \Procedure{FindInSubtree}{${\tt v}, F$} 
+    \If{$F \not\le {\tt v.centroid}$} \label{alg:FindInSubtree:line:RecursionCut}
+      \State \textbf{return} $\varnothing$
+    \ElsIf{${\tt v} \text{ is leaf}$}
+      \State \textbf{return} $\{F' \in {\tt v.set} \mid F \le F' \}$ 
+    \Else
+      \State ${\tt left} \gets $ \Call{FindInSubtree}{${\tt v.left}, F$}  
+      \State ${\tt right} \gets $ \Call{FindInSubtree}{${\tt v.right}, F$} 
+      \State \textbf{return} \Call{Concatenate}{${\tt left}, {\tt right}$} 
+    \EndIf
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+  \caption{Searching for all superstructures of a given molecule} \label{alg:FindMetaStructures}
+  \begin{algorithmic}[1]
+    \Require $M $ is a molecule 
+    \Ensure $\{M' \in \M \mid \mathrm{substructure}(M, M') \}$ 
+    \Procedure{FindMetaStructures}{$M $}
+    \State $F \gets {\sf fp}(M) $ 
+    \State $F_M \gets $ \Call{FindInSubtree}{$\T.{\tt root}, F$}
+    \State \textbf{return} $\bigcup\limits_{F' \in F_M} {\sf fp}^{-1}(F')$ \Comment{${\sf fp}^{-1}(F) = \{M' \in \M \mid {\sf fp}(M) = F\}$} 
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
+
+\subsection{Building the tree}
+
+\begin{algorithm}
+  \caption{Building the tree} \label{alg:BuildTree}
+  \begin{algorithmic}[1]
+    \Require $\F$ is the set of all fingerprints, $d$ is the depth of the tree
+    \Ensure $\T $ is the BallTree for the superstructure fingerprint search 
+    \Procedure{BuildTree}{$\F, d$}
+      \State ${\tt v} \gets$ new node
+      \If{$d = 1$} 
+      %\Comment{{\color{red} уточнить, остановка на $d = 1$ или на $d = 0$}} 
+	\State ${\tt v.set} \gets \F$ 
+	\State ${\tt v.centroid} \gets \bigvee\limits_{F \in \F} F$ 
+	\State \textbf{return} ${\tt v}$ 
+      \Else 
+        \State $\F_l, \F_r \gets $ \Call{SplitFingerprints}{$\F$}
+        \State ${\tt v.left} \gets $ \Call{BuildTree}{$\F_l, d - 1$} 
+	\State ${\tt v.right} \gets $ \Call{BuildTree}{$\F_r, d - 1$}
+	\State ${\tt v.centroid} \gets {\tt v.left.centroid} \lor {\tt v.right.centroid}$ 
+        \State \textbf{return} ${\tt v}$ 
+      \EndIf
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
+
+To start, let's create a trivial tree with a single node, denoted as $\T.{\tt root}$. Assign $\T.{\tt root.set} = \F$. 
+Next, we will inductively split the leaves of the tree into two parts, thereby adding new nodes to the tree.
+
+More formally, for each leaf node $\ell$ of the tree, we will divide $\ell.{\tt set}$ using a specific function 
+called SplitFingerprints: $\F_l, \F_r \gets \text{SplitFingerprints}(\ell.{\tt set})$ ($\F_l \sqcup \F_r = \ell.{\tt set}$).
+Next, we will recursively build trees for $\ell.{\tt left}, \ell.{\tt right}$ using the sets $\F_l, \F_r$.
+
+We will continue splitting the leaves in this manner until $\T$ becomes a full binary tree with depth $d$. 
+The pseudocode for the algorithm described above can be found in \ref{alg:BuildTree}.
+
+{ \color{red} We want somewhere to show that $\T.{\tt root} \gets $ BuildTree($\F, d$) }
+% после добавления предыдущей строчки заголовки алгоритмов красятся. 
+
+\begin{algorithm}
+  \caption{Algorithm for splitting fingerprints in parts during tree construction} \label{alg:SplitFingerprints}
+  \begin{algorithmic}[1]
+    \Require set $\F$ of fingerprints to be split
+    \Ensure the split $\F_l, \F_r$ of the set $\F$
+    \Procedure{SplitFingerprints}{$\F $}
+      \State $b \gets \argmin\limits_{i}\{ \left| |\F| - 2k \right| \mid k = \# \{F \in \F \mid F_i = 1 \} \}$ %\Comment{{\color{red} стоит ли пояснить формулу?}}
+      \State $\F_l \gets \{F \in \F \mid F[i] = 0\}$
+      \State $\F_r \gets \{F \in \F \mid F[i] = 1\}$ 
+      \If {$|\F_l| > \lfloor \frac{n}{2} \rfloor$}
+	\State $\F_r \gets \F_r \ \cup$ \Call{TakeLastElements}{$\F_l, |\F_l| - \lfloor \frac{n}{2} \rfloor$}
+	\State $\F_l \gets $ \Call{DropLastElements}{$\F_l, |\F_l| - \lfloor \frac{n}{2} \rfloor$} 
+      \ElsIf{$|\F_r| > \lceil \frac{n}{2} \rceil$}
+	\State $\F_l \gets \F_l \ \cup$ \Call{TakeLastElements}{$\F_r, |\F_r| - \lceil \frac{n}{2} \rceil$}
+	\State $\F_r \gets $ \Call{DropLastElements}{$\F_r, |\F_r| - \lceil \frac{n}{2} \rceil $} 
+      \EndIf
+      \State \textbf{return} $\F_l, \ \F_r$ 
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
+
+We want to perform the splits in such a way that, on average, the search often prunes branches during the traversal. That is, the $if$ statement in line \ref{alg:FindInSubtree:line:RecursionCut} of algorithm \ref{alg:FindInSubtree} should be executed frequently. Let's discuss the function SplitFingerprints in more detail.
+
+Initially, one might consider selecting a specific bit $i$ and assigning all fingerprints $F$ such that $F[i] = 0$ to the left subtree, and those with $F[i] = 1$ to the right subtree. In this case, when searching for superstructures of the fingerprint $F'$, if $F'[i] = 1$, the entire left subtree would be cropped. However, in practice, this approach leads to significant differences between the left and right parts after a few splits, making it difficult to create a deep and balanced tree. Unfortunately, a shallow or unbalanced tree does not offer substantial improvements over a full search, as it barely eliminates any search branches.
+
+Therefore, we suggest the following method: we will still select the bit as mentioned above, but we will divide the fingerprints in a way that ensures the sizes of the resulting partitions match. For instance, if the optimal division of $n$ fingerprints yields parts with sizes $n_0, n_1 (n_0 < n_1 \ \land \ n_0 + n_1 = n)$, then all values with zero will be assigned to the left partition, while the values with one will be distributed to achieve final left and right partition sizes of $\lfloor\frac{n}{2}\rfloor, \lceil \frac{n}{2} \rceil$ respectively. If $n_0 > n_1$, we will proceed symmetrically. The algorithm for the SplitFingerprints function can be found in the pseudocode \ref{alg:SplitFingerprints}.
+

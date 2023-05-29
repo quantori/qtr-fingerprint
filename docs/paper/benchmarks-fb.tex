@@ -1,0 +1,46 @@
+\section{Benchmarks}
+
+In this study, we have carried out comprehensive benchmarking to assess the performance of our algorithm, which is an extension 
+of the Bingo fingerprinting system, in comparison with established indices, namely Bingo and Sachem/Lucy. Our benchmarking process 
+was performed under the following conditions:
+
+\begin{itemize}
+\item OS: Ubuntu 22.04
+\item Processor: Intel Xeon E5-2686 v4 (Broadwell)
+\item Clock speed: 2.7 GHz
+\item RAM: 120 GB
+\end{itemize}
+
+The query dataset used for benchmarking was retrieved from \url{https://hg.sr.ht/~dalke/sqc/browse?rev=tip}, which contains 3488 
+relevant queries for substructure search. Ten queries were excluded due to various issues, resulting in a final set of 3478 compounds.
+
+We believe that this comparison is appropriate because the Sachem search in the referenced study was conducted in a similar manner. 
+However, there are some notable differences between our testing conditions and those of the referenced studies. Our testing was 
+performed on a processor with a higher clock speed (2.7 GHz versus 2.6 GHz), the database used in our tests was larger (113M 
+compared to 94M), and our search was conducted for the first 10,000 results.
+
+Despite these differences, the benchmark results provide a meaningful comparison of the relative efficiencies of the three systems. 
+For a single-threaded in-memory execution, our algorithm demonstrates competitive performance, and it also shows the potential for 
+parallelization, exhibiting substantial improvements when executed on 16 threads in memory.
+
+The table below summarizes these benchmark timings, providing a clear comparison between our algorithm, Bingo, and Sachem/Lucy.
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+    \hline
+    \% & \begin{tabular}{@{}c@{}}Our Algorithm,\\ single-threaded\\ in-memory\end{tabular} (s) & \begin{tabular}{@{}c@{}}Our Algorithm,\\ 16-threaded\\ in-memory\end{tabular} (s) & Bingo (s) & Sachem/Lucy (s) \\
+    \hline
+    50\% & 2.17443 & 0.337058 & 1 & - \\
+    60\% & 3.83995 & 0.525275 & - & - \\
+    70\% & 4.87392 & 0.677609 & - & - \\
+    80\% & 6.71327 & 0.895 & 10 & - \\
+    85\% & - & - & - & 1 \\
+    90\% & 12.9814 & 1.65519 & - & - \\
+    95\% & 30.2751 & 3.75599 & 100 & 10 \\
+    98\% & - & - & - & 10 \\
+    100\% & - & - & - & $<$80 \\
+    \hline
+\end{tabular}
+\end{center}
+
+This thorough analysis offers valuable insights into the performance and potential scalability of our algorithm, especially when it comes to parallel computing.
