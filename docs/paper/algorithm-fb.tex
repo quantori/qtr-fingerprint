@@ -1,9 +1,10 @@
 \section{Algorithm description}
 
 \subsection{Notation and main idea}
-The objective of our research is to facilitate the identification of specific substructures within the molecules from a database $\M$. For this, we utilize the concept of a ``fingerprint'', a binary string of constant length ${\sf fl}$, uniquely corresponding to each molecule. To perform this mapping, we define a function ${\sf fp}: \M \to \F$ that takes a molecule from the set $\M$ and produces its corresponding fingerprint in the set $\F$.
+The objective of our research is to facilitate the identification of specific substructures within the molecules from a database $\M$. For this, we utilize the concept of a ``fingerprint'', a binary string of constant length ${\sf fl}$, uniquely corresponding to each molecule.
+{\color{red} "uniquely corresponding" звучит так, будто fp~--- это биекция, что не является правдой. Фингерпринты разных молекул могут совпадать. } To perform this mapping, we define a function ${\sf fp}: \M \to \F$ that takes a molecule from the set $\M$ and produces its corresponding fingerprint in the set $\F$. {\color{red} На мой взгляд написано слишком кратко про фингерпринты. Кажется, если человек не в теме, то он может не понять, что это за сопоставление молекулам бинарных строк, зачем оно нужно и почему оно эффективно реализует этап filter}
 
-To make the substructure search process more efficient, we propose organizing these fingerprints in a binary search tree, denoted as $\T$. Each node $\tt{v}$ in the tree $\T$ holds a set $\tt{v.set}$ of fingerprints. The tree is binary and complete, having a specific depth $d$.
+To make the substructure search process more efficient, we propose organizing these fingerprints in a binary search tree, denoted as $\T$. Each node $\tt{v}$ in the tree $\T$ holds a set $\tt{v.set}$ of fingerprints. {\color{red} v.set определён только в листьях. Во внутренних вершинах ничего не храним.} The tree is binary and complete, having a specific depth $d$.
 
 In this tree, the root, left, and right subtrees of a node $\tt{v}$ are represented as $\T.\tt{root}$, $\tt{v.left}$, and $\tt{v.right}$, respectively. Each node also has a set of all leaves in its subtree, denoted as $\tt{v.leaves}$. A unique concept to our approach is the centroid, ${\tt v.centroid}$, recorded at each node $v$. The centroid is defined as a fingerprint $F$ for which $F[i] = 1$ if and only if there exists another fingerprint $F'$ in the subtree of $\tt{v}$ such that $F'[i] = 1$. This is represented as
 $${\tt v.centroid} = \bigvee\limits_{\ell \in {\tt v.leaves}}\bigvee\limits_{F \in \ell.{\tt set}} F.$$ 
@@ -11,7 +12,7 @@ This concept of the centroid is inspired by BallTree literature.
 
 Our search process is designed to locate all fingerprints $F'$ in the set $\F$ where $F$ is a submask of $F'$. This search relies on the relation $F_1 \le F_2$ for fingerprints $F_1, F_2$ that holds true if and only if for every $i \in {1, 2, \ldots, {\sf fl}}, \ F_1[i] \le F_2[i]$. 
 
-The search starts from the root and recursively descends into both subtrees. Note that here we can improve the performance by parallelizing this step to explore both subtrees simultaneously. We stop the recursive descent if we reach a node ${\tt v}$ where $F \not\le {\tt v.centroid}$. Conversely, if we reach a leaf $\ell$ and $F \le \ell.{\tt centroid}$, we add to $\F_M$ the set $\{F' \in {\tt v.set} \mid {\sf fp}(M) \le F'\}$.
+The search starts from the root and recursively descends into both subtrees. Note that here we can improve the performance by parallelizing this step to explore both subtrees simultaneously. We stop the recursive descent if we reach a node ${\tt v}$ where $F \not\le {\tt v.centroid}$. Conversely, if we reach a leaf $\ell$ and $F \le \ell.{\tt centroid}$, we add to $\F_M$ the set $\{F' \in {\color{red}{\tt \ell.set}} \mid {\sf fp}(M) \le F'\}$.
 
 Following the generation of $\F_M$, the next phase involves examining each $M'$ in $\bigcup\limits_{F' \in \F_M} {\sf fp}^{-1}(F')$. The objective is to determine whether each $M'$ is a substructure of $M$. This determination is made by employing external algorithms to verify the predicate $\verb|SubStructure|(M', M)$, which is true if and only if $M'$ is a substructure of $M$. 
 
@@ -49,6 +50,8 @@ The pseudocode for the fingerprint search function in the tree is described in A
     \State $F \gets {\sf fp}(M) $ 
     \State $F_M \gets $ \Call{FindInSubtree}{$\T.{\tt root}, F$}
     \State \textbf{return} $\bigcup\limits_{F' \in F_M} {\sf fp}^{-1}(F')$ \Comment{${\sf fp}^{-1}(F) = \{M' \in \M \mid {\sf fp}(M) = F\}$} 
+    \State {\color{red} В коде ошибка. Здесь нет стадии верификации. Должно быть что-то такое:}
+    \State \textbf{return} $\{M' \in \bigcup\limits_{F' \in F_M} {\sf fp}^{-1}(F') \mid \Call{SubStructure}{M, M'}\}$ 
     \EndProcedure
   \end{algorithmic}
 \end{algorithm}
@@ -92,9 +95,9 @@ We will continue splitting the leaves in this manner until $\T$ becomes a full b
     \Require set $\F$ of fingerprints to be split
     \Ensure the split $\F_l, \F_r$ of the set $\F$
     \Procedure{SplitFingerprints}{$\F $}
-      \State $b \gets \argmin\limits_{i}\{ \left| |\F| - 2k \right| \mid k = \# \{F \in \F \mid F_i = 1 \} \}$ %\Comment{{\color{red} стоит ли пояснить формулу?}}
-      \State $\F_l \gets \{F \in \F \mid F[i] = 0\}$
-      \State $\F_r \gets \{F \in \F \mid F[i] = 1\}$ 
+      \State $j \gets \argmin\limits_{i}\{ \left| |\F| - 2k \right| \mid k = \# \{F \in \F \mid F_i = 1 \} \}$ %\Comment{{\color{red} стоит ли пояснить формулу?}}
+      \State $\F_l \gets \{F \in \F \mid F[j] = 0\}$
+      \State $\F_r \gets \{F \in \F \mid F[j] = 1\}$ 
       \If {$|\F_l| > \lfloor \frac{n}{2} \rfloor$}
 	\State $\F_r \gets \F_r \ \cup$ \Call{TakeLastElements}{$\F_l, |\F_l| - \lfloor \frac{n}{2} \rfloor$}
 	\State $\F_l \gets $ \Call{DropLastElements}{$\F_l, |\F_l| - \lfloor \frac{n}{2} \rfloor$} 
@@ -109,6 +112,6 @@ We will continue splitting the leaves in this manner until $\T$ becomes a full b
 
 We want to perform the splits in such a way that, on average, the search often prunes branches during the traversal. That is, the {\bf if} statement in line \ref{alg:FindInSubtree:line:RecursionCut} of algorithm \ref{alg:FindInSubtree} should be executed frequently. Let's discuss the function SplitFingerprints in more detail.
 
-Initially, one might consider selecting a specific bit $i$ and assigning all fingerprints $F$ such that $F[i] = 0$ to the left subtree, and those with $F[i] = 1$ to the right subtree. In this case, when searching for superstructures of the fingerprint $F'$, if $F'[i] = 1$, the entire left subtree would be cropped. However, in practice, this approach leads to significant differences between the left and right parts after a few splits, making it difficult to create a deep and balanced tree. Unfortunately, a shallow or unbalanced tree does not offer substantial improvements over a full search, as it barely eliminates any search branches.
+Initially, one might consider selecting a specific bit $j$ and assigning all fingerprints $F$ such that $F[j] = 0$ to the left subtree, and those with $F[j] = 1$ to the right subtree. In this case, when searching for superstructures of the fingerprint $F'$, if $F'[j] = 1$, the entire left subtree would be cropped. However, in practice, this approach leads to significant differences between the left and right parts after a few splits, making it difficult to create a deep and balanced tree. Unfortunately, a shallow or unbalanced tree does not offer substantial improvements over a full search, as it barely eliminates any search branches.
 
 Therefore, we suggest the following method: we will still select the bit as mentioned above, but we will divide the fingerprints in a way that ensures the sizes of the resulting partitions match. For instance, if the optimal division of $n$ fingerprints yields parts with sizes $n_0, n_1 (n_0 < n_1 \ \land \ n_0 + n_1 = n)$, then all values with zero will be assigned to the left partition, while the values with one will be distributed to achieve final left and right partition sizes of $\lfloor\frac{n}{2}\rfloor, \lceil \frac{n}{2} \rceil$ respectively. If $n_0 > n_1$, we will proceed symmetrically. The algorithm for the SplitFingerprints function can be found in the pseudocode \ref{alg:SplitFingerprints}.

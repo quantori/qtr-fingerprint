@@ -31,17 +31,21 @@ However, as the number of known molecules and the size of chemical databases hav
 which often require full or nearly full enumeration of candidates, have become increasingly challenging to implement efficiently. 
 This development underlines the need for more scalable solutions.
 
+{\color{red} Информация про экспоненциальный рост взята из обсуждений с коллегами проекта. Однако, я не могу сослаться на авторитетный источник, подтверждающий экспоненциальный рост. Поэтому предлагаю написать более аккуратно. Например, сказать, что у компании есть датасет размера 4 миллиарда, и что текущие подходы не позволяют эффективно поддерживать такую большую базу данных. Поэтому и есть потребность в поиске нового алгоритма. (А где-то в итогах можно упомянуть, что наш подход в текущей версии всё ещё не решает задачу для 4 миллиардов) }
+
 Our work presents a novel approach that addresses these limitations by moving beyond the conventional full enumeration paradigm. 
+{\color{red} в худшем случае наше решение выполняет полный перебор, поэтому не уверен, можно ли тут сказать, что мы вышли за его рамки} 
 Instead, we introduce a unique index structure: a tree that segments the molecular dataset into clusters based on the presence or 
 absence of features. Inspired by the binary Ball-Tree concept \cite{omohundro1989, clarkson1994}, this structure demonstrates 
 superior performance over exhaustive search on average, leading to a significant acceleration in the filtering process.
 
-We provide a comparative analysis of our method with Sachem, a known fast search method, highlighting key differences. While Sachem 
+We provide a comparative analysis of our method with Sachem {\color{red} \cite{Kratochvil2018}}, a known fast search method, highlighting key differences. While Sachem 
 uses advanced filtering effectively, it relies on exhaustive search in a chemical space that continually expands. In contrast, 
 our approach departs from exhaustive search and places an existing molecular fingerprint into a tree structure, rather than a 
 conventional relational database. While the current version of our approach does not significantly speed up the verification 
-stage, the potential lies in reducing the false positive rate and enhancing the verification process runtime.
-
+stage
+{\color{red} Но ведь текущая версия абсолютно не влияет на verification stage. Поэтому у нас абсолютно нет улучшений части verification}, the potential lies in reducing the false positive rate and enhancing the verification process runtime.
+{\color{red} в предыдущем абзаце мне было бы непонятно, что уже реализовано, а что только появиться быть в нашей будущей версии. }
 By introducing this innovative structure, we aim to cater to the growing scale of chemical databases and the escalating demand 
 for efficient and scalable search solutions. Our approach offers potential for future research and application in the quest 
 for more efficient and accurate substructure search techniques.
