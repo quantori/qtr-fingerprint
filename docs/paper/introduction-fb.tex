@@ -27,26 +27,28 @@ Efficient filtering techniques often involve the use of binary and quantitative 
 structures. These fingerprints facilitate the rapid elimination of graphs that do not contain specific features required by the 
 query subgraph, thereby speeding up the substructure search process \cite{bonchi2011, klein2014}.
 
-However, as the number of known molecules and the size of chemical databases have grown exponentially, the traditional approaches, 
+However, as the number of known molecules and the size of chemical databases have grown significantly, the traditional approaches, 
 which often require full or nearly full enumeration of candidates, have become increasingly challenging to implement efficiently. 
 This development underlines the need for more scalable solutions.
 
 {\color{red} Информация про экспоненциальный рост взята из обсуждений с коллегами проекта. Однако, я не могу сослаться на авторитетный источник, подтверждающий экспоненциальный рост. Поэтому предлагаю написать более аккуратно. Например, сказать, что у компании есть датасет размера 4 миллиарда, и что текущие подходы не позволяют эффективно поддерживать такую большую базу данных. Поэтому и есть потребность в поиске нового алгоритма. (А где-то в итогах можно упомянуть, что наш подход в текущей версии всё ещё не решает задачу для 4 миллиардов) }
 
-Our work presents a novel approach that addresses these limitations by moving beyond the conventional full enumeration paradigm. 
-{\color{red} в худшем случае наше решение выполняет полный перебор, поэтому не уверен, можно ли тут сказать, что мы вышли за его рамки} 
+{\color{blue} Я заменил exponentially на significantly. В принципе, можно найти как менялись размеры PubChem, Chembl, ZINC, ChemSpider в зависимости от версий. Писать ли про 4 млрд - я не знаю.}
+
+Our work introduces a unique approach aimed at mitigating these challenges. While in certain cases the algorithm may resort to exhaustive enumeration, in most scenarios it employs a more sophisticated strategy, transcending the conventional full enumeration paradigm.
+{\color{red} в худшем случае наше решение выполняет полный перебор, поэтому не уверен, можно ли тут сказать, что мы вышли за его рамки}
+{\color{blue} переформулировал}
 Instead, we introduce a unique index structure: a tree that segments the molecular dataset into clusters based on the presence or 
 absence of features. Inspired by the binary Ball-Tree concept \cite{omohundro1989, clarkson1994}, this structure demonstrates 
 superior performance over exhaustive search on average, leading to a significant acceleration in the filtering process.
 
-We provide a comparative analysis of our method with Sachem {\color{red} \cite{Kratochvil2018}}, a known fast search method, highlighting key differences. While Sachem 
+We provide a comparative analysis of our method with Sachem  \cite{Kratochvil2018}, a known fast search method, highlighting key differences. While Sachem 
 uses advanced filtering effectively, it relies on exhaustive search in a chemical space that continually expands. In contrast, 
 our approach departs from exhaustive search and places an existing molecular fingerprint into a tree structure, rather than a 
-conventional relational database. While the current version of our approach does not significantly speed up the verification 
-stage
-{\color{red} Но ведь текущая версия абсолютно не влияет на verification stage. Поэтому у нас абсолютно нет улучшений части verification}, the potential lies in reducing the false positive rate and enhancing the verification process runtime.
+conventional relational database.While our current version does not impact the verification stage, it holds promise for reducing the false positive rate. 
+{\color{red} Но ведь текущая версия абсолютно не влияет на verification stage. Поэтому у нас абсолютно нет улучшений части verification}
 {\color{red} в предыдущем абзаце мне было бы непонятно, что уже реализовано, а что только появиться быть в нашей будущей версии. }
+{\color{blue} я немного переформулировал... }
 By introducing this innovative structure, we aim to cater to the growing scale of chemical databases and the escalating demand 
 for efficient and scalable search solutions. Our approach offers potential for future research and application in the quest 
 for more efficient and accurate substructure search techniques.
-
