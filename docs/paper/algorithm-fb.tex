@@ -7,7 +7,8 @@ To perform this mapping, we define a function ${\sf fp}: \M \to \F$ that takes a
 corresponding fingerprint in the set $\F$. {\color{red} На мой взгляд написано слишком кратко про фингерпринты. Кажется, если 
 человек не в теме, то он может не понять, что это за сопоставление молекулам бинарных строк, зачем оно нужно и почему оно эффективно реализует этап filter}
 
-To make the substructure search process more efficient, we propose organizing these fingerprints in a binary search tree, denoted as $\T$. The tree is binary and complete, having a specific depth $d$.
+To make the substructure search process more efficient, we propose organizing these fingerprints in a binary search tree, denoted as $\T$. 
+The tree is binary and complete, having a specific depth $d$.
 
 In this tree, the root, left, and right subtrees of a node $\tt{v}$ are represented as $\T.\tt{root}$, $\tt{v.left}$, and $\tt{v.right}$, 
 respectively. Each node also has a set of all leaves in its subtree, denoted as $\tt{v.leaves}$. Each leaf $\ell$ in the tree $\T$ holds 
