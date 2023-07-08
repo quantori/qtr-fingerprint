@@ -34,12 +34,12 @@ enum DestType {
     TABLES
 };
 
-struct Args {
+struct ArgsOld {
     std::filesystem::path sourceDirPath;
     std::filesystem::path destDirPath;
     DestType parseMode;
 
-    Args(int argc, char *argv[]) {
+    ArgsOld(int argc, char *argv[]) {
         absl::ParseCommandLine(argc, argv);
 
         sourceDirPath = absl::GetFlag(FLAGS_source_dir_path);
@@ -81,7 +81,7 @@ void processSDF(const std::filesystem::path &sdFilePath,
     LOG(INFO) << "Finish processing " << sdFilePath << " : skipped -- " << skipped << ", processed -- " << processed;
 }
 
-void sdfToRb(const std::filesystem::path &sdFilePath, const Args &args) {
+void sdfToRb(const std::filesystem::path &sdFilePath, const ArgsOld &args) {
     std::filesystem::path rbFilePath = args.destDirPath / (sdFilePath.stem().string() + qtr::rawBucketExtension);
     qtr::RawBucketWriter writer(rbFilePath);
 
@@ -92,7 +92,7 @@ void sdfToRb(const std::filesystem::path &sdFilePath, const Args &args) {
     });
 }
 
-void sdfToTables(const std::filesystem::path &sdFilePath, const Args &args) {
+void sdfToTables(const std::filesystem::path &sdFilePath, const ArgsOld &args) {
     std::filesystem::path smilesTablePath =
             args.destDirPath / "smilesTables" / (sdFilePath.stem().string() + qtr::stringTableExtension);
     std::filesystem::path fingerprintTablePath =
@@ -115,7 +115,7 @@ void sdfToTables(const std::filesystem::path &sdFilePath, const Args &args) {
     });
 }
 
-void parseSDF(const std::filesystem::path &sdFilePath, const Args &args) {
+void parseSDF(const std::filesystem::path &sdFilePath, const ArgsOld &args) {
     if (args.parseMode == RB) {
         sdfToRb(sdFilePath, args);
     } else if (args.parseMode == TABLES) {
@@ -126,7 +126,7 @@ void parseSDF(const std::filesystem::path &sdFilePath, const Args &args) {
 int main(int argc, char *argv[]) {
     google::InitGoogleLogging(argv[0]);
     google::LogToStderr();
-    Args args(argc, argv);
+    ArgsOld args(argc, argv);
 
     qtr::TimeTicker timeTicker;
     std::vector<std::filesystem::path> sdFilePaths = qtr::findFiles(args.sourceDirPath, ".sdf");

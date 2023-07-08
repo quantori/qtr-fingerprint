@@ -7,7 +7,7 @@
 
 namespace qtr {
 
-    enum class DbType {
+    enum class DataBaseType {
         OnDrive,
         InRam
     };

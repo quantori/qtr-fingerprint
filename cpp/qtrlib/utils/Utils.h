@@ -38,18 +38,19 @@ namespace qtr {
 
         class FunctionTimeMeasurer {
         public:
-            FunctionTimeMeasurer(TimeMeasurer& statisticCollector, std::string label);
+            FunctionTimeMeasurer(TimeMeasurer &statisticCollector, std::string label);
 
             ~FunctionTimeMeasurer();
 
         private:
-            TimeMeasurer& _statisticCollector;
+            TimeMeasurer &_statisticCollector;
             std::string _label;
         };
 
-        void start(const std::string& label);
+        void start(const std::string &label);
 
-        void finish(const std::string& label);
+        void finish(const std::string &label);
+
     private:
         std::unordered_map<std::string, double> _measurements;
         std::unordered_map<std::string, decltype(std::chrono::high_resolution_clock::now())> _startPoints;

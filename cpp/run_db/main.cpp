@@ -49,7 +49,7 @@ ABSL_FLAG(string, db_type, "",
 ABSL_FLAG(double, time_limit, -1,
           "Single request time limit in seconds");
 
-struct Args {
+struct ArgsOld {
 
     enum class Mode {
         Interactive,
@@ -64,7 +64,7 @@ struct Args {
     Mode mode;
     filesystem::path inputFile;
     uint64_t ansCount;
-    DbType dbType;
+    DataBaseType dbType;
     double timeLimit;
 
     vector<filesystem::path> dbDataDirsPaths;
@@ -76,7 +76,7 @@ struct Args {
     filesystem::path idToStringDirPath;
     filesystem::path propertyTableDestinationPath;
 
-    Args(int argc, char *argv[]) {
+    ArgsOld(int argc, char *argv[]) {
         absl::ParseCommandLine(argc, argv);
 
         // get flags
@@ -133,9 +133,9 @@ struct Args {
             exit(-1);
         }
         if (dbTypeStr == "in_ram") {
-            dbType = DbType::InRam;
+            dbType = DataBaseType::InRam;
         } else if (dbTypeStr == "on_drive") {
-            dbType = DbType::OnDrive;
+            dbType = DataBaseType::OnDrive;
         } else {
             LOG(ERROR) << "Bad mode option value";
             exit(-1);
@@ -144,7 +144,7 @@ struct Args {
         // log
         LOG(INFO) << "inputFile: " << inputFile;
         LOG(INFO) << "otherDataPath: " << otherDataPath;
-        LOG(INFO) << "dbName: " << dbName;
+        LOG(INFO) << "dataBaseName: " << dbName;
         LOG(INFO) << "threadsCount: " << threadsCount;
         LOG(INFO) << "dbOtherDataPath" << dbOtherDataPath;
         LOG(INFO) << "ballTreePath: " << ballTreePath;
@@ -181,11 +181,11 @@ loadSmilesTable(const filesystem::path &smilesTablePath, const HuffmanCoder &huf
     return builder.buildPtr();
 }
 
-shared_ptr<BallTreeSearchEngine> loadBallTree(const Args &args) {
+shared_ptr<BallTreeSearchEngine> loadBallTree(const ArgsOld &args) {
     BufferedReader ballTreeReader(args.ballTreePath);
     LOG(INFO) << "Start ball tree loading";
     shared_ptr<BallTreeSearchEngine> res;
-    if (args.dbType == DbType::InRam)
+    if (args.dbType == DataBaseType::InRam)
         res = make_shared<BallTreeRAMSearchEngine>(ballTreeReader, args.dbDataDirsPaths);
     else {
         res = make_shared<BallTreeDriveSearchEngine>(ballTreeReader, args.dbDataDirsPaths);
@@ -210,7 +210,7 @@ shared_ptr<vector<PropertiesFilter::Properties>> loadPropertiesTable(const std::
     return res;
 }
 
-shared_ptr<SearchData> loadRamSearchData(const Args &args, TimeTicker &timeTicker) {
+shared_ptr<SearchData> loadRamSearchData(const ArgsOld &args, TimeTicker &timeTicker) {
     HuffmanCoder huffmanCoder = HuffmanCoder::load(args.huffmanCoderPath);
     auto loadBallTreeTask = async(launch::async, loadBallTree, cref(args));
     auto loadSmilesTableTask = async(launch::async, loadSmilesTable, cref(args.smilesTablePath), cref(huffmanCoder));
@@ -226,7 +226,7 @@ shared_ptr<SearchData> loadRamSearchData(const Args &args, TimeTicker &timeTicke
                                       args.timeLimit, smilesTablePtr, propertiesTablePtr);
 }
 
-shared_ptr<SearchData> loadDriveSearchData(const Args &args, TimeTicker &timeTicker) {
+shared_ptr<SearchData> loadDriveSearchData(const ArgsOld &args, TimeTicker &timeTicker) {
     auto loadBallTreeTask = async(launch::async, loadBallTree, cref(args));
     auto loadIdConverterTask = async(launch::async, loadIdConverter, cref(args.idToStringDirPath));
 
@@ -237,27 +237,27 @@ shared_ptr<SearchData> loadDriveSearchData(const Args &args, TimeTicker &timeTic
                                         args.timeLimit);
 }
 
-shared_ptr<SearchData> loadSearchData(const Args &args, TimeTicker &timeTicker) {
-    if (args.dbType == qtr::DbType::InRam) {
+shared_ptr<SearchData> loadSearchData(const ArgsOld &args, TimeTicker &timeTicker) {
+    if (args.dbType == qtr::DataBaseType::InRam) {
         return loadRamSearchData(args, timeTicker);
-    } else if (args.dbType == qtr::DbType::OnDrive) {
+    } else if (args.dbType == qtr::DataBaseType::OnDrive) {
         return loadDriveSearchData(args, timeTicker);
     }
     throw std::logic_error("Undefined db type");
 }
 
-void runDb(const Args &args) {
+void runDb(const ArgsOld &args) {
 
     TimeTicker timeTicker;
     auto searchData = loadSearchData(args, timeTicker);
     timeTicker.tick("Db data loading");
 
     shared_ptr<RunMode> mode = nullptr;
-    if (args.mode == Args::Mode::Interactive)
+    if (args.mode == ArgsOld::Mode::Interactive)
         mode = make_shared<InteractiveMode>(searchData);
-    else if (args.mode == Args::Mode::FromFile)
+    else if (args.mode == ArgsOld::Mode::FromFile)
         mode = make_shared<FromFileMode>(searchData, args.inputFile);
-    else if (args.mode == Args::Mode::Web)
+    else if (args.mode == ArgsOld::Mode::Web)
         mode = make_shared<WebMode>(searchData);
     mode->run();
 
@@ -265,7 +265,7 @@ void runDb(const Args &args) {
 
 int main(int argc, char *argv[]) {
     initLogging(argv, google::INFO, "run_db.info", true);
-    Args args(argc, argv);
+    ArgsOld args(argc, argv);
 
     runDb(args);
 

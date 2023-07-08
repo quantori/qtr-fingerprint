@@ -18,15 +18,19 @@
 #include "properties_table_io/PropertiesTableReader.h"
 #include "properties_table_io/PropertiesTableWriter.h"
 #include "PropertiesFilter.h"
+#include "ArgsBase.h"
 
 using namespace std;
 using namespace qtr;
 
-ABSL_FLAG(string, source_dir_path, "",
+ABSL_FLAG(string, sourceDirPath, "",
           "Path to directory where source data are stored");
 
-ABSL_FLAG(vector<string>, dest_dir_paths, {},
+ABSL_FLAG(vector<string>, destDirPaths, {},
           "Path to directories where data should be stored");
+
+
+/////////////////
 
 ABSL_FLAG(string, other_dest_dir_path, "",
           "Path to directory where other data should be stored");
@@ -45,7 +49,44 @@ ABSL_FLAG(string, db_type, "",
 
 TimeMeasurer statisticCollector;
 
-struct Args {
+class Args : public ArgsBase {
+public:
+    Args(int argc, char *argv[]) : ArgsBase(argc, argv) {
+        parseSourceDirPath();
+        checkSourceDirPath();
+    }
+
+    [[nodiscard]] std::filesystem::path sourceDirPath() const {
+        checkEmptyArgument(_sourceDirPath, tryToGetUninitializedField + OPTION_NAME(sourceDirPath));
+        return _sourceDirPath;
+    }
+
+private:
+    filesystem::path _sourceDirPath;
+    vector<filesystem::path> _destDirPaths;
+
+    void parseSourceDirPath() {
+        _sourceDirPath = GET_FLAG(sourceDirPath);
+        checkEmptyArgument(_sourceDirPath, "Please specify " OPTION_NAME(sourceDirPath) " option");
+        LOG(INFO) << OPTION_NAME(sourceDirPath) << ": " << _sourceDirPath;
+    }
+
+    void checkSourceDirPath() {
+        checkEmptyArgument(_sourceDirPath, "Please specify " OPTION_NAME(sourceDirPath) " option");
+    }
+
+
+    void parse
+
+};
+
+struct ArgsOld {
+    // Common fields
+    DataBaseType dbType;
+    string dbName;
+    filesystem::path sourceDirPath;
+
+    // Qtr fields
     filesystem::path smilesSourceDirPath;
     filesystem::path fingerprintTablesSourceDirPath;
     filesystem::path idToStringSourceDirPath;
@@ -55,14 +96,6 @@ struct Args {
     filesystem::path otherDataPath;
     uint64_t subtreeParallelDepth;
     uint64_t treeDepth;
-    string dbName;
-
-    enum class DbType {
-        OnDrive,
-        InRam
-    };
-
-    DbType dbType;
 
     vector<filesystem::path> dbDataDirsPaths;
     filesystem::path dbOtherDataPath;
@@ -74,77 +107,80 @@ struct Args {
     filesystem::path propertyTableDestinationPath;
 
 
-    Args(int argc, char *argv[]) {
+    ArgsOld(int argc, char *argv[]) {
         absl::ParseCommandLine(argc, argv);
 
-        // get flags
-        filesystem::path sourceDirPath = absl::GetFlag(FLAGS_source_dir_path);
-        vector<string> tmpDestDirPaths = absl::GetFlag(FLAGS_dest_dir_paths);
-        otherDataPath = absl::GetFlag(FLAGS_other_dest_dir_path);
-        subtreeParallelDepth = absl::GetFlag(FLAGS_subtree_parallel_depth);
-        treeDepth = absl::GetFlag(FLAGS_tree_depth);
-        dbName = absl::GetFlag(FLAGS_db_name);
+        // _dbType
         string dbTypeStr = absl::GetFlag(FLAGS_db_type);
-
-        // check empty flags
-        checkEmptyArgument(sourceDirPath, "Please specify source_dir_path option");
-        checkEmptyArgument(tmpDestDirPaths, "Please specify dest_dir_paths option");
-        checkEmptyArgument(otherDataPath, "Please specify other_dest_dir_path option");
-        checkEmptyArgument(subtreeParallelDepth, "Please specify subtree_parallel_depth option");
-        checkEmptyArgument(treeDepth, "Please specify tree_depth option");
         checkEmptyArgument(dbTypeStr, "Please specify db_type option");
+        dbType = parseDataBaseType(dbTypeStr);
+        LOG(INFO) << "DataBaseType: " << dbTypeStr;
 
-        // init values
-        smilesSourceDirPath = sourceDirPath / "smilesTables";
-        fingerprintTablesSourceDirPath = sourceDirPath / "fingerprintTables";
-        idToStringSourceDirPath = sourceDirPath / "idToStringTables";
-        propertyTablesSourceDirPath = sourceDirPath / "propertyTables";
-        copy(tmpDestDirPaths.begin(), tmpDestDirPaths.end(), back_inserter(destDirPaths));
-        if (dbName.empty()) {
+        // dataBaseName
+        dbName = absl::GetFlag(FLAGS_db_name);
+        if (dbName.empty())
             dbName = generateDbName(destDirPaths, otherDataPath);
-        }
-        for (auto &dir: destDirPaths) {
-            dbDataDirsPaths.emplace_back(dir / dbName);
-        }
-        dbOtherDataPath = otherDataPath / dbName;
-        ballTreePath = dbOtherDataPath / "tree";
-        smilesTablePath = dbOtherDataPath / "smilesTable";
-        huffmanCoderPath = dbOtherDataPath / "huffman";
-        idToStringDestinationDirPath = dbOtherDataPath / "idToString";
-        propertyTableDestinationPath = dbOtherDataPath / "propertyTable";
-        if (dbTypeStr == "in_ram") {
-            dbType = DbType::InRam;
-        } else if (dbTypeStr == "on_drive") {
-            dbType = DbType::OnDrive;
-        } else {
-            LOG(ERROR) << "Bad mode option value";
-            exit(-1);
-        }
+        LOG(INFO) << "dataBaseName: " << dbName;
 
-        // log
-        LOG(INFO) << "smilesSourceDirPath: " << smilesSourceDirPath;
-        LOG(INFO) << "fingerprintTablesSourceDirPath" << fingerprintTablesSourceDirPath;
-        LOG(INFO) << "idToStringSourceDirPath" << idToStringSourceDirPath;
-        for (size_t i = 0; i < destDirPaths.size(); i++) {
-            LOG(INFO) << "destDirPaths[" << i << "]: " << destDirPaths[i];
+        // sourceDirPath
+        sourceDirPath = absl::GetFlag(FLAGS_source_dir_path);
+        checkEmptyArgument(sourceDirPath, "Please specify source_dir_path option");
+        LOG(INFO) << "sourceDirPath: " << sourceDirPath;
+
+        if (dbType == DataBaseType::QtrDrive || dbType == qtr::DataBaseType::QtrRam) {
+            // get flags
+            vector<string> destDirPathsStr = absl::GetFlag(FLAGS_dest_dir_paths);
+            otherDataPath = absl::GetFlag(FLAGS_other_dest_dir_path);
+            subtreeParallelDepth = absl::GetFlag(FLAGS_subtree_parallel_depth);
+            treeDepth = absl::GetFlag(FLAGS_tree_depth);
+
+            // check empty flags
+            checkEmptyArgument(destDirPathsStr, "Please specify dest_dir_paths option");
+            checkEmptyArgument(otherDataPath, "Please specify other_dest_dir_path option");
+            checkEmptyArgument(subtreeParallelDepth, "Please specify subtree_parallel_depth option");
+            checkEmptyArgument(treeDepth, "Please specify tree_depth option");
+
+            // init values
+            smilesSourceDirPath = sourceDirPath / "smilesTables";
+            fingerprintTablesSourceDirPath = sourceDirPath / "fingerprintTables";
+            idToStringSourceDirPath = sourceDirPath / "idToStringTables";
+            propertyTablesSourceDirPath = sourceDirPath / "propertyTables";
+            copy(destDirPathsStr.begin(), destDirPathsStr.end(), back_inserter(destDirPaths));
+
+            for (auto &dir: destDirPaths) {
+                dbDataDirsPaths.emplace_back(dir / dbName);
+            }
+            dbOtherDataPath = otherDataPath / dbName;
+            ballTreePath = dbOtherDataPath / "tree";
+            smilesTablePath = dbOtherDataPath / "smilesTable";
+            huffmanCoderPath = dbOtherDataPath / "huffman";
+            idToStringDestinationDirPath = dbOtherDataPath / "idToString";
+            propertyTableDestinationPath = dbOtherDataPath / "propertyTable";
+
+            // log
+            LOG(INFO) << "smilesSourceDirPath: " << smilesSourceDirPath;
+            LOG(INFO) << "fingerprintTablesSourceDirPath" << fingerprintTablesSourceDirPath;
+            LOG(INFO) << "idToStringSourceDirPath" << idToStringSourceDirPath;
+            for (size_t i = 0; i < destDirPaths.size(); i++) {
+                LOG(INFO) << "destDirPaths[" << i << "]: " << destDirPaths[i];
+            }
+            LOG(INFO) << "otherDataPath: " << otherDataPath;
+            LOG(INFO) << "subtreeParallelDepth: " << subtreeParallelDepth;
+            LOG(INFO) << "treeDepth: " << treeDepth;
+            for (size_t i = 0; i < dbDataDirsPaths.size(); i++) {
+                LOG(INFO) << "dbDataDirPaths[" << i << "]: " << dbDataDirsPaths[i];
+            }
+            LOG(INFO) << "dbOtherDataPath: " << dbOtherDataPath;
+            LOG(INFO) << "splitterTreePath: " << ballTreePath;
+            LOG(INFO) << "smilesTablePath: " << smilesTablePath;
+            LOG(INFO) << "huffmanCoderPath: " << huffmanCoderPath;
+            LOG(INFO) << "idToStringDestinationDirPath: " << idToStringDestinationDirPath;
+            LOG(INFO) << "propertyTableDestinationPath: " << propertyTableDestinationPath;
         }
-        LOG(INFO) << "otherDataPath: " << otherDataPath;
-        LOG(INFO) << "subtreeParallelDepth: " << subtreeParallelDepth;
-        LOG(INFO) << "treeDepth: " << treeDepth;
-        LOG(INFO) << "dbName: " << dbName;
-        for (size_t i = 0; i < dbDataDirsPaths.size(); i++) {
-            LOG(INFO) << "dbDataDirPaths[" << i << "]: " << dbDataDirsPaths[i];
-        }
-        LOG(INFO) << "dbOtherDataPath: " << dbOtherDataPath;
-        LOG(INFO) << "splitterTreePath: " << ballTreePath;
-        LOG(INFO) << "smilesTablePath: " << smilesTablePath;
-        LOG(INFO) << "huffmanCoderPath: " << huffmanCoderPath;
-        LOG(INFO) << "idToStringDestinationDirPath: " << idToStringDestinationDirPath;
-        LOG(INFO) << "propertyTableDestinationPath: " << propertyTableDestinationPath;
     }
 };
 
-void initFileSystem(const Args &args) {
+void initFileSystem(const ArgsOld &args) {
     TimeMeasurer::FunctionTimeMeasurer timer(statisticCollector, "filesystem initialization");
 
     vector<filesystem::path> alreadyExists;
@@ -173,7 +209,7 @@ void initFileSystem(const Args &args) {
     filesystem::create_directory(args.idToStringDestinationDirPath);
 }
 
-void distributeFingerprintTables(const Args &args) {
+void distributeFingerprintTables(const ArgsOld &args) {
     TimeMeasurer::FunctionTimeMeasurer timer(statisticCollector, "fingerprint tables distribution");
 
     vector<filesystem::path> ftFilePaths = findFiles(args.fingerprintTablesSourceDirPath,
@@ -189,7 +225,7 @@ void distributeFingerprintTables(const Args &args) {
     }
 }
 
-size_t mergeSmilesTablesAndBuildHuffman(const Args &args) {
+size_t mergeSmilesTablesAndBuildHuffman(const ArgsOld &args) {
     TimeMeasurer::FunctionTimeMeasurer timer(statisticCollector, "merging smiles tables and building huffman");
 
     vector<filesystem::path> smilesTablePaths = findFiles(args.smilesSourceDirPath, stringTableExtension);
@@ -219,7 +255,7 @@ size_t mergeSmilesTablesAndBuildHuffman(const Args &args) {
     return smilesTable.size();
 }
 
-size_t mergePropertyTables(const Args &args) {
+size_t mergePropertyTables(const ArgsOld &args) {
     TimeMeasurer::FunctionTimeMeasurer timer(statisticCollector, "merging property tables");
 
     vector<filesystem::path> propertyTablePaths = findFiles(args.propertyTablesSourceDirPath, "");
@@ -257,7 +293,7 @@ void copyIdToStringTables(const filesystem::path &source, const filesystem::path
     }
 }
 
-size_t mergeTables(const Args &args) {
+size_t mergeTables(const ArgsOld &args) {
     auto mergeSmilesTablesTask = async(launch::async, mergeSmilesTablesAndBuildHuffman, cref(args));
     auto mergePropertyTablesTask = async(launch::async, mergePropertyTables, cref(args));
 
@@ -269,7 +305,7 @@ size_t mergeTables(const Args &args) {
     return moleculesNumber;
 }
 
-map<uint64_t, filesystem::path> getLeafDirLocations(const Args &args) {
+map<uint64_t, filesystem::path> getLeafDirLocations(const ArgsOld &args) {
     map<uint64_t, filesystem::path> leafLocations;
     for (const auto &dirPath: args.dbDataDirsPaths) {
         for (auto &filePath: findFiles(dirPath)) {
@@ -280,7 +316,7 @@ map<uint64_t, filesystem::path> getLeafDirLocations(const Args &args) {
     return leafLocations;
 }
 
-void shuffleBallTreeLeaves(const Args &args) {
+void shuffleBallTreeLeaves(const ArgsOld &args) {
     auto leafLocations = getLeafDirLocations(args);
 
     vector<uint64_t> leafIds;
@@ -295,7 +331,7 @@ void shuffleBallTreeLeaves(const Args &args) {
     }
 }
 
-size_t distributeSmilesTables(const Args &args, const map<uint64_t, filesystem::path> &molLocations) {
+size_t distributeSmilesTables(const ArgsOld &args, const map<uint64_t, filesystem::path> &molLocations) {
     unordered_map<string, vector<pair<uint64_t, string>>> smilesTables;
     vector<filesystem::path> smilesTablePaths = findFiles(args.smilesSourceDirPath, stringTableExtension);
     size_t molNumber = 0;
@@ -317,7 +353,7 @@ size_t distributeSmilesTables(const Args &args, const map<uint64_t, filesystem::
 }
 
 
-size_t distributePropertyTables(const Args &args, const map<uint64_t, filesystem::path> &molLocations) {
+size_t distributePropertyTables(const ArgsOld &args, const map<uint64_t, filesystem::path> &molLocations) {
     unordered_map<string, vector<pair<uint64_t, PropertiesFilter::Properties>>> propertyTables;
     vector<filesystem::path> propertyTablePaths = findFiles(args.propertyTablesSourceDirPath, "");
     size_t molNumber = 0;
@@ -338,7 +374,7 @@ size_t distributePropertyTables(const Args &args, const map<uint64_t, filesystem
     return molNumber;
 }
 
-size_t distributeTablesToLeafDirectories(const Args &args) {
+size_t distributeTablesToLeafDirectories(const ArgsOld &args) {
     TimeMeasurer::FunctionTimeMeasurer timer(statisticCollector, "smiles+properties tables distribution");
 
     auto leafLocations = getLeafDirLocations(args);
@@ -360,7 +396,7 @@ size_t distributeTablesToLeafDirectories(const Args &args) {
     return moleculesNumber;
 }
 
-void buildBallTree(const Args &args) {
+void buildBallTree(const ArgsOld &args) {
     TimeMeasurer::FunctionTimeMeasurer timer(statisticCollector, "ball tree building");
 
     distributeFingerprintTables(args);
@@ -370,11 +406,11 @@ void buildBallTree(const Args &args) {
     ofstream ballTreeWriter(args.ballTreePath);
     ballTree.dumpNodes(ballTreeWriter);
 
-    if (args.dbType == Args::DbType::OnDrive)
+    if (args.dbType == DataBaseType::QtrDrive)
         shuffleBallTreeLeaves(args);
 }
 
-void buildDb(const Args &args) {
+void buildDb(const ArgsOld &args) {
     TimeMeasurer::FunctionTimeMeasurer timer(statisticCollector, "db building");
 
     initFileSystem(args);
@@ -384,7 +420,7 @@ void buildDb(const Args &args) {
                                        cref(args.idToStringSourceDirPath),
                                        cref(args.idToStringDestinationDirPath));
     future<size_t> processTablesTask;
-    if (args.dbType == Args::DbType::InRam)
+    if (args.dbType == DataBaseType::QtrRam)
         processTablesTask = async(launch::async, mergeTables, cref(args));
     else {
         buildBallTreeTask.wait(); // should distribute only after ball tree is built
@@ -400,7 +436,7 @@ void buildDb(const Args &args) {
 
 int main(int argc, char *argv[]) {
     initLogging(argv, google::INFO, "build_db.info", true);
-    Args args(argc, argv);
+    ArgsOld args(argc, argv);
 
     buildDb(args);
 
