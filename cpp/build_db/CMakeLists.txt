@@ -1,7 +1,7 @@
 set(CMAKE_CXX_STANDARD 20)
 find_package(OpenMP REQUIRED)
 
-add_executable(build_db main.cpp)
+add_executable(build_db main.cpp buildQtr.cpp buildBingoNoSQL.cpp)
 
 target_include_directories(build_db
         PUBLIC .

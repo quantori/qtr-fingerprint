@@ -36,11 +36,11 @@ namespace qtr {
 
         StorageType::iterator end();
 
-        class FunctionTimeMeasurer {
+        class FunctionExecutionTimer {
         public:
-            FunctionTimeMeasurer(TimeMeasurer &statisticCollector, std::string label);
+            FunctionExecutionTimer(TimeMeasurer &statisticCollector, std::string label);
 
-            ~FunctionTimeMeasurer();
+            ~FunctionExecutionTimer();
 
         private:
             TimeMeasurer &_statisticCollector;
@@ -66,6 +66,51 @@ namespace qtr {
     bool endsWith(const std::string &a, const std::string &b);
 
 
+    template<typename T>
+    class HasEmptyMethod {
+        typedef char hasEmpty;
+        struct hasNotEmpty {
+            char x[2];
+        };
+
+        template<typename C>
+        static hasEmpty test(decltype(&C::empty)) { return hasEmpty(); }
+
+        template<typename C>
+        static hasNotEmpty test(...) { return hasNotEmpty(); }
+
+    public:
+        enum {
+            value = sizeof(test<T>(0)) == sizeof(char)
+        };
+    };
+
+    template<typename T, bool hasEmpty, typename D>
+    struct EmptyChecker {
+        D _emptyVal;
+
+        explicit EmptyChecker(const D& emptyVal) : _emptyVal(emptyVal) {};
+
+        bool check(const T &val) {
+            return val == _emptyVal;
+        }
+    };
+
+    template<typename T, typename D>
+    struct EmptyChecker<T, true, D> {
+
+        explicit EmptyChecker(const D&) {};
+
+        static bool check(const T &val) {
+            return val.empty();
+        }
+    };
+
+    template<typename T, typename D = T>
+    bool checkEmpty(const T &val, const D& emptyVal) {
+        return EmptyChecker<T, HasEmptyMethod<T>::value, D>(emptyVal).check(val);
+    }
+
     /**
      * Print message if argument is empty and finish program in that case
      * @param argument
@@ -73,7 +118,7 @@ namespace qtr {
      */
     template<typename T>
     void checkEmptyArgument(const T &argument, const std::string &message) {
-        if (argument.empty()) {
+        if (checkEmpty<T, T()>(argument)) {
             LOG(ERROR) << message;
             exit(-1);
         }
@@ -83,9 +128,6 @@ namespace qtr {
                                const std::filesystem::path &otherDataPath);
 
     void askAboutContinue(const std::string &question);
-
-    template<>
-    void checkEmptyArgument<uint64_t>(const uint64_t &argument, const std::string &message);
 
     /**
      * Return converted hex char to decimal

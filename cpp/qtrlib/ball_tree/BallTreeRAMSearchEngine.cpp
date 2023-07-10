@@ -1,4 +1,5 @@
 #include <random>
+#include <algorithm>
 
 #include "BallTreeRAMSearchEngine.h"
 #include "fingerprint_table_io/FingerprintTableReader.h"

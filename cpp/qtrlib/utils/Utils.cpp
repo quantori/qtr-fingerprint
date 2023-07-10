@@ -27,16 +27,8 @@ namespace qtr {
         return files;
     }
 
-    template<>
-    void checkEmptyArgument<uint64_t>(const uint64_t &argument, const string &message) {
-        if (argument == 0) {
-            LOG(ERROR) << message;
-            exit(-1);
-        }
-    }
-
     void askAboutContinue(const string &question) {
-        cout << question << ". Continue? (Y/n): ";
+        cout << question << ". Continue? (y/N): ";
         string userAnswer;
         cin >> userAnswer;
         if (userAnswer != "Y" && userAnswer != "y") {
@@ -113,13 +105,13 @@ namespace qtr {
         LOG(INFO) << "Finish " << label;
     }
 
-    TimeMeasurer::FunctionTimeMeasurer::FunctionTimeMeasurer(TimeMeasurer &statisticCollector,
-                                                             std::string label)
+    TimeMeasurer::FunctionExecutionTimer::FunctionExecutionTimer(TimeMeasurer &statisticCollector,
+                                                                 std::string label)
             : _statisticCollector(statisticCollector), _label(std::move(label)) {
         _statisticCollector.start(_label);
     }
 
-    TimeMeasurer::FunctionTimeMeasurer::~FunctionTimeMeasurer() {
+    TimeMeasurer::FunctionExecutionTimer::~FunctionExecutionTimer() {
         _statisticCollector.finish(_label);
     }
 } // namespace qtr

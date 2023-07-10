@@ -5,6 +5,7 @@
 #include <random>
 #include <future>
 #include <chrono>
+#include <algorithm>
 
 #include "fingerprint_table_io/FingerprintTableReader.h"
 #include "Utils.h"

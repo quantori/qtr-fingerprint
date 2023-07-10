@@ -2,6 +2,7 @@
 #include <future>
 #include <cstdlib>
 #include <random>
+#include <algorithm>
 
 #include "BallTreeBuilder.h"
 #include "data_io/fingerprint_table_io/FingerprintTableReader.h"
