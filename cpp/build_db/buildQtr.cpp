@@ -261,7 +261,7 @@ namespace qtr {
 
 
     void buildQtrDb(const Args &args, TimeMeasurer &statisticCollector) {
-        TimeMeasurer::FunctionExecutionTimer timer(statisticCollector, "db building");
+        TimeMeasurer::FunctionExecutionTimer timer(statisticCollector, "Qtr DB building");
 
         initFileSystem(args, statisticCollector);
 

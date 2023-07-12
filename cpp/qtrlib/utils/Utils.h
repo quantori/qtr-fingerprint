@@ -10,53 +10,6 @@
 #include "glog/log_severity.h"
 
 namespace qtr {
-
-    class TimeTicker {
-    public:
-        TimeTicker() {
-            _timePoints.emplace_back(std::chrono::high_resolution_clock::now());
-        }
-
-        double tick(const std::string &message = "");
-
-        [[nodiscard]] double elapsedTime() const;
-
-        void logResults() const;
-
-    private:
-        std::vector<decltype(std::chrono::high_resolution_clock::now())> _timePoints;
-        std::vector<std::pair<std::string, double>> _results;
-    };
-
-    class TimeMeasurer {
-    public:
-        using StorageType = std::unordered_map<std::string, double>;
-
-        StorageType::iterator begin();
-
-        StorageType::iterator end();
-
-        class FunctionExecutionTimer {
-        public:
-            FunctionExecutionTimer(TimeMeasurer &statisticCollector, std::string label);
-
-            ~FunctionExecutionTimer();
-
-        private:
-            TimeMeasurer &_statisticCollector;
-            std::string _label;
-        };
-
-        void start(const std::string &label);
-
-        void finish(const std::string &label);
-
-    private:
-        std::unordered_map<std::string, double> _measurements;
-        std::unordered_map<std::string, decltype(std::chrono::high_resolution_clock::now())> _startPoints;
-        std::mutex _lock;
-    };
-
     /**
      * Check, if string a ends with string b.
      * @param a
@@ -89,7 +42,7 @@ namespace qtr {
     struct EmptyChecker {
         D _emptyVal;
 
-        explicit EmptyChecker(const D& emptyVal) : _emptyVal(emptyVal) {};
+        explicit EmptyChecker(const D &emptyVal) : _emptyVal(emptyVal) {};
 
         bool check(const T &val) {
             return val == _emptyVal;
@@ -99,7 +52,7 @@ namespace qtr {
     template<typename T, typename D>
     struct EmptyChecker<T, true, D> {
 
-        explicit EmptyChecker(const D&) {};
+        explicit EmptyChecker(const D &) {};
 
         static bool check(const T &val) {
             return val.empty();
@@ -107,7 +60,7 @@ namespace qtr {
     };
 
     template<typename T, typename D = T>
-    bool checkEmpty(const T &val, const D& emptyVal) {
+    bool checkEmpty(const T &val, const D &emptyVal) {
         return EmptyChecker<T, HasEmptyMethod<T>::value, D>(emptyVal).check(val);
     }
 
@@ -123,9 +76,6 @@ namespace qtr {
             exit(-1);
         }
     }
-
-    std::string generateDbName(const std::vector<std::filesystem::path> &dataDirPaths,
-                               const std::filesystem::path &otherDataPath);
 
     void askAboutContinue(const std::string &question);
 

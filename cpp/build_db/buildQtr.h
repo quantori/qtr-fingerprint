@@ -1,10 +1,10 @@
 #pragma once
 
 #include "Args.h"
-#include "Utils.h"
+#include "TimeMeasurer.h"
 
 namespace qtr {
 
-    void buildQtrDb(const Args& args, TimeMeasurer& statisticCollector);
+    void buildQtrDb(const Args &args, TimeMeasurer &statisticCollector);
 
 }
