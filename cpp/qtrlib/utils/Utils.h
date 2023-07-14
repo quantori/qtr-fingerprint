@@ -71,7 +71,7 @@ namespace qtr {
      */
     template<typename T>
     void checkEmptyArgument(const T &argument, const std::string &message) {
-        if (checkEmpty<T, T()>(argument)) {
+        if (checkEmpty<T>(argument, T())) {
             LOG(ERROR) << message;
             exit(-1);
         }
@@ -136,10 +136,22 @@ namespace qtr {
      * @return vector of filenames
      */
     std::vector<std::filesystem::path>
-    findFiles(const std::filesystem::path &pathToDir, std::string extension = "");
+    findFiles(const std::filesystem::path &pathToDir, std::string extension);
 
     /**
      * Initialize google logging
      */
     void initLogging(char **argv, google::LogSeverity severity, const char *base_filename, bool alsoLogToStderr);
+
+    /**
+     * @param lhs
+     * @param rhs
+     * @return concatenation of @a lhs and @a rhs
+     */
+    template<typename T, typename D>
+    std::vector<T> concatVectors(const std::vector<T> &lhs, const std::vector<D> &rhs) {
+        std::vector<T> res = lhs;
+        std::copy(rhs.begin(), rhs.end(), std::back_inserter(res));
+        return res;
+    }
 } // namespace qtr

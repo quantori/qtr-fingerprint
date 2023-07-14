@@ -7,24 +7,24 @@
 using namespace std;
 using namespace qtr;
 
-ABSL_FLAG(std::string, dbType, "",
+ABSL_FLAG(string, dbType, "",
           "Possible types: "
                   FLAG_NAME(QtrDrive) ", "
                   FLAG_NAME(QtrRam) ", "
                   FLAG_NAME(BingoNoSQL));
 
-ABSL_FLAG(std::string, dbName, "",
-          "Name of folders with data base's files");
+ABSL_FLAG(string, dbName, "",
+          "Name of folders with database's files");
 
 
-ABSL_FLAG(std::string, sourceDirPath, "",
+ABSL_FLAG(string, sourceDir, "",
           "Path to directory where source data are stored");
 
-ABSL_FLAG(std::vector<std::string>, destDirPaths, {},
+ABSL_FLAG(vector<string>, destDirs, {},
           "Path to directories where data should be stored");
 
 
-ABSL_FLAG(std::string, otherDestDirPath, "",
+ABSL_FLAG(string, otherDestDir, "",
           "Path to directory where other data should be stored");
 
 ABSL_FLAG(uint64_t, parallelizeDepth, 0,

@@ -49,7 +49,7 @@ ABSL_FLAG(string, db_type, "",
 ABSL_FLAG(double, time_limit, -1,
           "Single request time limit in seconds");
 
-struct ArgsOld {
+struct Args {
 
     enum class Mode {
         Interactive,
@@ -76,7 +76,7 @@ struct ArgsOld {
     filesystem::path idToStringDirPath;
     filesystem::path propertyTableDestinationPath;
 
-    ArgsOld(int argc, char *argv[]) {
+    Args(int argc, char *argv[]) {
         absl::ParseCommandLine(argc, argv);
 
         // get flags
@@ -181,7 +181,7 @@ loadSmilesTable(const filesystem::path &smilesTablePath, const HuffmanCoder &huf
     return builder.buildPtr();
 }
 
-shared_ptr<BallTreeSearchEngine> loadBallTree(const ArgsOld &args) {
+shared_ptr<BallTreeSearchEngine> loadBallTree(const Args &args) {
     BufferedReader ballTreeReader(args.ballTreePath);
     LOG(INFO) << "Start ball tree loading";
     shared_ptr<BallTreeSearchEngine> res;
@@ -210,7 +210,7 @@ shared_ptr<vector<PropertiesFilter::Properties>> loadPropertiesTable(const std::
     return res;
 }
 
-shared_ptr<SearchData> loadRamSearchData(const ArgsOld &args, TimeTicker &timeTicker) {
+shared_ptr<SearchData> loadRamSearchData(const Args &args, TimeTicker &timeTicker) {
     HuffmanCoder huffmanCoder = HuffmanCoder::load(args.huffmanCoderPath);
     auto loadBallTreeTask = async(launch::async, loadBallTree, cref(args));
     auto loadSmilesTableTask = async(launch::async, loadSmilesTable, cref(args.smilesTablePath), cref(huffmanCoder));
@@ -226,7 +226,7 @@ shared_ptr<SearchData> loadRamSearchData(const ArgsOld &args, TimeTicker &timeTi
                                       args.timeLimit, smilesTablePtr, propertiesTablePtr);
 }
 
-shared_ptr<SearchData> loadDriveSearchData(const ArgsOld &args, TimeTicker &timeTicker) {
+shared_ptr<SearchData> loadDriveSearchData(const Args &args, TimeTicker &timeTicker) {
     auto loadBallTreeTask = async(launch::async, loadBallTree, cref(args));
     auto loadIdConverterTask = async(launch::async, loadIdConverter, cref(args.idToStringDirPath));
 
@@ -237,7 +237,7 @@ shared_ptr<SearchData> loadDriveSearchData(const ArgsOld &args, TimeTicker &time
                                         args.timeLimit);
 }
 
-shared_ptr<SearchData> loadSearchData(const ArgsOld &args, TimeTicker &timeTicker) {
+shared_ptr<SearchData> loadSearchData(const Args &args, TimeTicker &timeTicker) {
     if (args.dbType == qtr::DataBaseType::InRam) {
         return loadRamSearchData(args, timeTicker);
     } else if (args.dbType == qtr::DataBaseType::OnDrive) {
@@ -246,18 +246,18 @@ shared_ptr<SearchData> loadSearchData(const ArgsOld &args, TimeTicker &timeTicke
     throw std::logic_error("Undefined db type");
 }
 
-void runDb(const ArgsOld &args) {
+void runDb(const Args &args) {
 
     TimeTicker timeTicker;
     auto searchData = loadSearchData(args, timeTicker);
     timeTicker.tick("Db data loading");
 
     shared_ptr<RunMode> mode = nullptr;
-    if (args.mode == ArgsOld::Mode::Interactive)
+    if (args.mode == Args::Mode::Interactive)
         mode = make_shared<InteractiveMode>(searchData);
-    else if (args.mode == ArgsOld::Mode::FromFile)
+    else if (args.mode == Args::Mode::FromFile)
         mode = make_shared<FromFileMode>(searchData, args.inputFile);
-    else if (args.mode == ArgsOld::Mode::Web)
+    else if (args.mode == Args::Mode::Web)
         mode = make_shared<WebMode>(searchData);
     mode->run();
 
@@ -265,7 +265,7 @@ void runDb(const ArgsOld &args) {
 
 int main(int argc, char *argv[]) {
     initLogging(argv, google::INFO, "run_db.info", true);
-    ArgsOld args(argc, argv);
+    Args args(argc, argv);
 
     runDb(args);
 

@@ -24,9 +24,9 @@ namespace qtr {
             TimeMeasurer::FunctionExecutionTimer timer(statisticCollector, "filesystem initialization");
 
             vector<filesystem::path> alreadyExists;
-            for (auto &dbDirPath: args.dbDataDirPaths()) {
-                if (filesystem::exists(dbDirPath))
-                    alreadyExists.emplace_back(dbDirPath);
+            for (auto &dbDir: args.dbDataDirs()) {
+                if (filesystem::exists(dbDir))
+                    alreadyExists.emplace_back(dbDir);
             }
             if (filesystem::exists(args.dbOtherDataPath())) {
                 alreadyExists.emplace_back(args.dbOtherDataPath());
@@ -41,24 +41,24 @@ namespace qtr {
                     filesystem::remove_all(dir);
                 }
             }
-            for (auto &dbDirPath: args.dbDataDirPaths()) {
-                filesystem::create_directory(dbDirPath);
-                filesystem::create_directory(dbDirPath / "0");
+            for (auto &dbDir: args.dbDataDirs()) {
+                filesystem::create_directory(dbDir);
+                filesystem::create_directory(dbDir / "0");
             }
             filesystem::create_directory(args.dbOtherDataPath());
-            filesystem::create_directory(args.idToStringDestinationDirPath());
+            filesystem::create_directory(args.idToStringDestinationDir());
         }
 
         void distributeFingerprintTables(const Args &args, TimeMeasurer &statisticCollector) {
             TimeMeasurer::FunctionExecutionTimer timer(statisticCollector, "fingerprint tables distribution");
 
-            vector<filesystem::path> ftFilePaths = findFiles(args.fingerprintTablesSourceDirPath(),
+            vector<filesystem::path> ftFilePaths = findFiles(args.fingerprintTablesSourceDir(),
                                                              fingerprintTableExtension);
             shuffle(ftFilePaths.begin(), ftFilePaths.end(), mt19937(0));
-            size_t drivesCount = args.dbDataDirPaths().size();
+            size_t drivesCount = args.dbDataDirs().size();
             for (size_t i = 0; i < ftFilePaths.size(); i++) {
                 auto sourcePath = ftFilePaths[i];
-                auto destinationPath = args.dbDataDirPaths()[i % drivesCount] / "0" / sourcePath.filename();
+                auto destinationPath = args.dbDataDirs()[i % drivesCount] / "0" / sourcePath.filename();
                 filesystem::create_directory(destinationPath.parent_path());
                 LOG(INFO) << "Copy " << sourcePath << " to " << destinationPath;
                 filesystem::copy_file(sourcePath, destinationPath);
@@ -67,8 +67,8 @@ namespace qtr {
 
         map <uint64_t, filesystem::path> getLeafDirLocations(const Args &args) {
             map<uint64_t, filesystem::path> leafLocations;
-            for (const auto &dirPath: args.dbDataDirPaths()) {
-                for (auto &filePath: findFiles(dirPath)) {
+            for (const auto &dir: args.dbDataDirs()) {
+                for (auto &filePath: findFiles(dir, "")) {
                     uint64_t leafId = stoi(filePath.stem());
                     leafLocations[leafId] = filePath;
                 }
@@ -84,10 +84,10 @@ namespace qtr {
                 leafIds.push_back(id);
             shuffle(leafIds.begin(), leafIds.end(), mt19937(0));
 
-            auto dataDirPaths = args.dbDataDirPaths();
+            auto dataDirs = args.dbDataDirs();
             for (size_t i = 0; i < leafIds.size(); i++) {
                 const filesystem::path &currentLocation = leafLocations[leafIds[i]];
-                const filesystem::path &newLocation = dataDirPaths[i % dataDirPaths.size()];
+                const filesystem::path &newLocation = dataDirs[i % dataDirs.size()];
                 filesystem::rename(currentLocation, newLocation);
             }
         }
@@ -97,7 +97,7 @@ namespace qtr {
 
             distributeFingerprintTables(args, statisticCollector);
 
-            BallTreeBuilder ballTree(args.treeDepth(), args.parallelizeDepth(), args.dbDataDirPaths(),
+            BallTreeBuilder ballTree(args.treeDepth(), args.parallelizeDepth(), args.dbDataDirs(),
                                      MaxDispersionBitSelector());
             ofstream ballTreeWriter(args.ballTreePath());
             ballTree.dumpNodes(ballTreeWriter);
@@ -122,7 +122,7 @@ namespace qtr {
             TimeMeasurer::FunctionExecutionTimer timer(statisticCollector,
                                                        "merging smiles tables and building huffman");
 
-            vector<filesystem::path> smilesTablePaths = findFiles(args.smilesSourceDirPath(), stringTableExtension);
+            vector<filesystem::path> smilesTablePaths = findFiles(args.smilesSourceDir(), stringTableExtension);
 
             vector<string_table_value_t> smilesTable;
             HuffmanCoder::Builder huffmanBuilder;
@@ -152,7 +152,7 @@ namespace qtr {
         size_t mergePropertyTables(const Args &args, TimeMeasurer &statisticCollector) {
             TimeMeasurer::FunctionExecutionTimer timer(statisticCollector, "merging property tables");
 
-            vector<filesystem::path> propertyTablePaths = findFiles(args.propertyTablesSourceDirPath(), "");
+            vector<filesystem::path> propertyTablePaths = findFiles(args.propertyTablesSourceDir(), "");
 
             vector<pair<uint64_t, PropertiesFilter::Properties>> propertyTable;
 
@@ -193,7 +193,7 @@ namespace qtr {
 
         size_t distributeSmilesTables(const Args &args, const map <uint64_t, filesystem::path> &molLocations) {
             unordered_map<string, vector<pair<uint64_t, string>>> smilesTables;
-            vector<filesystem::path> smilesTablePaths = findFiles(args.smilesSourceDirPath(), stringTableExtension);
+            vector<filesystem::path> smilesTablePaths = findFiles(args.smilesSourceDir(), stringTableExtension);
             size_t molNumber = 0;
             for (auto &tablePath: smilesTablePaths) {
                 for (const auto &[id, smiles]: StringTableReader(tablePath)) {
@@ -203,8 +203,8 @@ namespace qtr {
                 }
             }
 
-            for (auto &[leafDirPath, leafTable]: smilesTables) {
-                auto leafTablePath = filesystem::path(leafDirPath) / ("smiles" + stringTableExtension);
+            for (auto &[leafDir, leafTable]: smilesTables) {
+                auto leafTablePath = filesystem::path(leafDir) / ("smiles" + stringTableExtension);
                 StringTableWriter writer(leafTablePath);
                 writer << leafTable;
             }
@@ -215,7 +215,7 @@ namespace qtr {
 
         size_t distributePropertyTables(const Args &args, const map <uint64_t, filesystem::path> &molLocations) {
             unordered_map<string, vector<pair<uint64_t, PropertiesFilter::Properties>>> propertyTables;
-            vector<filesystem::path> propertyTablePaths = findFiles(args.propertyTablesSourceDirPath(), "");
+            vector<filesystem::path> propertyTablePaths = findFiles(args.propertyTablesSourceDir(), "");
             size_t molNumber = 0;
             for (auto &tablePath: propertyTablePaths) {
                 for (const auto &[id, properties]: PropertiesTableReader(tablePath)) {
@@ -267,19 +267,22 @@ namespace qtr {
 
         auto buildBallTreeTask = async(launch::async, buildBallTree, cref(args), ref(statisticCollector));
 
-        auto idToStrSourceDirPath = args.idToStringSourceDirPath();
-        auto idToStrDestinationDirPath = args.idToStringDestinationDirPath();
+        auto idToStrSourceDir = args.idToStringSourceDir();
+        auto idToStrDestinationDir = args.idToStringDestinationDir();
         auto copyIdToStrTablesTask = async(launch::async, copyIdToStringTables,
                                            ref(statisticCollector),
-                                           cref(idToStrSourceDirPath),
-                                           cref(idToStrDestinationDirPath));
+                                           cref(idToStrSourceDir),
+                                           cref(idToStrDestinationDir));
         future<size_t> processTablesTask;
         if (args.dbType() == Args::DataBaseType::QtrRam)
             processTablesTask = async(launch::async, mergeTables, cref(args), ref(statisticCollector));
-        else {
+        else if (args.dbType() == Args::DataBaseType::QtrDrive) {
             buildBallTreeTask.wait(); // should distribute only after ball tree is built
             processTablesTask = async(launch::async, distributeTablesToLeafDirectories, cref(args),
                                       ref(statisticCollector));
+        } else {
+            LOG(ERROR) << "Wrong DB type in QtrDB building function";
+            exit(-1);
         }
 
         buildBallTreeTask.wait();

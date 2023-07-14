@@ -5,6 +5,7 @@
 #include "answer_filtering/PropertiesFilter.h"
 #include "BallTreeDriveSearchEngine.h"
 #include "modes/web/IdConverter.h"
+#include "TimeTicker.h"
 
 namespace qtr {
 

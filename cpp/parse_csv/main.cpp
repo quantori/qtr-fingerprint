@@ -10,17 +10,18 @@
 #include "id_to_string_io/IdToStringWriter.h"
 #include "properties_table_io/PropertiesTableWriter.h"
 #include "PropertiesFilter.h"
+#include "TimeTicker.h"
 
 ABSL_FLAG(std::string, source_dir_path, "", "Path to dir with csv files");
 
 ABSL_FLAG(std::string, dest_dir_path, "",
           "Path to directory where parsed data should be stored");
 
-struct ArgsOld {
+struct Args {
     std::filesystem::path sourceDirPath;
     std::filesystem::path destDirPath;
 
-    ArgsOld(int argc, char *argv[]) {
+    Args(int argc, char *argv[]) {
         absl::ParseCommandLine(argc, argv);
 
         sourceDirPath = absl::GetFlag(FLAGS_source_dir_path);
@@ -45,7 +46,7 @@ std::vector<std::string> splitString(const std::string &str, char delimiter) {
 }
 
 void
-parseCSV(const std::filesystem::path &csvFilePath, const ArgsOld &args, std::atomic_uint64_t &counter, std::mutex &mutex) {
+parseCSV(const std::filesystem::path &csvFilePath, const Args &args, std::atomic_uint64_t &counter, std::mutex &mutex) {
     std::filesystem::path smilesTablePath =
             args.destDirPath / "smilesTables" / (csvFilePath.stem().string() + qtr::stringTableExtension);
     std::filesystem::path fingerprintTablePath =
@@ -116,7 +117,7 @@ parseCSV(const std::filesystem::path &csvFilePath, const ArgsOld &args, std::ato
 int main(int argc, char *argv[]) {
     google::InitGoogleLogging(argv[0]);
     google::LogToStderr();
-    ArgsOld args(argc, argv);
+    Args args(argc, argv);
 
     qtr::TimeTicker timeTicker;
     std::vector<std::filesystem::path> csvPaths = qtr::findFiles(args.sourceDirPath, ".csv");

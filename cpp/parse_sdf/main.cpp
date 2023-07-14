@@ -18,6 +18,7 @@
 #include "raw_bucket_io/RawBucketWriter.h"
 #include "string_table_io/StringTableWriter.h"
 #include "fingerprint_table_io/FingerprintTableWriter.h"
+#include "TimeTicker.h"
 
 
 ABSL_FLAG(std::string, source_dir_path, "",
@@ -30,16 +31,16 @@ ABSL_FLAG(std::string, parse_mode, "",
           R"(How parsed data should be stored: "rb", "tables")");
 
 enum DestType {
-    RB,
-    TABLES
+    RawBucket,
+    Tables
 };
 
-struct ArgsOld {
+struct Args {
     std::filesystem::path sourceDirPath;
     std::filesystem::path destDirPath;
     DestType parseMode;
 
-    ArgsOld(int argc, char *argv[]) {
+    Args(int argc, char *argv[]) {
         absl::ParseCommandLine(argc, argv);
 
         sourceDirPath = absl::GetFlag(FLAGS_source_dir_path);
@@ -50,9 +51,9 @@ struct ArgsOld {
 
         std::string parseModeStr = absl::GetFlag(FLAGS_parse_mode);
         if (parseModeStr == "rb") {
-            parseMode = RB;
+            parseMode = RawBucket;
         } else if (parseModeStr == "tables") {
-            parseMode = TABLES;
+            parseMode = Tables;
         } else {
             LOG(ERROR) << R"(Please specify parseModeStr option with value "rb" or "tables")";
             exit(-1);
@@ -81,7 +82,7 @@ void processSDF(const std::filesystem::path &sdFilePath,
     LOG(INFO) << "Finish processing " << sdFilePath << " : skipped -- " << skipped << ", processed -- " << processed;
 }
 
-void sdfToRb(const std::filesystem::path &sdFilePath, const ArgsOld &args) {
+void sdfToRb(const std::filesystem::path &sdFilePath, const Args &args) {
     std::filesystem::path rbFilePath = args.destDirPath / (sdFilePath.stem().string() + qtr::rawBucketExtension);
     qtr::RawBucketWriter writer(rbFilePath);
 
@@ -92,7 +93,7 @@ void sdfToRb(const std::filesystem::path &sdFilePath, const ArgsOld &args) {
     });
 }
 
-void sdfToTables(const std::filesystem::path &sdFilePath, const ArgsOld &args) {
+void sdfToTables(const std::filesystem::path &sdFilePath, const Args &args) {
     std::filesystem::path smilesTablePath =
             args.destDirPath / "smilesTables" / (sdFilePath.stem().string() + qtr::stringTableExtension);
     std::filesystem::path fingerprintTablePath =
@@ -115,10 +116,10 @@ void sdfToTables(const std::filesystem::path &sdFilePath, const ArgsOld &args) {
     });
 }
 
-void parseSDF(const std::filesystem::path &sdFilePath, const ArgsOld &args) {
-    if (args.parseMode == RB) {
+void parseSDF(const std::filesystem::path &sdFilePath, const Args &args) {
+    if (args.parseMode == RawBucket) {
         sdfToRb(sdFilePath, args);
-    } else if (args.parseMode == TABLES) {
+    } else if (args.parseMode == Tables) {
         sdfToTables(sdFilePath, args);
     }
 }
@@ -126,7 +127,7 @@ void parseSDF(const std::filesystem::path &sdFilePath, const ArgsOld &args) {
 int main(int argc, char *argv[]) {
     google::InitGoogleLogging(argv[0]);
     google::LogToStderr();
-    ArgsOld args(argc, argv);
+    Args args(argc, argv);
 
     qtr::TimeTicker timeTicker;
     std::vector<std::filesystem::path> sdFilePaths = qtr::findFiles(args.sourceDirPath, ".sdf");
