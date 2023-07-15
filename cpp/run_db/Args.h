@@ -85,6 +85,14 @@ namespace qtr {
             }
         }
 
+        [[nodiscard]] inline std::vector<std::filesystem::path> dbDataDirs() const {
+            std::vector<std::filesystem::path> res;
+            for (auto &dir: dataDirs()) {
+                res.emplace_back(dir / dbName());
+            }
+            return res;
+        }
+
         [[nodiscard]] inline std::filesystem::path dbOtherDataDir() const {
             return otherDataDir() / dbName();
         }
@@ -105,10 +113,8 @@ namespace qtr {
             return dbOtherDataDir() / "idToString";
         }
 
-        [[nodiscard]] inline std::filesystem::path propertyTableDestinationPath() const {
+        [[nodiscard]] inline std::filesystem::path propertyTablePath() const {
             return dbOtherDataDir() / "propertyTable";
         }
-
-
     };
 }

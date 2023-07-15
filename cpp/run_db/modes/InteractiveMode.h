@@ -5,6 +5,7 @@
 #include "RunMode.h"
 #include "iostream"
 #include "RunDbUtils.h"
+#include "search_data/RamSearchData.h"
 
 namespace qtr {
     class InteractiveMode : public RunMode {
