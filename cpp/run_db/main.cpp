@@ -17,34 +17,41 @@
 #include "modes/InteractiveMode.h"
 #include "modes/FromFileMode.h"
 
+#include "Args.h"
+
 
 using namespace std;
 using namespace qtr;
 
-
-ABSL_FLAG(vector<string>, data_dir_paths, {},
-          "Path to directories where data are stored");
-
-ABSL_FLAG(string, other_data_path, "",
-          "Path to directory with other files");
-
-ABSL_FLAG(string, db_name, "",
+ABSL_FLAG(string, dbName, "",
           "Name of folders with data base's files");
 
-ABSL_FLAG(uint64_t, threads_count, -1,
+ABSL_FLAG(string, dbType, "",
+          "Possible types: "
+                  FLAG_NAME(QtrDrive) ", "
+                  FLAG_NAME(QtrRam) ", "
+                  FLAG_NAME(BingoNoSQL));
+
+ABSL_FLAG(vector<string>, dataDirs, {},
+          "Path to directories where data are stored");
+
+ABSL_FLAG(string, otherDataDir, "",
+          "Path to directory with other files");
+
+ABSL_FLAG(uint64_t, threads, -1,
           "Number of threads to process leafs.");
 
 ABSL_FLAG(string, mode, "",
-          "Possible modes: interactive, from_file, web");
+          "Possible modes: "
+                  FLAG_NAME(Interactive) ", "
+                  FLAG_NAME(FromFile) ", "
+                  FLAG_NAME(Web));
 
-ABSL_FLAG(string, input_file, "",
+ABSL_FLAG(string, inputFile, "",
           "File to load test molecules from");
 
-ABSL_FLAG(uint64_t, ans_count, -1,
-          "How many answers program will find");
-
-ABSL_FLAG(string, db_type, "",
-          "Possible types: on_drive, in_ram");
+ABSL_FLAG(uint64_t, ansCount, -1,
+          "The maximum number of answers to be found");
 
 ABSL_FLAG(double, time_limit, -1,
           "Single request time limit in seconds");

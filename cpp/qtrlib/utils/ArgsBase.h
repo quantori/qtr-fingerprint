@@ -24,7 +24,8 @@
             } \
         } \
         inline void parse_##name() { \
-            _##name = parseFunction(absl::GetFlag(FLAGS_##name)); \
+            _##name = parseFunction(absl::GetFlag(FLAGS_##name));     \
+            LOG(INFO) << #name << ": " << toString(absl::GetFlag(FLAGS_##name)); \
         } \
         inline void parseAndCheck_##name() { \
             parse_##name(); \
@@ -64,7 +65,9 @@ namespace qtr {
     protected:
         static std::vector<std::filesystem::path> vecStrToVecPath(const std::vector<std::string> &v);
 
-        static DataBaseType strToDataBaseType(const std::string &s);
+        const static inline auto strToDataBaseType = makeStringToEnumFunction(_strToDataBaseType,
+                                                                              DataBaseType::BadType);
+
     };
 } // qtr
 

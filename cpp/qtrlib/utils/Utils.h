@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <vector>
 #include <unordered_map>
+#include <type_traits>
 
 #include <glog/logging.h>
 #include "glog/log_severity.h"
@@ -153,5 +154,44 @@ namespace qtr {
         std::vector<T> res = lhs;
         std::copy(rhs.begin(), rhs.end(), std::back_inserter(res));
         return res;
+    }
+
+    template<typename Enum>
+    auto makeStringToEnumFunction(const std::unordered_map<std::string, Enum> &mapping, Enum badValue) {
+        return [&mapping, badValue](const std::string &s) {
+            auto it = mapping.find(s);
+            if (it == mapping.end())
+                return badValue;
+            return it->second;
+        };
+    }
+
+    template<typename T, typename = void>
+    struct Printable : std::false_type {
+    };
+
+    template<typename T>
+    struct Printable<T, std::void_t<decltype(std::cout << std::declval<T>())>> : std::true_type {
+    };
+
+    template<typename T>
+    std::string toString(const T &value) {
+        std::ostringstream oss;
+        if constexpr (Printable<T>::value) {
+            oss << value;
+        } else {
+            oss << "[";
+            for (const auto &element: value) {
+                oss << toString(element) << ", ";
+            }
+            std::string result = oss.str();
+            if (result.size() > 1) {
+                result.pop_back();
+                result.pop_back();
+            }
+            result.push_back(']');
+            return result;
+        }
+        return oss.str();
     }
 } // namespace qtr
