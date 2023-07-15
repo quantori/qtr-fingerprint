@@ -55,7 +55,7 @@ struct Args {
         } else if (parseModeStr == "tables") {
             parseMode = Tables;
         } else {
-            LOG(ERROR) << R"(Please specify parseModeStr option with value "rb" or "tables")";
+            LOG(ERROR) << R"(Please specify parse_mode option with value "rb" or "tables")";
             exit(-1);
         }
     }

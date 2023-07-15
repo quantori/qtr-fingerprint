@@ -4,6 +4,7 @@
 #include "IndigoMolecule.h"
 #include "IndigoSDFileIterator.h"
 #include "IndigoException.h"
+#include "string_table_io/StringTableReader.h"
 
 #include <future>
 
@@ -13,30 +14,30 @@ using namespace indigo_cpp;
 namespace qtr {
     namespace {
         void storeSDFDataInDB(int db, mutex &lock, const shared_ptr <IndigoSession> &indigoSessionPtr,
-                              const filesystem::path &sdfFilePath) {
-            LOG(INFO) << "Start " << sdfFilePath << " parsing";
-            IndigoSDFileIterator iterator = indigoSessionPtr->iterateSDFile(sdfFilePath.c_str());
+                              const filesystem::path &smilesTablePath) {
+            LOG(INFO) << "Start " << smilesTablePath << " parsing";
+            IndigoSDFileIterator iterator = indigoSessionPtr->iterateSDFile(smilesTablePath.c_str());
             size_t processedNumber = 0;
             size_t failuresNumber = 0;
-            for (auto &molecule: iterator) {
+            for (const auto &[id, smiles]: StringTableReader(smilesTablePath)) {
+                unique_ptr<IndigoMolecule> molecule = nullptr;
                 try {
+                    molecule = make_unique<IndigoMolecule>(indigoSessionPtr->loadMolecule(smiles));
                     molecule->aromatize();
-                }
-                catch (const IndigoException &e) {
-                    LOG(ERROR) << "Aromatize error: " << e.what();
-                    failuresNumber++;
-                }
-                {
                     lock_guard<mutex> lockGuard(lock);
                     bingoInsertRecordObj(db, molecule->id());
                 }
+                catch (const IndigoException &e) {
+                    LOG(ERROR) << "Indigo error: " << e.what();
+                    failuresNumber++;
+                }
                 processedNumber++;
                 if (processedNumber % 1000 == 0) {
-                    LOG(INFO) << "Processed " << processedNumber << " molecules from " << sdfFilePath;
+                    LOG(INFO) << "Processed " << processedNumber << " molecules from " << smilesTablePath;
                 }
             }
 
-            LOG(INFO) << "Finish " << sdfFilePath << " parsing " <<
+            LOG(INFO) << "Finish " << smilesTablePath << " parsing " <<
                       "(" << processedNumber << " processed, " << failuresNumber << " failures)";
         }
     }
@@ -60,7 +61,7 @@ namespace qtr {
         int db = bingoCreateDatabaseFile((destDir / args.dbName()).c_str(), "molecule", "");
         mutex indigoLock;
         vector<future<void>> tasks;
-        for (const auto &entry: filesystem::directory_iterator(args.sourceDir())) {
+        for (const auto &entry: filesystem::directory_iterator(args.smilesSourceDir())) {
             tasks.push_back(async(launch::async, storeSDFDataInDB, db, ref(indigoLock), cref(indigoSessionPtr),
                                   entry.path()));
         }
