@@ -13,7 +13,7 @@ using namespace indigo_cpp;
 
 namespace qtr {
     namespace {
-        void storeSmilesTableInDB(int db, mutex &lock, const shared_ptr <IndigoSession> &indigoSessionPtr,
+        void storeSmilesTableInDB(int db, const shared_ptr <IndigoSession> &indigoSessionPtr,
                                   const filesystem::path &smilesTablePath) {
             LOG(INFO) << "Start " << smilesTablePath << " parsing";
             IndigoSDFileIterator iterator = indigoSessionPtr->iterateSDFile(smilesTablePath.c_str());
@@ -24,8 +24,7 @@ namespace qtr {
                 try {
                     molecule = make_unique<IndigoMolecule>(indigoSessionPtr->loadMolecule(smiles));
                     molecule->aromatize();
-                    lock_guard<mutex> lockGuard(lock);
-                    bingoInsertRecordObj(db, molecule->id());
+                    indigoSessionPtr->_checkResult(bingoInsertRecordObj(db, molecule->id()));
                 }
                 catch (const IndigoException &e) {
                     LOG(ERROR) << "Indigo error: " << e.what();
@@ -58,10 +57,9 @@ namespace qtr {
             exit(-1);
         }
         int db = bingoCreateDatabaseFile((destDir / args.dbName()).c_str(), "molecule", "");
-        mutex indigoLock;
         vector<future<void>> tasks;
         for (const auto &entry: filesystem::directory_iterator(args.smilesSourceDir())) {
-            tasks.push_back(async(launch::async, storeSmilesTableInDB, db, ref(indigoLock), cref(indigoSessionPtr),
+            tasks.push_back(async(launch::async, storeSmilesTableInDB, db, cref(indigoSessionPtr),
                                   entry.path()));
         }
         for (auto &task: tasks) {

@@ -70,10 +70,6 @@ namespace qtr {
             }
 
             if (dbType() == DatabaseType::BingoNoSQL) {
-                if (mode() != Mode::FromFile) {
-                    LOG(ERROR) << "Only FromFile mode is supported for BingoNoSQL";
-                    exit(-1);
-                }
                 if (threads() != 1) {
                     LOG(ERROR) << "Only single-threaded run is supported for BingoNoSQL";
                     exit(-1);

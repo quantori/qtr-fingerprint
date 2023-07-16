@@ -6,6 +6,7 @@
 #include "iostream"
 #include "search_data/QtrRamSearchData.h"
 #include "search_data/QtrDriveSearchData.h"
+#include "search_data/BingoNoSQLSearchData.h"
 
 namespace qtr {
     class InteractiveMode : public RunMode {
@@ -31,21 +32,24 @@ namespace qtr {
                     queryData->waitAllTasks();
                     LOG(INFO) << "Found " << queryData->getCurrentAnswersCount() << " answers";
                     auto answers = queryData->getAnswers(0, 5).second;
+                    LOG(INFO) << "Answer examples:";
                     if (dynamic_cast<const QtrRamSearchData *>(this->_searchData.get()) != nullptr) {
-                        LOG(INFO) << "Answer examples:";
                         const auto *ramSearchData = dynamic_cast<const QtrRamSearchData *>(this->_searchData.get());
                         for (auto &i: answers) {
                             LOG(INFO) << (*ramSearchData->smilesTable)[i];
                         }
                     } else if (dynamic_cast<const QtrDriveSearchData *>(this->_searchData.get()) != nullptr) {
-                        LOG(INFO) << "Answer examples:";
                         for (auto &i: answers) {
                             LOG(INFO) << i;
+                        }
+                    } else if (dynamic_cast<const BingoNoSQLSearchData *>(this->_searchData.get()) != nullptr) {
+                        for (auto &i: answers) {
+                            LOG(INFO) << indigoSmiles(i);
                         }
                     }
                     std::cout << "Search time: " << this->_searchData->timeTicker.tick("Search time") << std::endl;
                 } catch (std::exception &e) {
-                    LOG(ERROR) << e.what() << " while processing " << smiles;
+                    LOG(ERROR) << e.what() << "error occurred while processing " << smiles;
                     continue;
                 }
             }
