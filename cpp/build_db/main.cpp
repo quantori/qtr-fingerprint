@@ -1,8 +1,8 @@
 #include <glog/logging.h>
 
 #include "Args.h"
-#include "buildQtr.h"
-#include "buildBingoNoSQL.h"
+#include "build_types/buildQtr.h"
+#include "build_types/buildBingoNoSQL.h"
 
 using namespace std;
 using namespace qtr;
@@ -39,10 +39,10 @@ int main(int argc, char *argv[]) {
     Args args(argc, argv);
     TimeMeasurer statisticCollector;
 
-    if (args.dbType() == ArgsBase::DataBaseType::QtrDrive ||
-        args.dbType() == ArgsBase::DataBaseType::QtrRam) {
+    if (args.dbType() == DatabaseType::QtrDrive ||
+        args.dbType() == DatabaseType::QtrRam) {
         buildQtrDb(args, statisticCollector);
-    } else if (args.dbType() == ArgsBase::DataBaseType::BingoNoSQL) {
+    } else if (args.dbType() == DatabaseType::BingoNoSQL) {
         buildBingoNoSQLDb(args, statisticCollector);
     }
 

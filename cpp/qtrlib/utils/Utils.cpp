@@ -43,4 +43,9 @@ namespace qtr {
         google::SetLogDestination(severity, base_filename);
         FLAGS_alsologtostderr = alsoLogToStderr;
     }
+
+    void logErrorAndExit(const string &message) {
+        LOG(ERROR) << message;
+        exit(-1);
+    }
 } // namespace qtr

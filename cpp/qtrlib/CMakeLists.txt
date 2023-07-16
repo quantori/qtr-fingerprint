@@ -25,6 +25,7 @@ target_include_directories(${This}
         PUBLIC ball_tree
         PUBLIC smiles_table
         PUBLIC answer_filtering
+        PUBLIC query_data
         )
 
 target_link_libraries(${This} glog::glog)

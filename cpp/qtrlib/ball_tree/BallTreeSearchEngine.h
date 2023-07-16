@@ -10,7 +10,7 @@
 #include "BallTree.h"
 #include "Fingerprint.h"
 #include "BallTreeTypes.h"
-#include "BallTreeQueryData.h"
+#include "query_data/BallTreeQueryData.h"
 #include "answer_filtering/AnswerFilter.h"
 #include "answer_filtering/AlwaysTrueFilter.h"
 

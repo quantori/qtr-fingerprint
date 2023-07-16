@@ -194,4 +194,6 @@ namespace qtr {
         }
         return oss.str();
     }
+
+    [[noreturn]] void logErrorAndExit(const std::string &message);
 } // namespace qtr

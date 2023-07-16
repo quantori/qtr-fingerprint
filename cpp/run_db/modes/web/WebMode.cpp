@@ -1,4 +1,5 @@
 #include "WebMode.h"
+#include "search_data/QtrSearchData.h"
 
 #include <utility>
 
@@ -6,26 +7,18 @@ using namespace std;
 
 namespace qtr {
 
-
-    WebMode::WebMode(std::shared_ptr<const SearchData> searchData) : _searchData(std::move(searchData)) {}
-
-    crow::json::wvalue
-    WebMode::prepareResponse(BallTreeQueryData &queryData, size_t minOffset, size_t maxOffset) {
-        cout << minOffset << " " << maxOffset << endl;
-        auto [isFinished, result] = queryData.getAnswers(minOffset, maxOffset);
-        LOG(INFO) << "found " << result.size() << " results";
-        crow::json::wvalue::list molecules;
-        molecules.reserve(result.size());
-        for (auto res: result) {
-            auto [id, libraryId] = _searchData->idConverter->fromDbId(res);
-            molecules.emplace_back(crow::json::wvalue{{"id",        id},
-                                                      {"libraryId", libraryId}});
+    namespace {
+        pair<string, string> convertId(CIDType id, const shared_ptr<SearchData>& searchData) {
+            auto qtrSearchData = dynamic_cast<const QtrSearchData *>(searchData.get());
+            if (qtrSearchData != nullptr)
+                return qtrSearchData->idConverter->fromDbId(id);
+            else
+                return {to_string(id), ""};
         }
-        return crow::json::wvalue{
-                {"molecules",  molecules},
-                {"isFinished", isFinished}
-        };
     }
+
+
+    WebMode::WebMode(std::shared_ptr<SearchData> searchData) : RunMode(std::move(searchData)) {}
 
     static PropertiesFilter::Bounds extractBounds(const crow::json::rvalue &json) {
         PropertiesFilter::Bounds bounds;
@@ -54,7 +47,7 @@ namespace qtr {
         mutex newTaskMutex;
 
         vector<string> smilesList;
-        vector<unique_ptr<BallTreeQueryData>> queries;
+        vector<unique_ptr<QueryData<CIDType>>> queries;
 
         CROW_ROUTE(app, "/query")
                 .methods(crow::HTTPMethod::POST)(
@@ -69,8 +62,8 @@ namespace qtr {
 
                             auto bounds = extractBounds(json);
                             size_t queryId = queries.size();
-                            auto [error, queryData] = runSearch(*_searchData, currSmiles, bounds);
-                            if (error) {
+                            auto queryData = _searchData->search(currSmiles, bounds);
+                            if (queryData == nullptr) {
                                 LOG(WARNING) << "Cannot start search for smilesList: " << currSmiles;
                                 return crow::response(to_string(-1));
                             }
@@ -101,8 +94,8 @@ namespace qtr {
                     auto bounds = extractBounds(json);
 
                     lock_guard<mutex> lock(newTaskMutex);
-                    auto [error, queryData] = runSearch(*_searchData, smiles, bounds);
-                    if (error) {
+                    auto queryData = _searchData->search(smiles, bounds);
+                    if (queryData == nullptr) {
                         LOG(WARNING) << "Cannot start search for smilesList: " << smiles;
                         return crow::json::wvalue(to_string(-1));
                     }
@@ -112,6 +105,23 @@ namespace qtr {
 
         app.port(8080).concurrency(2).run();
 
+    }
+
+    crow::json::wvalue WebMode::prepareResponse(QueryData<CIDType> &queryData, size_t minOffset, size_t maxOffset) {
+        cout << minOffset << " " << maxOffset << endl;
+        auto [isFinished, result] = queryData.getAnswers(minOffset, maxOffset);
+        LOG(INFO) << "found " << result.size() << " results";
+        crow::json::wvalue::list molecules;
+        molecules.reserve(result.size());
+        for (auto res: result) {
+            auto [id, libraryId] = convertId(res, _searchData);
+            molecules.emplace_back(crow::json::wvalue{{"id",        id},
+                                                      {"libraryId", libraryId}});
+        }
+        return crow::json::wvalue{
+                {"molecules",  molecules},
+                {"isFinished", isFinished}
+        };
     }
 
 } // namespace qtr

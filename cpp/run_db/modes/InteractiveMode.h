@@ -4,17 +4,14 @@
 
 #include "RunMode.h"
 #include "iostream"
-#include "RunDbUtils.h"
-#include "search_data/RamSearchData.h"
+#include "search_data/QtrRamSearchData.h"
+#include "search_data/QtrDriveSearchData.h"
 
 namespace qtr {
     class InteractiveMode : public RunMode {
-    private:
-        std::shared_ptr<const SearchData> _searchData;
-
     public:
-        inline explicit InteractiveMode(std::shared_ptr<const SearchData> searchData)
-                : _searchData(std::move(searchData)) {}
+        inline explicit InteractiveMode(std::shared_ptr<SearchData> searchData) :
+                RunMode(std::move(searchData)) {}
 
 
         inline void run() override {
@@ -24,30 +21,29 @@ namespace qtr {
                 std::cin >> smiles;
                 if (smiles.empty())
                     break;
-                _searchData->timeTicker.tick();
+                this->_searchData->timeTicker.tick();
                 try {
-                    auto [error, queryData] = runSearch(*_searchData, smiles, PropertiesFilter::Bounds());
-                    if (error) {
+                    auto queryData = this->_searchData->search(smiles, PropertiesFilter::Bounds());
+                    if (queryData == nullptr) {
                         LOG(ERROR) << "Can not parse given smiles";
                         continue;
                     }
                     queryData->waitAllTasks();
                     LOG(INFO) << "Found " << queryData->getCurrentAnswersCount() << " answers";
                     auto answers = queryData->getAnswers(0, 5).second;
-                    if (_searchData->getClass() == SearchData::DerivedClasses::RamSearchData) {
+                    if (dynamic_cast<const QtrRamSearchData *>(this->_searchData.get()) != nullptr) {
                         LOG(INFO) << "Answer examples:";
-                        const auto *ramSearchData = dynamic_cast<const RamSearchData *>(_searchData.get());
+                        const auto *ramSearchData = dynamic_cast<const QtrRamSearchData *>(this->_searchData.get());
                         for (auto &i: answers) {
                             LOG(INFO) << (*ramSearchData->smilesTable)[i];
                         }
-                    }
-                    else if (_searchData->getClass() == SearchData::DerivedClasses::DriveSearchData) {
+                    } else if (dynamic_cast<const QtrDriveSearchData *>(this->_searchData.get()) != nullptr) {
                         LOG(INFO) << "Answer examples:";
-                        for (auto& i : answers) {
+                        for (auto &i: answers) {
                             LOG(INFO) << i;
                         }
                     }
-                    std::cout << "Search time: " << _searchData->timeTicker.tick("Search time") << std::endl;
+                    std::cout << "Search time: " << this->_searchData->timeTicker.tick("Search time") << std::endl;
                 } catch (std::exception &e) {
                     LOG(ERROR) << e.what() << " while processing " << smiles;
                     continue;

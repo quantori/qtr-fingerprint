@@ -25,14 +25,14 @@ namespace qtr {
 
     private:
         const static inline std::unordered_map<std::string, Mode> _strToMode = {
-                {"interactive", Mode::Interactive},
-                {"fromFile",    Mode::FromFile},
-                {"web",         Mode::Web}
+                {"Interactive", Mode::Interactive},
+                {"FromFile",    Mode::FromFile},
+                {"Web",         Mode::Web}
         };
 
         const static inline auto strToMode = makeStringToEnumFunction(_strToMode, Mode::BadMode);
 
-    ADD_ARGUMENT_WITH_PARSER(DataBaseType, dbType, DataBaseType::BadType, strToDataBaseType)
+    ADD_ARGUMENT_WITH_PARSER(DatabaseType, dbType, DatabaseType::BadType, strToDataBaseType)
 
     ADD_ARGUMENT(std::string, dbName, "")
 
@@ -60,8 +60,8 @@ namespace qtr {
             parseAndCheck_ansCount();
             parseAndCheck_timeLimit();
 
-            if (dbType() == ArgsBase::DataBaseType::QtrRam ||
-                dbType() == ArgsBase::DataBaseType::QtrDrive) {
+            if (dbType() == DatabaseType::QtrRam ||
+                dbType() == DatabaseType::QtrDrive) {
                 parseAndCheck_otherDataDir();
             }
 
@@ -69,7 +69,7 @@ namespace qtr {
                 parseAndCheck_queriesFile();
             }
 
-            if (dbType() == ArgsBase::DataBaseType::BingoNoSQL) {
+            if (dbType() == DatabaseType::BingoNoSQL) {
                 if (mode() != Mode::FromFile) {
                     LOG(ERROR) << "Only FromFile mode is supported for BingoNoSQL";
                     exit(-1);

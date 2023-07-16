@@ -20,7 +20,7 @@ ABSL_DECLARE_FLAG(uint64_t, treeDepth);
 
 namespace qtr {
     class Args : public ArgsBase {
-    ADD_ARGUMENT_WITH_PARSER(DataBaseType, dbType, DataBaseType::BadType, strToDataBaseType)
+    ADD_ARGUMENT_WITH_PARSER(DatabaseType, dbType, DatabaseType::BadType, strToDataBaseType)
 
     ADD_ARGUMENT(std::string, dbName, std::string())
 
@@ -40,12 +40,12 @@ namespace qtr {
             parseAndCheck_dbType();
             parseAndCheck_sourceDir();
             parseAndCheck_destDirs();
-            if (dbType() == DataBaseType::QtrDrive || dbType() == DataBaseType::QtrRam) {
+            if (dbType() == DatabaseType::QtrDrive || dbType() == DatabaseType::QtrRam) {
                 parseAndCheck_otherDestDir();
                 parseAndCheck_parallelizeDepth();
                 parseAndCheck_treeDepth();
-            } else if (dbType() == qtr::ArgsBase::DataBaseType::BingoNoSQL) {
-                // TODO: implement Bingo arguments
+            } else if (dbType() == DatabaseType::BingoNoSQL) {
+                // No specific arguments for BingoNoSQL
             } else {
                 LOG(ERROR) << "A case that should not have been executed has been executed";
                 exit(-1);

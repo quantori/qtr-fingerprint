@@ -11,6 +11,7 @@
 #include <map>
 
 #include "Utils.h"
+#include "DatabaseType.h"
 
 #define FLAG_NAME(x) #x
 
@@ -47,26 +48,19 @@ namespace qtr {
 
     class ArgsBase {
     public:
-        enum class DataBaseType {
-            BadType,
-            QtrDrive,
-            QtrRam,
-            BingoNoSQL
-        };
-
         ArgsBase(int argc, char *argv[]);
 
     private:
-        static inline const std::unordered_map<std::string, DataBaseType> _strToDataBaseType =
-                {{"QtrDrive",   DataBaseType::QtrDrive},
-                 {"QrtRam",     DataBaseType::QtrRam},
-                 {"BingoNoSQL", DataBaseType::BingoNoSQL}};
+        static inline const std::unordered_map<std::string, DatabaseType> _strToDataBaseType =
+                {{"QtrDrive",   DatabaseType::QtrDrive},
+                 {"QrtRam",     DatabaseType::QtrRam},
+                 {"BingoNoSQL", DatabaseType::BingoNoSQL}};
 
     protected:
         static std::vector<std::filesystem::path> vecStrToVecPath(const std::vector<std::string> &v);
 
         const static inline auto strToDataBaseType = makeStringToEnumFunction(_strToDataBaseType,
-                                                                              DataBaseType::BadType);
+                                                                              DatabaseType::BadType);
 
     };
 } // qtr

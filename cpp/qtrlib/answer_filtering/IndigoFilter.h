@@ -5,17 +5,18 @@
 
 #include "AnswerFilter.h"
 #include "SmilesTable.h"
+#include "BallTreeTypes.h"
 
 #include "IndigoQueryMolecule.h"
 #include "IndigoSubstructureMatcher.h"
 
 namespace qtr {
 
-    class IndigoFilter : public AnswerFilter {
+    class IndigoFilter : public ByIdAnswerFilter {
     public:
         inline static std::atomic<double> indigoFilteringTimer = 0;
 
-        bool operator()(CIDType id) override;
+        bool operator()(const CIDType &id) override;
 
         ~IndigoFilter() override;
 

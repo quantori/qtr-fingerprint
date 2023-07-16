@@ -19,7 +19,7 @@ namespace qtr {
     IndigoDriveFilter::IndigoDriveFilter(shared_ptr<const string> querySmiles) :
             IndigoFilter(std::move(querySmiles)) {}
 
-    unique_ptr <AnswerFilter> IndigoDriveFilter::copy() {
+    unique_ptr <ByIdAnswerFilter> IndigoDriveFilter::copy() {
         return make_unique<IndigoDriveFilter>(_querySmiles);
     }
 } // qtr

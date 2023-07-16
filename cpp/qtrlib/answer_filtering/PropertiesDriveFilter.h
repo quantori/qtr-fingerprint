@@ -1,12 +1,14 @@
 #pragma once
 
 #include <map>
+#include <filesystem>
 
 #include "PropertiesFilter.h"
+#include "QtrBallTreeLeafInitMixin.h"
 
 namespace qtr {
 
-    class PropertiesDriveFilter : public PropertiesFilter {
+    class PropertiesDriveFilter : public PropertiesFilter, public QtrBallTreeLeafInitMixin {
     public:
         std::unique_ptr<AnswerFilter> copy() override;
 
@@ -14,10 +16,10 @@ namespace qtr {
 
         explicit PropertiesDriveFilter(Bounds bounds);
 
+        void initBallTreeLeaf(const std::filesystem::path& leafDirPath) override;
+
     private:
         const Properties& getProperties(CIDType id) override;
-
-        void initBallTreeLeaf(const std::filesystem::path& leafDirPath) override;
 
         std::map<CIDType, Properties> _propertiesTable;
     };

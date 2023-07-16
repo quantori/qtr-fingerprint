@@ -3,11 +3,12 @@
 #include "glog/logging.h"
 #include "IndigoMolecule.h"
 #include "indigo.h"
+#include "BallTreeTypes.h"
 
 using namespace std;
 
 namespace qtr {
-    bool IndigoFilter::operator()(CIDType id) {
+    bool IndigoFilter::operator()(const CIDType &id) {
         const auto &smiles = getSmiles(id);
         auto startTime = std::chrono::high_resolution_clock::now();
         bool result;

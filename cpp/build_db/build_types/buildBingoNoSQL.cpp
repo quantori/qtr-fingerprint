@@ -13,8 +13,8 @@ using namespace indigo_cpp;
 
 namespace qtr {
     namespace {
-        void storeSDFDataInDB(int db, mutex &lock, const shared_ptr <IndigoSession> &indigoSessionPtr,
-                              const filesystem::path &smilesTablePath) {
+        void storeSmilesTableInDB(int db, mutex &lock, const shared_ptr <IndigoSession> &indigoSessionPtr,
+                                  const filesystem::path &smilesTablePath) {
             LOG(INFO) << "Start " << smilesTablePath << " parsing";
             IndigoSDFileIterator iterator = indigoSessionPtr->iterateSDFile(smilesTablePath.c_str());
             size_t processedNumber = 0;
@@ -36,7 +36,6 @@ namespace qtr {
                     LOG(INFO) << "Processed " << processedNumber << " molecules from " << smilesTablePath;
                 }
             }
-
             LOG(INFO) << "Finish " << smilesTablePath << " parsing " <<
                       "(" << processedNumber << " processed, " << failuresNumber << " failures)";
         }
@@ -62,11 +61,12 @@ namespace qtr {
         mutex indigoLock;
         vector<future<void>> tasks;
         for (const auto &entry: filesystem::directory_iterator(args.smilesSourceDir())) {
-            tasks.push_back(async(launch::async, storeSDFDataInDB, db, ref(indigoLock), cref(indigoSessionPtr),
+            tasks.push_back(async(launch::async, storeSmilesTableInDB, db, ref(indigoLock), cref(indigoSessionPtr),
                                   entry.path()));
         }
         for (auto &task: tasks) {
             task.wait();
         }
+        bingoCloseDatabase(db);
     }
 }

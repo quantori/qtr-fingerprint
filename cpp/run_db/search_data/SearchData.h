@@ -11,22 +11,13 @@ namespace qtr {
 
     class SearchData {
     public:
-
-        enum class DerivedClasses {
-            RamSearchData,
-            DriveSearchData
-        };
-
-        [[nodiscard]] virtual DerivedClasses getClass() const = 0;
-
         virtual ~SearchData() = default;
 
-        SearchData(std::shared_ptr<const BallTreeSearchEngine> ballTree, std::shared_ptr<const IdConverter> idConverter,
-                   TimeTicker &timeTicker, size_t ansCount, size_t threadCount, double timeLimit);
+        SearchData(TimeTicker &timeTicker, size_t ansCount, size_t threadCount, double timeLimit);
 
+        virtual std::unique_ptr<QueryData<CIDType>>
+        search(const std::string &querySmiles, const PropertiesFilter::Bounds &queryBounds) = 0;
 
-        std::shared_ptr<const BallTreeSearchEngine> ballTree;
-        std::shared_ptr<const IdConverter> idConverter;
         TimeTicker &timeTicker;
         size_t ansCount;
         size_t threadsCount;

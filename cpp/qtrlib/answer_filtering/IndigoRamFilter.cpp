@@ -7,7 +7,7 @@
 
 namespace qtr {
 
-    std::unique_ptr<AnswerFilter> IndigoRamFilter::copy() {
+    std::unique_ptr<ByIdAnswerFilter> IndigoRamFilter::copy() {
         return std::make_unique<IndigoRamFilter>(_smilesTable, _querySmiles);
     }
 

@@ -102,7 +102,7 @@ namespace qtr {
             ofstream ballTreeWriter(args.ballTreePath());
             ballTree.dumpNodes(ballTreeWriter);
 
-            if (args.dbType() == Args::DataBaseType::QtrDrive)
+            if (args.dbType() == DatabaseType::QtrDrive)
                 shuffleBallTreeLeaves(args);
         }
 
@@ -274,9 +274,9 @@ namespace qtr {
                                            cref(idToStrSourceDir),
                                            cref(idToStrDestinationDir));
         future<size_t> processTablesTask;
-        if (args.dbType() == Args::DataBaseType::QtrRam)
+        if (args.dbType() == DatabaseType::QtrRam)
             processTablesTask = async(launch::async, mergeTables, cref(args), ref(statisticCollector));
-        else if (args.dbType() == Args::DataBaseType::QtrDrive) {
+        else if (args.dbType() == DatabaseType::QtrDrive) {
             buildBallTreeTask.wait(); // should distribute only after ball tree is built
             processTablesTask = async(launch::async, distributeTablesToLeafDirectories, cref(args),
                                       ref(statisticCollector));

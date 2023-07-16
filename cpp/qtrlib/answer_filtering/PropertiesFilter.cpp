@@ -25,7 +25,7 @@ namespace qtr {
         return true;
     }
 
-    bool PropertiesFilter::operator()(CIDType id) {
+    bool PropertiesFilter::operator()(const CIDType &id) {
         return _bounds->Check(getProperties(id));
     }
 

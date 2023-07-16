@@ -9,6 +9,7 @@
 
 #include "fingerprint_table_io/FingerprintTableReader.h"
 #include "Utils.h"
+#include "QtrBallTreeLeafInitMixin.h"
 
 using namespace std;
 
@@ -45,7 +46,7 @@ namespace qtr {
             auto res = searchInLeaf(leaves[i], queryData.getQueryFingerprint());
             if (res.empty())
                 continue;
-            filterObject->initBallTreeLeaf(getLeafDir(leaves[i]));
+            tryInitBallTreeLeaf(*filterObject, getLeafDir(leaves[i]));
             queryData.filterAndAddAnswers(res, *filterObject);
         }
         if (queryData.checkTimeOut()) {

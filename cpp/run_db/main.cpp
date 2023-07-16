@@ -7,7 +7,12 @@
 #include "Utils.h"
 
 #include "Args.h"
-#include "RunQtr.h"
+#include "TimeTicker.h"
+#include "search_data/SearchDataLoader.h"
+#include "modes/RunMode.h"
+#include "modes/InteractiveMode.h"
+#include "modes/web/WebMode.h"
+#include "modes/FromFileMode.h"
 
 using namespace std;
 using namespace qtr;
@@ -49,11 +54,21 @@ int main(int argc, char *argv[]) {
     initLogging(argv, google::INFO, "run_db.info", true);
     Args args(argc, argv);
 
-    if (args.dbType() == qtr::ArgsBase::DataBaseType::QtrDrive ||
-        args.dbType() == qtr::ArgsBase::DataBaseType::QtrRam) {
-        runQtrDB(args);
-    } else if (args.dbType() == qtr::ArgsBase::DataBaseType::BingoNoSQL) {
-        // TODO
+    try {
+        TimeTicker timeTicker;
+        auto searchData = SearchDataLoader::load(args, timeTicker);
+        timeTicker.tick("Db data loading");
+
+        shared_ptr<RunMode> mode = nullptr;
+        if (args.mode() == Args::Mode::Interactive)
+            mode = make_shared<InteractiveMode>(searchData);
+        else if (args.mode() == Args::Mode::FromFile)
+            mode = make_shared<FromFileMode>(searchData, args.queriesFile());
+        else if (args.mode() == Args::Mode::Web)
+            mode = make_shared<WebMode>(searchData);
+        mode->run();
+    } catch (const exception &e) {
+        logErrorAndExit(e.what());
     }
     return 0;
 }

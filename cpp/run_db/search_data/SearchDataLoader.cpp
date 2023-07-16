@@ -1,19 +1,18 @@
-#include "RunQtr.h"
+#include "SearchDataLoader.h"
 #include "Args.h"
-#include "TimeTicker.h"
-#include "modes/RunMode.h"
-#include "modes/InteractiveMode.h"
-#include "modes/FromFileMode.h"
-#include "modes/web/WebMode.h"
-#include "search_data/RamSearchData.h"
-#include "search_data/DriveSearchData.h"
+#include "HuffmanCoder.h"
+#include "QtrRamSearchData.h"
+#include "QtrDriveSearchData.h"
 #include "properties_table_io/PropertiesTableReader.h"
+#include "BallTreeRAMSearchEngine.h"
+#include "HuffmanSmilesTable.h"
+#include "string_table_io/StringTableReader.h"
 
 using namespace std;
 
 namespace qtr {
     namespace {
-        std::shared_ptr<SmilesTable>
+        shared_ptr<SmilesTable>
         loadSmilesTable(const filesystem::path &smilesTablePath, const HuffmanCoder &huffmanCoder) {
             LOG(INFO) << "Start smiles table loading";
             HuffmanSmilesTable::Builder builder(huffmanCoder);
@@ -28,7 +27,7 @@ namespace qtr {
             BufferedReader ballTreeReader(args.ballTreePath());
             LOG(INFO) << "Start ball tree loading";
             shared_ptr<BallTreeSearchEngine> res;
-            if (args.dbType() == Args::DataBaseType::QtrRam)
+            if (args.dbType() == DatabaseType::QtrRam)
                 res = make_shared<BallTreeRAMSearchEngine>(ballTreeReader, args.dbDataDirs());
             else {
                 res = make_shared<BallTreeDriveSearchEngine>(ballTreeReader, args.dbDataDirs());
@@ -37,11 +36,11 @@ namespace qtr {
             return res;
         }
 
-        shared_ptr<IdConverter> loadIdConverter(const std::filesystem::path &idToStringDirPath) {
-            return std::make_shared<IdConverter>(idToStringDirPath);
+        shared_ptr<IdConverter> loadIdConverter(const filesystem::path &idToStringDirPath) {
+            return make_shared<IdConverter>(idToStringDirPath);
         }
 
-        shared_ptr<vector<PropertiesFilter::Properties>> loadPropertiesTable(const std::filesystem::path &propertiesTablePath) {
+        shared_ptr<vector<PropertiesFilter::Properties>> loadPropertiesTable(const filesystem::path &propertiesTablePath) {
             LOG(INFO) << "Start properties table loading";
             auto res = make_shared<vector<PropertiesFilter::Properties>>();
             auto reader = PropertiesTableReader(propertiesTablePath);
@@ -65,8 +64,8 @@ namespace qtr {
             auto idConverterPtr = loadIdConverterTask.get();
             auto propertiesTablePtr = loadPropertyTableTask.get();
 
-            return make_shared<RamSearchData>(ballTreePtr, idConverterPtr, timeTicker, args.ansCount(), args.threads(),
-                                              args.timeLimit(), smilesTablePtr, propertiesTablePtr);
+            return make_shared<QtrRamSearchData>(ballTreePtr, idConverterPtr, timeTicker, args.ansCount(), args.threads(),
+                                                 args.timeLimit(), smilesTablePtr, propertiesTablePtr);
         }
 
         shared_ptr<SearchData> loadDriveSearchData(const Args &args, TimeTicker &timeTicker) {
@@ -76,32 +75,17 @@ namespace qtr {
             auto ballTreePtr = loadBallTreeTask.get();
             auto idConverterPtr = loadIdConverterTask.get();
 
-            return make_shared<DriveSearchData>(ballTreePtr, idConverterPtr, timeTicker, args.ansCount(), args.threads(),
-                                                args.timeLimit());
-        }
-        
-        shared_ptr<SearchData> loadSearchData(const Args &args, TimeTicker &timeTicker) {
-            if (args.dbType() == Args::DataBaseType::QtrRam) {
-                return loadRamSearchData(args, timeTicker);
-            } else if (args.dbType() == Args::DataBaseType::QtrDrive) {
-                return loadDriveSearchData(args, timeTicker);
-            }
-            throw std::logic_error("Undefined db type");
+            return make_shared<QtrDriveSearchData>(ballTreePtr, idConverterPtr, timeTicker, args.ansCount(), args.threads(),
+                                                   args.timeLimit());
         }
     }
-    
-    void runQtrDB(const Args& args) {
-        TimeTicker timeTicker;
-        auto searchData = loadSearchData(args, timeTicker);
-        timeTicker.tick("Db data loading");
 
-        shared_ptr<RunMode> mode = nullptr;
-        if (args.mode() == Args::Mode::Interactive)
-            mode = make_shared<InteractiveMode>(searchData);
-        else if (args.mode() == Args::Mode::FromFile)
-            mode = make_shared<FromFileMode>(searchData, args.queriesFile());
-        else if (args.mode() == Args::Mode::Web)
-            mode = make_shared<WebMode>(searchData);
-        mode->run();
+    shared_ptr<SearchData> SearchDataLoader::load(const Args &args, TimeTicker &timeTicker) {
+        if (args.dbType() == DatabaseType::QtrRam) {
+            return loadRamSearchData(args, timeTicker);
+        } else if (args.dbType() == DatabaseType::QtrDrive) {
+            return loadDriveSearchData(args, timeTicker);
+        }
+        throw logic_error("Undefined db type");
     }
-}
+} // qtr
