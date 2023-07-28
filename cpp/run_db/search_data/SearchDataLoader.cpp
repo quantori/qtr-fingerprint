@@ -1,7 +1,7 @@
-#include "SearchDataLoader.h"
-
 #include "Args.h"
 #include "HuffmanCoder.h"
+#include "SearchDataLoader.h"
+
 #include "QtrRamSearchData.h"
 #include "QtrDriveSearchData.h"
 #include "BingoNoSQLSearchData.h"
@@ -10,7 +10,6 @@
 #include "HuffmanSmilesTable.h"
 #include "string_table_io/StringTableReader.h"
 
-#include "bingo-nosql.h"
 #include "IndigoException.h"
 
 using namespace std;
@@ -89,17 +88,15 @@ namespace qtr {
         }
 
         shared_ptr <SearchData> loadBingoNoSQLSearchData(const Args &args, TimeTicker &timeTicker) {
-            auto dbDataDir = args.dbDataDirs()[0];
-            IndigoSessionPtr indigoSessionPtr = IndigoSession::create();
-            int db = 0;
+            filesystem::path dbDataDir = args.dbDataDirs()[0];
             try {
-                db = indigoSessionPtr->_checkResult(bingoLoadDatabaseFile(dbDataDir.c_str(), ""));
+                return make_shared<BingoNoSQLSearchData>(dbDataDir, timeTicker, args.ansCount(), args.threads(),
+                                                         args.timeLimit());
             }
             catch (const IndigoException &e) {
                 logErrorAndExit(e.what());
             }
-            return make_shared<BingoNoSQLSearchData>(db, indigoSessionPtr, timeTicker, args.ansCount(), args.threads(),
-                                                     args.timeLimit());
+
         }
     }
 

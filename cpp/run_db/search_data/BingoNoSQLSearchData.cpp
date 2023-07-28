@@ -4,47 +4,44 @@
 
 #include <utility>
 
-#include "bingo-nosql.h"
-#include "IndigoQueryMolecule.h"
 #include "IndigoException.h"
+#include "BingoNoSQL.h"
+
 
 using namespace std;
 using namespace indigo_cpp;
 
 namespace qtr {
     namespace {
-        void searchInBingoDB(QueryData<CIDType> &queryData, uint64_t ansCount, const IndigoSessionPtr &indigoSessionPtr,
-                             int db, const IndigoQueryMolecule &query) {
+                void searchInBingoDB(QueryData<CIDType> &queryData, uint64_t ansCount, BingoMolecule &db,
+                             const IndigoQueryMolecule &query) {
             queryData.tagStartTask();
             vector<CIDType> result;
-            int subMatcher = indigoSessionPtr->_checkResult(bingoSearchSub(db, query.id(), ""));
-            int resultObj = bingoGetObject(subMatcher);
-            while (bingoNext(subMatcher) && result.size() < ansCount && !queryData.checkTimeOut() &&
-                   !queryData.checkShouldStop()) {
-                int clone = indigoClone(resultObj);
-                result.emplace_back(clone);
+            auto subMatcher = db.searchSub(query, "");
+            for (auto &mol: subMatcher) {
+                if (result.size() >= ansCount || queryData.checkShouldStop() || queryData.checkTimeOut())
+                    break;
+                result.push_back(mol.getId());
             }
             if (queryData.checkTimeOut()) {
                 LOG(INFO) << "Search stopped due to timeout";
             }
-            bingoEndSearch(subMatcher);
             queryData.addAnswers(result);
             queryData.tagFinishTask();
         }
     }
 
-    BingoNoSQLSearchData::BingoNoSQLSearchData(int db, IndigoSessionPtr indigoSessionPtr,
-                                               TimeTicker &timeTicker, size_t ansCount, size_t threadsCount,
-                                               double timeLimit) :
-            SearchData(timeTicker, ansCount, threadsCount, timeLimit), db(db),
-            indigoSessionPtr(std::move(indigoSessionPtr)) {}
+    BingoNoSQLSearchData::BingoNoSQLSearchData(const std::filesystem::path &dbDataDir, TimeTicker &timeTicker,
+                                               size_t ansCount, size_t threadsCount, double timeLimit) :
+            SearchData(timeTicker, ansCount, threadsCount, timeLimit),
+            db(BingoMolecule::loadDatabaseFile(IndigoSession::create(), dbDataDir, "")) {}
 
     unique_ptr <QueryData<CIDType>>
     BingoNoSQLSearchData::search(const string &querySmiles, const PropertiesFilter::Bounds &) {
         LOG(INFO) << "Start search: " << querySmiles;
         unique_ptr<IndigoQueryMolecule> molecule = nullptr;
         try {
-            molecule = make_unique<IndigoQueryMolecule>(indigoSessionPtr->loadQueryMolecule(querySmiles));
+            molecule = make_unique<IndigoQueryMolecule>(db.session->loadQueryMolecule(querySmiles));
             molecule->aromatize();
         }
         catch (const IndigoException &e) {
@@ -54,12 +51,12 @@ namespace qtr {
 
         auto queryData = make_unique<QueryData<CIDType>>(ansCount, timeLimit, make_unique<AlwaysTrueFilter<CIDType>>());
         queryData->addTask(
-                std::async(launch::async, searchInBingoDB, ref(*queryData), ansCount, cref(indigoSessionPtr), db,
+                std::async(launch::async, searchInBingoDB, ref(*queryData), ansCount, std::ref(db),
                            std::move(*molecule)));
         return std::move(queryData);
     }
 
     BingoNoSQLSearchData::~BingoNoSQLSearchData() {
-        bingoCloseDatabase(db);
+        db.close();
     }
 } // qtr
