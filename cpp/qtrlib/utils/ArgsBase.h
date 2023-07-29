@@ -53,7 +53,7 @@ namespace qtr {
     private:
         static inline const std::unordered_map<std::string, DatabaseType> _strToDataBaseType =
                 {{"QtrDrive",   DatabaseType::QtrDrive},
-                 {"QrtRam",     DatabaseType::QtrRam},
+                 {"QtrRam",     DatabaseType::QtrRam},
                  {"BingoNoSQL", DatabaseType::BingoNoSQL}};
 
     protected:
