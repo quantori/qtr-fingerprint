@@ -12,7 +12,6 @@
 #include "IndigoMolecule.h"
 #include "IndigoSession.h"
 #include "IndigoWriteBuffer.h"
-#include "IndigoSDFileIterator.h"
 
 #include "Utils.h"
 #include "Bitset.h"

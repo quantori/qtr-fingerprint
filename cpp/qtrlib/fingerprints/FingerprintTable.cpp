@@ -1,6 +1,7 @@
 #include "FingerprintTable.h"
 
 #include "QtrIndigoFingerprint.h"
+#include "IndigoIterator.h"
 
 namespace qtr {
 
@@ -10,7 +11,7 @@ namespace qtr {
         using namespace indigo_cpp;
 
         IndigoSessionPtr indigoSessionPtr = IndigoSession::create();
-        IndigoSDFileIterator iterator = indigoSessionPtr->iterateSDFile(sdfFile);
+        auto iterator = indigoSessionPtr->iterateSDFile(sdfFile);
 
         for (IndigoMoleculeSPtr &molecule: iterator) {
             molecule->aromatize();

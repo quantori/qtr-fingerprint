@@ -1,6 +1,6 @@
 #include "IndigoMolecule.h"
 #include "IndigoWriteBuffer.h"
-#include "IndigoSDFileIterator.h"
+#include "IndigoIterator.h"
 
 #include <glog/logging.h>
 

@@ -4,7 +4,7 @@
 #include "IndigoQueryMolecule.h"
 #include "IndigoMolecule.h"
 #include "IndigoWriteBuffer.h"
-#include "IndigoSDFileIterator.h"
+#include "IndigoIterator.h"
 #include "indigo_savers.h"
 #include "indigo_internal.h"
 #include "gzip/gzip_output.h"

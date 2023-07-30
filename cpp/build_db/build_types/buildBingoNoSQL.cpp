@@ -2,9 +2,9 @@
 
 #include "bingo-nosql.h"
 #include "IndigoMolecule.h"
-#include "IndigoSDFileIterator.h"
 #include "IndigoException.h"
 #include "string_table_io/StringTableReader.h"
+#include "IndigoIterator.h"
 
 #include <future>
 
@@ -16,7 +16,7 @@ namespace qtr {
         void storeSmilesTableInDB(int db, const shared_ptr <IndigoSession> &indigoSessionPtr,
                                   const filesystem::path &smilesTablePath) {
             LOG(INFO) << "Start " << smilesTablePath << " parsing";
-            IndigoSDFileIterator iterator = indigoSessionPtr->iterateSDFile(smilesTablePath.c_str());
+            auto iterator = indigoSessionPtr->iterateSDFile(smilesTablePath.c_str());
             size_t processedNumber = 0;
             size_t failuresNumber = 0;
             for (const auto &[id, smiles]: StringTableReader(smilesTablePath)) {
