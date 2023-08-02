@@ -3,6 +3,8 @@
 #include <memory>
 #include <vector>
 
+#include "CFStorage.h"
+
 #include "SmilesTable.h"
 #include "QtrSearchData.h"
 
@@ -13,11 +15,12 @@ namespace qtr {
 
         QtrRamSearchData(std::shared_ptr<const BallTreeSearchEngine> ballTree,
                          std::shared_ptr<const IdConverter> idConverter, TimeTicker &timeTicker, size_t ansCount,
-                         size_t threadCount, double timeLimit, std::shared_ptr<const SmilesTable> smilesTable,
+                         size_t threadCount, double timeLimit,
+                         std::shared_ptr<CFStorage> cfStorage,
                          std::shared_ptr<const std::vector<PropertiesFilter::Properties>> propertiesTable);
 
 
-        std::shared_ptr<const SmilesTable> smilesTable;
+        std::shared_ptr<CFStorage> cfStorage;
         std::shared_ptr<const std::vector<PropertiesFilter::Properties>> propertiesTable;
     };
 

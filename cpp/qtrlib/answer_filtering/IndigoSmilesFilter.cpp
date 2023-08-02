@@ -1,4 +1,4 @@
-#include "IndigoFilter.h"
+#include "IndigoSmilesFilter.h"
 
 #include "glog/logging.h"
 #include "IndigoMolecule.h"
@@ -8,7 +8,7 @@
 using namespace std;
 
 namespace qtr {
-    bool IndigoFilter::operator()(const CIDType &id) {
+    bool IndigoSmilesFilter::operator()(const CIDType &id) {
         const auto &smiles = getSmiles(id);
         auto startTime = std::chrono::high_resolution_clock::now();
         bool result;
@@ -29,13 +29,13 @@ namespace qtr {
         return result;
     }
 
-    IndigoFilter::IndigoFilter(std::shared_ptr<const std::string> querySmiles) :
+    IndigoSmilesFilter::IndigoSmilesFilter(std::shared_ptr<const std::string> querySmiles) :
             _querySmiles(std::move(querySmiles)), _indigoSessionPtr(indigo_cpp::IndigoSession::create()),
             _queryMolecule(_indigoSessionPtr->loadQueryMolecule(*_querySmiles)) {
         _queryMolecule.aromatize();
     }
 
-    IndigoFilter::~IndigoFilter() {
+    IndigoSmilesFilter::~IndigoSmilesFilter() {
         indigoFilteringTimer += _timer;
     }
 } // qtr

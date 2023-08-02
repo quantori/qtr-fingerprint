@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
     initLogging(argv, google::INFO, "run_db.info", true);
     Args args(argc, argv);
 
-    try {
+//    try {
         TimeTicker timeTicker;
         auto searchData = SearchDataLoader::load(args, timeTicker);
         timeTicker.tick("Db data loading");
@@ -67,8 +67,9 @@ int main(int argc, char *argv[]) {
         else if (args.mode() == Args::Mode::Web)
             mode = make_shared<WebMode>(searchData);
         mode->run();
-    } catch (const exception &e) {
-        logErrorAndExit(e.what());
-    }
+//    } catch (const exception &e) {
+//        logErrorAndExit(e.what());
+//    }
+// TODO: uncomment try catch
     return 0;
 }

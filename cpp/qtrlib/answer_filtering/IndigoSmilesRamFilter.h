@@ -3,7 +3,7 @@
 #include <string>
 #include <atomic>
 
-#include "IndigoFilter.h"
+#include "IndigoSmilesFilter.h"
 #include "SmilesTable.h"
 
 #include "IndigoQueryMolecule.h"
@@ -12,9 +12,9 @@
 namespace qtr {
 
 
-    class IndigoRamFilter : public IndigoFilter {
+    class IndigoSmilesRamFilter : public IndigoSmilesFilter {
     public:
-        IndigoRamFilter(std::shared_ptr<const SmilesTable> smilesTable, std::shared_ptr<const std::string> querySmiles);
+        IndigoSmilesRamFilter(std::shared_ptr<const SmilesTable> smilesTable, std::shared_ptr<const std::string> querySmiles);
 
         std::unique_ptr<AnswerFilter> copy() override;
 

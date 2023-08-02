@@ -14,7 +14,7 @@ target_include_directories(run_db
         )
 
 target_link_directories(run_db PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../build/lib)
-target_link_libraries(run_db indigo indigo-cpp OpenMP::OpenMP_CXX)
+target_link_libraries(run_db indigo indigo-cpp bingo-nosql indigo-core OpenMP::OpenMP_CXX)
 target_link_libraries(run_db absl::flags absl::flags_parse)
 target_link_libraries(run_db qtrlib glog::glog)
 target_link_libraries(run_db Crow::Crow)

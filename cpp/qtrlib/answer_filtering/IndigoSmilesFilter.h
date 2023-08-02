@@ -12,15 +12,15 @@
 
 namespace qtr {
 
-    class IndigoFilter : public ByIdAnswerFilter {
+    class IndigoSmilesFilter : public ByIdAnswerFilter {
     public:
         inline static std::atomic<double> indigoFilteringTimer = 0;
 
         bool operator()(const CIDType &id) override;
 
-        ~IndigoFilter() override;
+        ~IndigoSmilesFilter() override;
 
-        explicit IndigoFilter(std::shared_ptr<const std::string> querySmiles);
+        explicit IndigoSmilesFilter(std::shared_ptr<const std::string> querySmiles);
 
     protected:
         virtual std::string getSmiles(CIDType id) = 0;

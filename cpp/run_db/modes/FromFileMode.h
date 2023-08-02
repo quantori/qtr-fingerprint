@@ -3,8 +3,8 @@
 #include <utility>
 
 #include "RunMode.h"
-#include "IndigoRamFilter.h"
-#include "IndigoDriveFilter.h"
+#include "IndigoSmilesRamFilter.h"
+#include "IndigoSmilesDriveFilter.h"
 
 namespace qtr {
     class FromFileMode : public RunMode {
@@ -64,9 +64,9 @@ namespace qtr {
             LOG(INFO) << "median: " << median;
             LOG(INFO) << percentilesStatStream.str();
             LOG(INFO) << "Total search time: " << BallTreeSearchEngine::ballTreeSearchTimer;
-            LOG(INFO) << "Total indigo time: " << IndigoFilter::indigoFilteringTimer;
+            LOG(INFO) << "Total indigo time: " << IndigoSmilesFilter::indigoFilteringTimer;
             LOG(INFO) << "indigo percentage: "
-                      << IndigoFilter::indigoFilteringTimer / BallTreeSearchEngine::ballTreeSearchTimer * 100 << "%";
+                      << IndigoSmilesFilter::indigoFilteringTimer / BallTreeSearchEngine::ballTreeSearchTimer * 100 << "%";
             LOG(INFO) << "overdue queries: " << BallTreeQueryData::timedOutCounter;
         }
 

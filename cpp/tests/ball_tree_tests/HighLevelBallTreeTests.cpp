@@ -9,7 +9,7 @@
 #include "io/BufferedWriter.h"
 #include "fingerprint_table_io/FingerprintTableWriter.h"
 #include "fingerprint_table_io/FingerprintTableReader.h"
-#include "answer_filtering/IndigoRamFilter.h"
+#include "answer_filtering/IndigoSmilesRamFilter.h"
 #include "MapSmilesTable.h"
 
 class HighLevelBallTreeTests : public TmpDirFixture {

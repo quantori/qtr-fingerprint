@@ -2,8 +2,8 @@
 
 #include "IndigoException.h"
 #include "QtrRamSearchData.h"
-#include "IndigoRamFilter.h"
-#include "IndigoDriveFilter.h"
+#include "IndigoCFRamFilter.h"
+#include "IndigoSmilesDriveFilter.h"
 #include "PropertiesRamFilter.h"
 #include "PropertiesDriveFilter.h"
 #include "CompoundFilter.h"
@@ -17,8 +17,7 @@ namespace qtr {
     namespace {
         unique_ptr <ByIdAnswerFilter> createRamFilter(const QtrRamSearchData &searchData, const std::string &querySmiles,
                                                      const PropertiesFilter::Bounds queryBounds) {
-            auto querySmilesPtr = make_shared<string>(querySmiles);
-            auto indigoFilter = make_unique<IndigoRamFilter>(searchData.smilesTable, querySmilesPtr);
+            auto indigoFilter = make_unique<IndigoCFRamFilter>( searchData.cfStorage, querySmiles);
             auto propertiesFilter = make_unique<PropertiesRamFilter>(searchData.propertiesTable,
                                                                      queryBounds);
             auto filter = make_unique<CompoundFilter<CIDType>>(std::move(propertiesFilter), std::move(indigoFilter));
@@ -29,7 +28,7 @@ namespace qtr {
         createDriveFilter(const QtrDriveSearchData &searchData, const std::string &querySmiles,
                           const PropertiesFilter::Bounds queryBounds) {
             auto querySmilesPtr = make_shared<string>(querySmiles);
-            auto indigoFilter = make_unique<IndigoDriveFilter>(querySmilesPtr);
+            auto indigoFilter = make_unique<IndigoSmilesDriveFilter>(querySmilesPtr);
             auto propertiesFilter = make_unique<PropertiesDriveFilter>(queryBounds);
             auto filter = make_unique<CompoundFilter<CIDType>>(std::move(propertiesFilter), std::move(indigoFilter));
             return std::move(filter);
@@ -64,7 +63,7 @@ namespace qtr {
         try {
             fingerprint = indigoFingerprintFromSmiles(querySmiles);
         }
-        catch (const IndigoException &exception) {
+        catch (const std::exception &exception) {
             LOG(WARNING) << "Skip query:" << exception.what();
             return {nullptr};
         }

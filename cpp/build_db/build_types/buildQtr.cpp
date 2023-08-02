@@ -55,13 +55,14 @@ namespace qtr {
             vector<filesystem::path> ftFilePaths = findFiles(args.fingerprintTablesSourceDir(),
                                                              fingerprintTableExtension);
             shuffle(ftFilePaths.begin(), ftFilePaths.end(), mt19937(0));
-            size_t drivesCount = args.dbDataDirs().size();
+            auto dbDataDirs = args.dbDataDirs();
+            size_t drivesCount = dbDataDirs.size();
             for (size_t i = 0; i < ftFilePaths.size(); i++) {
                 auto sourcePath = ftFilePaths[i];
-                auto destinationPath = args.dbDataDirs()[i % drivesCount] / "0" / sourcePath.filename();
+                auto destinationPath = dbDataDirs[i % drivesCount] / "0" / sourcePath.filename();
                 filesystem::create_directory(destinationPath.parent_path());
                 LOG(INFO) << "Copy " << sourcePath << " to " << destinationPath;
-                filesystem::copy_file(sourcePath, destinationPath);
+                copyFileAndCheck(sourcePath, destinationPath);
             }
         }
 
@@ -114,7 +115,7 @@ namespace qtr {
 
             for (const filesystem::path &filePath: findFiles(source, ".csv")) {
                 LOG(INFO) << "copy file" << filePath << " to " << destination / filePath.filename();
-                filesystem::copy_file(filePath, destination / filePath.filename());
+                copyFileAndCheck(filePath, destination / filePath.filename());
             }
         }
 
