@@ -22,7 +22,7 @@ unique_ptr<Molecule> CFStorage::operator[](CFStorage::KeyType key) const {
     const ValueType &arr = _map[key];
     BufferScanner scanner(arr);
     CmfLoader cmf_loader(scanner);
-    unique_ptr<Molecule> molecule;
+    auto molecule = make_unique<Molecule>();
     cmf_loader.loadMolecule(*molecule);
     return std::move(molecule);
 }
