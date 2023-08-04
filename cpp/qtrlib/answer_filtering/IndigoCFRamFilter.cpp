@@ -25,7 +25,8 @@ bool IndigoCFRamFilter::operator()(const CIDType &id) {
         return msm.find();
 
     } catch (const std::exception &e) {
-        logErrorAndExit(e.what());
+        LOG(ERROR) << e.what();
+        return false;
     }
 }
 
