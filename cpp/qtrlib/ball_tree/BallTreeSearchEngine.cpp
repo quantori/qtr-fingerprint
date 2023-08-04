@@ -40,7 +40,6 @@ namespace qtr {
     void
     BallTreeSearchEngine::processLeafGroup(BallTreeQueryData &queryData, const vector<uint64_t> &leaves) const {
         auto startTime = chrono::high_resolution_clock::now();
-        queryData.tagStartTask();
         auto filterObject = queryData.getFilterObject();
         for (size_t i = 0; i < leaves.size() && !queryData.checkShouldStop(); i++) {
             auto res = searchInLeaf(leaves[i], queryData.getQueryFingerprint());

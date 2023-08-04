@@ -88,6 +88,7 @@ namespace qtr {
 
     template<typename AnsType>
     void QueryData<AnsType>::addTask(std::future<void> &&task) {
+        tagStartTask();
         _tasks.emplace_back(std::move(task));
     }
 

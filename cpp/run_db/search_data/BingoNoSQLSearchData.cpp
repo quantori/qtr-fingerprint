@@ -15,7 +15,6 @@ namespace qtr {
     namespace {
         void searchInBingoDB(QueryData<CIDType> &queryData, uint64_t ansCount, BingoMolecule &db,
                              const IndigoQueryMolecule &query) {
-            queryData.tagStartTask();
             vector<CIDType> result;
             auto subMatcher = db.searchSub(query, "");
             for (auto &mol: subMatcher) {
