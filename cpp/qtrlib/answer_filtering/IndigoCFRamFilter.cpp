@@ -19,6 +19,7 @@ using namespace bingo;
 bool IndigoCFRamFilter::operator()(const CIDType &id) {
     try {
         auto molecule = (*_cfStorage)[id];
+        molecule->aromatize(AromaticityOptions());
         MoleculeSubstructureMatcher msm(*molecule);
         msm.setQuery(*_queryMolecule);
         return msm.find();
@@ -34,6 +35,7 @@ IndigoCFRamFilter::IndigoCFRamFilter(std::shared_ptr<CFStorage> cfStorage, const
     SmilesLoader loader(scanner);
     _queryMolecule = make_shared<QueryMolecule>();
     loader.loadQueryMolecule(*_queryMolecule);
+    _queryMolecule->aromatize(AromaticityOptions());
 }
 
 unique_ptr<AnswerFilter<CIDType>> IndigoCFRamFilter::copy() {
