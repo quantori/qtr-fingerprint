@@ -113,7 +113,7 @@ namespace qtr {
     const static Indigo indigoInstance;
 
     inline IndigoFingerprint indigoFingerprintFromSmiles(const std::string &smiles) {
-        indigo::BufferScanner scanner(smiles.c_str(), smiles.size(), false);
+        indigo::BufferScanner scanner(smiles.c_str(), smiles.size());
         indigo::SmilesLoader loader(scanner);
         indigo::Molecule molecule;
         loader.loadMolecule(molecule);
@@ -128,15 +128,5 @@ namespace qtr {
         FullIndigoFingerprint fullIndigoFingerprint(subFingerprint);
         IndigoFingerprint  cutFingerprint = cutFullIndigoFingerprint(fullIndigoFingerprint);
         return cutFingerprint;
-
-        // TODO: implement indigoFingerprint Building using indigo core
-
-//        auto indigoSessionPtr = indigo_cpp::IndigoSession::create();
-//        auto mol = indigoSessionPtr->loadMolecule(smiles);
-//        mol.aromatize();
-//        int fingerprint = indigoFingerprint(mol.id(), "sub");
-//        FullIndigoFingerprint fullFingerprints(indigoToString(fingerprint));
-//        IndigoFingerprint cutFingerprint = cutFullIndigoFingerprint(fullFingerprints);
-//        return cutFingerprint;
     }
 } // namespace qtr

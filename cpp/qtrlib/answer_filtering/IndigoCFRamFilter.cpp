@@ -30,7 +30,7 @@ bool IndigoCFRamFilter::operator()(const CIDType &id) {
 
 IndigoCFRamFilter::IndigoCFRamFilter(std::shared_ptr<CFStorage> cfStorage, const std::string &querySmiles)
         : _cfStorage(std::move(cfStorage)) {
-    BufferScanner scanner(querySmiles.c_str(), querySmiles.size(), false);
+    BufferScanner scanner(querySmiles.c_str(), querySmiles.size());
     SmilesLoader loader(scanner);
     _queryMolecule = make_shared<QueryMolecule>();
     loader.loadQueryMolecule(*_queryMolecule);

@@ -39,7 +39,7 @@ namespace {
         size_t counter = 0;
         for (const auto &[id, smiles]: StringTableReader(smilesTablePath)) {
             try {
-                BufferScanner scanner(smiles.c_str(), smiles.size(), false);
+                BufferScanner scanner(smiles.c_str(), smiles.size());
                 SmilesLoader loader(scanner);
                 Molecule molecule;
                 loader.loadMolecule(molecule);
@@ -52,7 +52,7 @@ namespace {
             catch (const std::exception &e) {
                 logErrorAndExit(e.what());
             }
-            if (counter % 1000 == 0) {
+            if (counter % 100000 == 0) {
                 LOG(INFO) << "CFStorage loading: processed " << counter << " molecules";
             }
         }
