@@ -113,7 +113,7 @@ namespace qtr {
     const static Indigo indigoInstance;
 
     inline IndigoFingerprint indigoFingerprintFromSmiles(const std::string &smiles) {
-        indigo::BufferScanner scanner(smiles.c_str(), smiles.size());
+        indigo::BufferScanner scanner(smiles.c_str(), smiles.size(), false);
         indigo::SmilesLoader loader(scanner);
         indigo::Molecule molecule;
         loader.loadMolecule(molecule);

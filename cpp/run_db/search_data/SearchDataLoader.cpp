@@ -39,7 +39,7 @@ namespace {
         size_t counter = 0;
         for (const auto &[id, smiles]: StringTableReader(smilesTablePath)) {
             try {
-                BufferScanner scanner(smiles.c_str(), smiles.size());
+                BufferScanner scanner(smiles.c_str(), smiles.size(), false);
                 SmilesLoader loader(scanner);
                 Molecule molecule;
                 loader.loadMolecule(molecule);
