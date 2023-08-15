@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
         auto searchData = SearchDataLoader::load(args, timeTicker);
         timeTicker.tick("Db data loading");
 
-        unique_ptr<RunMode> mode = RunModeFactory::create(args, searc hData);
+        unique_ptr<RunMode> mode = RunModeFactory::create(args, searchData);
         mode->run();
     } catch (const exception &e) {
         logErrorAndExit(e.what());
