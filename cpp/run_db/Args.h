@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ArgsBase.h"
+#include "modes/RunMode.h"
 
 ABSL_DECLARE_FLAG(std::string, dbName);
 ABSL_DECLARE_FLAG(std::string, dbType);
@@ -15,22 +16,14 @@ ABSL_DECLARE_FLAG(double, timeLimit);
 namespace qtr {
 
     class Args : public ArgsBase {
-    public:
-        enum class Mode {
-            BadMode,
-            Interactive,
-            FromFile,
-            Web
-        };
-
     private:
-        const static inline std::unordered_map<std::string, Mode> _strToMode = {
-                {"Interactive", Mode::Interactive},
-                {"FromFile",    Mode::FromFile},
-                {"Web",         Mode::Web}
+        const static inline std::unordered_map<std::string, RunMode::Type> _strToMode = {
+                {"Interactive", RunMode::Type::Interactive},
+                {"FromFile",    RunMode::Type::FromFile},
+                {"Web",         RunMode::Type::Web}
         };
 
-        const static inline auto strToMode = makeStringToEnumFunction(_strToMode, Mode::BadMode);
+        const static inline auto strToMode = makeStringToEnumFunction(_strToMode, RunMode::Type::BadType);
 
     ADD_ARGUMENT_WITH_PARSER(DatabaseType, dbType, DatabaseType::BadType, strToDataBaseType)
 
@@ -42,7 +35,7 @@ namespace qtr {
 
     ADD_ARGUMENT(uint64_t, threads, -1)
 
-    ADD_ARGUMENT_WITH_PARSER(Mode, mode, Mode::BadMode, strToMode)
+    ADD_ARGUMENT_WITH_PARSER(RunMode::Type, mode, RunMode::Type::BadType, strToMode)
 
     ADD_ARGUMENT(std::filesystem::path, queriesFile, "")
 
@@ -65,7 +58,7 @@ namespace qtr {
                 parseAndCheck_otherDataDir();
             }
 
-            if (mode() == Mode::FromFile) {
+            if (mode() == RunMode::Type::FromFile) {
                 parseAndCheck_queriesFile();
             }
 

@@ -7,6 +7,8 @@ add_executable(run_db main.cpp ${sources})
 
 target_include_directories(run_db
         PUBLIC .
+        PUBLIC modes
+        PUBLIC search_data
         )
 
 target_link_directories(run_db PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../build/lib)

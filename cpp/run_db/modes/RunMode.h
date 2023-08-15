@@ -5,7 +5,16 @@
 #include "search_data/SearchData.h"
 
 namespace qtr {
+
     class RunMode {
+    public:
+        enum class Type {
+            BadType,
+            Interactive,
+            FromFile,
+            Web
+        };
+
     protected:
         std::shared_ptr<SearchData> _searchData;
 
