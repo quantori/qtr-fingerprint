@@ -18,8 +18,5 @@ using namespace indigo_cpp;
 using namespace qtr;
 
 int main() {
-
-
-
     return 0;
 }

@@ -23,7 +23,8 @@ namespace qtr {
         ~StringTableWriter() override {
             _binaryWriter->seekp(0, std::ios::beg);
             _binaryWriter->write((char *) &_writtenStrings, sizeof _writtenStrings);
-            LOG(INFO) << "Delete string table writer with " << _writtenStrings << " molecules (" << _binaryWriter << ")";
+            LOG(INFO) << "Delete string table writer with " << _writtenStrings << " molecules (" << _binaryWriter
+                      << ")";
         }
 
         StringTableWriter &operator<<(const WriteValue &value) override {

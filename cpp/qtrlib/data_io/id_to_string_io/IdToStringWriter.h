@@ -8,7 +8,7 @@ namespace qtr {
     public:
         explicit IdToStringWriter(const std::filesystem::path &fileName) : BaseWriter(fileName), _writtenRows(0) {}
 
-        IdToStringWriter &operator << (const WriteValue& value) override {
+        IdToStringWriter &operator<<(const WriteValue &value) override {
             if (_writtenRows != 0)
                 *_binaryWriter << '\n';
             *_binaryWriter << value.first << ' ' << value.second;

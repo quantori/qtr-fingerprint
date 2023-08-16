@@ -8,7 +8,7 @@ using namespace std;
 namespace qtr {
 
     namespace {
-        pair<string, string> convertId(CIDType id, const shared_ptr<SearchData>& searchData) {
+        pair <string, string> convertId(CIDType id, const shared_ptr <SearchData> &searchData) {
             auto qtrSearchData = dynamic_cast<const QtrSearchData *>(searchData.get());
             if (qtrSearchData != nullptr)
                 return qtrSearchData->idConverter->fromDbId(id);

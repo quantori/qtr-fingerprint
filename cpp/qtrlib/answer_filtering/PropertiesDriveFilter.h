@@ -16,10 +16,10 @@ namespace qtr {
 
         explicit PropertiesDriveFilter(Bounds bounds);
 
-        void initBallTreeLeaf(const std::filesystem::path& leafDirPath) override;
+        void initBallTreeLeaf(const std::filesystem::path &leafDirPath) override;
 
     private:
-        const Properties& getProperties(CIDType id) override;
+        const Properties &getProperties(CIDType id) override;
 
         std::map<CIDType, Properties> _propertiesTable;
     };

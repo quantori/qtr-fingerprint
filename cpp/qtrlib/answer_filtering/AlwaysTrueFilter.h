@@ -9,7 +9,7 @@ namespace qtr {
     public:
         AlwaysTrueFilter() = default;
 
-        inline bool operator()(const T&) override {
+        inline bool operator()(const T &) override {
             return true;
         }
 

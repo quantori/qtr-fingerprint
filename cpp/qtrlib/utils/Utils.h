@@ -197,5 +197,5 @@ namespace qtr {
 
     [[noreturn]] void logErrorAndExit(const std::string &message);
 
-   void copyFileAndCheck(const std::filesystem::path &from, const std::filesystem::path &to);
+    void copyFileAndCheck(const std::filesystem::path &from, const std::filesystem::path &to);
 } // namespace qtr

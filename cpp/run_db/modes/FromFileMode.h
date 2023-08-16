@@ -66,7 +66,8 @@ namespace qtr {
             LOG(INFO) << "Total search time: " << BallTreeSearchEngine::ballTreeSearchTimer;
             LOG(INFO) << "Total indigo time: " << IndigoSmilesFilter::indigoFilteringTimer;
             LOG(INFO) << "indigo percentage: "
-                      << IndigoSmilesFilter::indigoFilteringTimer / BallTreeSearchEngine::ballTreeSearchTimer * 100 << "%";
+                      << IndigoSmilesFilter::indigoFilteringTimer / BallTreeSearchEngine::ballTreeSearchTimer * 100
+                      << "%";
             LOG(INFO) << "overdue queries: " << BallTreeQueryData::timedOutCounter;
         }
 

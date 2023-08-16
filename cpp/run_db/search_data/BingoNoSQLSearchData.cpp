@@ -50,7 +50,7 @@ namespace qtr {
 
         auto queryData = make_unique<QueryData<CIDType>>(ansCount, timeLimit, make_unique<AlwaysTrueFilter<CIDType>>());
         queryData->addTask(std::async(launch::async, searchInBingoDB, ref(*queryData), ansCount, std::ref(db),
-                           std::move(*molecule)));
+                                      std::move(*molecule)));
         return std::move(queryData);
     }
 

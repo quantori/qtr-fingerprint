@@ -4,7 +4,6 @@
 #include "TimeMeasurer.h"
 
 namespace qtr {
-
     void buildQtrDb(const Args &args, TimeMeasurer &statisticCollector);
 
 }

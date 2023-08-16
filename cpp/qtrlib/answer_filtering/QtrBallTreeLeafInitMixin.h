@@ -10,7 +10,7 @@ namespace qtr {
     };
 
     template<typename AnsType>
-    void tryInitBallTreeLeaf(AnswerFilter<AnsType>& filter, const std::filesystem::path &leafDir) {
+    void tryInitBallTreeLeaf(AnswerFilter<AnsType> &filter, const std::filesystem::path &leafDir) {
         auto leafInit = dynamic_cast<QtrBallTreeLeafInitMixin *> (&filter);
         if (leafInit != nullptr)
             leafInit->initBallTreeLeaf(leafDir);

@@ -14,7 +14,8 @@ namespace qtr {
 
     class IndigoSmilesRamFilter : public IndigoSmilesFilter {
     public:
-        IndigoSmilesRamFilter(std::shared_ptr<const SmilesTable> smilesTable, std::shared_ptr<const std::string> querySmiles);
+        IndigoSmilesRamFilter(std::shared_ptr<const SmilesTable> smilesTable,
+                              std::shared_ptr<const std::string> querySmiles);
 
         std::unique_ptr<AnswerFilter> copy() override;
 

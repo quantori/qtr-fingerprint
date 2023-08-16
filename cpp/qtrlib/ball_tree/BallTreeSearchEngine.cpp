@@ -38,7 +38,7 @@ namespace qtr {
     }
 
     void
-    BallTreeSearchEngine::processLeafGroup(BallTreeQueryData &queryData, const vector<uint64_t> &leaves) const {
+    BallTreeSearchEngine::processLeafGroup(BallTreeQueryData &queryData, const vector <uint64_t> &leaves) const {
         auto startTime = chrono::high_resolution_clock::now();
         auto filterObject = queryData.getFilterObject();
         for (size_t i = 0; i < leaves.size() && !queryData.checkShouldStop(); i++) {

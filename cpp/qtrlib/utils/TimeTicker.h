@@ -18,7 +18,7 @@ namespace qtr {
 
     private:
         std::vector<decltype(std::chrono::high_resolution_clock::now())> _timePoints;
-        std::vector <std::pair<std::string, double>> _results;
+        std::vector<std::pair<std::string, double>> _results;
     };
 
 } // namespace qtr

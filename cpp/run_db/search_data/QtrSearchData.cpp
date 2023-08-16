@@ -15,9 +15,10 @@ using namespace indigo_cpp;
 
 namespace qtr {
     namespace {
-        unique_ptr <ByIdAnswerFilter> createRamFilter(const QtrRamSearchData &searchData, const std::string &querySmiles,
-                                                     const PropertiesFilter::Bounds queryBounds) {
-            auto indigoFilter = make_unique<IndigoCFRamFilter>( searchData.cfStorage, querySmiles);
+        unique_ptr <ByIdAnswerFilter>
+        createRamFilter(const QtrRamSearchData &searchData, const std::string &querySmiles,
+                        const PropertiesFilter::Bounds queryBounds) {
+            auto indigoFilter = make_unique<IndigoCFRamFilter>(searchData.cfStorage, querySmiles);
             auto propertiesFilter = make_unique<PropertiesRamFilter>(searchData.propertiesTable,
                                                                      queryBounds);
             auto filter = make_unique<CompoundFilter<CIDType>>(std::move(propertiesFilter), std::move(indigoFilter));
@@ -35,7 +36,7 @@ namespace qtr {
         }
 
         unique_ptr <ByIdAnswerFilter> createFilter(const QtrSearchData &searchData, const std::string &querySmiles,
-                                                  const PropertiesFilter::Bounds queryBounds) {
+                                                   const PropertiesFilter::Bounds queryBounds) {
             unique_ptr<ByIdAnswerFilter> filter;
             if (dynamic_cast<const QtrRamSearchData *>(&searchData) != nullptr) {
                 const auto &ramSearchData = dynamic_cast<const QtrRamSearchData &>(searchData);

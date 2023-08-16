@@ -15,14 +15,14 @@ namespace qtr {
 
     void TimeMeasurer::start(const string &label) {
         LOG(INFO) << "Start " << label;
-        lock_guard <mutex> lock(_lock);
+        lock_guard<mutex> lock(_lock);
         if (_measurements.contains(label) || _startPoints.contains(label))
             throw std::invalid_argument("Such label already exists: " + label);
         _startPoints[label] = chrono::high_resolution_clock::now();
     }
 
     void TimeMeasurer::finish(const string &label) {
-        lock_guard <mutex> lock(_lock);
+        lock_guard<mutex> lock(_lock);
         if (!_startPoints.contains(label))
             throw std::invalid_argument("Such label does not exist: " + label);
         chrono::duration<double> duration = chrono::high_resolution_clock::now() - _startPoints[label];
