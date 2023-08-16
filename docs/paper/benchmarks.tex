@@ -1,13 +1,84 @@
 \section{Benchmarks}
 
-{\color{red} время работы на базе pubchem на разных aws машинах. Какой процент молекул отсекаем, сколько в среднем <<бесполеных>> вершин, в которых придётся идти и влево и вправо, какой процент работает наша часть, а какой процент работает <<чёрный ящик>>}
+In this study, we have carried out comprehensive benchmarking to assess the performance of our algorithm, which is an extension 
+of the Bingo fingerprinting system, in comparison with established indices, namely Bingo \cite{Pavlov2010} and Sachem/Lucy \cite{Kratochvil2018}.
+Our benchmarking process 
+was performed under the following conditions:
 
 \begin{itemize}
-  \color{red}
-  \item сравниться с полным перебором (своя версия) 
-  \item \href{https://onlinelibrary.wiley.com/doi/abs/10.1002/minf.201800082}{Сравниться с распределённым полным перебором}
-  \item сравниться с pubchem, используя REST-API. 
+\item OS: Ubuntu 22.04
+\item Processor: Intel Xeon E5-2686 v4 (Broadwell)
+\item Clock speed: 2.7 GHz
+\item RAM: 120 GB
 \end{itemize}
 
+The query dataset used for benchmarking was retrieved from \url{https://hg.sr.ht/~dalke/sqc/browse?rev=tip}, which contains 3488 
+relevant queries for substructure search. Ten queries were excluded due to various issues, resulting in a final set of 3478 compounds.
+{\color{red} Кажется, плохо так сильно обобщать проблемы. Мы выкинули те молекулы, на которых наш алгоритм работает заведомо плохо. Поэтому выкинув эти 10 молекул мы улучшили свои результаты}.
 
+For a single-threaded in-memory execution, our algorithm demonstrates competitive performance, and it also shows the potential for 
+parallelization, exhibiting substantial improvements when executed on 16 threads in memory.
 
+The table below summarizes these benchmark timings, providing a clear comparison between our Qtr algorithm and Bingo algorithm.
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+\% & \begin{tabular}{@{}c@{}}Qtr Algorithm, \\ single-threaded, \\ in-memory\end{tabular} 
+   & \begin{tabular}{@{}c@{}}Bingo NoSQL,\\single-threaded\end{tabular} \\
+\hline
+10\% & 0.0273381 & 0.526846 \\
+20\% & 0.053802 & 0.554869 \\
+30\% & 0.100528 & 0.610074 \\
+40\% & 0.208735 & 0.700541 \\
+50\% & 0.553334 & 0.841574 \\
+60\% & 0.938981 & 1.06477 \\
+70\% & 1.09632 & 1.48609 \\
+80\% & 1.36175 & 2.61958 \\
+90\% & 2.61875 & 6.42211 \\
+95\% & 7.83572 & 13.3279 \\
+\hline
+$\le$  60 seconds: & 98.56\% & 98.39\% \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tikzpicture}
+\begin{loglogaxis}[
+    xlabel={Time (s)},
+    ylabel={Queries not finished (\%)},
+    legend pos=south east,
+    xmajorgrids=true,
+    grid style=dashed,
+    width=15cm,
+    height=10cm,
+    legend style={at={(0,0)},anchor=south west},
+    axis line style={draw=none},
+    tick style={draw=none},
+    ytick      ={1, 2, 5, 10, 20, 50, 100},
+    yticklabels={1, 2, 5, 10, 20, 50, 100},
+    xtick=      {0.001,0.01,0.1,1.0,10.0,60.0},
+    xticklabels={0.001,0.01,0.1,1,10,60},
+]
+\addplot[
+    color=blue,
+    mark=square,
+    ]
+    coordinates {
+    (0.001,100)(0.0273381,90)(0.053802,80)(0.100528,70)(0.208735,60)(0.553334,50)(0.938981,40)(1.09632,30)(1.36175,20)(2.61875,10)(7.83572,5)(60,1.43760)
+    };
+\addlegendentry{Qtr solution}
+\addplot[
+    color=red,
+    mark=square,
+    ]
+    coordinates {
+    (0.001,100)(0.526846,90)(0.554869,80)(0.610074,70)(0.700541,60)(0.841574,50)(1.06477,40)(1.48609,30)(2.61958,20)(6.42211,10)(13.3279,5)(60,1.61012)
+    };
+\addlegendentry{Bingo NoSQL solution}
+\end{loglogaxis}
+\end{tikzpicture}
+\end{center}
+
+This thorough analysis offers valuable insights into the performance and potential scalability of our algorithm, especially when it comes to parallel computing. {\color{red} осталось получить тесты параллельной версии}
