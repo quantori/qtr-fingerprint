@@ -1,5 +1,5 @@
 #include "SearchDataLoader.h"
-#include "Args.h"
+#include "RunArgs.h"
 #include "HuffmanCoder.h"
 
 #include "QtrRamSearchData.h"
@@ -60,7 +60,7 @@ namespace {
         return result;
     }
 
-    shared_ptr<BallTreeSearchEngine> loadBallTree(const Args &args) {
+    shared_ptr<BallTreeSearchEngine> loadBallTree(const RunArgs &args) {
         BufferedReader ballTreeReader(args.ballTreePath());
         LOG(INFO) << "Start ball tree loading";
         shared_ptr<BallTreeSearchEngine> res;
@@ -90,7 +90,7 @@ namespace {
         return res;
     }
 
-    shared_ptr<SearchData> loadQtrRamSearchData(const Args &args, TimeTicker &timeTicker) {
+    shared_ptr<SearchData> loadQtrRamSearchData(const RunArgs &args, TimeTicker &timeTicker) {
         HuffmanCoder huffmanCoder = HuffmanCoder::load(args.huffmanCoderPath());
         auto loadBallTreeTask = async(launch::async, loadBallTree, cref(args));
 //        auto loadSmilesTableTask = async(launch::async, loadSmilesTable, args.smilesTablePath(),
@@ -109,7 +109,7 @@ namespace {
                                              args.threads(), args.timeLimit(), cfStoragePtr, propertiesTablePtr);
     }
 
-    shared_ptr<SearchData> loadQtrDriveSearchData(const Args &args, TimeTicker &timeTicker) {
+    shared_ptr<SearchData> loadQtrDriveSearchData(const RunArgs &args, TimeTicker &timeTicker) {
         auto loadBallTreeTask = async(launch::async, loadBallTree, cref(args));
         auto loadIdConverterTask = async(launch::async, loadIdConverter, args.idToStringDir());
 
@@ -120,7 +120,7 @@ namespace {
                                                args.threads(), args.timeLimit());
     }
 
-    shared_ptr<SearchData> loadBingoNoSQLSearchData(const Args &args, TimeTicker &timeTicker) {
+    shared_ptr<SearchData> loadBingoNoSQLSearchData(const RunArgs &args, TimeTicker &timeTicker) {
         filesystem::path dbDataDir = args.dbDataDirs()[0];
         try {
             return make_shared<BingoNoSQLSearchData>(dbDataDir, timeTicker, args.ansCount(), args.threads(),
@@ -133,7 +133,7 @@ namespace {
     }
 }
 
-shared_ptr<SearchData> SearchDataLoader::load(const Args &args, TimeTicker &timeTicker) {
+shared_ptr<SearchData> SearchDataLoader::load(const RunArgs &args, TimeTicker &timeTicker) {
     if (args.dbType() == DatabaseType::QtrRam) {
         return loadQtrRamSearchData(args, timeTicker);
     } else if (args.dbType() == DatabaseType::QtrDrive) {

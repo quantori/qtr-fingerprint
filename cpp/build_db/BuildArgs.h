@@ -19,7 +19,7 @@ ABSL_DECLARE_FLAG(uint64_t, treeDepth);
 
 
 namespace qtr {
-    class Args : public ArgsBase {
+    class BuildArgs : public ArgsBase {
     ADD_ARGUMENT_WITH_PARSER(DatabaseType, dbType, DatabaseType::BadType, strToDataBaseType)
 
     ADD_ARGUMENT(std::string, dbName, std::string())
@@ -35,7 +35,7 @@ namespace qtr {
     ADD_ARGUMENT(uint64_t, treeDepth, 0)
 
     public:
-        Args(int argc, char *argv[]) : ArgsBase(argc, argv) {
+        BuildArgs(int argc, char *argv[]) : ArgsBase(argc, argv) {
             parseAndCheck_dbName();
             parseAndCheck_dbType();
             parseAndCheck_sourceDir();

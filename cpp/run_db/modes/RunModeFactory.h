@@ -4,14 +4,14 @@
 #include "web/WebMode.h"
 #include "FromFileMode.h"
 #include "SearchData.h"
-#include "Args.h"
+#include "RunArgs.h"
 #include "InteractiveMode.h"
 
 namespace qtr {
 
     class RunModeFactory {
     public:
-        static std::unique_ptr<RunMode> create(const Args &args, const std::shared_ptr<SearchData> &searchData) {
+        static std::unique_ptr<RunMode> create(const RunArgs &args, const std::shared_ptr<SearchData> &searchData) {
             std::unique_ptr<RunMode> result = nullptr;
             if (args.mode() == RunMode::Type::Interactive)
                 result = make_unique<InteractiveMode>(searchData);

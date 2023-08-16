@@ -15,7 +15,7 @@ ABSL_DECLARE_FLAG(double, timeLimit);
 
 namespace qtr {
 
-    class Args : public ArgsBase {
+    class RunArgs : public ArgsBase {
     private:
         const static inline std::unordered_map<std::string, RunMode::Type> _strToMode = {
                 {"Interactive", RunMode::Type::Interactive},
@@ -44,7 +44,7 @@ namespace qtr {
     ADD_ARGUMENT(double, timeLimit, -1)
 
     public:
-        Args(int argc, char *argv[]) : ArgsBase(argc, argv) {
+        RunArgs(int argc, char *argv[]) : ArgsBase(argc, argv) {
             parseAndCheck_dbType();
             parseAndCheck_dbName();
             parseAndCheck_dataDirs();

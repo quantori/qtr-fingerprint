@@ -1,4 +1,4 @@
-#include "buildBingoNoSQL.h"
+#include "BingoNoSQLDatabaseBuilder.h"
 
 #include "bingo-nosql.h"
 #include "IndigoMolecule.h"
@@ -40,7 +40,7 @@ namespace qtr {
         }
     }
 
-    void buildBingoNoSQLDb(const Args &args, TimeMeasurer &statisticCollector) {
+    void BingoNoSQLDatabaseBuilder::build(const BuildArgs &args, TimeMeasurer &statisticCollector) {
         TimeMeasurer::FunctionExecutionTimer timer(statisticCollector, "bingo NO SQL building");
 
         auto indigoSessionPtr = IndigoSession::create();
@@ -67,4 +67,4 @@ namespace qtr {
         }
         bingoCloseDatabase(db);
     }
-}
+} // qtr

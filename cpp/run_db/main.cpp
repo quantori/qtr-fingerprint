@@ -6,7 +6,7 @@
 
 #include "Utils.h"
 
-#include "Args.h"
+#include "RunArgs.h"
 #include "TimeTicker.h"
 #include "SearchDataLoader.h"
 #include "RunModeFactory.h"
@@ -49,7 +49,7 @@ ABSL_FLAG(double, timeLimit, -1,
 
 int main(int argc, char *argv[]) {
     initLogging(argv, google::INFO, "run_db.info", true);
-    Args args(argc, argv);
+    RunArgs args(argc, argv);
 
     try {
         TimeTicker timeTicker;

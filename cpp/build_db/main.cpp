@@ -1,8 +1,7 @@
 #include <glog/logging.h>
 
-#include "Args.h"
-#include "build_types/buildQtr.h"
-#include "build_types/buildBingoNoSQL.h"
+#include "BuildArgs.h"
+#include "database_builders/DatabaseBuilderFactory.h"
 
 using namespace std;
 using namespace qtr;
@@ -36,18 +35,19 @@ ABSL_FLAG(uint64_t, treeDepth, 0,
 
 int main(int argc, char *argv[]) {
     initLogging(argv, google::INFO, "build_db.info", true);
-    Args args(argc, argv);
-    TimeMeasurer statisticCollector;
+    BuildArgs args(argc, argv);
 
-    if (args.dbType() == DatabaseType::QtrDrive ||
-        args.dbType() == DatabaseType::QtrRam) {
-        buildQtrDb(args, statisticCollector);
-    } else if (args.dbType() == DatabaseType::BingoNoSQL) {
-        buildBingoNoSQLDb(args, statisticCollector);
+    try {
+        TimeMeasurer statisticCollector;
+        auto builder = DatabaseBuilderFactory::create(args.dbType());
+        builder->build(args, statisticCollector);
+
+        for (auto &[label, time]: statisticCollector) {
+            LOG(INFO) << label << ": " << time;
+        }
     }
-
-    for (auto &[label, time]: statisticCollector) {
-        LOG(INFO) << label << ": " << time;
+    catch (std::exception& e) {
+        logErrorAndExit(e.what());
     }
 
     return 0;

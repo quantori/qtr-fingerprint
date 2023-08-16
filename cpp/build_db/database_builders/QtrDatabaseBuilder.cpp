@@ -1,4 +1,4 @@
-#include "buildQtr.h"
+#include "QtrDatabaseBuilder.h"
 
 #include "BallTreeBuilder.h"
 #include "string_table_io/StringTableWriter.h"
@@ -18,9 +18,8 @@
 using namespace std;
 
 namespace qtr {
-
     namespace {
-        void initFileSystem(const Args &args, TimeMeasurer &statisticCollector) {
+        void initFileSystem(const BuildArgs &args, TimeMeasurer &statisticCollector) {
             TimeMeasurer::FunctionExecutionTimer timer(statisticCollector, "filesystem initialization");
 
             vector<filesystem::path> alreadyExists;
@@ -49,7 +48,7 @@ namespace qtr {
             filesystem::create_directory(args.idToStringDestinationDir());
         }
 
-        void distributeFingerprintTables(const Args &args, TimeMeasurer &statisticCollector) {
+        void distributeFingerprintTables(const BuildArgs &args, TimeMeasurer &statisticCollector) {
             TimeMeasurer::FunctionExecutionTimer timer(statisticCollector, "fingerprint tables distribution");
 
             vector<filesystem::path> ftFilePaths = findFiles(args.fingerprintTablesSourceDir(),
@@ -66,7 +65,7 @@ namespace qtr {
             }
         }
 
-        map <uint64_t, filesystem::path> getLeafDirLocations(const Args &args) {
+        map <uint64_t, filesystem::path> getLeafDirLocations(const BuildArgs &args) {
             map<uint64_t, filesystem::path> leafLocations;
             for (const auto &dir: args.dbDataDirs()) {
                 for (auto &filePath: findFiles(dir, "")) {
@@ -77,7 +76,7 @@ namespace qtr {
             return leafLocations;
         }
 
-        void shuffleBallTreeLeaves(const Args &args) {
+        void shuffleBallTreeLeaves(const BuildArgs &args) {
             auto leafLocations = getLeafDirLocations(args);
 
             vector<uint64_t> leafIds;
@@ -93,7 +92,7 @@ namespace qtr {
             }
         }
 
-        void buildBallTree(const Args &args, TimeMeasurer &statisticCollector) {
+        void buildBallTree(const BuildArgs &args, TimeMeasurer &statisticCollector) {
             TimeMeasurer::FunctionExecutionTimer timer(statisticCollector, "ball tree building");
 
             distributeFingerprintTables(args, statisticCollector);
@@ -119,7 +118,7 @@ namespace qtr {
             }
         }
 
-        size_t mergeSmilesTablesAndBuildHuffman(const Args &args, TimeMeasurer &statisticCollector) {
+        size_t mergeSmilesTablesAndBuildHuffman(const BuildArgs &args, TimeMeasurer &statisticCollector) {
             TimeMeasurer::FunctionExecutionTimer timer(statisticCollector,
                                                        "merging smiles tables and building huffman");
 
@@ -150,7 +149,7 @@ namespace qtr {
             return smilesTable.size();
         }
 
-        size_t mergePropertyTables(const Args &args, TimeMeasurer &statisticCollector) {
+        size_t mergePropertyTables(const BuildArgs &args, TimeMeasurer &statisticCollector) {
             TimeMeasurer::FunctionExecutionTimer timer(statisticCollector, "merging property tables");
 
             vector<filesystem::path> propertyTablePaths = findFiles(args.propertyTablesSourceDir(), "");
@@ -178,7 +177,7 @@ namespace qtr {
             return propertyTable.size();
         }
 
-        size_t mergeTables(const Args &args, TimeMeasurer &statisticCollector) {
+        size_t mergeTables(const BuildArgs &args, TimeMeasurer &statisticCollector) {
             auto mergeSmilesTablesTask = async(launch::async, mergeSmilesTablesAndBuildHuffman, cref(args),
                                                ref(statisticCollector));
             auto mergePropertyTablesTask = async(launch::async, mergePropertyTables, cref(args),
@@ -192,7 +191,7 @@ namespace qtr {
             return moleculesNumber;
         }
 
-        size_t distributeSmilesTables(const Args &args, const map <uint64_t, filesystem::path> &molLocations) {
+        size_t distributeSmilesTables(const BuildArgs &args, const map <uint64_t, filesystem::path> &molLocations) {
             unordered_map<string, vector<pair<uint64_t, string>>> smilesTables;
             vector<filesystem::path> smilesTablePaths = findFiles(args.smilesSourceDir(), stringTableExtension);
             size_t molNumber = 0;
@@ -214,7 +213,7 @@ namespace qtr {
         }
 
 
-        size_t distributePropertyTables(const Args &args, const map <uint64_t, filesystem::path> &molLocations) {
+        size_t distributePropertyTables(const BuildArgs &args, const map <uint64_t, filesystem::path> &molLocations) {
             unordered_map<string, vector<pair<uint64_t, PropertiesFilter::Properties>>> propertyTables;
             vector<filesystem::path> propertyTablePaths = findFiles(args.propertyTablesSourceDir(), "");
             size_t molNumber = 0;
@@ -235,7 +234,7 @@ namespace qtr {
             return molNumber;
         }
 
-        size_t distributeTablesToLeafDirectories(const Args &args, TimeMeasurer &statisticCollector) {
+        size_t distributeTablesToLeafDirectories(const BuildArgs &args, TimeMeasurer &statisticCollector) {
             TimeMeasurer::FunctionExecutionTimer timer(statisticCollector, "smiles+properties tables distribution");
 
             auto leafLocations = getLeafDirLocations(args);
@@ -259,9 +258,8 @@ namespace qtr {
             return moleculesNumber;
         }
     }
-
-
-    void buildQtrDb(const Args &args, TimeMeasurer &statisticCollector) {
+    
+    void QtrDatabaseBuilder::build(const BuildArgs &args, TimeMeasurer &statisticCollector) {
         TimeMeasurer::FunctionExecutionTimer timer(statisticCollector, "Qtr DB building");
 
         initFileSystem(args, statisticCollector);
@@ -292,4 +290,4 @@ namespace qtr {
 
         LOG(INFO) << "Molecules number: " << moleculesNumber;
     }
-}
+} // qtr

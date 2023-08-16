@@ -3,14 +3,14 @@
 #include <memory>
 
 #include "SearchData.h"
-#include "Args.h"
+#include "RunArgs.h"
 #include "TimeTicker.h"
 
 namespace qtr {
 
     class SearchDataLoader {
     public:
-        static std::shared_ptr<SearchData> load(const Args &args, TimeTicker &timeTicker);
+        static std::shared_ptr<SearchData> load(const RunArgs &args, TimeTicker &timeTicker);
     };
 
 } // qtr 
