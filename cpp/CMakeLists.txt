@@ -19,13 +19,13 @@ SET(ABSL_PROPAGATE_CXX_STD ON)
 
 
 add_subdirectory(run_db)
-add_subdirectory(parse_sdf)
-add_subdirectory(parse_csv)
 add_subdirectory(build_db)
+add_subdirectory(preprocessing)
+add_subdirectory(playground)
 add_subdirectory(qtrlib)
+add_subdirectory(tests)
+
 add_subdirectory(third_party/Indigo)
 add_subdirectory(third_party/glog)
 add_subdirectory(third_party/Crow)
-add_subdirectory(tests)
 add_subdirectory(third_party/abseil-cpp)
-add_subdirectory(playground)

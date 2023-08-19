@@ -1,15 +1,17 @@
 set(CMAKE_CXX_STANDARD 20)
-set(This parse_csv)
-find_package(OpenMP REQUIRED)
+set(This preprocessing)
 
-add_executable(${This} main.cpp)
+file(GLOB_RECURSE sources *.cpp *.h)
+
+add_executable(${This} main.cpp ${sources})
 
 target_include_directories(${This}
         PUBLIC .
+        PUBLIC preprocessors
         )
 
 target_link_directories(${This} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../build/lib)
-target_link_libraries(${This} bingo-nosql-object OpenMP::OpenMP_CXX)
+target_link_libraries(${This} bingo-nosql-object)
 target_link_libraries(${This} absl::flags absl::flags_parse)
 target_link_libraries(${This} qtrlib glog::glog)
 
