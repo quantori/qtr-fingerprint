@@ -7,15 +7,12 @@ add_executable(run_db main.cpp ${sources})
 
 target_include_directories(run_db
         PUBLIC .
-        PUBLIC modes
-        PUBLIC search_data
+        PUBLIC qtr_run/modes
+        PUBLIC qtr_run/search_data
         )
 
 target_link_directories(run_db PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../build/lib)
-target_link_libraries(run_db bingo-nosql-object OpenMP::OpenMP_CXX)
-target_link_libraries(run_db absl::flags absl::flags_parse)
-target_link_libraries(run_db qtrlib glog::glog)
-target_link_libraries(run_db Crow::Crow)
+target_link_libraries(run_db qtr_run)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/SetOutputDirectory.cmake)
 set_output_directory(run_db)
