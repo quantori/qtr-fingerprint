@@ -20,6 +20,7 @@ SET(ABSL_PROPAGATE_CXX_STD ON)
 
 add_subdirectory(run_db)
 add_subdirectory(build_db)
+add_subdirectory(build_db/qtr_build)
 add_subdirectory(preprocessing)
 add_subdirectory(playground)
 add_subdirectory(qtrlib)

@@ -16,7 +16,7 @@ ABSL_FLAG(std::string, sourceDir, "", "Directory with source files");
 ABSL_FLAG(std::string, destDir, "", "Destination directory where preprocessed files should be stored");
 
 ABSL_FLAG(std::string, targetFilesType, "",
-          "Target files type. "
+          "Target files type (for " FLAG_NAME(SDF) " preprocessing type only). "
           "Possible types: "
                   FLAG_NAME(RawBucket) ", "
                   FLAG_NAME(Tables));
