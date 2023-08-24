@@ -7,13 +7,11 @@ add_executable(${This} main.cpp ${sources})
 
 target_include_directories(${This}
         PUBLIC .
-        PUBLIC preprocessors
+        PUBLIC qtr_preprocessing/preprocessors
         )
 
 target_link_directories(${This} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../build/lib)
-target_link_libraries(${This} bingo-nosql-object)
-target_link_libraries(${This} absl::flags absl::flags_parse)
-target_link_libraries(${This} qtrlib glog::glog)
+target_link_libraries(${This} qtr_preprocessing)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/SetOutputDirectory.cmake)
 set_output_directory(${This})
