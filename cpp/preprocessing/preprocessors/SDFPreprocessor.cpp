@@ -72,9 +72,9 @@ namespace qtr {
         }
 
         void parseSDF(const std::filesystem::path &sdFilePath, const PreprocessingArgs &args) {
-            if (args.destFilesType() == DestinationType::RawBucket) {
+            if (args.targetFilesType() == TargetType::RawBucket) {
                 sdfToRb(sdFilePath, args);
-            } else if (args.destFilesType() == DestinationType::Tables) {
+            } else if (args.targetFilesType() == TargetType::Tables) {
                 sdfToTables(sdFilePath, args);
             }
         }
