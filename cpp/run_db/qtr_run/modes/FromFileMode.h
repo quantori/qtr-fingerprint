@@ -5,6 +5,7 @@
 #include "RunMode.h"
 #include "IndigoSmilesRamFilter.h"
 #include "IndigoSmilesDriveFilter.h"
+#include "Profiling.h"
 
 namespace qtr {
     class FromFileMode : public RunMode {
@@ -31,7 +32,7 @@ namespace qtr {
             LOG(INFO) << "Loaded " << queries.size() << " queries";
             for (size_t i = 0; i < queries.size(); i++) {
                 LOG(INFO) << "Start search for " << i << ": " << queries[i];
-                this->_searchData->timeTicker.tick();
+                ProfilingTimer profilingTimer("Query processing");
                 auto queryData = this->_searchData->search(queries[i], PropertiesFilter::Bounds());
                 if (queryData == nullptr) {
                     ++skipped;
@@ -39,8 +40,9 @@ namespace qtr {
                 }
                 queryData->waitAllTasks();
                 LOG(INFO) << "Found " << queryData->getCurrentAnswersCount() << " answers";
-                times.emplace_back(
-                        this->_searchData->timeTicker.tick("search molecule " + std::to_string(i) + ": " + queries[i]));
+                auto queryDuration = profilingTimer.stop();
+                LOG(INFO) << queryDuration << " seconds spent to process molecule " << i << ": " << queries[i];
+                times.emplace_back(queryDuration);
             }
 
 

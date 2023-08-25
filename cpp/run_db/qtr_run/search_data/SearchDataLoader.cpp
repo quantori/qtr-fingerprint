@@ -9,6 +9,7 @@
 #include "BallTreeRAMSearchEngine.h"
 #include "HuffmanSmilesTable.h"
 #include "string_table_io/StringTableReader.h"
+#include "Profiling.h"
 
 #include "IndigoException.h"
 #include "base_cpp/scanner.h"
@@ -90,7 +91,7 @@ namespace {
         return res;
     }
 
-    shared_ptr<SearchData> loadQtrRamSearchData(const RunArgs &args, TimeTicker &timeTicker) {
+    shared_ptr<SearchData> loadQtrRamSearchData(const RunArgs &args) {
         HuffmanCoder huffmanCoder = HuffmanCoder::load(args.huffmanCoderPath());
         auto loadBallTreeTask = async(launch::async, loadBallTree, cref(args));
 //        auto loadSmilesTableTask = async(launch::async, loadSmilesTable, args.smilesTablePath(),
@@ -105,26 +106,25 @@ namespace {
         auto idConverterPtr = loadIdConverterTask.get();
         auto propertiesTablePtr = loadPropertyTableTask.get();
 
-        return make_shared<QtrRamSearchData>(ballTreePtr, idConverterPtr, timeTicker, args.ansCount(),
-                                             args.threads(), args.timeLimit(), cfStoragePtr, propertiesTablePtr);
+        return make_shared<QtrRamSearchData>(ballTreePtr, idConverterPtr, args.ansCount(), args.threads(),
+                                             args.timeLimit(), cfStoragePtr, propertiesTablePtr);
     }
 
-    shared_ptr<SearchData> loadQtrDriveSearchData(const RunArgs &args, TimeTicker &timeTicker) {
+    shared_ptr<SearchData> loadQtrDriveSearchData(const RunArgs &args) {
         auto loadBallTreeTask = async(launch::async, loadBallTree, cref(args));
         auto loadIdConverterTask = async(launch::async, loadIdConverter, args.idToStringDir());
 
         auto ballTreePtr = loadBallTreeTask.get();
         auto idConverterPtr = loadIdConverterTask.get();
 
-        return make_shared<QtrDriveSearchData>(ballTreePtr, idConverterPtr, timeTicker, args.ansCount(),
-                                               args.threads(), args.timeLimit());
+        return make_shared<QtrDriveSearchData>(ballTreePtr, idConverterPtr, args.ansCount(), args.threads(),
+                                               args.timeLimit());
     }
 
-    shared_ptr<SearchData> loadBingoNoSQLSearchData(const RunArgs &args, TimeTicker &timeTicker) {
+    shared_ptr<SearchData> loadBingoNoSQLSearchData(const RunArgs &args) {
         filesystem::path dbDataDir = args.dbDataDirs()[0];
         try {
-            return make_shared<BingoNoSQLSearchData>(dbDataDir, timeTicker, args.ansCount(), args.threads(),
-                                                     args.timeLimit());
+            return make_shared<BingoNoSQLSearchData>(dbDataDir, args.ansCount(), args.threads(), args.timeLimit());
         }
         catch (const IndigoException &e) {
             logErrorAndExit(e.what());
@@ -133,13 +133,14 @@ namespace {
     }
 }
 
-shared_ptr<SearchData> SearchDataLoader::load(const RunArgs &args, TimeTicker &timeTicker) {
+shared_ptr<SearchData> SearchDataLoader::load(const RunArgs &args) {
+    ProfileScope("SearchData loading");
     if (args.dbType() == DatabaseType::QtrRam) {
-        return loadQtrRamSearchData(args, timeTicker);
+        return loadQtrRamSearchData(args);
     } else if (args.dbType() == DatabaseType::QtrDrive) {
-        return loadQtrDriveSearchData(args, timeTicker);
+        return loadQtrDriveSearchData(args);
     } else if (args.dbType() == DatabaseType::BingoNoSQL) {
-        return loadBingoNoSQLSearchData(args, timeTicker);
+        return loadBingoNoSQLSearchData(args);
     }
     throw logic_error("Undefined db type");
 }

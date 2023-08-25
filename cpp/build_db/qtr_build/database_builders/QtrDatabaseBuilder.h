@@ -5,7 +5,7 @@
 namespace qtr {
 
     class QtrDatabaseBuilder : public DatabaseBuilder {
-        void build(const qtr::BuildArgs &args, qtr::TimeMeasurer &timeMeasurer) override;
+        void build(const qtr::BuildArgs &args) override;
     };
 
 } // qtr

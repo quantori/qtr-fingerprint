@@ -2,6 +2,7 @@
 
 #include "BuildArgs.h"
 #include "DatabaseBuilderFactory.h"
+#include "Profiling.h"
 
 using namespace std;
 using namespace qtr;
@@ -11,15 +12,14 @@ int main(int argc, char *argv[]) {
     BuildArgs args(argc, argv);
 
     try {
-        TimeMeasurer statisticCollector;
         auto builder = DatabaseBuilderFactory::create(args.dbType());
-        builder->build(args, statisticCollector);
+        builder->build(args);
 
-        for (auto &[label, time]: statisticCollector) {
+        for (auto &[label, time]: ProfilingPool::getStatistics()) {
             LOG(INFO) << label << ": " << time;
         }
     }
-    catch (std::exception& e) {
+    catch (std::exception &e) {
         logErrorAndExit(e.what());
     }
 

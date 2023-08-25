@@ -2,8 +2,6 @@
 
 #include "PreprocessingArgs.h"
 
-#include "TimeTicker.h"
-
 namespace qtr {
     class Preprocessor {
     public:

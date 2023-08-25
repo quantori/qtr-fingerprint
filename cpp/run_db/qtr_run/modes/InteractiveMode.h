@@ -22,7 +22,7 @@ namespace qtr {
                 std::cin >> smiles;
                 if (smiles.empty())
                     break;
-                this->_searchData->timeTicker.tick();
+                ProfilingTimer profilingTimer("Query processing");
                 try {
                     auto queryData = this->_searchData->search(smiles, PropertiesFilter::Bounds());
                     if (queryData == nullptr) {
@@ -49,7 +49,7 @@ namespace qtr {
                             LOG(INFO) << indigoSmiles(i);
                         }
                     }
-                    std::cout << "Search time: " << this->_searchData->timeTicker.tick("Search time") << std::endl;
+                    std::cout << "Search time: " << profilingTimer.stop() << std::endl;
                 } catch (std::exception &e) {
                     LOG(ERROR) << e.what() << "error occurred while processing " << smiles;
                     continue;

@@ -7,7 +7,6 @@
 #include "Utils.h"
 
 #include "RunArgs.h"
-#include "TimeTicker.h"
 #include "SearchDataLoader.h"
 #include "RunModeFactory.h"
 
@@ -19,9 +18,7 @@ int main(int argc, char *argv[]) {
     RunArgs args(argc, argv);
 
     try {
-        TimeTicker timeTicker;
-        auto searchData = SearchDataLoader::load(args, timeTicker);
-        timeTicker.tick("Db data loading");
+        auto searchData = SearchDataLoader::load(args);
         unique_ptr<RunMode> mode = RunModeFactory::create(args, searchData);
         mode->run();
     } catch (const exception &e) {

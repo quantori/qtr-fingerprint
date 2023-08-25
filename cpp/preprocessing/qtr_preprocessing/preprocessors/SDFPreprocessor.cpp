@@ -7,11 +7,11 @@
 #include "raw_bucket_io/RawBucketWriter.h"
 #include "string_table_io/StringTableWriter.h"
 #include "fingerprint_table_io/FingerprintTableWriter.h"
-#include "TimeTicker.h"
 
 #include "IndigoMolecule.h"
 #include "IndigoWriteBuffer.h"
 #include "IndigoIterator.h"
+#include "Profiling.h"
 
 
 namespace qtr {
@@ -34,7 +34,8 @@ namespace qtr {
                 if ((processed + skipped) % 100'000 == 0)
                     LOG(INFO) << (processed + skipped) << " molecules was processed from " << sdFilePath;
             }
-            LOG(INFO) << "Finish processing " << sdFilePath << " : skipped -- " << skipped << ", processed -- " << processed;
+            LOG(INFO) << "Finish processing " << sdFilePath << " : skipped -- " << skipped << ", processed -- "
+                      << processed;
         }
 
         void sdfToRb(const std::filesystem::path &sdFilePath, const PreprocessingArgs &args) {
@@ -60,15 +61,16 @@ namespace qtr {
             qtr::StringTableWriter smilesTableWriter(smilesTablePath);
             qtr::FingerprintTableWriter fingerprintTableWriter(fingerprintTablePath);
 
-            processSDF(sdFilePath, [&smilesTableWriter, &fingerprintTableWriter](const indigo_cpp::IndigoMoleculeSPtr &mol) {
-                mol->aromatize();
-                std::string smiles = mol->smiles();
-                qtr::IndigoFingerprint fingerprint = qtr::indigoFingerprintFromSmiles(smiles);
-                uint64_t cid = std::stoull(mol->name());
+            processSDF(sdFilePath,
+                       [&smilesTableWriter, &fingerprintTableWriter](const indigo_cpp::IndigoMoleculeSPtr &mol) {
+                           mol->aromatize();
+                           std::string smiles = mol->smiles();
+                           qtr::IndigoFingerprint fingerprint = qtr::indigoFingerprintFromSmiles(smiles);
+                           uint64_t cid = std::stoull(mol->name());
 
-                smilesTableWriter << std::make_pair(cid, smiles);
-                fingerprintTableWriter << std::make_pair(cid, fingerprint);
-            });
+                           smilesTableWriter << std::make_pair(cid, smiles);
+                           fingerprintTableWriter << std::make_pair(cid, fingerprint);
+                       });
         }
 
         void parseSDF(const std::filesystem::path &sdFilePath, const PreprocessingArgs &args) {
@@ -82,7 +84,7 @@ namespace qtr {
     }
 
     void SDFPreprocessor::run(const PreprocessingArgs &args) {
-        qtr::TimeTicker timeTicker;
+        ProfileScope("SDF preprocessing");
         std::vector<std::filesystem::path> sdFilePaths = qtr::findFiles(args.sourceDir(), ".sdf");
         std::vector<std::future<void>> tasks;
         for (auto &sdFilePath: sdFilePaths) {
@@ -91,6 +93,5 @@ namespace qtr {
         for (auto &task: tasks) {
             task.get();
         }
-        timeTicker.tick("Elapsed time");
     }
 } // qtr

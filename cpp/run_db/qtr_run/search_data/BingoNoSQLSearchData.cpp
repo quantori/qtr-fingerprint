@@ -30,9 +30,9 @@ namespace qtr {
         }
     }
 
-    BingoNoSQLSearchData::BingoNoSQLSearchData(const std::filesystem::path &dbDataDir, TimeTicker &timeTicker,
-                                               size_t ansCount, size_t threadsCount, double timeLimit) :
-            SearchData(timeTicker, ansCount, threadsCount, timeLimit),
+    BingoNoSQLSearchData::BingoNoSQLSearchData(const std::filesystem::path &dbDataDir, size_t ansCount,
+                                               size_t threadsCount, double timeLimit) :
+            SearchData(ansCount, threadsCount, timeLimit),
             db(BingoMolecule::loadDatabaseFile(IndigoSession::create(), dbDataDir, "")) {}
 
     unique_ptr <QueryData<CIDType>>

@@ -6,6 +6,8 @@
 #include "string_table_io/StringTableReader.h"
 #include "IndigoIterator.h"
 
+#include "Profiling.h"
+
 #include <future>
 
 using namespace std;
@@ -40,8 +42,8 @@ namespace qtr {
         }
     }
 
-    void BingoNoSQLDatabaseBuilder::build(const BuildArgs &args, TimeMeasurer &statisticCollector) {
-        TimeMeasurer::FunctionExecutionTimer timer(statisticCollector, "bingo NO SQL building");
+    void BingoNoSQLDatabaseBuilder::build(const BuildArgs &args) {
+        ProfileScope("BingoNoSQL building");
 
         auto indigoSessionPtr = IndigoSession::create();
 

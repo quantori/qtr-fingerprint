@@ -10,6 +10,7 @@
 #include "properties_table_io/PropertiesTableWriter.h"
 #include "HuffmanCoder.h"
 #include "PropertiesFilter.h"
+#include "Profiling.h"
 
 
 #include <future>
@@ -19,8 +20,8 @@ using namespace std;
 
 namespace qtr {
     namespace {
-        void initFileSystem(const BuildArgs &args, TimeMeasurer &statisticCollector) {
-            TimeMeasurer::FunctionExecutionTimer timer(statisticCollector, "filesystem initialization");
+        void initFileSystem(const BuildArgs &args) {
+            ProfileScope("Filesystem initialization");
 
             vector<filesystem::path> alreadyExists;
             for (auto &dbDir: args.dbDataDirs()) {
@@ -48,8 +49,8 @@ namespace qtr {
             filesystem::create_directory(args.idToStringDestinationDir());
         }
 
-        void distributeFingerprintTables(const BuildArgs &args, TimeMeasurer &statisticCollector) {
-            TimeMeasurer::FunctionExecutionTimer timer(statisticCollector, "fingerprint tables distribution");
+        void distributeFingerprintTables(const BuildArgs &args) {
+            ProfileScope("Fingerprint tables distribution");
 
             vector<filesystem::path> ftFilePaths = findFiles(args.fingerprintTablesSourceDir(),
                                                              fingerprintTableExtension);
@@ -92,10 +93,10 @@ namespace qtr {
             }
         }
 
-        void buildBallTree(const BuildArgs &args, TimeMeasurer &statisticCollector) {
-            TimeMeasurer::FunctionExecutionTimer timer(statisticCollector, "ball tree building");
+        void buildBallTree(const BuildArgs &args) {
+            ProfileScope("Ball tree building");
 
-            distributeFingerprintTables(args, statisticCollector);
+            distributeFingerprintTables(args);
 
             BallTreeBuilder ballTree(args.treeDepth(), args.parallelizeDepth(), args.dbDataDirs(),
                                      MaxDispersionBitSelector());
@@ -106,11 +107,8 @@ namespace qtr {
                 shuffleBallTreeLeaves(args);
         }
 
-        void copyIdToStringTables(TimeMeasurer &statisticCollector, const filesystem::path &source,
-                                  const filesystem::path &destination) {
-            TimeMeasurer::FunctionExecutionTimer timer(statisticCollector,
-                                                       "copying from " + source.string() + " to " +
-                                                       destination.string());
+        void copyIdToStringTables(const filesystem::path &source, const filesystem::path &destination) {
+            ProfileScope("copying from " + source.string() + " to " + destination.string());
 
             for (const filesystem::path &filePath: findFiles(source, ".csv")) {
                 LOG(INFO) << "copy file" << filePath << " to " << destination / filePath.filename();
@@ -118,9 +116,8 @@ namespace qtr {
             }
         }
 
-        size_t mergeSmilesTablesAndBuildHuffman(const BuildArgs &args, TimeMeasurer &statisticCollector) {
-            TimeMeasurer::FunctionExecutionTimer timer(statisticCollector,
-                                                       "merging smiles tables and building huffman");
+        size_t mergeSmilesTablesAndBuildHuffman(const BuildArgs &args) {
+            ProfileScope("Merging smiles tables and building huffman");
 
             vector<filesystem::path> smilesTablePaths = findFiles(args.smilesSourceDir(), stringTableExtension);
 
@@ -149,8 +146,8 @@ namespace qtr {
             return smilesTable.size();
         }
 
-        size_t mergePropertyTables(const BuildArgs &args, TimeMeasurer &statisticCollector) {
-            TimeMeasurer::FunctionExecutionTimer timer(statisticCollector, "merging property tables");
+        size_t mergePropertyTables(const BuildArgs &args) {
+            ProfileScope("Merge property tables");
 
             vector<filesystem::path> propertyTablePaths = findFiles(args.propertyTablesSourceDir(), "");
 
@@ -177,11 +174,9 @@ namespace qtr {
             return propertyTable.size();
         }
 
-        size_t mergeTables(const BuildArgs &args, TimeMeasurer &statisticCollector) {
-            auto mergeSmilesTablesTask = async(launch::async, mergeSmilesTablesAndBuildHuffman, cref(args),
-                                               ref(statisticCollector));
-            auto mergePropertyTablesTask = async(launch::async, mergePropertyTables, cref(args),
-                                                 ref(statisticCollector));
+        size_t mergeTables(const BuildArgs &args) {
+            auto mergeSmilesTablesTask = async(launch::async, mergeSmilesTablesAndBuildHuffman, cref(args));
+            auto mergePropertyTablesTask = async(launch::async, mergePropertyTables, cref(args));
 
             size_t moleculesNumber = mergeSmilesTablesTask.get();
             size_t moleculesNumber2 = mergePropertyTablesTask.get();
@@ -234,8 +229,8 @@ namespace qtr {
             return molNumber;
         }
 
-        size_t distributeTablesToLeafDirectories(const BuildArgs &args, TimeMeasurer &statisticCollector) {
-            TimeMeasurer::FunctionExecutionTimer timer(statisticCollector, "smiles+properties tables distribution");
+        size_t distributeTablesToLeafDirectories(const BuildArgs &args) {
+            ProfileScope("SMILES+Properties tables distribution");
 
             auto leafLocations = getLeafDirLocations(args);
 
@@ -258,27 +253,25 @@ namespace qtr {
             return moleculesNumber;
         }
     }
-    
-    void QtrDatabaseBuilder::build(const BuildArgs &args, TimeMeasurer &statisticCollector) {
-        TimeMeasurer::FunctionExecutionTimer timer(statisticCollector, "Qtr DB building");
 
-        initFileSystem(args, statisticCollector);
+    void QtrDatabaseBuilder::build(const BuildArgs &args) {
+        ProfileScope("QtrDB building");
 
-        auto buildBallTreeTask = async(launch::async, buildBallTree, cref(args), ref(statisticCollector));
+        initFileSystem(args);
+
+        auto buildBallTreeTask = async(launch::async, buildBallTree, cref(args));
 
         auto idToStrSourceDir = args.idToStringSourceDir();
         auto idToStrDestinationDir = args.idToStringDestinationDir();
         auto copyIdToStrTablesTask = async(launch::async, copyIdToStringTables,
-                                           ref(statisticCollector),
                                            cref(idToStrSourceDir),
                                            cref(idToStrDestinationDir));
         future<size_t> processTablesTask;
         if (args.dbType() == DatabaseType::QtrRam)
-            processTablesTask = async(launch::async, mergeTables, cref(args), ref(statisticCollector));
+            processTablesTask = async(launch::async, mergeTables, cref(args));
         else if (args.dbType() == DatabaseType::QtrDrive) {
             buildBallTreeTask.wait(); // should distribute only after ball tree is built
-            processTablesTask = async(launch::async, distributeTablesToLeafDirectories, cref(args),
-                                      ref(statisticCollector));
+            processTablesTask = async(launch::async, distributeTablesToLeafDirectories, cref(args));
         } else {
             LOG(ERROR) << "Wrong DB type in QtrDB building function";
             exit(-1);

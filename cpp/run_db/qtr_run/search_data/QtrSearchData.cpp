@@ -52,9 +52,9 @@ namespace qtr {
     }
 
     QtrSearchData::QtrSearchData(shared_ptr<const BallTreeSearchEngine> ballTree,
-                                 shared_ptr<const IdConverter> idConverter, TimeTicker &timeTicker,
-                                 size_t ansCount, size_t threadCount, double timeLimit) :
-            SearchData(timeTicker, ansCount, threadCount, timeLimit),
+                                 shared_ptr<const IdConverter> idConverter, size_t ansCount, size_t threadCount,
+                                 double timeLimit) :
+            SearchData(ansCount, threadCount, timeLimit),
             ballTree(std::move(ballTree)), idConverter(std::move(idConverter)) {}
 
     unique_ptr <QueryData<CIDType>>

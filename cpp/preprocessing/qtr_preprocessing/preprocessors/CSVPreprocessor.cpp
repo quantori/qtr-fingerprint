@@ -7,7 +7,7 @@
 #include "id_to_string_io/IdToStringWriter.h"
 #include "properties_table_io/PropertiesTableWriter.h"
 #include "PropertiesFilter.h"
-#include "TimeTicker.h"
+#include "Profiling.h"
 
 namespace qtr {
     namespace {
@@ -98,7 +98,7 @@ namespace qtr {
     }
 
     void CSVPreprocessor::run(const PreprocessingArgs &args) {
-        qtr::TimeTicker timeTicker;
+        ProfileScope("CSV preprocessing");
         std::vector<std::filesystem::path> csvPaths = qtr::findFiles(args.sourceDir(), ".csv");
         std::vector<std::future<void>> tasks;
         std::atomic_uint64_t counter = 0;
@@ -111,6 +111,5 @@ namespace qtr {
         for (auto &task: tasks) {
             task.get();
         }
-        timeTicker.tick("Elapsed time");
     }
 } // qtr

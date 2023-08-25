@@ -6,7 +6,7 @@ namespace qtr {
 
     class BingoNoSQLDatabaseBuilder : public DatabaseBuilder {
     public:
-        void build(const BuildArgs &args, TimeMeasurer &timeMeasurer) override;
+        void build(const BuildArgs &args) override;
 
     };
 
