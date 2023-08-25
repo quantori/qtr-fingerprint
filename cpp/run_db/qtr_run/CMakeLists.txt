@@ -16,5 +16,6 @@ target_link_libraries(${This} bingo-nosql-object)
 
 target_include_directories(${This}
         PUBLIC .
-        PUBLIC preprocessors
+        PUBLIC search_data
+        PUBLIC modes
         )
