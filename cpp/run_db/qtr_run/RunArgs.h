@@ -12,6 +12,7 @@ ABSL_DECLARE_FLAG(std::string, mode);
 ABSL_DECLARE_FLAG(std::string, queriesFile);
 ABSL_DECLARE_FLAG(uint64_t, ansCount);
 ABSL_DECLARE_FLAG(double, timeLimit);
+ABSL_DECLARE_FLAG(std::string, summaryFile);
 
 namespace qtr {
 
@@ -43,6 +44,8 @@ namespace qtr {
 
     ADD_ARGUMENT(double, timeLimit, -1)
 
+    ADD_ARGUMENT(std::filesystem::path, summaryFile, "")
+
     public:
         RunArgs(int argc, char *argv[]) : ArgsBase(argc, argv) {
             parseAndCheck_dbType();
@@ -60,6 +63,7 @@ namespace qtr {
 
             if (mode() == RunMode::Type::FromFile) {
                 parseAndCheck_queriesFile();
+                parseAndCheck_summaryFile();
             }
 
             if (dbType() == DatabaseType::BingoNoSQL) {

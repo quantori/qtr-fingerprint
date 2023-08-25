@@ -33,13 +33,7 @@ namespace qtr {
                     LOG(INFO) << "Found " << queryData->getCurrentAnswersCount() << " answers";
                     auto answers = queryData->getAnswers(0, 5).second;
                     LOG(INFO) << "Answer examples:";
-/*                    if (dynamic_cast<const QtrRamSearchData *>(this->_searchData.get()) != nullptr) {
-                        const auto *ramSearchData = dynamic_cast<const QtrRamSearchData *>(this->_searchData.get());
-                        for (auto &i: answers) {
-
-                            LOG(INFO) << (*ramSearchData->cfStorage)[i];
-                        }
-                    } else */if (dynamic_cast<const QtrDriveSearchData *>(this->_searchData.get()) != nullptr
+                    if (dynamic_cast<const QtrDriveSearchData *>(this->_searchData.get()) != nullptr
                                  || dynamic_cast<const QtrRamSearchData *>(this->_searchData.get()) != nullptr) {
                         for (auto &i: answers) {
                             LOG(INFO) << i;

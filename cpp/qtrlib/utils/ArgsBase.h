@@ -39,7 +39,10 @@
                 exit(-1); \
             } \
             return _##name; \
-        }
+        } \
+        [[nodiscard]] inline bool isProvided_##name() const { \
+            return checkEmpty(_##name, emptyVal); \
+        } \
 
 
 #define ADD_ARGUMENT(type, name, emptyVal) ADD_ARGUMENT_WITH_PARSER(type, name, emptyVal, std::identity())

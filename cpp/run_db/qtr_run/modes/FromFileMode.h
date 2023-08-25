@@ -11,41 +11,14 @@ namespace qtr {
     class FromFileMode : public RunMode {
     private:
         std::filesystem::path _inputFile;
+        std::filesystem::path _summaryFile;
 
     public:
-        inline FromFileMode(std::shared_ptr<SearchData> searchData, std::filesystem::path inputFile)
-                : RunMode(std::move(searchData)), _inputFile(std::move(inputFile)) {}
+        inline FromFileMode(std::shared_ptr<SearchData> searchData, std::filesystem::path inputFile,
+                            std::filesystem::path summaryFile)
+                : RunMode(std::move(searchData)), _inputFile(std::move(inputFile)), _summaryFile(summaryFile) {}
 
-
-        inline void run() override {
-            std::ifstream input(_inputFile);
-            std::vector<std::string> queries;
-            while (input.peek() != EOF) {
-                std::string query;
-                input >> query;
-                std::string otherInfoInLine;
-                std::getline(input, otherInfoInLine);
-                queries.emplace_back(query);
-            }
-            std::vector<double> times;
-            size_t skipped = 0;
-            LOG(INFO) << "Loaded " << queries.size() << " queries";
-            for (size_t i = 0; i < queries.size(); i++) {
-                LOG(INFO) << "Start search for " << i << ": " << queries[i];
-                ProfilingTimer profilingTimer("Query processing");
-                auto queryData = this->_searchData->search(queries[i], PropertiesFilter::Bounds());
-                if (queryData == nullptr) {
-                    ++skipped;
-                    continue;
-                }
-                queryData->waitAllTasks();
-                LOG(INFO) << "Found " << queryData->getCurrentAnswersCount() << " answers";
-                auto queryDuration = profilingTimer.stop();
-                LOG(INFO) << queryDuration << " seconds spent to process molecule " << i << ": " << queries[i];
-                times.emplace_back(queryDuration);
-            }
-
-
+        inline static void showStatistics(std::vector<float> times, size_t skippedQueries, std::ostream &out) {
             double mean = std::accumulate(times.begin(), times.end(), 0.0) / double(times.size());
             double min = *std::min_element(times.begin(), times.end());
             double max = *std::max_element(times.begin(), times.end());
@@ -59,19 +32,70 @@ namespace qtr {
                     percentilesStatStream << " | ";
             }
 
-            LOG(INFO) << "skipped queries: " << skipped;
-            LOG(INFO) << "  mean: " << mean;
-            LOG(INFO) << "   max: " << max;
-            LOG(INFO) << "   min: " << min;
-            LOG(INFO) << "median: " << median;
-            LOG(INFO) << percentilesStatStream.str();
-            LOG(INFO) << "Total search time: " << BallTreeSearchEngine::ballTreeSearchTimer;
-            LOG(INFO) << "Total indigo time: " << IndigoSmilesFilter::indigoFilteringTimer;
-            LOG(INFO) << "indigo percentage: "
-                      << IndigoSmilesFilter::indigoFilteringTimer / BallTreeSearchEngine::ballTreeSearchTimer * 100
-                      << "%";
-            LOG(INFO) << "overdue queries: " << BallTreeQueryData::timedOutCounter;
+            out << "skipped queries: " << skippedQueries;
+            out << "  mean: " << mean;
+            out << "   max: " << max;
+            out << "   min: " << min;
+            out << "median: " << median;
+            out << percentilesStatStream.str();
+            out << "Total search time: " << BallTreeSearchEngine::ballTreeSearchTimer;
+            out << "Total indigo time: " << IndigoSmilesFilter::indigoFilteringTimer;
+            out << "indigo percentage: "
+                << IndigoSmilesFilter::indigoFilteringTimer / BallTreeSearchEngine::ballTreeSearchTimer * 100
+                << "%";
+            out << "overdue queries: " << BallTreeQueryData::timedOutCounter;
         }
+
+        inline static std::vector<std::string> loadQueriesFromFile(const std::filesystem::path &inputFile) {
+            std::ifstream input(inputFile);
+            std::vector<std::string> queries;
+            while (input.peek() != EOF) {
+                std::string query;
+                input >> query;
+                std::string otherInfoInLine;
+                std::getline(input, otherInfoInLine);
+                queries.emplace_back(query);
+            }
+            LOG(INFO) << "Loaded " << queries.size() << " queries";
+            return queries;
+        }
+
+        inline static void
+        showSummary(const std::vector<size_t> &answerCounters, const std::filesystem::path &summaryFile) {
+            if (summaryFile.empty())
+                return;
+            std::ofstream out(summaryFile);
+            for (float i: answerCounters) {
+                out << i << '\n';
+            }
+        }
+
+        inline void run() override {
+            auto queries = loadQueriesFromFile(_inputFile);
+            std::vector<float> times;
+            std::vector<size_t> answerCounters;
+            size_t skipped = 0;
+            for (size_t i = 0; i < queries.size(); i++) {
+                LOG(INFO) << "Start search for " << i << ": " << queries[i];
+                ProfilingTimer profilingTimer("Query processing");
+                auto queryData = this->_searchData->search(queries[i], PropertiesFilter::Bounds());
+                if (queryData == nullptr) {
+                    ++skipped;
+                    continue;
+                }
+                queryData->waitAllTasks();
+                auto ansCount = queryData->getCurrentAnswersCount();
+                answerCounters.emplace_back(ansCount);
+                LOG(INFO) << "Found " << ansCount << " answers";
+                auto queryDuration = profilingTimer.stop();
+                LOG(INFO) << queryDuration << " seconds spent to process molecule " << i << ": " << queries[i];
+                times.emplace_back(queryDuration);
+            }
+
+            showStatistics(times, skipped, std::cout);
+            showSummary(answerCounters, _summaryFile);
+        }
+
 
     };
 } // qtr

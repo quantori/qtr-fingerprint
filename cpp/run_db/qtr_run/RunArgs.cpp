@@ -27,10 +27,14 @@ ABSL_FLAG(string, mode, "",
                   FLAG_NAME(Web));
 
 ABSL_FLAG(string, queriesFile, "",
-          "File to load test molecules from");
+          "File to load test molecules from it (for " FLAG_NAME(FromFile) " mode only)");
 
 ABSL_FLAG(uint64_t, ansCount, -1,
           "The maximum number of answers to be found");
 
 ABSL_FLAG(double, timeLimit, -1,
           "Single request time limit in seconds");
+
+ABSL_FLAG(std::string, summaryFile, "",
+          "File where summary of the run should be stored (for " FLAG_NAME(FromFile) " mode only)");
+
