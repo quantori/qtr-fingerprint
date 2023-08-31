@@ -177,7 +177,7 @@ namespace qtr {
         size_t mergeTables(const BuildArgs &args) {
             auto mergeSmilesTablesTask = async(launch::async, mergeSmilesTablesAndBuildHuffman, cref(args));
 
-            if (args.buildProperties()) {
+            if (args.properties()) {
                 auto mergePropertyTablesTask = async(launch::async, mergePropertyTables, cref(args));
                 mergePropertyTablesTask.wait();
             }
@@ -244,7 +244,7 @@ namespace qtr {
             auto distributeSmilesTablesTask = async(launch::async, distributeSmilesTables, cref(args),
                                                     cref(molLocations));
 
-            if (args.buildProperties()) {
+            if (args.properties()) {
                 auto distributePropertyTablesTask = async(launch::async, distributePropertyTables, cref(args),
                                                           cref(molLocations));
                 distributePropertyTablesTask.wait();

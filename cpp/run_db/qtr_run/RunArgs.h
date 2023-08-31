@@ -13,6 +13,7 @@ ABSL_DECLARE_FLAG(std::string, queriesFile);
 ABSL_DECLARE_FLAG(uint64_t, ansCount);
 ABSL_DECLARE_FLAG(double, timeLimit);
 ABSL_DECLARE_FLAG(std::string, summaryFile);
+ABSL_DECLARE_FLAG(bool, properties);
 
 namespace qtr {
 
@@ -46,6 +47,8 @@ namespace qtr {
 
     ADD_ARGUMENT(std::filesystem::path, summaryFile, "")
 
+    ADD_ARGUMENT(bool, properties, true);
+
     public:
         RunArgs(int argc, char *argv[]) : ArgsBase(argc, argv) {
             parseAndCheck_dbType();
@@ -55,6 +58,7 @@ namespace qtr {
             parseAndCheck_mode();
             parseAndCheck_ansCount();
             parseAndCheck_timeLimit();
+            parse_properties();
 
             if (dbType() == DatabaseType::QtrRam ||
                 dbType() == DatabaseType::QtrDrive) {
@@ -63,17 +67,18 @@ namespace qtr {
 
             if (mode() == RunMode::Type::FromFile) {
                 parseAndCheck_queriesFile();
-                parseAndCheck_summaryFile();
+                parse_summaryFile();
             }
 
             if (dbType() == DatabaseType::BingoNoSQL) {
+                if (properties()) {
+                    logErrorAndExit("Only databases without properties are supported for BingoNoSQL");
+                }
                 if (threads() != 1) {
-                    LOG(ERROR) << "Only single-threaded run is supported for BingoNoSQL";
-                    exit(-1);
+                    logErrorAndExit("Only single-threaded run is supported for BingoNoSQL");
                 }
                 if (dataDirs().size() != 1) {
-                    LOG(ERROR) << "Multiple data folders is not supported for BingoNoSQL";
-                    exit(-1);
+                    logErrorAndExit("Multiple data folders is not supported for BingoNoSQL");
                 }
             }
         }

@@ -41,14 +41,14 @@ namespace {
         std::filesystem::create_directory(smilesTablePath.parent_path());
         std::filesystem::create_directory(fingerprintTablePath.parent_path());
         std::filesystem::create_directory(idToStringTablePath.parent_path());
-        if (args.preprocessProperties())
+        if (args.properties())
             std::filesystem::create_directory(propertyTablesPath.parent_path());
 
         StringTableWriter smilesTableWriter(smilesTablePath);
         FingerprintTableWriter fingerprintTableWriter(fingerprintTablePath);
         IdToStringWriter idToStringWriter(idToStringTablePath);
         unique_ptr<PropertiesTableWriter> propertiesTableWriter = nullptr;
-        if (args.preprocessProperties())
+        if (args.properties())
             propertiesTableWriter = make_unique<PropertiesTableWriter>(propertyTablesPath);
 
         std::ifstream in(csvFilePath);
@@ -56,8 +56,8 @@ namespace {
         uint64_t skipped = 0, processed = 0;
         while (std::getline(in, line)) {
             auto lineElements = splitString(line);
-            if ((args.preprocessProperties() && lineElements.size() != 2 + PropertiesFilter::Properties().size())
-             || (!args.preprocessProperties() && lineElements.size() != 2)) {
+            if ((args.properties() && lineElements.size() != 2 + PropertiesFilter::Properties().size())
+             || (!args.properties() && lineElements.size() != 2)) {
                 LOG(WARNING) << "Skip line with invalid (" << lineElements.size()
                              << ") number of arguments elements: "
                              << line;
@@ -68,7 +68,7 @@ namespace {
             std::string strId = lineElements[0];
             std::string smiles = lineElements[1];
             PropertiesFilter::Properties properties{};
-            if (args.preprocessProperties()) {
+            if (args.properties()) {
                 try {
                     for (size_t i = 0; i < properties.size(); i++) {
                         properties[i] = std::stof(lineElements[i + 2]);
@@ -108,7 +108,7 @@ namespace {
 
 void CSVPreprocessor::run(const PreprocessingArgs &args) {
     ProfileScope("CSV preprocessing");
-    std::vector<std::filesystem::path> csvPaths = qtr::findFiles(args.preprocessDir(), ".csv");
+    std::vector<std::filesystem::path> csvPaths = qtr::findFiles(args.sourceDir(), ".csv");
     std::vector<std::future<void>> tasks;
     std::atomic_uint64_t counter = 0;
     std::mutex mutex;

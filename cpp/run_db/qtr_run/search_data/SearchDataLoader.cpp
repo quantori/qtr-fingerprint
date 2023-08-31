@@ -98,13 +98,16 @@ namespace {
 //                                         cref(huffmanCoder));
         auto loadCFStorageTask = async(launch::async, loadCFStorage, args.smilesTablePath());
         auto loadIdConverterTask = async(launch::async, loadIdConverter, args.idToStringDir());
-        auto loadPropertyTableTask = async(launch::async, loadPropertiesTable, args.propertyTablePath());
 
+        shared_ptr<vector<PropertiesFilter::Properties>> propertiesTablePtr = nullptr;
+        if (args.properties()) {
+            auto loadPropertyTableTask = async(launch::async, loadPropertiesTable, args.propertyTablePath());
+            propertiesTablePtr = loadPropertyTableTask.get();
+        }
         auto ballTreePtr = loadBallTreeTask.get();
 //        auto smilesTablePtr = loadSmilesTableTask.get();
         auto cfStoragePtr = loadCFStorageTask.get();
         auto idConverterPtr = loadIdConverterTask.get();
-        auto propertiesTablePtr = loadPropertyTableTask.get();
 
         return make_shared<QtrRamSearchData>(ballTreePtr, idConverterPtr, args.ansCount(), args.threads(),
                                              args.timeLimit(), cfStoragePtr, propertiesTablePtr);

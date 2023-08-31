@@ -19,9 +19,14 @@ namespace qtr {
         createRamFilter(const QtrRamSearchData &searchData, const std::string &querySmiles,
                         const PropertiesFilter::Bounds queryBounds) {
             auto indigoFilter = make_unique<IndigoCFRamFilter>(searchData.cfStorage, querySmiles);
-            auto propertiesFilter = make_unique<PropertiesRamFilter>(searchData.propertiesTable,
-                                                                     queryBounds);
-            auto filter = make_unique<CompoundFilter<CIDType>>(std::move(propertiesFilter), std::move(indigoFilter));
+            unique_ptr<ByIdAnswerFilter> filter = nullptr;
+            if (searchData.propertiesTable != nullptr) {
+                auto propertiesFilter = make_unique<PropertiesRamFilter>(searchData.propertiesTable,
+                                                                         queryBounds);
+                filter = make_unique<CompoundFilter<CIDType>>(std::move(propertiesFilter), std::move(indigoFilter));
+            } else {
+                filter = std::move(indigoFilter);
+            }
             return std::move(filter);
         }
 

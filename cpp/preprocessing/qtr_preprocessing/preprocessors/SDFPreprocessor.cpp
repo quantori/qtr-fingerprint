@@ -85,7 +85,7 @@ namespace qtr {
 
     void SDFPreprocessor::run(const PreprocessingArgs &args) {
         ProfileScope("SDF preprocessing");
-        std::vector<std::filesystem::path> sdFilePaths = qtr::findFiles(args.preprocessDir(), ".sdf");
+        std::vector<std::filesystem::path> sdFilePaths = qtr::findFiles(args.sourceDir(), ".sdf");
         std::vector<std::future<void>> tasks;
         for (auto &sdFilePath: sdFilePaths) {
             tasks.emplace_back(std::async(std::launch::async, parseSDF, std::cref(sdFilePath), std::cref(args)));

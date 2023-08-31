@@ -6,13 +6,13 @@
 
 ABSL_DECLARE_FLAG(std::string, preprocessingType);
 
-ABSL_DECLARE_FLAG(std::string, preprocessDir);
+ABSL_DECLARE_FLAG(std::string, sourceDir);
 
 ABSL_DECLARE_FLAG(std::string, destDir);
 
 ABSL_DECLARE_FLAG(std::string, targetFilesType);
 
-ABSL_DECLARE_FLAG(bool, preprocessProperties);
+ABSL_DECLARE_FLAG(bool, properties);
 
 namespace qtr {
 
@@ -39,24 +39,24 @@ namespace qtr {
 
     ADD_ARGUMENT_WITH_PARSER(PreprocessingType, preprocessingType, PreprocessingType::BadType, strToPreprocessingType);
 
-    ADD_ARGUMENT(std::filesystem::path, preprocessDir, "");
+    ADD_ARGUMENT(std::filesystem::path, sourceDir, "");
 
     ADD_ARGUMENT(std::filesystem::path, destDir, "");
 
     ADD_ARGUMENT_WITH_PARSER(TargetType, targetFilesType, TargetType::BadType, strToTargetType);
 
-    ADD_ARGUMENT(bool, preprocessProperties, true);
+    ADD_ARGUMENT(bool, properties, true);
 
     public:
         PreprocessingArgs(int argc, char *argv[]) : ArgsBase(argc, argv) {
             parseAndCheck_preprocessingType();
-            parseAndCheck_preprocessDir();
+            parseAndCheck_sourceDir();
             parseAndCheck_destDir();
             if (preprocessingType() == PreprocessingType::SDF) {
                 parse_targetFilesType();
             }
             if (preprocessingType() == PreprocessingType::CSV) {
-                parse_preprocessProperties();
+                parse_properties();
             }
         }
 

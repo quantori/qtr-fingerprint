@@ -61,39 +61,91 @@ public:
     static void runDB(initializer_list<string> args) {
         runFunction(runDB, args);
     }
+
+    void runQtrDatabase(const filesystem::path &csvPath,
+                        const filesystem::path &queriesPath,
+                        const vector<size_t> &expectedSummary,
+                        size_t drivesCount,
+                        size_t parallelizeDepth,
+                        size_t treeDepth,
+                        size_t runTreads,
+                        size_t ansCount,
+                        double timeLimit) const {
+        filesystem::path csvDir = DataPathManager::getDataDir() / csvPath;
+        filesystem::path carbonQueries = DataPathManager::getDataDir() / queriesPath;
+        string dbName = "testDB";
+        vector<filesystem::path> dbDrives;
+        string dbDrivesStr;
+        for (size_t i = 0; i < drivesCount; i++) {
+            dbDrives.push_back(TmpDirFixture::getTmpDir() / ("drive" + to_string(i)));
+            dbDrivesStr += dbDrives.back().string();
+            if (i + 1 < drivesCount)
+                dbDrivesStr += ',';
+        }
+
+        filesystem::path preprocessedDir = TmpDirFixture::getTmpDir() / "preprocessed";
+        filesystem::path otherDataDir = TmpDirFixture::getTmpDir() / "other_data";
+        filesystem::path summaryFile = TmpDirFixture::getTmpDir() / "summary.txt";
+
+        if (!is_directory(csvDir) || !is_regular_file(carbonQueries)) {
+            GTEST_SKIP() << "No data for test";
+        }
+        for (const auto &dir: {preprocessedDir, otherDataDir, dbDrives[0], dbDrives[1]}) {
+            create_directory(dir);
+        }
+        preprocess({"--preprocessingType=CSV",
+                    "--sourceDir=" + csvDir.string(),
+                    "--destDir=" + preprocessedDir.string(),
+                    "--properties=false",
+                   });
+
+
+        buildDB({"--dbName=" + dbName,
+                 "--dbType=QtrRam",
+                 "--sourceDir=" + preprocessedDir.string(),
+                 "--destDirs=" + dbDrivesStr,
+                 "--otherDestDir=" + otherDataDir.string(),
+                 "--parallelizeDepth=" + to_string(parallelizeDepth),
+                 "--treeDepth=" + to_string(treeDepth),
+                 "--properties=false",
+                });
+
+        runDB({"--dbName=" + dbName,
+               "--dataDirs=" + dbDrivesStr,
+               "--otherDataDir=" + otherDataDir.string(),
+               "--threads=" + to_string(runTreads),
+               "--mode=FromFile",
+               "--ansCount=" + to_string(ansCount),
+               "--timeLimit=" + to_string(timeLimit),
+               "--queriesFile=" + carbonQueries.string(),
+               "--summaryFile=" + summaryFile.string(),
+               "--properties=false",
+              });
+
+        ifstream summary(summaryFile);
+        for (size_t i : expectedSummary) {
+            int actual;
+            summary >> actual;
+            EXPECT_EQ(actual, i);
+        }
+    }
+
+    void testCarbonDatabase(size_t drivesCount,
+                            size_t parallelizeDepth,
+                            size_t treeDepth,
+                            size_t runTreads,
+                            size_t ansCount,
+                            double timeLimit) const {
+        vector<size_t> summary(200);
+        iota(summary.begin(), summary.end(), 1);
+        reverse(summary.begin(), summary.end());
+
+        runQtrDatabase("molecules/carbon_csv", "molecules/carbon_queries.txt", summary, drivesCount, parallelizeDepth,
+                       treeDepth, runTreads, ansCount, timeLimit);
+    }
 };
 
 TEST_F(HighLevelDatabaseTests, CarbonDB) {
-    filesystem::path csvDir = DataPathManager::getDataDir() / "molecules/carbon_csv";
-    filesystem::path preprocessedDir = TmpDirFixture::getTmpDir() / "preprocessed";
-    string dbName = "CarbonDB";
-    vector<filesystem::path> dbDrives = {
-            TmpDirFixture::getTmpDir() / "drive1",
-            TmpDirFixture::getTmpDir() / "drive2"
-    };
-    filesystem::path otherDataDir = TmpDirFixture::getTmpDir() / "other_data";
-
-    if (!is_directory(csvDir)) {
-        GTEST_SKIP() << "No data for test";
-    }
-    for (const auto& dir : {preprocessedDir, otherDataDir, dbDrives[0], dbDrives[1]}) {
-        create_directory(dir);
-    }
-    preprocess({"--preprocessingType=CSV",
-                "--preprocessDir=" + csvDir.string(),
-                "--destDir=" + preprocessedDir.string(),
-                "--preprocessProperties=false",
-               });
-
-
-    buildDB({"--dbName=" + dbName,
-             "--dbType=QtrRam",
-             "--sourceDir=" + preprocessedDir.string(),
-             "--destDirs=" + dbDrives[0].string() + "," + dbDrives[1].string(),
-             "--otherDestDir=" + otherDataDir.string(),
-             "--parallelizeDepth=3",
-             "--treeDepth=5",
-             "--buildProperties=false",
-             });
+    testCarbonDatabase(2, 3, 5, 1, 10000, 1.0);
 }
 

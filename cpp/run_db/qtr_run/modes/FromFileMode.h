@@ -16,7 +16,7 @@ namespace qtr {
     public:
         inline FromFileMode(std::shared_ptr<SearchData> searchData, std::filesystem::path inputFile,
                             std::filesystem::path summaryFile)
-                : RunMode(std::move(searchData)), _inputFile(std::move(inputFile)), _summaryFile(summaryFile) {}
+                : RunMode(std::move(searchData)), _inputFile(std::move(inputFile)), _summaryFile(std::move(summaryFile)) {}
 
         inline static void showStatistics(std::vector<float> times, size_t skippedQueries, std::ostream &out) {
             double mean = std::accumulate(times.begin(), times.end(), 0.0) / double(times.size());
@@ -32,18 +32,18 @@ namespace qtr {
                     percentilesStatStream << " | ";
             }
 
-            out << "skipped queries: " << skippedQueries;
-            out << "  mean: " << mean;
-            out << "   max: " << max;
-            out << "   min: " << min;
-            out << "median: " << median;
-            out << percentilesStatStream.str();
-            out << "Total search time: " << BallTreeSearchEngine::ballTreeSearchTimer;
-            out << "Total indigo time: " << IndigoSmilesFilter::indigoFilteringTimer;
+            out << "skipped queries: " << skippedQueries << '\n';
+            out << "  mean: " << mean << '\n';
+            out << "   max: " << max << '\n';
+            out << "   min: " << min << '\n';
+            out << "median: " << median << '\n';
+            out << percentilesStatStream.str() << '\n';
+            out << "Total search time: " << BallTreeSearchEngine::ballTreeSearchTimer << '\n';
+            out << "Total indigo time: " << IndigoSmilesFilter::indigoFilteringTimer << '\n';
             out << "indigo percentage: "
                 << IndigoSmilesFilter::indigoFilteringTimer / BallTreeSearchEngine::ballTreeSearchTimer * 100
-                << "%";
-            out << "overdue queries: " << BallTreeQueryData::timedOutCounter;
+                << "%" << '\n';
+            out << "overdue queries: " << BallTreeQueryData::timedOutCounter << '\n';
         }
 
         inline static std::vector<std::string> loadQueriesFromFile(const std::filesystem::path &inputFile) {
