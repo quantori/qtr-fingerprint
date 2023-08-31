@@ -23,7 +23,6 @@ bool IndigoCFRamFilter::operator()(const CIDType &id) {
         MoleculeSubstructureMatcher msm(*molecule);
         msm.setQuery(*_queryMolecule);
         return msm.find();
-
     } catch (const std::exception &e) {
         LOG(ERROR) << e.what();
         return false;

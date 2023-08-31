@@ -145,7 +145,10 @@ public:
     }
 };
 
-TEST_F(HighLevelDatabaseTests, CarbonDB) {
-    testCarbonDatabase(2, 3, 5, 1, 10000, 1.0);
+TEST_F(HighLevelDatabaseTests, SimpleCarbonDB) {
+    testCarbonDatabase(2, 3, 5, 1, 10000, 2.0);
 }
 
+TEST_F(HighLevelDatabaseTests, ParallelCarbonDB) {
+    testCarbonDatabase(2, 3, 5, 2, 10000, 2.0);
+}

@@ -168,7 +168,7 @@ public:
         }
     }
 
-    void buildBallTree(const DataTable &data) {
+    void buildBallTree(const DataTable &data) const {
         LOG(INFO) << "Start data preparation";
         prepareTreeDirs(data);
         LOG(INFO) << "Finish data preparation";

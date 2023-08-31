@@ -45,7 +45,7 @@ namespace qtr {
 
         [[nodiscard]] bool checkShouldStop() const;
 
-        ~QueryData();
+        virtual ~QueryData();
 
     protected:
         size_t _stopAnswersNumber;
