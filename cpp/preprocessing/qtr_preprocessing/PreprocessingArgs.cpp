@@ -8,7 +8,7 @@ ABSL_FLAG(string, preprocessingType, "",
                   FLAG_NAME(SDF) ", "
                   FLAG_NAME(CSV));
 
-ABSL_FLAG(string, sourceDir, "", "Directory with source files");
+ABSL_FLAG(string, preprocessDir, "", "Directory with source files");
 
 ABSL_FLAG(string, destDir, "", "Destination directory where preprocessed files should be stored");
 
@@ -17,3 +17,7 @@ ABSL_FLAG(string, targetFilesType, "",
                                                    "Possible types: "
                   FLAG_NAME(RawBucket) ", "
                   FLAG_NAME(Tables));
+
+ABSL_FLAG(bool, properties, true,
+          "Is true if properties should be concerned. False otherwise (for " FLAG_NAME(
+                  CSV) " preprocessing type only)");

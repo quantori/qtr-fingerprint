@@ -9,7 +9,7 @@ target_include_directories(tests
         PUBLIC ../third_party/Indigo/third_party/googletest/include
         )
 
-target_link_libraries(tests qtrlib qtr_build)
+target_link_libraries(tests qtrlib qtr_build qtr_preprocessing qtr_run)
 target_link_libraries(tests indigo-cpp gtest glog::glog)
 target_link_libraries(tests absl::flags absl::flags_parse)
 

@@ -34,10 +34,6 @@
         }\
     public: \
         [[nodiscard]] inline type name() const { \
-            if (checkEmpty(_##name, emptyVal)) { \
-                LOG(ERROR) << "Try to get uninitialized  field " << #name; \
-                exit(-1); \
-            } \
             return _##name; \
         } \
         [[nodiscard]] inline bool isProvided_##name() const { \
