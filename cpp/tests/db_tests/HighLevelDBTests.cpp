@@ -65,17 +65,35 @@ public:
 
 TEST_F(HighLevelDatabaseTests, CarbonDB) {
     filesystem::path csvDir = DataPathManager::getDataDir() / "molecules/carbon_csv";
+    filesystem::path preprocessedDir = TmpDirFixture::getTmpDir() / "preprocessed";
+    string dbName = "CarbonDB";
+    vector<filesystem::path> dbDrives = {
+            TmpDirFixture::getTmpDir() / "drive1",
+            TmpDirFixture::getTmpDir() / "drive2"
+    };
+    filesystem::path otherDataDir = TmpDirFixture::getTmpDir() / "other_data";
+
     if (!is_directory(csvDir)) {
         GTEST_SKIP() << "No data for test";
     }
-    filesystem::path preprocessedDir = TmpDirFixture::getTmpDir() / "preprocessed";
-    create_directory(preprocessedDir);
+    for (const auto& dir : {preprocessedDir, otherDataDir, dbDrives[0], dbDrives[1]}) {
+        create_directory(dir);
+    }
     preprocess({"--preprocessingType=CSV",
                 "--preprocessDir=" + csvDir.string(),
                 "--destDir=" + preprocessedDir.string(),
-                "--properties=false",
+                "--preprocessProperties=false",
                });
-    cout << "Test";
 
+
+    buildDB({"--dbName=" + dbName,
+             "--dbType=QtrRam",
+             "--sourceDir=" + preprocessedDir.string(),
+             "--destDirs=" + dbDrives[0].string() + "," + dbDrives[1].string(),
+             "--otherDestDir=" + otherDataDir.string(),
+             "--parallelizeDepth=3",
+             "--treeDepth=5",
+             "--buildProperties=false",
+             });
 }
 

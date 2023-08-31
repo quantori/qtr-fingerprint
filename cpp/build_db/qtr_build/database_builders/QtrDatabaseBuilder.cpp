@@ -176,13 +176,12 @@ namespace qtr {
 
         size_t mergeTables(const BuildArgs &args) {
             auto mergeSmilesTablesTask = async(launch::async, mergeSmilesTablesAndBuildHuffman, cref(args));
-            auto mergePropertyTablesTask = async(launch::async, mergePropertyTables, cref(args));
 
+            if (args.buildProperties()) {
+                auto mergePropertyTablesTask = async(launch::async, mergePropertyTables, cref(args));
+                mergePropertyTablesTask.wait();
+            }
             size_t moleculesNumber = mergeSmilesTablesTask.get();
-            size_t moleculesNumber2 = mergePropertyTablesTask.get();
-
-            assert(moleculesNumber == moleculesNumber2);
-
             return moleculesNumber;
         }
 
@@ -244,12 +243,13 @@ namespace qtr {
             }
             auto distributeSmilesTablesTask = async(launch::async, distributeSmilesTables, cref(args),
                                                     cref(molLocations));
-            auto distributePropertyTablesTask = async(launch::async, distributePropertyTables, cref(args),
-                                                      cref(molLocations));
 
+            if (args.buildProperties()) {
+                auto distributePropertyTablesTask = async(launch::async, distributePropertyTables, cref(args),
+                                                          cref(molLocations));
+                distributePropertyTablesTask.wait();
+            }
             size_t moleculesNumber = distributeSmilesTablesTask.get();
-            size_t moleculesNumber2 = distributePropertyTablesTask.get();
-            assert(moleculesNumber == moleculesNumber2);
             return moleculesNumber;
         }
     }

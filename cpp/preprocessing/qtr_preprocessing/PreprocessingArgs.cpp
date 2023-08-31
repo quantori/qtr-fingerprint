@@ -18,6 +18,6 @@ ABSL_FLAG(string, targetFilesType, "",
                   FLAG_NAME(RawBucket) ", "
                   FLAG_NAME(Tables));
 
-ABSL_FLAG(bool, properties, true,
-          "Is true if properties should be concerned. False otherwise (for " FLAG_NAME(
+ABSL_FLAG(bool, preprocessProperties, true,
+          "True if properties should be concerned. False otherwise (for " FLAG_NAME(
                   CSV) " preprocessing type only)");

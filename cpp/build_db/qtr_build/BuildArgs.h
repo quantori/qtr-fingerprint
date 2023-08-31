@@ -17,6 +17,8 @@ ABSL_DECLARE_FLAG(uint64_t, parallelizeDepth);
 
 ABSL_DECLARE_FLAG(uint64_t, treeDepth);
 
+ABSL_DECLARE_FLAG(bool, buildProperties);
+
 
 namespace qtr {
     class BuildArgs : public ArgsBase {
@@ -34,21 +36,25 @@ namespace qtr {
 
     ADD_ARGUMENT(uint64_t, treeDepth, 0)
 
+    ADD_ARGUMENT(bool, buildProperties, true)
+
     public:
         BuildArgs(int argc, char *argv[]) : ArgsBase(argc, argv) {
             parseAndCheck_dbName();
             parseAndCheck_dbType();
             parseAndCheck_sourceDir();
             parseAndCheck_destDirs();
+            parse_buildProperties();
             if (dbType() == DatabaseType::QtrDrive || dbType() == DatabaseType::QtrRam) {
                 parseAndCheck_otherDestDir();
                 parseAndCheck_parallelizeDepth();
                 parseAndCheck_treeDepth();
             } else if (dbType() == DatabaseType::BingoNoSQL) {
-                // No specific arguments for BingoNoSQL
+                if (buildProperties()) {
+                    logErrorAndExit("Cannot build BingoNoSQL database with properties (Not implemented).");
+                }
             } else {
-                LOG(ERROR) << "A case that should not have been executed has been executed";
-                exit(-1);
+                logErrorAndExit("A case that should not have been executed has been executed");
             }
         }
 

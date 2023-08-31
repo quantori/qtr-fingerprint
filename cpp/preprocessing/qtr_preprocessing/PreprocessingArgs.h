@@ -12,7 +12,7 @@ ABSL_DECLARE_FLAG(std::string, destDir);
 
 ABSL_DECLARE_FLAG(std::string, targetFilesType);
 
-ABSL_DECLARE_FLAG(bool, properties);
+ABSL_DECLARE_FLAG(bool, preprocessProperties);
 
 namespace qtr {
 
@@ -45,7 +45,7 @@ namespace qtr {
 
     ADD_ARGUMENT_WITH_PARSER(TargetType, targetFilesType, TargetType::BadType, strToTargetType);
 
-    ADD_ARGUMENT(bool, properties, true);
+    ADD_ARGUMENT(bool, preprocessProperties, true);
 
     public:
         PreprocessingArgs(int argc, char *argv[]) : ArgsBase(argc, argv) {
@@ -56,7 +56,7 @@ namespace qtr {
                 parse_targetFilesType();
             }
             if (preprocessingType() == PreprocessingType::CSV) {
-                parse_properties();
+                parse_preprocessProperties();
             }
         }
 

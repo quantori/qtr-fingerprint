@@ -41,14 +41,14 @@ namespace {
         std::filesystem::create_directory(smilesTablePath.parent_path());
         std::filesystem::create_directory(fingerprintTablePath.parent_path());
         std::filesystem::create_directory(idToStringTablePath.parent_path());
-        if (args.properties())
+        if (args.preprocessProperties())
             std::filesystem::create_directory(propertyTablesPath.parent_path());
 
         StringTableWriter smilesTableWriter(smilesTablePath);
         FingerprintTableWriter fingerprintTableWriter(fingerprintTablePath);
         IdToStringWriter idToStringWriter(idToStringTablePath);
         unique_ptr<PropertiesTableWriter> propertiesTableWriter = nullptr;
-        if (args.properties())
+        if (args.preprocessProperties())
             propertiesTableWriter = make_unique<PropertiesTableWriter>(propertyTablesPath);
 
         std::ifstream in(csvFilePath);
@@ -56,8 +56,8 @@ namespace {
         uint64_t skipped = 0, processed = 0;
         while (std::getline(in, line)) {
             auto lineElements = splitString(line);
-            if ((args.properties() && lineElements.size() != 2 + PropertiesFilter::Properties().size())
-             || (!args.properties() && lineElements.size() != 2)) {
+            if ((args.preprocessProperties() && lineElements.size() != 2 + PropertiesFilter::Properties().size())
+             || (!args.preprocessProperties() && lineElements.size() != 2)) {
                 LOG(WARNING) << "Skip line with invalid (" << lineElements.size()
                              << ") number of arguments elements: "
                              << line;
@@ -68,7 +68,7 @@ namespace {
             std::string strId = lineElements[0];
             std::string smiles = lineElements[1];
             PropertiesFilter::Properties properties{};
-            if (args.properties()) {
+            if (args.preprocessProperties()) {
                 try {
                     for (size_t i = 0; i < properties.size(); i++) {
                         properties[i] = std::stof(lineElements[i + 2]);

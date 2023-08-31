@@ -27,3 +27,7 @@ ABSL_FLAG(uint64_t, parallelizeDepth, 0,
 
 ABSL_FLAG(uint64_t, treeDepth, 0,
           "ball tree depth");
+
+ABSL_FLAG(bool, buildProperties, true,
+          "True if properties should be concerned. False otherwise");
+
