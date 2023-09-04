@@ -5,7 +5,6 @@
 #include <random>
 #include <future>
 #include <chrono>
-#include <algorithm>
 
 #include "fingerprint_table_io/FingerprintTableReader.h"
 #include "Utils.h"
@@ -49,7 +48,7 @@ namespace qtr {
             queryData.filterAndAddAnswers(res, *filterObject);
         }
         if (queryData.checkTimeOut()) {
-            LOG(INFO) << "Search stopped due to timeout";
+                LOG(INFO) << "Search stopped due to timeout";
         }
 
         chrono::duration<double> duration = chrono::high_resolution_clock::now() - startTime;

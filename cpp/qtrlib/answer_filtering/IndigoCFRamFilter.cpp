@@ -30,20 +30,14 @@ bool IndigoCFRamFilter::operator()(const CIDType &id) {
 }
 
 IndigoCFRamFilter::IndigoCFRamFilter(std::shared_ptr<CFStorage> cfStorage, const std::string &querySmiles)
-        : _cfStorage(std::move(cfStorage)) {
-    BufferScanner scanner(querySmiles.c_str(), querySmiles.size(), false);
+        : _cfStorage(std::move(cfStorage)), _querySmiles(querySmiles) {
+    BufferScanner scanner(querySmiles.c_str(), (int) querySmiles.size(), false);
     SmilesLoader loader(scanner);
-    _queryMolecule = make_shared<QueryMolecule>();
+    _queryMolecule = make_unique<QueryMolecule>();
     loader.loadQueryMolecule(*_queryMolecule);
     _queryMolecule->aromatize(AromaticityOptions());
 }
 
 unique_ptr<AnswerFilter<CIDType>> IndigoCFRamFilter::copy() {
-    return make_unique<IndigoCFRamFilter>(*this);
+    return make_unique<IndigoCFRamFilter>(_cfStorage, _querySmiles);
 }
-
-IndigoCFRamFilter::IndigoCFRamFilter(const IndigoCFRamFilter &other) : _cfStorage(other._cfStorage),
-                                                                       _queryMolecule(other._queryMolecule) {
-
-}
-// qtr

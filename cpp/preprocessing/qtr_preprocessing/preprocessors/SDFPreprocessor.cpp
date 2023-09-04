@@ -1,14 +1,12 @@
 #include <future>
 #include "SDFPreprocessor.h"
 
-#include "PreprocessingArgs.h"
 #include "Utils.h"
 #include "Fingerprint.h"
 #include "raw_bucket_io/RawBucketWriter.h"
 #include "string_table_io/StringTableWriter.h"
 #include "fingerprint_table_io/FingerprintTableWriter.h"
 
-#include "IndigoMolecule.h"
 #include "IndigoWriteBuffer.h"
 #include "IndigoIterator.h"
 #include "Profiling.h"

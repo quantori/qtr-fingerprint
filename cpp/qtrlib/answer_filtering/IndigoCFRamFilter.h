@@ -12,15 +12,14 @@ namespace qtr {
     public:
         IndigoCFRamFilter(std::shared_ptr<CFStorage> cfStorage, const std::string &querySmiles);
 
-        IndigoCFRamFilter(const IndigoCFRamFilter &other);
-
         bool operator()(const CIDType &id) override;
 
         std::unique_ptr<AnswerFilter<CIDType>> copy() override;
 
     private:
         std::shared_ptr<CFStorage> _cfStorage;
-        std::shared_ptr<indigo::QueryMolecule> _queryMolecule;
+        std::unique_ptr<indigo::QueryMolecule> _queryMolecule;
+        std::string _querySmiles;
     };
 
 } // qtr

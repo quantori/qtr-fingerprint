@@ -1,6 +1,5 @@
 #include "PreprocessorFactory.h"
 #include "Utils.h"
-#include "PreprocessingArgs.h"
 
 using namespace qtr;
 using namespace std;
