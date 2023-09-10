@@ -1,7 +1,9 @@
 #include "Profiling.h"
 
-#include <chrono>
 #include <utility>
+#include <iomanip>
+#include <vector>
+#include <algorithm>
 
 using namespace std;
 using namespace qtr;
@@ -16,17 +18,32 @@ ProfilingPool &ProfilingPool::getInstance() {
     return _instance;
 }
 
-std::unordered_map<std::string, float> ProfilingPool::getStatistics() {
+unordered_map<string, float> ProfilingPool::getStatistics() {
     PROFILING_POOL_BEGIN;
     return instance._statistics;
 }
 
-void ProfilingPool::addRecord(const std::string &label, float result) {
+void ProfilingPool::addRecord(const string &label, float result) {
+    auto start = std::chrono::system_clock::now();
     PROFILING_POOL_BEGIN;
     instance._statistics[label] += result;
+    chrono::duration<float> duration = chrono::system_clock::now() - start;
+    instance._addRecordTimer += duration.count();
 }
 
-ProfilingTimer::ProfilingTimer(std::string label) : _label(std::move(label)), _duration(-1), _stopped(false) {
+void ProfilingPool::showStatistics(ostream &out) {
+    PROFILING_POOL_BEGIN;
+    auto statistics = instance._statistics;
+    out << "Profiling information:\n";
+    vector<pair<string, float>> stat(statistics.begin(), statistics.end());
+    stat.emplace_back("Time spent on profiling: ", instance._addRecordTimer);
+    sort(stat.begin(), stat.end());
+    for (auto &[label, time]: stat) {
+        out << fixed << setprecision(6) << label << ": " << time << " seconds\n";
+    }
+}
+
+ProfilingTimer::ProfilingTimer(string label) : _label(std::move(label)), _duration(-1), _stopped(false) {
     _start = profilingClock::now();
 }
 

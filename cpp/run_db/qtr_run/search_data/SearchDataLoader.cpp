@@ -94,8 +94,6 @@ namespace {
     shared_ptr<SearchData> loadQtrRamSearchData(const RunArgs &args) {
         HuffmanCoder huffmanCoder = HuffmanCoder::load(args.huffmanCoderPath());
         auto loadBallTreeTask = async(launch::async, loadBallTree, cref(args));
-//        auto loadSmilesTableTask = async(launch::async, loadSmilesTable, args.smilesTablePath(),
-//                                         cref(huffmanCoder));
         auto loadCFStorageTask = async(launch::async, loadCFStorage, args.smilesTablePath());
         auto loadIdConverterTask = async(launch::async, loadIdConverter, args.idToStringDir());
 
@@ -105,7 +103,6 @@ namespace {
             propertiesTablePtr = loadPropertyTableTask.get();
         }
         auto ballTreePtr = loadBallTreeTask.get();
-//        auto smilesTablePtr = loadSmilesTableTask.get();
         auto cfStoragePtr = loadCFStorageTask.get();
         auto idConverterPtr = loadIdConverterTask.get();
 
@@ -132,7 +129,6 @@ namespace {
         catch (const IndigoException &e) {
             logErrorAndExit(e.what());
         }
-
     }
 }
 

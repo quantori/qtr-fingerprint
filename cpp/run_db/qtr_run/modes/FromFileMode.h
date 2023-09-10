@@ -16,7 +16,8 @@ namespace qtr {
     public:
         inline FromFileMode(std::shared_ptr<SearchData> searchData, std::filesystem::path inputFile,
                             std::filesystem::path summaryFile)
-                : RunMode(std::move(searchData)), _inputFile(std::move(inputFile)), _summaryFile(std::move(summaryFile)) {}
+                : RunMode(std::move(searchData)), _inputFile(std::move(inputFile)),
+                  _summaryFile(std::move(summaryFile)) {}
 
         inline static void showStatistics(std::vector<float> times, size_t skippedQueries, std::ostream &out) {
             double mean = std::accumulate(times.begin(), times.end(), 0.0) / double(times.size());
@@ -38,11 +39,6 @@ namespace qtr {
             out << "   min: " << min << '\n';
             out << "median: " << median << '\n';
             out << percentilesStatStream.str() << '\n';
-            out << "Total search time: " << BallTreeSearchEngine::ballTreeSearchTimer << '\n';
-            out << "Total indigo time: " << IndigoSmilesFilter::indigoFilteringTimer << '\n';
-            out << "indigo percentage: "
-                << IndigoSmilesFilter::indigoFilteringTimer / BallTreeSearchEngine::ballTreeSearchTimer * 100
-                << "%" << '\n';
             out << "overdue queries: " << BallTreeQueryData::timedOutCounter << '\n';
         }
 
@@ -94,6 +90,7 @@ namespace qtr {
 
             showStatistics(times, skipped, std::cout);
             showSummary(answerCounters, _summaryFile);
+            ProfilingPool::showStatistics(std::cout);
         }
 
 

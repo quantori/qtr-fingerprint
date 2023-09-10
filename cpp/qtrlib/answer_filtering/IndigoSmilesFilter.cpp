@@ -4,14 +4,15 @@
 #include "IndigoMolecule.h"
 #include "indigo.h"
 #include "BallTreeTypes.h"
+#include "Profiling.h"
 
 using namespace std;
 
 namespace qtr {
     bool IndigoSmilesFilter::operator()(const CIDType &id) {
-        const auto &smiles = getSmiles(id);
-        auto startTime = std::chrono::high_resolution_clock::now();
+        ProfileScope("IndigoSmilesFilter");
         bool result;
+        const auto &smiles = getSmiles(id);
         try {
             auto candidateMol = _indigoSessionPtr->loadMolecule(smiles);
             candidateMol.aromatize();
@@ -24,8 +25,6 @@ namespace qtr {
                        << e.what();
             result = false;
         }
-        std::chrono::duration<double> duration = std::chrono::high_resolution_clock::now() - startTime;
-        _timer += duration.count();
         return result;
     }
 
@@ -33,9 +32,5 @@ namespace qtr {
             _querySmiles(std::move(querySmiles)), _indigoSessionPtr(indigo_cpp::IndigoSession::create()),
             _queryMolecule(_indigoSessionPtr->loadQueryMolecule(*_querySmiles)) {
         _queryMolecule.aromatize();
-    }
-
-    IndigoSmilesFilter::~IndigoSmilesFilter() {
-        indigoFilteringTimer += _timer;
     }
 } // qtr

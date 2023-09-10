@@ -18,9 +18,6 @@ namespace qtr {
 
     class BallTreeSearchEngine : public BallTree {
     public:
-
-        inline static std::atomic<double> ballTreeSearchTimer = 0;
-
         template<typename BinaryReader>
         BallTreeSearchEngine(BinaryReader &nodesReader, std::vector<std::filesystem::path> dataDirectories);
 

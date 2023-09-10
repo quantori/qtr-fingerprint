@@ -3,6 +3,7 @@
 
 #include "BallTreeRAMSearchEngine.h"
 #include "fingerprint_table_io/FingerprintTableReader.h"
+#include "Profiling.h"
 
 namespace qtr {
 
@@ -27,6 +28,7 @@ namespace qtr {
     }
 
     std::vector<CIDType> BallTreeRAMSearchEngine::searchInLeaf(size_t leafId, const IndigoFingerprint &query) const {
+        ProfileScope("searchInLeaf");
         std::vector<CIDType> answers;
         for (const auto &[id, fingerprint]: _buckets[leafNumberById((leafId))]) {
             if (query <= fingerprint)
@@ -37,6 +39,7 @@ namespace qtr {
 
     std::vector<std::vector<uint64_t>>
     BallTreeRAMSearchEngine::divideLeavesIntoGroups(const std::vector<uint64_t> &leaves, size_t threads) const {
+        ProfileScope("divideLeavesIntoGroups");
         auto shuffledLeaves = leaves;
         std::mt19937 random_generator(0);
         std::shuffle(shuffledLeaves.begin(), shuffledLeaves.end(), random_generator);
@@ -44,7 +47,7 @@ namespace qtr {
         for (size_t i = 0; i < shuffledLeaves.size(); i++) {
             result[i % result.size()].emplace_back(shuffledLeaves[i]);
         }
-        return result;
+        return std::move(result);
     }
 
 } // qtr

@@ -14,11 +14,7 @@ namespace qtr {
 
     class IndigoSmilesFilter : public ByIdAnswerFilter {
     public:
-        inline static std::atomic<double> indigoFilteringTimer = 0;
-
         bool operator()(const CIDType &id) override;
-
-        ~IndigoSmilesFilter() override;
 
         explicit IndigoSmilesFilter(std::shared_ptr<const std::string> querySmiles);
 
@@ -28,7 +24,6 @@ namespace qtr {
         std::shared_ptr<const std::string> _querySmiles;
         indigo_cpp::IndigoSessionPtr _indigoSessionPtr;
         indigo_cpp::IndigoQueryMolecule _queryMolecule;
-        double _timer = 0;
     };
 
 } // qtr

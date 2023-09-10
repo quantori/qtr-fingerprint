@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.12)
 
 set(This qtrlib)
 
+option(QTR_PROFILING "" OFF)
+
 file(GLOB_RECURSE ${This}-sources
         "*.h"
         "*.c"
@@ -10,6 +12,11 @@ file(GLOB_RECURSE ${This}-sources
 
 
 add_library(${This} STATIC ${${This}-sources})
+
+if (QTR_PROFILING)
+    target_compile_definitions(${This} PUBLIC QTR_PROFILING)
+    message(STATUS "Enabling QTR_PROFILING because QTR_PROFILING=ON")
+endif (QTR_PROFILING)
 
 target_link_libraries(${This} glog::glog)
 target_link_libraries(${This} indigo-core indigo-cpp bingo-nosql)

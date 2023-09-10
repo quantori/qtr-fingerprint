@@ -7,6 +7,7 @@
 
 #include "BallTreeTypes.h"
 #include "AnswerFilter.h"
+#include "Profiling.h"
 
 namespace qtr {
 
@@ -129,6 +130,8 @@ namespace qtr {
     template<typename AnsType>
     void
     QueryData<AnsType>::filterAndAddAnswers(const std::vector<AnsType> &answers, AnswerFilter<AnsType> &filterObject) {
+        ProfileScope("filterAndAddAnswers");
+
         std::vector<AnsType> filteredAnswers;
         for (auto &ans: answers) {
             if (filterObject(ans)) {
@@ -157,9 +160,14 @@ namespace qtr {
         return getCurrentAnswersCount() >= _stopAnswersNumber;
     }
 
-    template<typename AnswersNumber>
-    void QueryData<AnswersNumber>::addAnswers(const std::vector<AnswersNumber> &answers) {
+    template<typename AnsType>
+    void QueryData<AnsType>::addAnswers(const std::vector<AnsType> &answers) {
+        ProfileScope("addAnswers");
+
+        CreateProfiler(addAnswersLockTimer, "addAnswers, lock acquiring");
         std::lock_guard<std::mutex> lock(_resultLock);
+        StopProfiler(addAnswersLockTimer);
+
         copy(answers.begin(), answers.end(), back_inserter(_result));
         if (checkFoundEnoughAnswers())
             stopProcess();

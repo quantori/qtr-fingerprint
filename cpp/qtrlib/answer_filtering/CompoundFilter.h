@@ -29,6 +29,7 @@ namespace qtr {
 
     template<typename T>
     bool CompoundFilter<T>::operator()(const T &value) {
+        ProfileScope("Compound filter");
         return _filter1->operator()(value) && _filter2->operator()(value);
     }
 

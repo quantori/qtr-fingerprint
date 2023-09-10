@@ -1,5 +1,6 @@
 #include "PropertiesFilter.h"
 #include "glog/logging.h"
+#include "Profiling.h"
 
 #include <algorithm>
 #include <numeric>
@@ -26,6 +27,7 @@ namespace qtr {
     }
 
     bool PropertiesFilter::operator()(const CIDType &id) {
+        ProfileScope("Properties filter");
         return _bounds->Check(getProperties(id));
     }
 

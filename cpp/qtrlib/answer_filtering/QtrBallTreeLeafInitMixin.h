@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include "Profiling.h"
 
 namespace qtr {
 
@@ -11,6 +12,7 @@ namespace qtr {
 
     template<typename AnsType>
     void tryInitBallTreeLeaf(AnswerFilter<AnsType> &filter, const std::filesystem::path &leafDir) {
+        ProfileScope("tryInitBallTreeLeaf");
         auto leafInit = dynamic_cast<QtrBallTreeLeafInitMixin *> (&filter);
         if (leafInit != nullptr)
             leafInit->initBallTreeLeaf(leafDir);

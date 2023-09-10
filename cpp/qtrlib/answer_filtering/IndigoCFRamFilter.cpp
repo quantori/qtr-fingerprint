@@ -7,6 +7,7 @@
 #include "base_cpp/scanner.h"
 #include "IndigoSubstructureMatcher.h"
 #include "src/bingo_matcher.h"
+#include "Profiling.h"
 
 
 using namespace qtr;
@@ -17,6 +18,7 @@ using namespace bingo;
 
 
 bool IndigoCFRamFilter::operator()(const CIDType &id) {
+    ProfileScope("IndigoCFRamFilter");
     try {
         auto molecule = (*_cfStorage)[id];
         molecule->aromatize(AromaticityOptions());

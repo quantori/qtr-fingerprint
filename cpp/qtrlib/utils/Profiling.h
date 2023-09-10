@@ -2,17 +2,33 @@
 
 #include <mutex>
 #include <unordered_map>
-#include "chrono"
+#include <filesystem>
+#include <chrono>
+#include <ostream>
+#include <string>
 
+
+#ifdef QTR_PROFILING
 #define CONCATENATE_TOKENS_IMPL(token1, token2) token1##token2
 #define CONCATENATE_TOKENS(token1, token2) CONCATENATE_TOKENS_IMPL(token1, token2)
-#define ProfileScope(label) qtr::ProfilingTimer CONCATENATE_TOKENS(profilingTimer, __LINE__) (label)
+
+#define CreateProfiler(timerName, label) qtr::ProfilingTimer timerName("[" + std::filesystem::path(__FILE__).filename().string() + ":" + std::to_string(__LINE__) + "] " + (label))
+#define StopProfiler(timerName) (timerName).stop()
+#define ProfileScope(label) CreateProfiler(CONCATENATE_TOKENS(profilingTimer, __LINE__), label)
+
+#else
+#define CreateProfiler(profilerName, label)
+#define ProfileScope(label)
+#define StopProfiler(profilerName)
+#endif
 
 namespace qtr {
 
     class ProfilingPool {
     public:
         static std::unordered_map<std::string, float> getStatistics();
+
+        static void showStatistics(std::ostream &out);
 
         static void addRecord(const std::string &label, float result);
 
@@ -21,6 +37,7 @@ namespace qtr {
 
         std::unordered_map<std::string, float> _statistics;
         std::mutex _lock;
+        float _addRecordTimer = 0;
     };
 
     class ProfilingTimer {
