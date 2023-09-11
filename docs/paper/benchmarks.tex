@@ -1,7 +1,7 @@
 \section{Benchmarks}
 
-In this study, we have carried out comprehensive benchmarking to assess the performance of our algorithm, which is an extension 
-of the Bingo fingerprinting system, in comparison with established index, namely Bingo \cite{Pavlov2010}.
+In this study, we have performed a comprehensive benchmarking to assess the performance of our algorithm, which is an extension 
+of the Bingo fingerprinting system, compared to the established index, namely Bingo \cite{Pavlov2010}.
 Our benchmarking process 
 was performed under the following conditions:
 
@@ -12,14 +12,14 @@ was performed under the following conditions:
 \item RAM: 120 GB
 \end{itemize}
 
-The query dataset used for benchmarking was retrieved from \url{https://hg.sr.ht/~dalke/sqc/browse?rev=tip}, which contains 3488 
-relevant queries for substructure search. Ten queries were excluded due to various issues, resulting in a final set of 3478 compounds.
-{\color{red} Кажется, плохо так сильно обобщать проблемы. Мы выкинули те молекулы, на которых наш алгоритм работает заведомо плохо. Поэтому выкинув эти 10 молекул мы улучшили свои результаты}.
+The query dataset used for the benchmarking was retrieved from \url{https://hg.sr.ht/~dalke/sqc/browse?rev=tip}, which contains 3488 
+relevant queries for the substructure search. Ten queries were excluded due to various issues, resulting in a final set of 3478 compounds.
+%{\color{red} Кажется, плохо так сильно обобщать проблемы. Мы выкинули те молекулы, на которых наш алгоритм работает заведомо плохо. Поэтому выкинув эти 10 молекул мы улучшили свои результаты}.
 
 For a single-threaded in-memory execution, our algorithm demonstrates competitive performance, and it also shows the potential for 
 parallelization, exhibiting substantial improvements when executed on 16 threads in memory.
 
-The table below summarizes these benchmark timings, providing a clear comparison between our Qtr algorithm and Bingo algorithm.
+The table below summarizes these benchmark timings, providing a clear comparison between our Qtr algorithm and the Bingo algorithm.
 
 \begin{center}
 \begin{tabular}{|c|c|c|}
@@ -81,4 +81,5 @@ $\le$  60 seconds: & 98.56\% & 98.39\% \\
 \end{tikzpicture}
 \end{center}
 
-This thorough analysis offers valuable insights into the performance and potential scalability of our algorithm, especially when it comes to parallel computing. {\color{red} осталось получить тесты параллельной версии}
+This detailed analysis offers valuable information about the performance and potential scalability of our algorithm, especially when it comes to parallel computing. 
+{\color{red} Waiting for the benchmarks for the parallel version}
