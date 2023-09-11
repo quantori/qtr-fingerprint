@@ -4,8 +4,9 @@
 The objective of our research is to facilitate the identification of specific substructures within the molecules from a database $\M$. 
 For this, we utilize the concept of a ``fingerprint'', a binary string of constant length ${\sf fl}$, corresponding to each molecule. 
 To perform this mapping, we define a function ${\sf fp}: \M \to \F$ that takes a molecule from the set $\M$ and produces its 
-corresponding fingerprint in the set $\F$. {\color{red} На мой взгляд написано слишком кратко про фингерпринты. Кажется, если 
-человек не в теме, то он может не понять, что это за сопоставление молекулам бинарных строк, зачем оно нужно и почему оно эффективно реализует этап filter}
+corresponding fingerprint in the set $\F$. 
+%{\color{red} На мой взгляд написано слишком кратко про фингерпринты. Кажется, если 
+%человек не в теме, то он может не понять, что это за сопоставление молекулам бинарных строк, зачем оно нужно и почему оно эффективно реализует этап filter}
 
 To make the substructure search process more efficient, we propose organizing these fingerprints in a binary search tree, denoted as $\T$. 
 The tree is binary and complete, having a specific depth $d$.
