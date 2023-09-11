@@ -1,30 +1,30 @@
 \section{Further Development}
 
-Fingerprints currently form the basis of our algorithm, but they do have certain limitations which don't make them the ideal fit for our tree-based approach.
+Fingerprints currently form the basis of our algorithm, but they do have certain limitations which do not make them the ideal fit for our tree-based approach.
 
-Firstly, the fingerprint's condensed nature is aimed to ensure efficient computation, which often leads to grouping together several characteristics. 
+Firstly, the condensed nature of the fingerprint is aimed at ensuring efficient computation, which often leads to grouping together several characteristics. 
 For instance, a single attribute in a fingerprint often encapsulates multiple individual elements because these isolated items, while lacking substantial 
-filtering power across the entire dataset, might be relevant for specific subsets. However, the fingerprint structure doesn't account for such instances. 
-Contrarily, our approach could accommodate more complex functions, even if they operate slower than traditional filtering methods—for example, using 
-a fingerprint variant that doesn't amalgamate different elements.
+filtering power across the entire dataset, might be relevant for specific subsets. However, the fingerprint structure does not account for such instances. 
+On the contrary, our approach could accommodate more complex functions, even if they operate slower than traditional filtering methods, for example, using 
+a fingerprint variant that does not amalgamate different elements.
 
-Secondly, fingerprints are designed to provide a universal filter across the entire dataset. This results in a significantly pared-down set of 
-attributes applicable to the entire database. For example, Bingo utilizes 2584 attributes, which intuitively seems insufficient to capture all 
-peculiarities of a 113M-sized molecule dataset. Even a substantially enlarged fingerprint variant wouldn't be able to cover all exceptional cases. 
+Secondly, fingerprints are designed to provide a universal filter throughout the dataset. This results in a significantly reduced set  
+attributes applicable to the entire database. For example, Bingo utilizes 2584 attributes, which intuitively seem insufficient to capture all the 
+peculiarities of a 113M-sized molecule dataset. Even a substantially enlarged fingerprint variant would not be able to cover all exceptional cases. 
 In contrast, our approach, by dealing with subsets, can extract a unique characteristic for a tree node relevant to the set in the given subtree, 
-thus allowing for a much more effective coverage of the existing data nuances.
+thus allowing for much more effective coverage of the existing data nuances.
 
 As a result, a potential enhancement of our algorithm might involve the use of a specific attribute in each tree node. Depending on its presence or absence, 
 the search continues in both subtrees or only in the right subtree. This attribute would be chosen in advance to approximately bisect the set in the subtree. 
-A leaf would contain several characteristics which would be examined when filtering elements from the leaf.
+A leaf would contain several characteristics that would be examined when filtering elements from the leaf.
 
-Employing the method described above, we could potentially improve the false positive rate, as the selected attributes would be relevant to the examined subsets. 
+Using the method described above, we could potentially improve the false-positive rate, as the selected attributes would be relevant to the examined subsets. 
 Moreover, these attributes could be utilized during verification, possibly resulting in substantial improvements in the verification stage speed, thanks to the 
 relevance of these attributes to the molecule subsets.
 
 \section{Conclusion}
 
-The current version of our approach can serve as an extension to a fingerprint, enhancing the filtering speed by avoiding exhaustive enumeration. Moreover, 
+The current version of our approach can serve as an extension of a fingerprint, enhancing filtering speed by avoiding exhaustive enumeration. Moreover, 
 the tree's ability to cluster molecules enables a more detailed examination of cluster-specific attributes, an aspect that existing algorithms struggle with, 
 as they aim to find optimal ways to generalize across the entire dataset. Therefore, our approach could potentially be used in the future to improve both the 
 false-positive rate and the verification speed.
