@@ -1,25 +1,26 @@
 \section{Algorithm description}
 
 \subsection{Notation and main idea}
-The objective of our research is to facilitate the identification of specific substructures within the molecules from a database $\M$. 
+The objective of our research is to facilitate the identification of specific substructures within molecules from a database $\M$. 
 For this, we utilize the concept of a ``fingerprint'', a binary string of constant length ${\sf fl}$, corresponding to each molecule. 
 To perform this mapping, we define a function ${\sf fp}: \M \to \F$ that takes a molecule from the set $\M$ and produces its 
 corresponding fingerprint in the set $\F$. 
 %{\color{red} На мой взгляд написано слишком кратко про фингерпринты. Кажется, если 
 %человек не в теме, то он может не понять, что это за сопоставление молекулам бинарных строк, зачем оно нужно и почему оно эффективно реализует этап filter}
 
-To make the substructure search process more efficient, we propose organizing these fingerprints in a binary search tree, denoted as $\T$. 
+To make the substructure search process more efficient, we propose organizing these fingerprints in a binary search tree, denoted $\T$. 
 The tree is binary and complete, having a specific depth $d$.
 
-In this tree, the root, left, and right subtrees of a node $\tt{v}$ are represented as $\T.\tt{root}$, $\tt{v.left}$, and $\tt{v.right}$, 
+In this tree, the root, left and right subtrees of a node $\tt{v}$ are represented as $\T.\tt{root}$, $\tt{v.left}$, and $\tt{v.right}$, 
 respectively. Each node also has a set of all leaves in its subtree, denoted as $\tt{v.leaves}$. Each leaf $\ell$ in the tree $\T$ holds 
-a set $\ell.\tt{set}$ of fingerprints. A unique concept to our approach is the centroid, ${\tt v.centroid}$, recorded at each node $v$. 
+a set $\ell.\tt{set}$ of fingerprints. A unique concept of our approach is the centroid, ${\tt v.centroid}$, recorded at each node $v$. 
 The centroid is defined as a fingerprint $F$ for which $F[i] = 1$ if and only if there exists another fingerprint $F'$ in the subtree 
 of $\tt{v}$ such that $F'[i] = 1$. This is represented as
 $${\tt v.centroid} = \bigvee\limits_{\ell \in {\tt v.leaves}}\bigvee\limits_{F \in \ell.{\tt set}} F.$$ 
 This concept of the centroid is inspired by BallTree literature.
 
-Our search process is designed to locate all fingerprints $F'$ in the set $\F$ where $F$ is a submask of $F'$. This search relies on the relation $F_1 \le F_2$ for fingerprints $F_1, F_2$ that holds true if and only if for every $i \in {1, 2, \ldots, {\sf fl}}, \ F_1[i] \le F_2[i]$. 
+Our search process is designed to locate all fingerprints $F'$ in the set $\F$ where $F$ is a submask of $F'$. This search is based on the 
+relation $F_1 \le F_2$ for the fingerprints $F_1, F_2$ that holds true if and only if for every $i \in {1, 2, \ldots, {\sf fl}}, \ F_1[i] \le F_2[i]$. 
 
 The search starts from the root and recursively descends into both subtrees. Note that here we can improve the performance by parallelizing 
 this step to explore both subtrees simultaneously. We stop the recursive descent if we reach a node ${\tt v}$ where $F \not\le {\tt v.centroid}$. 
@@ -91,14 +92,14 @@ The pseudocode for the fingerprint search function in the tree is described in A
   \end{algorithmic}
 \end{algorithm}
 
-To start, let's create a trivial tree with a single node, denoted as $\T.{\tt root}$. Assign $\T.{\tt root.set} = \F$. 
+To start, let us create a trivial tree with a single node, denoted as $\T.{\tt root}$. Assign $\T.{\tt root.set} = \F$. 
 Next, we will inductively split the leaves of the tree into two parts, thereby adding new nodes to the tree.
 
 More formally, for each leaf node $\ell$ of the tree, we will divide $\ell.{\tt set}$ using a specific function called 
 SplitFingerprints: $\F_l, \F_r \gets \text{SplitFingerprints}(\ell.{\tt set})$ ($\F_l \sqcup \F_r = \ell.{\tt set}$).
 Next, we will recursively build trees for $\ell.{\tt left}, \ell.{\tt right}$ using the sets $\F_l, \F_r$.
 
-We will continue splitting the leaves in this manner until $\T$ becomes a full binary tree with depth $d$. The pseudocode 
+We will continue to split the leaves in this manner until $\T$ becomes a full binary tree with depth $d$. The pseudocode 
 for the algorithm described above can be found in \ref{alg:BuildTree}.
  
 
@@ -124,8 +125,8 @@ for the algorithm described above can be found in \ref{alg:BuildTree}.
 \end{algorithm}
 
 We want to perform the splits in such a way that, on average, the search often prunes branches during the traversal. 
-That is, the {\bf if} statement in line \ref{alg:FindInSubtree:line:RecursionCut} of algorithm \ref{alg:FindInSubtree} 
-should be executed frequently. Let's discuss the function SplitFingerprints in more detail.
+That is, the {\bf if} statement in line \ref{alg:FindInSubtree:line:RecursionCut} of the algorithm \ref{alg:FindInSubtree} 
+should be executed frequently. Let us discuss the function SplitFingerprints in more detail.
 
 Initially, one might consider selecting a specific bit $j$ and assigning all fingerprints $F$ such that $F[j] = 0$ to 
 the left subtree, and those with $F[j] = 1$ to the right subtree. In this case, when searching for superstructures of 
