@@ -13,7 +13,8 @@ namespace qtr {
         IdToStringReader &operator>>(ReadValue &value) override {
             auto& [id, str] = value;
             *_binaryReader >> id;
-            assert(_binaryReader->get() == ' ');
+            char space = _binaryReader->get();
+            assert(space == ' ');
             for (int symbol = _binaryReader->get(); symbol != EOF && symbol != '\n'; symbol = _binaryReader->get())  {
                 str += (char)symbol;
             }
