@@ -88,7 +88,8 @@ namespace {
                     uint64_t id = counter++;
                     smilesTableWriter << std::make_pair(id, smiles);
                     fingerprintTableWriter << std::make_pair(id, fingerprint);
-                    idToStringWriter << std::make_pair(id, strId);
+//                    idToStringWriter << std::make_pair(id, strId);
+                    idToStringWriter << std::make_pair(id, smiles);
                     if (propertiesTableWriter != nullptr)
                         *propertiesTableWriter << std::make_pair(id, properties);
                     processed++;

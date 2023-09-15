@@ -25,7 +25,9 @@ public:
     }
 
     inline std::pair<const std::string &, const std::string &> fromDbId(uint64_t innerId) const {
-        const auto &[outerId, library] = _fromDbId.find(innerId)->second;
+        auto it = _fromDbId.find(innerId);
+        assert(it != _fromDbId.end());
+        const auto &[outerId, library] = it->second;
         return {outerId, _libraryIds[library]};
     }
 };
