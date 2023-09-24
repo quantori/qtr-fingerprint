@@ -3,7 +3,7 @@
 using namespace std;
 
 namespace qtr {
-    unique_ptr <AnswerFilter> PropertiesRamFilter::copy() {
+    unique_ptr <ByIdAnswerFilter> PropertiesRamFilter::copy() {
         unique_ptr<PropertiesRamFilter> result = make_unique<PropertiesRamFilter>(_propertiesTable);
         result->setBounds(_bounds);
         return result;

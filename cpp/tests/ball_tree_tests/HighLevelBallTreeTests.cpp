@@ -9,7 +9,7 @@
 #include "io/BufferedWriter.h"
 #include "fingerprint_table_io/FingerprintTableWriter.h"
 #include "fingerprint_table_io/FingerprintTableReader.h"
-#include "answer_filtering/IndigoRamFilter.h"
+#include "answer_filtering/IndigoSmilesRamFilter.h"
 #include "MapSmilesTable.h"
 
 class HighLevelBallTreeTests : public TmpDirFixture {
@@ -22,10 +22,11 @@ public:
     size_t _parallelizeDepth = 0;
     size_t _drivesNumber = 0;
     size_t _threadsCount = 0;
+    size_t _timeLimit = 0;
     bool _propertiesInitialized = false;
 
-    void initProperties(size_t treeDepth = 0, size_t parallelizeDepth = 0, size_t drivesNumber = 0,
-                        size_t threadsCount = 0) {
+    void initProperties(size_t treeDepth, size_t parallelizeDepth, size_t drivesNumber,
+                        size_t threadsCount, size_t timeLimit) {
         if (_propertiesInitialized)
             GTEST_FAIL() << "initialize properties more the once per test";
         _treeDepth = treeDepth;
@@ -35,6 +36,7 @@ public:
         _parallelizeDepth = parallelizeDepth;
         _drivesNumber = drivesNumber;
         _threadsCount = threadsCount;
+        _timeLimit = timeLimit;
         _propertiesInitialized = true;
     }
 
@@ -166,7 +168,7 @@ public:
         }
     }
 
-    void buildBallTree(const DataTable &data) {
+    void buildBallTree(const DataTable &data) const {
         LOG(INFO) << "Start data preparation";
         prepareTreeDirs(data);
         LOG(INFO) << "Finish data preparation";
@@ -215,7 +217,7 @@ public:
         for (const auto &[id, fingerprint]: data) {
             auto expectedAnswer = getAnswers(data, fingerprint);
             auto smiles = std::make_shared<std::string>("smiles" + std::to_string(id));
-            qtr::BallTreeQueryData queryData(-1, -1, fingerprint);
+            qtr::BallTreeQueryData queryData(-1, _timeLimit, fingerprint);
             ballTree.search(queryData, _threadsCount);
             queryData.waitAllTasks();
             auto actualAnswer = queryData.getAnswers(0, queryData.getCurrentAnswersCount()).second;
@@ -226,11 +228,11 @@ public:
 };
 
 TEST_F(HighLevelBallTreeTests, buildBallTree) {
-    initProperties(4, 2, 4, 2);
+    initProperties(4, 2, 4, 2, 2);
     buildBallTreeAndCheck(getAllData());
 }
 
 TEST_F(HighLevelBallTreeTests, buildAndRunBallTree) {
-    initProperties(6, 3, 4, 3);
+    initProperties(6, 3, 4, 3, 2);
     runTest<qtr::BallTreeRAMSearchEngine>(getAllData());
 }

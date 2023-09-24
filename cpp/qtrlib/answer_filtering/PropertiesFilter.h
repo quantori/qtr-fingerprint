@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnswerFilter.h"
+#include "BallTreeTypes.h"
 
 #include <numeric>
 #include <vector>
@@ -8,7 +9,7 @@
 
 namespace qtr {
 
-    class PropertiesFilter : public AnswerFilter {
+    class PropertiesFilter : public ByIdAnswerFilter {
     public:
         inline static const std::string propertyNames[] = {
                 "PUBCHEM_COMPONENT_COUNT",
@@ -127,7 +128,7 @@ namespace qtr {
             Properties maxBounds{};
         };
 
-        bool operator()(CIDType id) override;
+        bool operator()(const CIDType &id) override;
 
         PropertiesFilter();
 

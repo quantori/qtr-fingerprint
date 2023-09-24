@@ -24,7 +24,7 @@ namespace qtr {
         size_t _treeRoot;
         std::vector<bool> _symbolsMap[std::numeric_limits<uint8_t>::max() + 1];
 
-        void createTree(const std::map<char, uint64_t>& symbolsFrequency);
+        void createTree(const std::map<char, uint64_t> &symbolsFrequency);
 
         void createSymbolsMap();
 
@@ -32,7 +32,7 @@ namespace qtr {
 
         std::vector<bool> &getSymbolCode(char symbol);
 
-        HuffmanCoder(const std::map<char, uint64_t>& symbolsFrequency);
+        HuffmanCoder(const std::map<char, uint64_t> &symbolsFrequency);
 
     public:
 
@@ -58,9 +58,9 @@ namespace qtr {
 
         std::string decode(const std::vector<bool> &code) const;
 
-        void dump(const std::filesystem::path& filePath) const;
+        void dump(const std::filesystem::path &filePath) const;
 
-        static HuffmanCoder load(const std::filesystem::path& filePath);
+        static HuffmanCoder load(const std::filesystem::path &filePath);
 
     };
 

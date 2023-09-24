@@ -1,20 +1,29 @@
+cmake_minimum_required(VERSION 3.12)
+
 set(This qtrlib)
+
+option(QTR_PROFILING "" OFF)
 
 file(GLOB_RECURSE ${This}-sources
         "*.h"
         "*.c"
         "*.hpp"
-        "*.cpp"
-        )
+        "*.cpp")
+
 
 add_library(${This} STATIC ${${This}-sources})
 
+if (QTR_PROFILING)
+    target_compile_definitions(${This} PUBLIC QTR_PROFILING)
+    message(STATUS "Enabling QTR_PROFILING because QTR_PROFILING=ON")
+endif (QTR_PROFILING)
+
+target_link_libraries(${This} glog::glog)
+target_link_libraries(${This} indigo-core indigo-cpp bingo-nosql)
+target_link_libraries(${This} absl::flags absl::flags_parse)
+
 target_include_directories(${This}
         PUBLIC .
-        PUBLIC ../third_party/Indigo/api/cpp/src
-        PUBLIC ../third_party/Indigo/api/c/bingo-nosql
-        PUBLIC ../third_party/Indigo/api/c/indigo
-
         PUBLIC profiler
         PUBLIC search_engine
         PUBLIC utils
@@ -24,7 +33,5 @@ target_include_directories(${This}
         PUBLIC ball_tree
         PUBLIC smiles_table
         PUBLIC answer_filtering
+        PUBLIC query_data
         )
-
-target_link_libraries(${This} glog::glog)
-target_link_libraries(parse_sdf indigo indigo-cpp)

@@ -5,57 +5,12 @@
 #include <filesystem>
 #include <vector>
 #include <unordered_map>
+#include <type_traits>
 
 #include <glog/logging.h>
 #include "glog/log_severity.h"
 
 namespace qtr {
-
-    class TimeTicker {
-    public:
-        TimeTicker() {
-            _timePoints.emplace_back(std::chrono::high_resolution_clock::now());
-        }
-
-        double tick(const std::string &message = "");
-
-        [[nodiscard]] double elapsedTime() const;
-
-        void logResults() const;
-
-    private:
-        std::vector<decltype(std::chrono::high_resolution_clock::now())> _timePoints;
-        std::vector<std::pair<std::string, double>> _results;
-    };
-
-    class TimeMeasurer {
-    public:
-        using StorageType = std::unordered_map<std::string, double>;
-
-        StorageType::iterator begin();
-
-        StorageType::iterator end();
-
-        class FunctionTimeMeasurer {
-        public:
-            FunctionTimeMeasurer(TimeMeasurer& statisticCollector, std::string label);
-
-            ~FunctionTimeMeasurer();
-
-        private:
-            TimeMeasurer& _statisticCollector;
-            std::string _label;
-        };
-
-        void start(const std::string& label);
-
-        void finish(const std::string& label);
-    private:
-        std::unordered_map<std::string, double> _measurements;
-        std::unordered_map<std::string, decltype(std::chrono::high_resolution_clock::now())> _startPoints;
-        std::mutex _lock;
-    };
-
     /**
      * Check, if string a ends with string b.
      * @param a
@@ -65,6 +20,51 @@ namespace qtr {
     bool endsWith(const std::string &a, const std::string &b);
 
 
+    template<typename T>
+    class HasEmptyMethod {
+        typedef char hasEmpty;
+        struct hasNotEmpty {
+            char x[2];
+        };
+
+        template<typename C>
+        static hasEmpty test(decltype(&C::empty)) { return hasEmpty(); }
+
+        template<typename C>
+        static hasNotEmpty test(...) { return hasNotEmpty(); }
+
+    public:
+        enum {
+            value = sizeof(test<T>(0)) == sizeof(char)
+        };
+    };
+
+    template<typename T, bool hasEmpty, typename D>
+    struct EmptyChecker {
+        D _emptyVal;
+
+        explicit EmptyChecker(const D &emptyVal) : _emptyVal(emptyVal) {};
+
+        bool check(const T &val) {
+            return val == _emptyVal;
+        }
+    };
+
+    template<typename T, typename D>
+    struct EmptyChecker<T, true, D> {
+
+        explicit EmptyChecker(const D &) {};
+
+        static bool check(const T &val) {
+            return val.empty();
+        }
+    };
+
+    template<typename T, typename D = T>
+    bool checkEmpty(const T &val, const D &emptyVal) {
+        return EmptyChecker<T, HasEmptyMethod<T>::value, D>(emptyVal).check(val);
+    }
+
     /**
      * Print message if argument is empty and finish program in that case
      * @param argument
@@ -72,19 +72,13 @@ namespace qtr {
      */
     template<typename T>
     void checkEmptyArgument(const T &argument, const std::string &message) {
-        if (argument.empty()) {
+        if (checkEmpty<T>(argument, T())) {
             LOG(ERROR) << message;
             exit(-1);
         }
     }
 
-    std::string generateDbName(const std::vector<std::filesystem::path> &dataDirPaths,
-                               const std::filesystem::path &otherDataPath);
-
     void askAboutContinue(const std::string &question);
-
-    template<>
-    void checkEmptyArgument<uint64_t>(const uint64_t &argument, const std::string &message);
 
     /**
      * Return converted hex char to decimal
@@ -143,10 +137,65 @@ namespace qtr {
      * @return vector of filenames
      */
     std::vector<std::filesystem::path>
-    findFiles(const std::filesystem::path &pathToDir, std::string extension = "");
+    findFiles(const std::filesystem::path &pathToDir, std::string extension);
 
     /**
      * Initialize google logging
      */
     void initLogging(char **argv, google::LogSeverity severity, const char *base_filename, bool alsoLogToStderr);
+
+    /**
+     * @param lhs
+     * @param rhs
+     * @return concatenation of @a lhs and @a rhs
+     */
+    template<typename T, typename D>
+    std::vector<T> concatVectors(const std::vector<T> &lhs, const std::vector<D> &rhs) {
+        std::vector<T> res = lhs;
+        std::copy(rhs.begin(), rhs.end(), std::back_inserter(res));
+        return res;
+    }
+
+    template<typename Enum>
+    auto makeStringToEnumFunction(const std::unordered_map<std::string, Enum> &mapping, Enum badValue) {
+        return [&mapping, badValue](const std::string &s) {
+            auto it = mapping.find(s);
+            if (it == mapping.end())
+                return badValue;
+            return it->second;
+        };
+    }
+
+    template<typename T, typename = void>
+    struct Printable : std::false_type {
+    };
+
+    template<typename T>
+    struct Printable<T, std::void_t<decltype(std::cout << std::declval<T>())>> : std::true_type {
+    };
+
+    template<typename T>
+    std::string toString(const T &value) {
+        std::ostringstream oss;
+        if constexpr (Printable<T>::value) {
+            oss << value;
+        } else {
+            oss << "[";
+            for (const auto &element: value) {
+                oss << toString(element) << ", ";
+            }
+            std::string result = oss.str();
+            if (result.size() > 1) {
+                result.pop_back();
+                result.pop_back();
+            }
+            result.push_back(']');
+            return result;
+        }
+        return oss.str();
+    }
+
+    [[noreturn]] void logErrorAndExit(const std::string &message);
+
+    void copyFileAndCheck(const std::filesystem::path &from, const std::filesystem::path &to);
 } // namespace qtr

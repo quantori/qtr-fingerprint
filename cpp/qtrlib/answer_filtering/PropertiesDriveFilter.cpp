@@ -6,7 +6,7 @@ using namespace std;
 namespace qtr {
     PropertiesDriveFilter::PropertiesDriveFilter(PropertiesFilter::Bounds bounds) : PropertiesFilter(bounds) {}
 
-    std::unique_ptr<AnswerFilter> PropertiesDriveFilter::copy() {
+    std::unique_ptr<ByIdAnswerFilter> PropertiesDriveFilter::copy() {
         unique_ptr<PropertiesDriveFilter> result = make_unique<PropertiesDriveFilter>();
         result->setBounds(_bounds);
         return result;

@@ -15,7 +15,7 @@ namespace qtr {
         PropertiesRamFilter(std::shared_ptr<const std::vector<Properties>> propertiesTable, Bounds bounds);
 
     private:
-        const Properties& getProperties(CIDType id) override;
+        const Properties &getProperties(CIDType id) override;
 
         std::shared_ptr<const std::vector<Properties>> _propertiesTable;
     };

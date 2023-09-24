@@ -11,7 +11,13 @@ namespace qtr {
         explicit IdToStringReader(const std::filesystem::path &fileName) : BaseReader(fileName) {}
 
         IdToStringReader &operator>>(ReadValue &value) override {
-            *_binaryReader >> value.first >> value.second;
+            auto& [id, str] = value;
+            *_binaryReader >> id;
+            char space = _binaryReader->get();
+            assert(space == ' ');
+            for (int symbol = _binaryReader->get(); symbol != EOF && symbol != '\n'; symbol = _binaryReader->get())  {
+                str += (char)symbol;
+            }
             return *this;
         }
 

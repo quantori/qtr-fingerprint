@@ -8,15 +8,21 @@
 #include <string>
 
 #include "indigo.h"
-
 #include "IndigoMolecule.h"
 #include "IndigoSession.h"
 #include "IndigoWriteBuffer.h"
-#include "IndigoSDFileIterator.h"
+
+#include "base_cpp/array.h"
+#include "base_cpp/scanner.h"
+#include "src/bingo_object.h"
+#include "src/indigo_internal.h"
+#include "molecule/smiles_loader.h"
+#include "molecule/molecule_fingerprint.h"
 
 #include "Utils.h"
 #include "Bitset.h"
 #include "QtrIndigoFingerprint.h"
+
 
 namespace qtr {
 
@@ -36,12 +42,19 @@ namespace qtr {
         explicit Fingerprint(const std::string &s) {
             assert(s.size() == sizeInBytes * 2);
             for (size_t i = 0; i < s.size(); ++i) {
-                size_t j = i * 4ull;
-                int currentSym = chexToInt(s[i]);
-                this->operator[](j + 3) = currentSym & 1;
-                this->operator[](j + 2) = currentSym & 2;
-                this->operator[](j + 1) = currentSym & 4;
-                this->operator[](j + 0) = currentSym & 8;
+                addSymbol(i, 4, (size_t) chexToInt(s[i]));
+            }
+        }
+
+        /**
+         * Builds fingerprint from byte array
+         * @param arr
+         */
+
+        explicit Fingerprint(const indigo::Array<byte> &arr) {
+            assert(arr.size() == sizeInBytes);
+            for (size_t i = 0; i < arr.size(); i++) {
+                addSymbol(i, 8, arr[i]);
             }
         }
 
@@ -64,6 +77,13 @@ namespace qtr {
 
         explicit Fingerprint(const QtrIndigoFingerprint &f) {
             setBytes(f.data());
+        }
+
+    private:
+        void addSymbol(size_t blockIndex, size_t blockSize, size_t symbol) {
+            for (size_t i = 0; i < blockSize; i++) {
+                (*this)[blockIndex * blockSize + blockSize - i - 1] = symbol & (1u << i);
+            }
         }
     };
 
@@ -90,13 +110,23 @@ namespace qtr {
         return fingerprint;
     }
 
+    const static Indigo indigoInstance;
+
     inline IndigoFingerprint indigoFingerprintFromSmiles(const std::string &smiles) {
-        auto indigoSessionPtr = indigo_cpp::IndigoSession::create();
-        auto mol = indigoSessionPtr->loadMolecule(smiles);
-        mol.aromatize();
-        int fingerprint = indigoFingerprint(mol.id(), "sub");
-        FullIndigoFingerprint fullFingerprints(indigoToString(fingerprint));
-        IndigoFingerprint cutFingerprint = cutFullIndigoFingerprint(fullFingerprints);
+        indigo::BufferScanner scanner(smiles.c_str(), smiles.size(), false);
+        indigo::SmilesLoader loader(scanner);
+        indigo::Molecule molecule;
+        loader.loadMolecule(molecule);
+        molecule.aromatize(indigo::AromaticityOptions());
+        bingo::IndexMolecule indexMolecule(molecule, indigo::AromaticityOptions());
+        indigo::Array<byte> subFingerprint;
+        indigo::MoleculeFingerprintBuilder fingerprintBuilder(molecule, indigoInstance.fp_params);
+        fingerprintBuilder.parseFingerprintType("sub", false);
+        fingerprintBuilder.process();
+        subFingerprint.copy(fingerprintBuilder.get(), indigoInstance.fp_params.fingerprintSize());
+//        indexMolecule.buildFingerprint(indigoInstance.fp_params, &subFingerprint, nullptr);
+        FullIndigoFingerprint fullIndigoFingerprint(subFingerprint);
+        IndigoFingerprint  cutFingerprint = cutFullIndigoFingerprint(fullIndigoFingerprint);
         return cutFingerprint;
     }
 } // namespace qtr

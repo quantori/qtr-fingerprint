@@ -8,6 +8,8 @@
 
 #include "fingerprint_table_io/FingerprintTableReader.h"
 #include "Utils.h"
+#include "QtrBallTreeLeafInitMixin.h"
+#include "Profiling.h"
 
 using namespace std;
 
@@ -36,29 +38,25 @@ namespace qtr {
     }
 
     void
-    BallTreeSearchEngine::processLeafGroup(BallTreeQueryData &queryData, const vector<uint64_t> &leaves) const {
-        auto startTime = chrono::high_resolution_clock::now();
-        queryData.tagStartTask();
+    BallTreeSearchEngine::processLeafGroup(BallTreeQueryData &queryData, const vector <uint64_t> &leaves) const {
+        ProfileScope("processLeafGroup");
         auto filterObject = queryData.getFilterObject();
         for (size_t i = 0; i < leaves.size() && !queryData.checkShouldStop(); i++) {
             auto res = searchInLeaf(leaves[i], queryData.getQueryFingerprint());
             if (res.empty())
                 continue;
-            filterObject->initBallTreeLeaf(getLeafDir(leaves[i]));
+            tryInitBallTreeLeaf(*filterObject, getLeafDir(leaves[i]));
             queryData.filterAndAddAnswers(res, *filterObject);
         }
         if (queryData.checkTimeOut()) {
-            LOG(INFO) << "Search stopped due to timeout";
+                LOG(INFO) << "Search stopped due to timeout";
         }
-
-        chrono::duration<double> duration = chrono::high_resolution_clock::now() - startTime;
-        ballTreeSearchTimer += duration.count();
         queryData.tagFinishTask();
     }
 
     void BallTreeSearchEngine::search(BallTreeQueryData &queryData, size_t threads) const {
+        ProfileScope("Search fingerprints in BallTree");
         vector<uint64_t> leaves;
-        auto startTime = chrono::high_resolution_clock::now();
         findLeaves(queryData.getQueryFingerprint(), root(), leaves);
         LOG(INFO) << "Search in " << leaves.size() << " leaves";
         auto leafGroups = divideLeavesIntoGroups(leaves, threads);
@@ -67,9 +65,6 @@ namespace qtr {
                               ref(queryData), leafGroup);
             queryData.addTask(std::move(task));
         }
-        chrono::duration<double> duration = chrono::high_resolution_clock::now() - startTime;
-        // multiply duration and groups number to make time consumption percentage more accurate
-        ballTreeSearchTimer += duration.count() * (double) leafGroups.size();
     }
 
     vector <size_t> BallTreeSearchEngine::getLeafIds() const {

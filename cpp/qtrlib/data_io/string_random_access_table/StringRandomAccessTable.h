@@ -18,7 +18,7 @@ namespace qtr {
             return tableDir / "seeks.txt";
         }
 
-        StringRandomAccessTable(const std::filesystem::path& tablePath, const std::filesystem::path &tableDir);
+        StringRandomAccessTable(const std::filesystem::path &tablePath, const std::filesystem::path &tableDir);
 
         explicit StringRandomAccessTable(const std::filesystem::path &tableDir);
 
