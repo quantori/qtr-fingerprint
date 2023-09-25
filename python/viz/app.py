@@ -71,4 +71,5 @@ def server(input: Inputs, output: Outputs, session: Session):
 
 
 www_dir = Path(__file__).parent / "www"
+www_dir.mkdir(parents=True, exist_ok=True)
 app = App(app_ui, server, static_assets=www_dir)
