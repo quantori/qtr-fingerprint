@@ -6,6 +6,7 @@ from shiny import App, Inputs, Outputs, Session, reactive, render, ui
 ROW_SIZE = 5
 IMG_STYLE = "width: 250px;"
 
+CompoundSmiles = str  # type alias
 
 app_ui = ui.page_fluid(
 
@@ -13,61 +14,65 @@ app_ui = ui.page_fluid(
         ui.column(
             3, ui.div(
                 ui.p("Database size is 112kk"),
-                ui.input_slider("n", "Max number of compounds", min=0, max=1000, value=1),
+                ui.input_slider("n", "Max number of compounds", min=0, max=27, value=1),
                 ui.input_text("compound", "Compound:", 'c1cc(C(=O)O)c(OC(=O)C)cc1'),
                 ui.input_action_button("search", "Substructure search", class_="btn-success"),
-                ui.p("Target compount:"),
-                ui.output_ui("target"),
+                ui.p("Target compound:"),
+                ui.output_ui("target_image"),
             )
         ),
         ui.column(
             9,
-            ui.output_ui("result"),
+            ui.output_ui("compounds_grid"),
         ),
     ),
 )
 
 
-def square(x: ui.TagChild, n: int) -> ui.Tag:
-    row = ui.div([x] * n)
-    return ui.div([row] * n)
-
-
-def server(input: Inputs, output: Outputs, session: Session):
-    def save_smiles(smiles):
-        mol = Chem.MolFromSmarts(smiles)
-        file_name = smiles + ".png"
-        Draw.MolToFile(mol, www_dir / file_name)
-        return file_name
-
-    def generate_smiles_img(smiles, **metadata):
-        file_name = save_smiles(smiles)
-        return ui.img(name=smiles, src=file_name, style=IMG_STYLE, **metadata)
-
-    @output
+def server(inputs: Inputs, outputs: Outputs, session: Session):
+    @outputs
     @render.ui
-    @reactive.event(input.search, ignore_none=False)
-    def target():
-        return generate_smiles_img(input.compound())
+    @reactive.event(inputs.compound)
+    def target_image():
+        return create_image_from_smiles(inputs.compound())
 
-    def found_smiles(smiles):
-        return [smiles] * 13
-
-    @output
+    @outputs
     @render.ui
-    @reactive.event(input.search, ignore_none=False)
-    def result():
-        smiless = found_smiles(input.compound())
-        imgs = []
-        row = []
-        for smiles in smiless:
-            row.append(generate_smiles_img(smiles, border="1"))
-            if len(row) == ROW_SIZE:
-                imgs.append(ui.div(row))
-                row = []
-        if row:
-            imgs.append(ui.div(row))
-        return ui.div(imgs)
+    @reactive.event(inputs.search, ignore_none=False)
+    def compounds_grid():
+        n_results: int = inputs.n()
+        target_compound: CompoundSmiles = inputs.compound()
+
+        similar_compounds = find_similar_compounds(target_compound, limit=n_results)
+        result_grid = create_image_grid(similar_compounds, ROW_SIZE)
+        return result_grid
+
+    def create_image_grid(results: list[str], row_size: int):
+        images = [create_image_from_smiles(compound) for compound in results]
+        # spits in chunks
+        images = [images[i: i + row_size] for i in range(0, len(results), row_size)]
+        images = [ui.div(row) for row in images]
+        images = ui.div(images)
+        return images
+
+    def create_image_from_smiles(compound: CompoundSmiles):
+        filename = f"{compound}.png"
+        filepath = www_dir / filename
+        generate_image(compound, file=filepath)
+        shown_image = ui.img(name=compound, src=filename, style=IMG_STYLE, border="1")
+        return shown_image
+
+
+def find_similar_compounds(target: CompoundSmiles, limit: int = None) -> list[CompoundSmiles]:
+    # stub
+    if limit is None:
+        limit = 13
+    return [target] * limit
+
+
+def generate_image(smiles: CompoundSmiles, file: Path):
+    mol = Chem.MolFromSmarts(smiles)
+    Draw.MolToFile(mol, file)
 
 
 www_dir = Path(__file__).parent / "www"
