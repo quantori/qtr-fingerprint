@@ -1,7 +1,13 @@
+import logging
+import random
+import time
 from pathlib import Path
+
 from rdkit import Chem
 from rdkit.Chem import Draw
 from shiny import App, Inputs, Outputs, Session, reactive, render, ui
+
+logger = logging.getLogger(__name__)
 
 ROW_SIZE = 5
 IMG_STYLE = "width: 250px;"
@@ -17,6 +23,7 @@ app_ui = ui.page_fluid(
                 ui.input_slider("n", "Max number of compounds", min=0, max=27, value=1),
                 ui.input_text("compound", "Compound:", 'c1cc(C(=O)O)c(OC(=O)C)cc1'),
                 ui.input_action_button("search", "Substructure search", class_="btn-success"),
+                ui.output_text("search_time"),
                 ui.p("Target compound:"),
                 ui.output_ui("target_image"),
             )
@@ -38,12 +45,8 @@ def server(inputs: Inputs, outputs: Outputs, session: Session):
 
     @outputs
     @render.ui
-    @reactive.event(inputs.search, ignore_none=False)
     def compounds_grid():
-        n_results: int = inputs.n()
-        target_compound: CompoundSmiles = inputs.compound()
-
-        similar_compounds = find_similar_compounds(target_compound, limit=n_results)
+        similar_compounds, _ = compound_search()
         result_grid = create_image_grid(similar_compounds, ROW_SIZE)
         return result_grid
 
@@ -58,15 +61,39 @@ def server(inputs: Inputs, outputs: Outputs, session: Session):
     def create_image_from_smiles(compound: CompoundSmiles):
         filename = f"{compound}.png"
         filepath = www_dir / filename
+        logger.debug(f"Turning compound {compound} into image at {filepath}")
         generate_image(compound, file=filepath)
         shown_image = ui.img(name=compound, src=filename, style=IMG_STYLE, border="1")
         return shown_image
 
+    @outputs
+    @render.text
+    def search_time():
+        _, execution_time = compound_search()
+        return f"Elapsed time: {execution_time:.4f} sec"
+
+    @reactive.Calc
+    @reactive.event(inputs.search, ignore_none=False, ignore_init=True)
+    def compound_search() -> tuple[list[CompoundSmiles], float]:
+        n_results: int = inputs.n()
+        target_compound: CompoundSmiles = inputs.compound()
+
+        start_time = time.perf_counter()
+        results = find_similar_compounds(target_compound, limit=n_results)
+        finish_time = time.perf_counter()
+        elapsed = finish_time - start_time
+        logger.info(f"Search took {elapsed} seconds, returned {len(results)} results")
+
+        return results, elapsed
+
 
 def find_similar_compounds(target: CompoundSmiles, limit: int = None) -> list[CompoundSmiles]:
+    delay = random.random()
+    time.sleep(delay)
     # stub
     if limit is None:
         limit = 13
+    logger.info(f"Performing similarity search for {target},  max {limit}")
     return [target] * limit
 
 
@@ -74,6 +101,8 @@ def generate_image(smiles: CompoundSmiles, file: Path):
     mol = Chem.MolFromSmarts(smiles)
     Draw.MolToFile(mol, file)
 
+
+logging.basicConfig(level=logging.INFO)
 
 www_dir = Path(__file__).parent / "www"
 www_dir.mkdir(parents=True, exist_ok=True)
