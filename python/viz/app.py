@@ -1,5 +1,5 @@
+import hashlib
 import logging
-import random
 import time
 from pathlib import Path
 
@@ -7,12 +7,12 @@ from rdkit import Chem
 from rdkit.Chem import Draw
 from shiny import App, Inputs, Outputs, Session, reactive, render, ui
 
+from qtr_api import CompoundSmiles, QtrFingerprintApi
+
 logger = logging.getLogger(__name__)
 
 ROW_SIZE = 5
 IMG_STYLE = "width: 250px;"
-
-CompoundSmiles = str  # type alias
 
 app_ui = ui.page_fluid(
 
@@ -59,7 +59,7 @@ def server(inputs: Inputs, outputs: Outputs, session: Session):
         return images
 
     def create_image_from_smiles(compound: CompoundSmiles):
-        filename = f"{compound}.png"
+        filename = generate_filename(compound)
         filepath = www_dir / filename
         logger.debug(f"Turning compound {compound} into image at {filepath}")
         generate_image(compound, file=filepath)
@@ -79,7 +79,8 @@ def server(inputs: Inputs, outputs: Outputs, session: Session):
         target_compound: CompoundSmiles = inputs.compound()
 
         start_time = time.perf_counter()
-        results = find_similar_compounds(target_compound, limit=n_results)
+        logger.info(f"Performing similarity search for {target_compound},  max {n_results}")
+        results = api.query_similar_compounds(target_compound, limit=n_results)
         finish_time = time.perf_counter()
         elapsed = finish_time - start_time
         logger.info(f"Search took {elapsed} seconds, returned {len(results)} results")
@@ -87,17 +88,16 @@ def server(inputs: Inputs, outputs: Outputs, session: Session):
         return results, elapsed
 
 
-def find_similar_compounds(target: CompoundSmiles, limit: int = None) -> list[CompoundSmiles]:
-    delay = random.random()
-    time.sleep(delay)
-    # stub
-    if limit is None:
-        limit = 13
-    logger.info(f"Performing similarity search for {target},  max {limit}")
-    return [target] * limit
+def generate_filename(compound: CompoundSmiles) -> str:
+    # SMILES have symbols that lead to invalid filenames
+    # we need them to be unique
+    # BLAKE2 has enough collision resistance and fast enough
+    compound_hash = hashlib.blake2b(compound.encode('utf-8')).hexdigest()
+    return f'{compound_hash}.png'
 
 
 def generate_image(smiles: CompoundSmiles, file: Path):
+    logger.info(f"Saving {smiles}")
     mol = Chem.MolFromSmarts(smiles)
     Draw.MolToFile(mol, file)
 
@@ -106,4 +106,5 @@ logging.basicConfig(level=logging.INFO)
 
 www_dir = Path(__file__).parent / "www"
 www_dir.mkdir(parents=True, exist_ok=True)
+api = QtrFingerprintApi()
 app = App(app_ui, server, static_assets=www_dir)
