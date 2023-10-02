@@ -34,4 +34,5 @@ target_include_directories(${This}
         PUBLIC smiles_table
         PUBLIC answer_filtering
         PUBLIC query_data
+        PUBLIC mmf
         )
