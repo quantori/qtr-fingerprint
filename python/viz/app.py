@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 ROW_SIZE = 5
 IMG_STYLE = "width: 250px;"
+MAX_RESULTS = 200
 
 DATABASE_SIZE = "240k"
 
@@ -23,7 +24,7 @@ app_ui = ui.page_fluid(
         ui.column(
             3, ui.div(
                 ui.output_text("database_size"),
-                ui.input_slider("n", "Max number of compounds", min=0, max=27, value=1),
+                ui.input_slider("n", "Max number of compounds", min=1, max=MAX_RESULTS, value=1),
                 ui.input_text("compound", "Compound:", 'c1cc(C(=O)O)c(OC(=O)C)cc1'),
                 ui.input_action_button("search", "Substructure search", class_="btn-success"),
                 ui.p("Target compound:"),
@@ -64,7 +65,7 @@ def server(inputs: Inputs, outputs: Outputs, session: Session):
     @render.text
     def search_time():
         _, execution_time = compound_search()
-        return f"Similarity search time: {execution_time:.4f} sec"
+        return f"Substructure search time: {execution_time:.4f} sec"
 
     @outputs
     @render.text
@@ -76,7 +77,7 @@ def server(inputs: Inputs, outputs: Outputs, session: Session):
     @render.text
     def result_count():
         results, _ = compound_search()
-        return f"Found {len(results)} similar compounds"
+        return f"Found {len(results)} compounds"
 
     @reactive.Calc
     @reactive.event(inputs.search, ignore_none=False, ignore_init=True)
@@ -84,7 +85,7 @@ def server(inputs: Inputs, outputs: Outputs, session: Session):
         n_results: int = inputs.n()
         target_compound: CompoundSmiles = inputs.compound()
 
-        logger.info(f"Performing similarity search for {target_compound},  max {n_results}")
+        logger.info(f"Performing substructure search for {target_compound},  max {n_results}")
         results, elapsed = timed(api.query_similar_compounds, target_compound, limit=n_results)
         logger.info(f"Search took {elapsed} seconds, returned {len(results)} results")
 
