@@ -15,12 +15,14 @@ logger = logging.getLogger(__name__)
 ROW_SIZE = 5
 IMG_STYLE = "width: 250px;"
 
+DATABASE_SIZE = "240k"
+
 app_ui = ui.page_fluid(
 
     ui.row(
         ui.column(
             3, ui.div(
-                ui.p("Database size is 112kk"),
+                ui.output_text("database_size"),
                 ui.input_slider("n", "Max number of compounds", min=0, max=27, value=1),
                 ui.input_text("compound", "Compound:", 'c1cc(C(=O)O)c(OC(=O)C)cc1'),
                 ui.input_action_button("search", "Substructure search", class_="btn-success"),
@@ -103,6 +105,11 @@ def server(inputs: Inputs, outputs: Outputs, session: Session):
         generate_image(compound, file=filepath)
         shown_image = ui.img(name=compound, src=filename, style=IMG_STYLE, border="1")
         return shown_image
+
+    @outputs
+    @render.text
+    def database_size() -> str:
+        return f"Database size is {DATABASE_SIZE}"
 
 
 def generate_filename(compound: CompoundSmiles) -> str:
