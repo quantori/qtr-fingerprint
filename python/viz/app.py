@@ -145,5 +145,5 @@ logging.basicConfig(level=logging.INFO)
 
 www_dir = Path(__file__).parent / "www"
 www_dir.mkdir(parents=True, exist_ok=True)
-api = QtrFingerprintApi()
+api = QtrFingerprintApi.from_env()
 app = App(app_ui, server, static_assets=www_dir)
