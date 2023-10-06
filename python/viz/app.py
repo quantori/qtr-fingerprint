@@ -1,6 +1,7 @@
 import hashlib
 import logging
 import time
+from itertools import chain
 from pathlib import Path
 from typing import Callable, TypeVar
 
@@ -94,16 +95,23 @@ def server(inputs: Inputs, outputs: Outputs, session: Session):
     @reactive.Calc
     def result_image_files():
         results, _ = compound_search()
+        # takes the input compound during last search
+        # doesn't redraw when changing compounds
+        with reactive.isolate():
+            highlight = inputs.compound()
         logger.info(f"Creating {len(results)} images from search results")
-        images, render_time = timed(lambda res: [create_image_from_smiles(compound) for compound in res], results)
+        images, render_time = timed(
+            lambda res: [create_image_from_smiles(compound, highlight) for compound in res],
+            results
+        )
         logger.info(f"Rendering result images took {render_time} seconds")
         return images, render_time
 
-    def create_image_from_smiles(compound: CompoundSmiles):
+    def create_image_from_smiles(compound: CompoundSmiles, highlight: CompoundSmiles = None):
         filename = generate_filename(compound)
         filepath = www_dir / filename
         logger.debug(f"Turning compound {compound} into image at {filepath}")
-        generate_image(compound, file=filepath)
+        generate_image(filepath, compound, highlight)
         shown_image = ui.img(name=compound, src=filename, style=IMG_STYLE, border="1")
         return shown_image
 
@@ -121,10 +129,22 @@ def generate_filename(compound: CompoundSmiles) -> str:
     return f'{compound_hash}.png'
 
 
-def generate_image(smiles: CompoundSmiles, file: Path):
-    logger.debug(f"Saving {smiles} to {file}")
-    mol = Chem.MolFromSmarts(smiles)
-    Draw.MolToFile(mol, file)
+def generate_image(file: Path, compound: CompoundSmiles, highlight: CompoundSmiles = None):
+    logger.debug(f"Saving {compound} to {file}")
+    mol = Chem.MolFromSmiles(compound)
+    if highlight:
+        part = Chem.MolFromSmiles(highlight)
+        matches = mol.GetSubstructMatches(part)
+        if matches:
+            logger.debug(f"Found {len(matches)} matches in {compound}")
+            match = chain(*matches)
+        else:
+            logger.warning(f"Unable to find {highlight} in {compound}")
+            match = []
+    else:
+        match = []
+
+    Draw.MolToFile(mol, file, highlightAtoms=match)
 
 
 T = TypeVar('T')
