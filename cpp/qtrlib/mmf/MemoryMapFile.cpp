@@ -64,36 +64,34 @@ MemoryMapFile::Header &MemoryMapFile::_header() {
     return *(static_cast<Header *>(ptr()) - 1);
 }
 
-MemoryMapFile MemoryMapFile::create(const filesystem::path &filePath, uint64_t capacity) {
+std::unique_ptr<MemoryMapFile> MemoryMapFile::create(const std::filesystem::path &filePath, uint64_t capacity) {
     if (filesystem::exists(filePath)) {
         throw std::runtime_error("Cannot create memory map file " + filePath.string() + " because it already exists");
     }
-    MemoryMapFile mmf;
-
+    MemoryMapFile *mmf = new MemoryMapFile();
     uint64_t maxFileSize = fileSize(capacity);
-
-    mmf._fd = openMemoryMapFile(filePath);
-    if (ftruncate(mmf._fd, maxFileSize) < 0) {
+    mmf->_fd = openMemoryMapFile(filePath);
+    if (ftruncate(mmf->_fd, maxFileSize) < 0) {
         throw std::runtime_error("MemoryMapFile: Cannot truncate file to size=" + to_string(maxFileSize));
     }
-    mmf._ptr = memoryMap(maxFileSize, mmf._fd);
-    mmf._capacity() = capacity;
-    mmf._size() = 0;
-    return mmf;
+    mmf->_ptr = memoryMap(maxFileSize, mmf->_fd);
+    mmf->_capacity() = capacity;
+    mmf->_size() = 0;
+    return unique_ptr<MemoryMapFile>(mmf);
 }
 
-MemoryMapFile MemoryMapFile::open(const filesystem::path &filePath) {
+std::unique_ptr<MemoryMapFile> MemoryMapFile::open(const std::filesystem::path &filePath) {
     if (!filesystem::is_regular_file(filePath)) {
         throw std::runtime_error(
                 "Cannot open memory map file " + filePath.string() +
                 " because it does not exist or not a regular file");
     }
-    MemoryMapFile mmf;
-    mmf._fd = openMemoryMapFile(filePath);
+    MemoryMapFile *mmf = new MemoryMapFile();
+    mmf->_fd = openMemoryMapFile(filePath);
     Header header;
-    read(mmf._fd, &header, sizeof(header));
-    mmf._ptr = memoryMap(fileSize(header.capacity), mmf._fd);
-    return mmf;
+    read(mmf->_fd, &header, sizeof(header));
+    mmf->_ptr = memoryMap(fileSize(header.capacity), mmf->_fd);
+    return unique_ptr<MemoryMapFile>(mmf);
 }
 
 uint64_t &MemoryMapFile::_capacity() {

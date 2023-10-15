@@ -11,9 +11,9 @@ namespace qtr {
             uint64_t size;
         };
 
-        static MemoryMapFile create(const std::filesystem::path &filePath, uint64_t capacity);
+        static std::unique_ptr<MemoryMapFile> create(const std::filesystem::path &filePath, uint64_t capacity);
 
-        static MemoryMapFile open(const std::filesystem::path &filePath);
+        static std::unique_ptr<MemoryMapFile> open(const std::filesystem::path &filePath);
 
         ~MemoryMapFile();
 
