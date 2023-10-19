@@ -58,6 +58,8 @@ namespace {
         FingerprintTableWriter fingerprintTableWriter(fingerprintTablePath);
         IdToStringWriter idToStringWriter(idToStringTablePath);
 
+        static atomic_uint64_t entryId = 0;
+
         processSDF(sdFilePath,
                    [&smilesTableWriter, &fingerprintTableWriter, &idToStringWriter](
                            const indigo_cpp::IndigoMoleculeSPtr &mol) {
@@ -68,7 +70,7 @@ namespace {
 
                        smilesTableWriter << make_pair(cid, smiles);
                        fingerprintTableWriter << make_pair(cid, fingerprint);
-                       idToStringWriter << make_pair(cid, smiles);
+                       idToStringWriter << make_pair(entryId.fetch_add(1), to_string(cid));
                    });
     }
 

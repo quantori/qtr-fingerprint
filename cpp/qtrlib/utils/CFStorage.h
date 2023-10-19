@@ -24,7 +24,7 @@ namespace qtr {
         std::unique_ptr<indigo::Molecule> operator[](KeyType key) const;
 
     private:
-        std::vector<ValueType> _map;
+        std::vector<std::unique_ptr<ValueType>> _map;
     };
 
 
