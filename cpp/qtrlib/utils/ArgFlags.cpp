@@ -48,13 +48,6 @@ ABSL_FLAG(string, preprocessingType, "",
 
 ABSL_FLAG(string, destDir, "", "Destination directory where preprocessed files should be stored");
 
-ABSL_FLAG(string, targetFilesType, "",
-          "Target files type (for " FLAG_NAME(SDF) " preprocessing type only). "
-                                                   "Possible types: "
-                  FLAG_NAME(RawBucket) ", "
-                  FLAG_NAME(Tables));
-
-
 ABSL_FLAG(vector<string>, dataDirs, {},
           "Path to directories where data are stored");
 

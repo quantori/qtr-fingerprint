@@ -10,8 +10,6 @@ ABSL_DECLARE_FLAG(std::string, sourceDir);
 
 ABSL_DECLARE_FLAG(std::string, destDir);
 
-ABSL_DECLARE_FLAG(std::string, targetFilesType);
-
 ABSL_DECLARE_FLAG(bool, properties);
 
 namespace qtr {
@@ -23,13 +21,6 @@ namespace qtr {
     };
 
     class PreprocessingArgs : public ArgsBase {
-        static inline const std::unordered_map<std::string, TargetType> _strToDestinationType =
-                {{FLAG_NAME(RawBucket), TargetType::RawBucket},
-                 {FLAG_NAME(Tables),    TargetType::Tables}};
-
-        const static inline auto strToTargetType = makeStringToEnumFunction(_strToDestinationType,
-                                                                            TargetType::BadType);
-
         static inline const std::unordered_map<std::string, PreprocessingType> _strToPreprocessingType =
                 {{FLAG_NAME(CSV), PreprocessingType::CSV},
                  {FLAG_NAME(SDF), PreprocessingType::SDF}};
@@ -43,8 +34,6 @@ namespace qtr {
 
     ADD_ARGUMENT(std::filesystem::path, destDir, "");
 
-    ADD_ARGUMENT_WITH_PARSER(TargetType, targetFilesType, TargetType::BadType, strToTargetType);
-
     ADD_ARGUMENT(bool, properties, true);
 
     public:
@@ -53,7 +42,6 @@ namespace qtr {
             parseAndCheck_sourceDir();
             parseAndCheck_destDir();
             if (preprocessingType() == PreprocessingType::SDF) {
-                parse_targetFilesType();
             }
             if (preprocessingType() == PreprocessingType::CSV) {
                 parse_properties();
