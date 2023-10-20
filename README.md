@@ -101,7 +101,7 @@ The Qtr databases also support molecular property-based search. The following mo
 ## Benchmarking and Research
 
 The results described in [this article](https://arxiv.org/abs/2310.02022) were obtained
-using [this dataset](https://www.dropbox.com/scl/fo/wn5zxx2lkehofeoqadlwv/h?rlkey=q8qidhc3urei5m9xet4hrco07&dl=0). The
+using [this dataset](https://www.dropbox.com/scl/fi/5je47quy4naarr1svflgt/compound_libraries.tar.gz?rlkey=6n05eexhfatcjpvgyvehya8ks&dl=0). The
 set of queries can be found in [this file](data/queries_3488_good.txt). The comparisons in the article are
 between `QtrRam` and `BingoNoSQL`. The runs were performed with the following arguments:
 
