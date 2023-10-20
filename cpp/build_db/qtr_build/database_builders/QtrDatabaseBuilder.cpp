@@ -209,6 +209,10 @@ namespace qtr {
 
         size_t distributePropertyTables(const BuildArgs &args, const map <uint64_t, filesystem::path> &molLocations) {
             unordered_map<string, vector<pair<uint64_t, PropertiesFilter::Properties>>> propertyTables;
+            if (!is_directory(args.propertyTablesSourceDir())) {
+                throw runtime_error(
+                        "Directory with properties does not exist: " + args.propertyTablesSourceDir().string());
+            }
             vector<filesystem::path> propertyTablePaths = findFiles(args.propertyTablesSourceDir(), "");
             size_t molNumber = 0;
             for (auto &tablePath: propertyTablePaths) {
