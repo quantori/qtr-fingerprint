@@ -51,8 +51,7 @@ namespace qtr {
 
     template<typename T, uint64_t B>
     T &MemoryMapVector<T, B>::operator[](size_t i) {
-        return *const_cast<T *>(const_cast<MemoryMapVector<T, B>*>(this)->operator[](i));
-
+        return *static_cast<T *>(_byteStorage->getBytes(i / elementsInBlock, i % elementsInBlock));
     }
 
     template<typename T, uint64_t B>
@@ -65,7 +64,8 @@ namespace qtr {
         MemoryMapVector<T, B> *vector = new MemoryMapVector<T, B>;
         vector->_byteStorage = MemoryMapBytesStorage::open(vectorDir);
         vector->_size =
-                vector->_byteStorage->filesCount() * elementsInBlock + vector->_byteStorage->lastFileSize() / sizeof(T);
+                (vector->_byteStorage->filesCount() - 1) * elementsInBlock +
+                vector->_byteStorage->lastFileSize() / sizeof(T);
         return std::unique_ptr<MemoryMapVector<T, B>>(vector);
     }
 

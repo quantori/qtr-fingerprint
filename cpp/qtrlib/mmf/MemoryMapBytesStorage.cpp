@@ -1,6 +1,7 @@
 #include "MemoryMapBytesStorage.h"
 
 #include <fstream>
+#include <iostream>
 
 using namespace std;
 using namespace qtr;
