@@ -12,12 +12,14 @@ ABSL_DECLARE_FLAG(std::string, destDir);
 
 ABSL_DECLARE_FLAG(bool, properties);
 
+ABSL_DECLARE_FLAG(std::string, molIdType);
+
 namespace qtr {
 
-    enum class TargetType {
+    enum class MolIdType {
         BadType,
-        RawBucket,
-        Tables
+        SMILES,
+        OriginalId
     };
 
     class PreprocessingArgs : public ArgsBase {
@@ -28,6 +30,12 @@ namespace qtr {
         const static inline auto strToPreprocessingType = makeStringToEnumFunction(_strToPreprocessingType,
                                                                                    PreprocessingType::BadType);
 
+        static inline const std::unordered_map<std::string, MolIdType> _strToMolIdType =
+                {{FLAG_NAME(SMILES), MolIdType::SMILES},
+                 {FLAG_NAME(OriginalId), MolIdType::OriginalId}};
+
+        const static inline auto strToMolIdType = makeStringToEnumFunction(_strToMolIdType, MolIdType::BadType);
+
     ADD_ARGUMENT_WITH_PARSER(PreprocessingType, preprocessingType, PreprocessingType::BadType, strToPreprocessingType);
 
     ADD_ARGUMENT(std::filesystem::path, sourceDir, "");
@@ -36,11 +44,14 @@ namespace qtr {
 
     ADD_ARGUMENT(bool, properties, true);
 
+    ADD_ARGUMENT_WITH_PARSER(MolIdType, molIdType, MolIdType::BadType, strToMolIdType);
+
     public:
         PreprocessingArgs(int argc, char *argv[]) : ArgsBase(argc, argv) {
             parseAndCheck_preprocessingType();
             parseAndCheck_sourceDir();
             parseAndCheck_destDir();
+            parseAndCheck_molIdType();
             if (preprocessingType() == PreprocessingType::SDF) {
             }
             if (preprocessingType() == PreprocessingType::CSV) {

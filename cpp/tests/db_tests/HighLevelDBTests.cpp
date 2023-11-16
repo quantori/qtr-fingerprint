@@ -97,6 +97,7 @@ public:
                     "--sourceDir=" + csvDir.string(),
                     "--destDir=" + preprocessedDir.string(),
                     "--properties=false",
+                    "--molIdType=OriginalId"
                    });
 
 
@@ -119,7 +120,7 @@ public:
                "--timeLimit=" + to_string(timeLimit),
                "--queriesFile=" + carbonQueries.string(),
                "--summaryFile=" + summaryFile.string(),
-               "--properties=false",
+               "--properties=false"
               });
 
         ifstream summary(summaryFile);
