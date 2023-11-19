@@ -75,7 +75,8 @@ ABSL_FLAG(double, timeLimit, -1,
 ABSL_FLAG(string, summaryFile, "",
           "File where summary of the run should be stored (for " FLAG_NAME(FromFile) " mode only)");
 
-
-
-
-
+ABSL_FLAG(std::string, molIdType, "",
+          "Type of molecule identifier to use in the database. (for " FLAG_NAME(CSV) " preprocessing type only) "
+          "Possible types: "
+            FLAG_NAME(SMILES) ", "
+            FLAG_NAME(OriginalId));

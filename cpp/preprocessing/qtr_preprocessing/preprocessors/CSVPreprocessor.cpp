@@ -57,7 +57,7 @@ namespace {
         while (std::getline(in, line)) {
             auto lineElements = splitString(line);
             if ((args.properties() && lineElements.size() != 2 + PropertiesFilter::Properties().size())
-             || (!args.properties() && lineElements.size() != 2)) {
+                || (!args.properties() && lineElements.size() != 2)) {
                 LOG(WARNING) << "Skip line with invalid (" << lineElements.size()
                              << ") number of arguments elements: "
                              << line;
@@ -88,8 +88,12 @@ namespace {
                     uint64_t id = counter++;
                     smilesTableWriter << std::make_pair(id, smiles);
                     fingerprintTableWriter << std::make_pair(id, fingerprint);
-//                    idToStringWriter << std::make_pair(id, strId);
-                    idToStringWriter << std::make_pair(id, smiles);
+                    if (args.molIdType() == qtr::MolIdType::OriginalId)
+                        idToStringWriter << std::make_pair(id, strId);
+                    else if (args.molIdType() == qtr::MolIdType::SMILES)
+                        idToStringWriter << std::make_pair(id, smiles);
+                    else
+                        throw std::logic_error("Undefined molecule Id Type");
                     if (propertiesTableWriter != nullptr)
                         *propertiesTableWriter << std::make_pair(id, properties);
                     processed++;

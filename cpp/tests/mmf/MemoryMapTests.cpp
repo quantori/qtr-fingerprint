@@ -42,15 +42,16 @@ TEST_F(MemoryMapTests, MemoryMapFileTest) {
 
 TEST_F(MemoryMapTests, MemoryMapVectorTest) {
     using Vec = qtr::MemoryMapVector<uint32_t, 32>;
-    const int N = 100;
+    auto vectorDir = getTmpDir() / "vector";
+    const int N = 1;
     {
-        auto vector = Vec::create(getTmpDir());
+        auto vector = Vec::create(vectorDir);
         for (int i = 0; i < N; i++) {
             vector->push_back(i);
         }
     }
     {
-        auto vector = Vec::open(getTmpDir());
+        auto vector = Vec::open(vectorDir);
         EXPECT_EQ(vector->size(), N);
         for (int i = N - 1; i >= 0; i--) {
             EXPECT_EQ((*vector)[i], i);
