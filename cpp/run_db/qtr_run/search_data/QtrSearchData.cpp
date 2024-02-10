@@ -7,6 +7,7 @@
 #include "PropertiesRamFilter.h"
 #include "PropertiesDriveFilter.h"
 #include "CompoundFilter.h"
+#include "AlwaysTrueFilter.h"
 #include "QtrDriveSearchData.h"
 
 
@@ -58,11 +59,11 @@ namespace qtr {
 
     QtrSearchData::QtrSearchData(shared_ptr<const BallTreeSearchEngine> ballTree,
                                  shared_ptr<const IdConverter> idConverter, size_t ansCount, size_t threadCount,
-                                 double timeLimit) :
-            SearchData(ansCount, threadCount, timeLimit),
+                                 double timeLimit, bool verificationStage) :
+            SearchData(ansCount, threadCount, timeLimit, verificationStage),
             ballTree(std::move(ballTree)), idConverter(std::move(idConverter)) {}
 
-    unique_ptr <QueryData<CIDType>>
+    unique_ptr<QueryData<CIDType>>
     QtrSearchData::search(const string &querySmiles, const PropertiesFilter::Bounds &queryBounds) {
         LOG(INFO) << "Start search: " << querySmiles;
         IndigoFingerprint fingerprint;
@@ -73,7 +74,12 @@ namespace qtr {
             LOG(WARNING) << "Skip query:" << exception.what();
             return {nullptr};
         }
-        auto filter = createFilter(*this, querySmiles, queryBounds);
+        auto filter = [&]() -> unique_ptr<ByIdAnswerFilter> {
+           if (verificationStage)
+               return createFilter(*this, querySmiles, queryBounds);
+           else
+               return make_unique<AlwaysTrueFilter<CIDType>>();
+        }();
         auto queryData = make_unique<BallTreeQueryData>(ansCount, timeLimit, fingerprint, std::move(filter));
         ballTree->search(*queryData, threadsCount);
         return std::move(queryData);

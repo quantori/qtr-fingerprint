@@ -31,11 +31,16 @@ namespace qtr {
     }
 
     BingoNoSQLSearchData::BingoNoSQLSearchData(const std::filesystem::path &dbDataDir, size_t ansCount,
-                                               size_t threadsCount, double timeLimit) :
-            SearchData(ansCount, threadsCount, timeLimit),
-            db(BingoMolecule::loadDatabaseFile(IndigoSession::create(), dbDataDir, "")) {}
+                                               size_t threadsCount, double timeLimit,
+                                               bool verificationStage) :
+            SearchData(ansCount, threadsCount, timeLimit, verificationStage),
+            db(BingoMolecule::loadDatabaseFile(IndigoSession::create(), dbDataDir, "")) {
+        if (!verificationStage) {
+            throw std::runtime_error("VerificationStage=false is not supported for BingoNoSQL");
+        }
+    }
 
-    unique_ptr <QueryData<CIDType>>
+    unique_ptr<QueryData<CIDType>>
     BingoNoSQLSearchData::search(const string &querySmiles, const PropertiesFilter::Bounds &) {
         LOG(INFO) << "Start search: " << querySmiles;
         unique_ptr<IndigoQueryMolecule> molecule = nullptr;

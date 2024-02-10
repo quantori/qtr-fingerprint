@@ -12,14 +12,16 @@ namespace qtr {
     public:
         virtual ~SearchData() = default;
 
-        SearchData(size_t ansCount, size_t threadCount, double timeLimit);
+        SearchData(size_t ansCount, size_t threadCount, double timeLimit, bool verificationStage);
 
         virtual std::unique_ptr<QueryData<CIDType>>
         search(const std::string &querySmiles, const PropertiesFilter::Bounds &queryBounds) = 0;
 
+    protected:
         size_t ansCount;
         size_t threadsCount;
         double timeLimit;
+        bool verificationStage;
     };
 
 } // qtr

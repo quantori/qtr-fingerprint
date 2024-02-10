@@ -78,7 +78,7 @@ The Qtr databases also support molecular property-based search. The following mo
 * `--otherDataDir` - Folder where search index files that cannot be stored in parallel are saved (only for `QtrRam`).
 * `--parallelizeDepth` - Depth at which sub-trees of the search index should be built in parallel (affects construction
   speed, only for `QtrRam` and `QtrDrive`).
-* `treeDepth` - Depth to which the tree should be built (relevant only for `QtrRam` and `QtrDrive`).
+* `--treeDepth` - Depth to which the tree should be built (relevant only for `QtrRam` and `QtrDrive`).
 
 ### run_db
 
@@ -97,7 +97,7 @@ The Qtr databases also support molecular property-based search. The following mo
 * `--ansCount` - Maximum number of answers the application can return for a single query (if there are more answers
   than `ansCount`, some will be discarded).
 * `--timeLimit` - Time limit in seconds for executing a single query.
-
+* `--verificationStage` - True if verification stage should be executed after screening, False if only screening stage should be executed.
 ## Benchmarking and Research
 
 The results described in [this article](https://arxiv.org/abs/2310.02022) were obtained

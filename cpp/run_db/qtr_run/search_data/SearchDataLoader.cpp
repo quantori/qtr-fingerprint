@@ -107,7 +107,8 @@ namespace {
         auto idConverterPtr = loadIdConverterTask.get();
 
         return make_shared<QtrRamSearchData>(ballTreePtr, idConverterPtr, args.ansCount(), args.threads(),
-                                             args.timeLimit(), cfStoragePtr, propertiesTablePtr);
+                                             args.timeLimit(), cfStoragePtr, propertiesTablePtr,
+                                             args.verificationStage());
     }
 
     shared_ptr<SearchData> loadQtrDriveSearchData(const RunArgs &args) {
@@ -118,13 +119,14 @@ namespace {
         auto idConverterPtr = loadIdConverterTask.get();
 
         return make_shared<QtrDriveSearchData>(ballTreePtr, idConverterPtr, args.ansCount(), args.threads(),
-                                               args.timeLimit());
+                                               args.timeLimit(), args.verificationStage());
     }
 
     shared_ptr<SearchData> loadBingoNoSQLSearchData(const RunArgs &args) {
         filesystem::path dbDataDir = args.dbDataDirs()[0];
         try {
-            return make_shared<BingoNoSQLSearchData>(dbDataDir, args.ansCount(), args.threads(), args.timeLimit());
+            return make_shared<BingoNoSQLSearchData>(dbDataDir, args.ansCount(), args.threads(), args.timeLimit(),
+                                                     args.verificationStage());
         }
         catch (const IndigoException &e) {
             logErrorAndExit(e.what());

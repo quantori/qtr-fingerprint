@@ -14,6 +14,7 @@ ABSL_DECLARE_FLAG(uint64_t, ansCount);
 ABSL_DECLARE_FLAG(double, timeLimit);
 ABSL_DECLARE_FLAG(std::string, summaryFile);
 ABSL_DECLARE_FLAG(bool, properties);
+ABSL_DECLARE_FLAG(bool, verificationStage);
 
 namespace qtr {
 
@@ -49,6 +50,8 @@ namespace qtr {
 
     ADD_ARGUMENT(bool, properties, true);
 
+    ADD_ARGUMENT(bool, verificationStage, true);
+
     public:
         RunArgs(int argc, char *argv[]) : ArgsBase(argc, argv) {
             parseAndCheck_dbType();
@@ -59,6 +62,7 @@ namespace qtr {
             parseAndCheck_ansCount();
             parseAndCheck_timeLimit();
             parse_properties();
+            parse_verificationStage();
 
             if (dbType() == DatabaseType::QtrRam ||
                 dbType() == DatabaseType::QtrDrive) {
@@ -79,6 +83,9 @@ namespace qtr {
                 }
                 if (dataDirs().size() != 1) {
                     logErrorAndExit("Multiple data folders is not supported for BingoNoSQL");
+                }
+                if (!verificationStage()) {
+                    logErrorAndExit("verificationStage=false is not supported for BingoNoSQL");
                 }
             }
         }

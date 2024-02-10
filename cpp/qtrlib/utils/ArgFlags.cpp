@@ -80,3 +80,6 @@ ABSL_FLAG(std::string, molIdType, "",
           "Possible types: "
             FLAG_NAME(SMILES) ", "
             FLAG_NAME(OriginalId));
+
+ABSL_FLAG(bool, verificationStage, true,
+          "True if verification stage should be executed after screening, False if only screening stage should be executed");
