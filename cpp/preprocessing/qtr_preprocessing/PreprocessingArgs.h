@@ -19,7 +19,7 @@ namespace qtr {
     enum class MolIdType {
         BadType,
         SMILES,
-        OriginalId
+        UID
     };
 
     class PreprocessingArgs : public ArgsBase {
@@ -32,7 +32,7 @@ namespace qtr {
 
         static inline const std::unordered_map<std::string, MolIdType> _strToMolIdType =
                 {{FLAG_NAME(SMILES), MolIdType::SMILES},
-                 {FLAG_NAME(OriginalId), MolIdType::OriginalId}};
+                 {FLAG_NAME(UID), MolIdType::UID}};
 
         const static inline auto strToMolIdType = makeStringToEnumFunction(_strToMolIdType, MolIdType::BadType);
 

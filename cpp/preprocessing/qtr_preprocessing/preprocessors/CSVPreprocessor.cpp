@@ -88,7 +88,7 @@ namespace {
                     uint64_t id = counter++;
                     smilesTableWriter << std::make_pair(id, smiles);
                     fingerprintTableWriter << std::make_pair(id, fingerprint);
-                    if (args.molIdType() == qtr::MolIdType::OriginalId)
+                    if (args.molIdType() == qtr::MolIdType::UID)
                         idToStringWriter << std::make_pair(id, strId);
                     else if (args.molIdType() == qtr::MolIdType::SMILES)
                         idToStringWriter << std::make_pair(id, smiles);

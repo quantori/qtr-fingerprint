@@ -97,7 +97,7 @@ public:
                     "--sourceDir=" + csvDir.string(),
                     "--destDir=" + preprocessedDir.string(),
                     "--properties=false",
-                    "--molIdType=OriginalId"
+                    "--molIdType=UID"
                    });
 
 
