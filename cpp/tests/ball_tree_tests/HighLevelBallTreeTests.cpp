@@ -173,7 +173,8 @@ public:
         prepareTreeDirs(data);
         LOG(INFO) << "Finish data preparation";
         LOG(INFO) << "Start building ball tree";
-        qtr::BallTreeBuilder ballTree(_treeDepth, _parallelizeDepth, getTreeDirs(), qtr::MaxDispersionBitSelector());
+        qtr::BallTreeBuilder ballTree(_treeDepth, _parallelizeDepth, getTreeDirs(), qtr::MaxDispersionBitSelector(),
+                                      qtr::IndigoFingerprintSize);
         LOG(INFO) << "Finish building ball tree";
         LOG(INFO) << "Start dumping ball tree to " << getTreePath();
         qtr::BufferedWriter treeWriter(getTreePath());
@@ -213,7 +214,7 @@ public:
         }
         buildBallTreeAndCheck(data);
         qtr::BufferedReader treeReader(getTreePath());
-        BallTreeType ballTree(treeReader, getTreeDirs());
+        BallTreeType ballTree(treeReader, getTreeDirs(), qtr::IndigoFingerprintSize);
         for (const auto &[id, fingerprint]: data) {
             auto expectedAnswer = getAnswers(data, fingerprint);
             auto smiles = std::make_shared<std::string>("smiles" + std::to_string(id));

@@ -27,7 +27,7 @@ namespace {
         return substrings;
     }
 
-    void
+    uint64_t
     parseCSV(const std::filesystem::path &csvFilePath, const PreprocessingArgs &args, std::atomic_uint64_t &counter,
              std::mutex &mutex) {
         std::filesystem::path smilesTablePath =
@@ -54,13 +54,14 @@ namespace {
         std::ifstream in(csvFilePath);
         std::string line;
         uint64_t skipped = 0, processed = 0;
+        uint64_t fingerprintLength = 0;
         while (std::getline(in, line)) {
             auto lineElements = splitString(line);
-            if ((args.properties() && lineElements.size() != 2 + PropertiesFilter::Properties().size())
-                || (!args.properties() && lineElements.size() != 2)) {
+            size_t expectedElements = 2 + size_t(args.properties()) * PropertiesFilter::Properties().size() +
+                                      size_t(args.fingerprintProvided());
+            if (lineElements.size() != expectedElements) {
                 LOG(WARNING) << "Skip line with invalid (" << lineElements.size()
-                             << ") number of arguments elements: "
-                             << line;
+                             << ") number of arguments elements (expected" << expectedElements << ": " << line;
                 skipped++;
                 continue;
             }
@@ -82,7 +83,21 @@ namespace {
             }
 
             try {
-                Fingerprint fingerprint = indigoFingerprintFromSmiles(smiles);
+                Fingerprint fingerprint = [&]() {
+                    if (args.fingerprintProvided()) {
+                        size_t fingerprintIndex = 2 + size_t(args.properties()) * PropertiesFilter::Properties().size();
+                        std::string fingerprintStr = lineElements[fingerprintIndex];
+                        return Fingerprint(fingerprintStr);
+                    } else {
+                        return indigoFingerprintFromSmiles(smiles);
+                    }
+                }();
+
+                if (fingerprintLength == 0)
+                    fingerprintLength = fingerprint.size();
+                else
+                    assert(fingerprintLength == fingerprint.size());
+
                 {
                     std::lock_guard lock(mutex);
                     uint64_t id = counter++;
@@ -108,21 +123,30 @@ namespace {
         }
         LOG(INFO) << "Finish processing " << csvFilePath << " : skipped -- " << skipped << ", processed -- "
                   << processed;
+        return fingerprintLength;
     }
 }
 
 void CSVPreprocessor::run(const PreprocessingArgs &args) {
     ProfileScope("CSV preprocessing");
     std::vector<std::filesystem::path> csvPaths = qtr::findFiles(args.sourceDir(), ".csv");
-    std::vector<std::future<void>> tasks;
+    std::vector<std::future<uint64_t >> tasks;
     std::atomic_uint64_t counter = 0;
     std::mutex mutex;
-    for (auto &csvFile: csvPaths) {
+    tasks.reserve(csvPaths.size());
+    uint64_t fingerprintLength = 0;
+    for (auto &csvFile: csvPaths)
         tasks.emplace_back(
                 std::async(std::launch::async, parseCSV, std::cref(csvFile), std::cref(args), std::ref(counter),
                            std::ref(mutex)));
-    }
+
     for (auto &task: tasks) {
-        task.get();
+        uint64_t taskFingerprintLength = task.get();
+        if (fingerprintLength == 0)
+            fingerprintLength = taskFingerprintLength;
+        else
+            assert(fingerprintLength == taskFingerprintLength);
     }
+    ofstream fingerprintLengthWriter(args.fingerprintLengthFile());
+    fingerprintLengthWriter << fingerprintLength;
 }

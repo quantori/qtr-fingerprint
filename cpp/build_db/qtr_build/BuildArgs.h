@@ -74,6 +74,10 @@ namespace qtr {
             return sourceDir() / "propertyTables";
         }
 
+        [[nodiscard]] inline std::filesystem::path fingerprintLengthSourceFile() const {
+            return sourceDir() / "fingerprintLength";
+        }
+
         [[nodiscard]] inline std::filesystem::path dbOtherDataPath() const {
             return otherDestDir() / dbName();
         }
@@ -96,6 +100,10 @@ namespace qtr {
 
         [[nodiscard]] inline std::filesystem::path propertyTableDestinationPath() const {
             return dbOtherDataPath() / "propertyTable";
+        }
+
+        [[nodiscard]] inline std::filesystem::path fingerprintLengthDestFile() const {
+            return dbOtherDataPath() / "fingerprintLength";
         }
 
         [[nodiscard]] inline std::vector<std::filesystem::path> dbDataDirs() const {

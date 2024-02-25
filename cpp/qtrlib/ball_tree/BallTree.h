@@ -12,7 +12,7 @@ namespace qtr {
         class Node;
 
     protected:
-        explicit BallTree(std::vector<std::filesystem::path> dataDirectories);
+        explicit BallTree(std::vector<std::filesystem::path> dataDirectories, size_t fingerprintLength);
 
         static size_t leftChild(size_t nodeId);
 
@@ -30,6 +30,7 @@ namespace qtr {
         std::vector<Node> _nodes;
         size_t _depth;
         std::vector<std::filesystem::path> _dataDirectories;
+        size_t _fingerprintLength;
     };
 
     struct BallTree::Node {

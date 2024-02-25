@@ -19,7 +19,7 @@ if (QTR_PROFILING)
 endif (QTR_PROFILING)
 
 target_link_libraries(${This} glog::glog)
-target_link_libraries(${This} indigo-core indigo-cpp bingo-nosql)
+target_link_libraries(${This} indigo-core indigo-cpp bingo-nosql bingo-nosql-object)
 target_link_libraries(${This} absl::flags absl::flags_parse)
 
 target_include_directories(${This}

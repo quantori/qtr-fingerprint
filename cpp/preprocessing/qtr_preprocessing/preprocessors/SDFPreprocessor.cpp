@@ -3,7 +3,6 @@
 
 #include "Utils.h"
 #include "Fingerprint.h"
-#include "raw_bucket_io/RawBucketWriter.h"
 #include "string_table_io/StringTableWriter.h"
 #include "fingerprint_table_io/FingerprintTableWriter.h"
 

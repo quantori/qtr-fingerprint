@@ -66,9 +66,9 @@ namespace {
         LOG(INFO) << "Start ball tree loading";
         shared_ptr<BallTreeSearchEngine> res;
         if (args.dbType() == DatabaseType::QtrRam)
-            res = make_shared<BallTreeRAMSearchEngine>(ballTreeReader, args.dbDataDirs());
+            res = make_shared<BallTreeRAMSearchEngine>(ballTreeReader, args.dbDataDirs(), qtr::IndigoFingerprintSize);
         else {
-            res = make_shared<BallTreeDriveSearchEngine>(ballTreeReader, args.dbDataDirs());
+            res = make_shared<BallTreeDriveSearchEngine>(ballTreeReader, args.dbDataDirs(), qtr::IndigoFingerprintSize);
         }
         LOG(INFO) << "Finish ball tree loading";
         return res;

@@ -4,7 +4,7 @@ namespace qtr {
 
     Fingerprint::Fingerprint(size_t size) : Bitset<>(size) {}
 
-    Fingerprint::Fingerprint(const std::string &s) : Bitset<>(s.size() / 2) {
+    Fingerprint::Fingerprint(const std::string &s) : Bitset<>(s.size() * BIT_IN_BYTE / 2) {
         assert(s.size() % 2 == 0);
         assert(s.size() == sizeInBytes() * 2);
         for (size_t i = 0; i < s.size(); ++i) {
@@ -12,7 +12,7 @@ namespace qtr {
         }
     }
 
-    Fingerprint::Fingerprint(const Array<byte> &arr) : Bitset<>(arr.size()) {
+    Fingerprint::Fingerprint(const Array<byte> &arr) : Bitset<>(arr.size() * BIT_IN_BYTE) {
         assert(arr.size() == sizeInBytes());
         for (size_t i = 0; i < arr.size(); i++) {
             addSymbol(i, 8, arr[i]);

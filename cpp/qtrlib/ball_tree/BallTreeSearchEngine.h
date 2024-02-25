@@ -19,7 +19,9 @@ namespace qtr {
     class BallTreeSearchEngine : public BallTree {
     public:
         template<typename BinaryReader>
-        BallTreeSearchEngine(BinaryReader &nodesReader, std::vector<std::filesystem::path> dataDirectories);
+        BallTreeSearchEngine(BinaryReader &nodesReader,
+                             std::vector<std::filesystem::path> dataDirectories,
+                             size_t fingerprintLength);
 
         void search(BallTreeQueryData &queryData, size_t threads) const;
 
@@ -50,8 +52,9 @@ namespace qtr {
 
     template<typename BinaryReader>
     BallTreeSearchEngine::BallTreeSearchEngine(BinaryReader &nodesReader,
-                                               std::vector<std::filesystem::path> dataDirectories)
-            : BallTree(dataDirectories) {
+                                               std::vector<std::filesystem::path> dataDirectories,
+                                               size_t fingerprintLength)
+            : BallTree(dataDirectories, fingerprintLength) {
         loadNodes(nodesReader);
         assert(__builtin_popcountll(_nodes.size() + 1) == 1);
         _depth = log2Floor(_nodes.size());
@@ -66,7 +69,7 @@ namespace qtr {
         _nodes.reserve(treeSize);
         for (size_t i = 0; i < treeSize; i++) {
             _nodes.emplace_back();
-            _nodes.back().centroid.load(reader, 0);
+            _nodes.back().centroid.load(reader, _fingerprintLength);
             // TODO: change 0 to fingerprint size for all load calls
         }
     }

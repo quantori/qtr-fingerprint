@@ -5,8 +5,9 @@
 
 namespace qtr {
 
-    BallTree::BallTree(std::vector<std::filesystem::path> dataDirectories)
-            : _nodes(), _depth(0), _dataDirectories(std::move(dataDirectories)) {}
+    BallTree::BallTree(std::vector<std::filesystem::path> dataDirectories, size_t fingerprintLength)
+            : _nodes(), _depth(0), _dataDirectories(std::move(dataDirectories)),
+              _fingerprintLength(fingerprintLength) {}
 
 
     size_t BallTree::leftChild(size_t nodeId) {

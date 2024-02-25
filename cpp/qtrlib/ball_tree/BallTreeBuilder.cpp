@@ -126,8 +126,9 @@ namespace qtr {
     } // namespace
 
     BallTreeBuilder::BallTreeBuilder(size_t depth, size_t parallelizationDepth,
-                                     std::vector<std::filesystem::path> dataDirectories,
-                                     const BitSelector &bitSelector) : BallTree(std::move(dataDirectories)) {
+                                     std::vector<std::filesystem::path> dataDirectories, const BitSelector &bitSelector,
+                                     size_t fingerprintLength) : BallTree(std::move(dataDirectories),
+                                                                          fingerprintLength) {
         _depth = depth;
         _nodes.resize((1ull << (depth + 1)) - 1);
         buildTree(depth, parallelizationDepth, bitSelector);
