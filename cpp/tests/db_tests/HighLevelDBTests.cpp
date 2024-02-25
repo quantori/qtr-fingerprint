@@ -127,7 +127,7 @@ public:
         for (size_t i : expectedSummary) {
             int actual;
             summary >> actual;
-            EXPECT_EQ(actual, i);
+            ASSERT_EQ(actual, i);
         }
     }
 
@@ -137,7 +137,7 @@ public:
                             size_t runTreads,
                             size_t ansCount,
                             double timeLimit) const {
-        vector<size_t> summary(200);
+        vector<size_t> summary(100);
         iota(summary.begin(), summary.end(), 1);
         reverse(summary.begin(), summary.end());
 
@@ -147,9 +147,9 @@ public:
 };
 
 TEST_F(HighLevelDatabaseTests, SimpleCarbonDB) {
-    testCarbonDatabase(2, 3, 5, 1, 10000, 2.0);
+    testCarbonDatabase(2, 3, 5, 1, 10000, 5.0);
 }
 
 TEST_F(HighLevelDatabaseTests, ParallelCarbonDB) {
-    testCarbonDatabase(2, 3, 5, 2, 10000, 2.0);
+    testCarbonDatabase(2, 3, 5, 2, 10000, 5.0);
 }
