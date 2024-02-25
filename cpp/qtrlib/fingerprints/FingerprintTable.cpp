@@ -5,8 +5,7 @@
 
 namespace qtr {
 
-    template<>
-    IndigoFingerprintTable::FingerprintTable(const std::string &sdfFile) {
+    FingerprintTable::FingerprintTable(const std::string &sdfFile) {
 
         using namespace indigo_cpp;
 

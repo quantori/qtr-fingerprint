@@ -73,7 +73,7 @@ namespace qtr {
         return result;
     }
 
-    void BallTreeSearchEngine::findLeaves(const IndigoFingerprint &fingerprint, size_t currentNode,
+    void BallTreeSearchEngine::findLeaves(const Fingerprint &fingerprint, size_t currentNode,
                                           vector <CIDType> &leaves) const {
         if (!(fingerprint <= _nodes[currentNode].centroid))
             return;

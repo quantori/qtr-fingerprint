@@ -14,7 +14,7 @@ namespace qtr {
         BallTreeRAMSearchEngine(BinaryReader &nodesReader,
                                 std::vector<std::filesystem::path> dataDirectories);
 
-        [[nodiscard]] std::vector<CIDType> searchInLeaf(size_t leafId, const IndigoFingerprint &query) const override;
+        [[nodiscard]] std::vector<CIDType> searchInLeaf(size_t leafId, const Fingerprint &query) const override;
 
     protected:
         [[nodiscard]] std::map<std::string, std::vector<std::pair<size_t, std::filesystem::path>>>

@@ -9,6 +9,8 @@ namespace qtr {
     public:
         ColumnsStatistic();
 
+        explicit ColumnsStatistic(size_t columnsCount);
+
         explicit ColumnsStatistic(const std::filesystem::path &filePath);
 
         explicit ColumnsStatistic(const std::vector<std::filesystem::path> &filePaths);
@@ -19,6 +21,8 @@ namespace qtr {
 
         [[nodiscard]] size_t size() const;
 
+        [[nodiscard]] size_t columns() const;
+
         void collectStatistic(const std::filesystem::path &filePath);
 
         void collectStatistic(const std::vector<std::filesystem::path> &filePaths);
@@ -27,7 +31,7 @@ namespace qtr {
 
     private:
         std::vector<size_t> _zerosCount;
-        size_t _fingerprintsCount;
+        size_t _fingerprintsCount = 0;
     };
 
 } // qtr

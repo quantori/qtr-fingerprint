@@ -15,7 +15,7 @@ namespace qtr {
 
         using BallTreeSearchEngine::BallTreeSearchEngine;
 
-        [[nodiscard]] std::vector<CIDType> searchInLeaf(size_t leafId, const IndigoFingerprint &query) const override;
+        [[nodiscard]] std::vector<CIDType> searchInLeaf(size_t leafId, const Fingerprint &query) const override;
     };
 
 } // qtr

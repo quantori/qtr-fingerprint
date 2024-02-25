@@ -33,7 +33,7 @@ namespace qtr {
     };
 
     struct BallTree::Node {
-        IndigoFingerprint centroid;
+        Fingerprint centroid;
     };
 
 } // qtr

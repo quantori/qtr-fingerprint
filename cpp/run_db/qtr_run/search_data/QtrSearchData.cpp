@@ -66,7 +66,7 @@ namespace qtr {
     unique_ptr<QueryData<CIDType>>
     QtrSearchData::search(const string &querySmiles, const PropertiesFilter::Bounds &queryBounds) {
         LOG(INFO) << "Start search: " << querySmiles;
-        IndigoFingerprint fingerprint;
+        Fingerprint fingerprint;
         try {
             fingerprint = indigoFingerprintFromSmiles(querySmiles);
         }

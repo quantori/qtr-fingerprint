@@ -7,7 +7,7 @@
 
 namespace qtr {
 
-    using raw_bucket_value_t = typename std::pair<std::string, qtr::IndigoFingerprint>;
+    using raw_bucket_value_t = typename std::pair<std::string, qtr::Fingerprint>;
 
     const std::string rawBucketExtension = ".rb";
 

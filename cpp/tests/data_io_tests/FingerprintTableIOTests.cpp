@@ -39,7 +39,7 @@ TEST_F(FingerprintTableIOTests, EmptyFile) {
 }
 
 TEST_F(FingerprintTableIOTests, DefaultValue) {
-    auto defaultValue = std::make_pair(0, qtr::IndigoFingerprint());
+    auto defaultValue = std::make_pair(0, qtr::Fingerprint(qtr::IndigoFingerprintSize));
     expected = {defaultValue};
     writeTmpTable(expected);
     actual = readTmpTable();
@@ -47,15 +47,17 @@ TEST_F(FingerprintTableIOTests, DefaultValue) {
 
 
 TEST_F(FingerprintTableIOTests, DefaultValues) {
-    auto defaultValue = std::make_pair(0, qtr::IndigoFingerprint());
+    auto defaultValue = std::make_pair(0, qtr::Fingerprint(qtr::IndigoFingerprintSize));
     expected = {defaultValue, defaultValue, defaultValue};
     writeTmpTable(expected);
     actual = readTmpTable();
 }
 
 TEST_F(FingerprintTableIOTests, RandomValue) {
-    auto fp1 = qtr::IndigoFingerprint(), fp2 = qtr::IndigoFingerprint(), fp3 = qtr::IndigoFingerprint();
-    fp1[0] = fp1[1] = fp1[10] = fp1[20] = fp1[qtr::IndigoFingerprint::size() - 1] = true;
+    auto fp1 = qtr::Fingerprint(qtr::IndigoFingerprintSize);
+    auto fp2 = qtr::Fingerprint(qtr::IndigoFingerprintSize);
+    auto fp3 = qtr::Fingerprint(qtr::IndigoFingerprintSize);
+    fp1[0] = fp1[1] = fp1[10] = fp1[20] = fp1[qtr::IndigoFingerprintSize - 1] = true;
     fp2[1] = fp2[3] = fp2[4] = true;
     fp3[100] = fp3[200] = fp3[400] = true;
     expected = {std::make_pair(0, fp1), std::make_pair(1, fp2), std::make_pair(2, fp3)};

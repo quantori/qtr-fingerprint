@@ -26,7 +26,7 @@ namespace qtr {
             assert(_moleculesInStream != 0);
             _moleculesInStream--;
             auto &[smiles, fingerprint] = value;
-            fingerprint.load(*_binaryReader);
+            fingerprint.load(*_binaryReader, 0);
             char symbol;
             while ((symbol = (char) _binaryReader->get()) != '\n') {
                 smiles += symbol;

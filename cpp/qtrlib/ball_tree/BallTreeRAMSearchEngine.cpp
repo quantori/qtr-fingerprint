@@ -27,7 +27,7 @@ namespace qtr {
         LOG(INFO) << "Finish loading leaf content from drive " << leafsList.front().second.parent_path().parent_path();
     }
 
-    std::vector<CIDType> BallTreeRAMSearchEngine::searchInLeaf(size_t leafId, const IndigoFingerprint &query) const {
+    std::vector<CIDType> BallTreeRAMSearchEngine::searchInLeaf(size_t leafId, const Fingerprint &query) const {
         ProfileScope("searchInLeaf");
         std::vector<CIDType> answers;
         for (const auto &[id, fingerprint]: _buckets[leafNumberById((leafId))]) {

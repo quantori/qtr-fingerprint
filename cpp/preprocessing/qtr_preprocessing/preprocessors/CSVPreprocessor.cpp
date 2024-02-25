@@ -82,7 +82,7 @@ namespace {
             }
 
             try {
-                IndigoFingerprint fingerprint = indigoFingerprintFromSmiles(smiles);
+                Fingerprint fingerprint = indigoFingerprintFromSmiles(smiles);
                 {
                     std::lock_guard lock(mutex);
                     uint64_t id = counter++;

@@ -68,6 +68,10 @@ namespace qtr {
                 filesStat.emplace_back(task.get());
                 summaryStat += filesStat.back();
             }
+            for (auto &stat: filesStat) {
+                if (stat.size() == 0)
+                    stat = ColumnsStatistic(summaryStat.size());
+            }
             return {filesStat, summaryStat};
         }
 
@@ -260,7 +264,11 @@ namespace qtr {
             std::vector<std::filesystem::path> nodeFiles = getNodeFiles(nodeId);
             assert(nodeFiles.size() == 1);
             for (const auto &[_, fingerprint]: FingerprintTableReader(nodeFiles[0])) {
-                _nodes[nodeId].centroid |= fingerprint;
+                auto &centroid = _nodes[nodeId].centroid;
+                if (centroid.size() == 0)
+                    centroid = fingerprint;
+                else
+                    _nodes[nodeId].centroid |= fingerprint;
             }
         } else {
             calculateCentroid(leftChild(nodeId));

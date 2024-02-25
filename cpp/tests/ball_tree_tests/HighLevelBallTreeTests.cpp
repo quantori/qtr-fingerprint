@@ -15,8 +15,8 @@
 class HighLevelBallTreeTests : public TmpDirFixture {
 public:
 
-    using DataTable = std::vector<std::pair<uint64_t, qtr::IndigoFingerprint>>;
-    using QueryTable = std::vector<qtr::IndigoFingerprint>;
+    using DataTable = std::vector<std::pair<uint64_t, qtr::Fingerprint>>;
+    using QueryTable = std::vector<qtr::Fingerprint>;
 
     size_t _treeDepth = 0;
     size_t _parallelizeDepth = 0;
@@ -60,7 +60,7 @@ public:
     static DataTable getAll5BitsMasksData() {
         DataTable result;
         for (size_t i = 0; i < 32; i++) {
-            qtr::IndigoFingerprint fp;
+            qtr::Fingerprint fp(qtr::IndigoFingerprintSize);
             fp.reset();
             fp[0] = i & 1;
             fp[1] = i & 2;
@@ -81,9 +81,9 @@ public:
 
     static DataTable getRowOfSubMasksData() {
         DataTable result;
-        qtr::IndigoFingerprint fp;
+        qtr::Fingerprint fp(qtr::IndigoFingerprintSize);
         fp.reset();
-        for (size_t i = 0; i < qtr::IndigoFingerprint::size(); i++) {
+        for (size_t i = 0; i < qtr::IndigoFingerprintSize; i++) {
             fp[i] = true;
             result.emplace_back(i, fp);
         }
@@ -92,8 +92,8 @@ public:
 
     static DataTable getNoSubMasksData() {
         DataTable result;
-        qtr::IndigoFingerprint fp;
-        for (size_t i = 0; i < qtr::IndigoFingerprint::size(); i++) {
+        qtr::Fingerprint fp(qtr::IndigoFingerprintSize);
+        for (size_t i = 0; i < qtr::IndigoFingerprintSize; i++) {
             fp.reset();
             fp[i] = true;
             result.emplace_back(i, fp);
@@ -103,7 +103,7 @@ public:
 
     static DataTable getHalfZerosAndHalfOnesData() {
         DataTable result;
-        qtr::IndigoFingerprint fp;
+        qtr::Fingerprint fp(qtr::IndigoFingerprintSize);
         fp.reset();
         for (size_t i = 0; i < 10; i++) {
             result.emplace_back(i, fp);
@@ -131,7 +131,7 @@ public:
         return result;
     }
 
-    static std::vector<uint64_t> getAnswers(const DataTable &data, const qtr::IndigoFingerprint &query) {
+    static std::vector<uint64_t> getAnswers(const DataTable &data, const qtr::Fingerprint &query) {
         std::vector<uint64_t> result;
         for (const auto &[id, fp]: data) {
             if (query <= fp) {
@@ -185,7 +185,7 @@ public:
         if (!_propertiesInitialized) {
             GTEST_FAIL() << "Properties wasn't initialized";
         }
-        std::map<uint64_t, qtr::IndigoFingerprint> dataMap(data.begin(), data.end());
+        std::map<uint64_t, qtr::Fingerprint> dataMap(data.begin(), data.end());
         std::set<uint64_t> dataUsed;
         buildBallTree(data);
         for (auto &dataDir: getTreeDirs()) {
@@ -197,7 +197,7 @@ public:
                     dataUsed.insert(id);
                     EXPECT_TRUE(dataMap.count(id));
                     const auto &[expectedId, expectedFingerprint] = *dataMap.find(id);
-                    for (size_t i = 0; i < qtr::IndigoFingerprint::size(); i++) {
+                    for (size_t i = 0; i < qtr::IndigoFingerprintSize; i++) {
                         EXPECT_EQ(expectedFingerprint[i], fingerprint[i]);
                     }
                 }

@@ -65,7 +65,7 @@ namespace {
                            const indigo_cpp::IndigoMoleculeSPtr &mol) {
                        mol->aromatize();
                        string smiles = mol->smiles();
-                       IndigoFingerprint fingerprint = indigoFingerprintFromSmiles(smiles);
+                       Fingerprint fingerprint = indigoFingerprintFromSmiles(smiles);
                        uint64_t cid = stoull(mol->name());
 
                        smilesTableWriter << make_pair(cid, smiles);

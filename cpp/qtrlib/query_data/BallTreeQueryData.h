@@ -14,13 +14,13 @@ namespace qtr {
     class BallTreeQueryData : public QueryData<CIDType> {
     public:
         BallTreeQueryData(size_t stopAnswersCount, double timeLimit,
-                          const IndigoFingerprint &query = IndigoFingerprint(),
+                          const Fingerprint &query,
                           std::unique_ptr<ByIdAnswerFilter> &&filter = std::make_unique<AlwaysTrueFilter<CIDType>>());
 
-        [[nodiscard]] const IndigoFingerprint &getQueryFingerprint() const;
+        [[nodiscard]] const Fingerprint &getQueryFingerprint() const;
 
     private:
-        IndigoFingerprint _queryFingerprint;
+        Fingerprint _queryFingerprint;
     };
 
 } // namespace qtr

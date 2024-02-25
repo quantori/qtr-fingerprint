@@ -42,7 +42,7 @@ TEST_F(RawBucketIOTests, EmptyFile) {
 }
 
 TEST_F(RawBucketIOTests, DefaultValue) {
-    auto defaultValue = std::make_pair(std::string(), qtr::IndigoFingerprint());
+    auto defaultValue = std::make_pair(std::string(), qtr::Fingerprint(qtr::IndigoFingerprintSize));
     expected = {defaultValue};
     writeTmpBucket(expected);
     actual = readTmpBucket();
@@ -50,15 +50,17 @@ TEST_F(RawBucketIOTests, DefaultValue) {
 
 
 TEST_F(RawBucketIOTests, DefaultValues) {
-    auto defaultValue = std::make_pair(std::string(), qtr::IndigoFingerprint());
+    auto defaultValue = std::make_pair(std::string(), qtr::Fingerprint(qtr::IndigoFingerprintSize));
     expected = {defaultValue, defaultValue, defaultValue};
     writeTmpBucket(expected);
     actual = readTmpBucket();
 }
 
 TEST_F(RawBucketIOTests, RandomValue) {
-    auto fp1 = qtr::IndigoFingerprint(), fp2 = qtr::IndigoFingerprint(), fp3 = qtr::IndigoFingerprint();
-    fp1[0] = fp1[1] = fp1[10] = fp1[20] = fp1[qtr::IndigoFingerprint::size() - 1] = true;
+    auto fp1 = qtr::Fingerprint(qtr::IndigoFingerprintSize);
+    auto fp2 = qtr::Fingerprint(qtr::IndigoFingerprintSize);
+    auto fp3 = qtr::Fingerprint(qtr::IndigoFingerprintSize);
+    fp1[0] = fp1[1] = fp1[10] = fp1[20] = fp1[qtr::IndigoFingerprintSize - 1] = true;
     fp2[1] = fp2[3] = fp2[4] = true;
     fp3[100] = fp3[200] = fp3[400] = true;
     std::string str1 = "C1=CC=C(C=C1)C=O";
