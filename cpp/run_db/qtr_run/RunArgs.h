@@ -121,5 +121,9 @@ namespace qtr {
         [[nodiscard]] inline std::filesystem::path propertyTablePath() const {
             return dbOtherDataDir() / "propertyTable";
         }
+
+        [[nodiscard]] inline std::filesystem::path fingerprintLengthFile() const {
+            return dbOtherDataDir() / "fingerprintLength";
+        }
     };
 }

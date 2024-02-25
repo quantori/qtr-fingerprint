@@ -150,7 +150,7 @@ TEST_F(BitsetTests, StdIODumpLoadTest) {
     {
         std::ifstream reader(filePath);
         bitset.reset();
-        bitset.load(reader, 0);
+        bitset.load(reader, BitsetSize);
         EXPECT_EQ(bitset2, bitset);
     }
     std::filesystem::remove(filePath);
@@ -170,7 +170,7 @@ TEST_F(BitsetTests, QtrIODumpLoadTest) {
     {
         qtr::BufferedReader<1024> reader(filePath);
         bitset.reset();
-        bitset.load(reader, 0);
+        bitset.load(reader, BitsetSize);
         EXPECT_EQ(bitset2, bitset);
     }
     std::filesystem::remove(filePath);

@@ -65,10 +65,16 @@ namespace {
         BufferedReader ballTreeReader(args.ballTreePath());
         LOG(INFO) << "Start ball tree loading";
         shared_ptr<BallTreeSearchEngine> res;
+        size_t fingerprintLength = [&]() {
+            ifstream in(args.fingerprintLengthFile());
+            size_t res;
+            in >> res;
+            return res;
+        }();
         if (args.dbType() == DatabaseType::QtrRam)
-            res = make_shared<BallTreeRAMSearchEngine>(ballTreeReader, args.dbDataDirs(), qtr::IndigoFingerprintSize);
+            res = make_shared<BallTreeRAMSearchEngine>(ballTreeReader, args.dbDataDirs(), fingerprintLength);
         else {
-            res = make_shared<BallTreeDriveSearchEngine>(ballTreeReader, args.dbDataDirs(), qtr::IndigoFingerprintSize);
+            res = make_shared<BallTreeDriveSearchEngine>(ballTreeReader, args.dbDataDirs(), fingerprintLength);
         }
         LOG(INFO) << "Finish ball tree loading";
         return res;
