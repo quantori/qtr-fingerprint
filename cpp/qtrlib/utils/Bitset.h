@@ -78,7 +78,8 @@ namespace qtr {
         template<typename BinaryReader>
         void load(BinaryReader &reader, size_t size) {
             assert(size != 0);
-            new(this) Bitset(size);
+            this->~Bitset();
+            new (this) Bitset(size);
             _data.back() = 0; // init extra bits with zeros
             reader.read((char *) _data.data(), sizeInBytes());
         }
