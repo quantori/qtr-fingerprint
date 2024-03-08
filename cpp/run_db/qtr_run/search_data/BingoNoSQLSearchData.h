@@ -12,7 +12,7 @@ namespace qtr {
                              double timeLimit, bool verificationStage);
 
         std::unique_ptr<QueryData<CIDType>>
-        search(const std::string &querySmiles, const PropertiesFilter::Bounds &) override;
+        search(const SearchData::Query &query, const PropertiesFilter::Bounds &) override;
 
         ~BingoNoSQLSearchData() override;
 

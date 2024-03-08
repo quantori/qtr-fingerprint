@@ -22,9 +22,10 @@ namespace qtr {
                 std::cin >> smiles;
                 if (smiles.empty())
                     break;
+                SearchData::Query query(std::make_unique<std::string>(smiles), nullptr);
                 ProfilingTimer profilingTimer("Query processing");
                 try {
-                    auto queryData = this->_searchData->search(smiles, PropertiesFilter::Bounds());
+                    auto queryData = this->_searchData->search(query, PropertiesFilter::Bounds());
                     if (queryData == nullptr) {
                         LOG(ERROR) << "Can not parse given smiles";
                         continue;

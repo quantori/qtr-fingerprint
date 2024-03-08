@@ -63,25 +63,39 @@ namespace qtr {
             SearchData(ansCount, threadCount, timeLimit, verificationStage),
             ballTree(std::move(ballTree)), idConverter(std::move(idConverter)) {}
 
-    unique_ptr<QueryData<CIDType>>
-    QtrSearchData::search(const string &querySmiles, const PropertiesFilter::Bounds &queryBounds) {
-        LOG(INFO) << "Start search: " << querySmiles;
-        Fingerprint fingerprint;
-        try {
-            fingerprint = indigoFingerprintFromSmiles(querySmiles);
-        }
-        catch (const std::exception &exception) {
-            LOG(WARNING) << "Skip query:" << exception.what();
-            return {nullptr};
-        }
-        auto filter = [&]() -> unique_ptr<ByIdAnswerFilter> {
-           if (verificationStage)
-               return createFilter(*this, querySmiles, queryBounds);
-           else
-               return make_unique<AlwaysTrueFilter<CIDType>>();
-        }();
+    unique_ptr <QueryData<CIDType>>
+    QtrSearchData::search(const SearchData::Query &query,
+                          const PropertiesFilter::Bounds &queryBounds) {
+        assert(query.smiles != nullptr);
+        LOG(INFO) << "Start search: " << *query.smiles;
+        Fingerprint fingerprint = getFingerprint(query);
+        auto filter = getFilter(query, queryBounds);
         auto queryData = make_unique<BallTreeQueryData>(ansCount, timeLimit, fingerprint, std::move(filter));
         ballTree->search(*queryData, threadsCount);
         return std::move(queryData);
+    }
+
+    std::unique_ptr<ByIdAnswerFilter>
+    QtrSearchData::getFilter(const SearchData::Query &query, const PropertiesFilter::Bounds &queryBounds) const {
+        if (verificationStage) {
+            return createFilter(*this, *query.smiles, queryBounds);
+        } else
+            return make_unique<AlwaysTrueFilter<CIDType>>();
+    }
+
+    Fingerprint QtrSearchData::getFingerprint(const SearchData::Query &query) {
+        Fingerprint fingerprint;
+        if (query.fingerprint != nullptr) {
+            fingerprint = *query.fingerprint;
+        } else {
+            try {
+                fingerprint = indigoFingerprintFromSmiles(*query.smiles);
+            }
+            catch (const std::exception &exception) {
+                LOG(WARNING) << "Cannot build fingerprint: " << exception.what();
+                return {};
+            }
+        }
+        return fingerprint;
     }
 } // qtr

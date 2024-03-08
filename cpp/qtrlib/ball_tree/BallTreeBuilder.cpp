@@ -261,14 +261,13 @@ namespace qtr {
 
     void BallTreeBuilder::calculateCentroid(size_t nodeId) {
         if (isLeaf(nodeId)) {
-            auto& centroid = _nodes[nodeId].centroid;
+            auto &centroid = _nodes[nodeId].centroid;
             assert(centroid.size() == 0);
 //            centroid.reset();
 //            _nodes[nodeId].centroid.reset();
             std::vector<std::filesystem::path> nodeFiles = getNodeFiles(nodeId);
             assert(nodeFiles.size() == 1);
             for (const auto &[_, fingerprint]: FingerprintTableReader(nodeFiles[0])) {
-                auto &centroid = _nodes[nodeId].centroid;
                 if (centroid.size() == 0)
                     centroid = fingerprint;
                 else

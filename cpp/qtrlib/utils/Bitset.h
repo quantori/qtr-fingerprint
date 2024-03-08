@@ -23,7 +23,7 @@ namespace qtr {
         static const size_t IndexShift = log2Floor(TypeSizeInBits);
         static_assert((1ull << IndexShift) == TypeSizeInBits);
         std::vector<T> _data;
-        size_t _size;
+        size_t _size{};
 
         class Proxy {
         private:

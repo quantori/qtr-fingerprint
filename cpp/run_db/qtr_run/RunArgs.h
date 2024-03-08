@@ -15,6 +15,7 @@ ABSL_DECLARE_FLAG(double, timeLimit);
 ABSL_DECLARE_FLAG(std::string, summaryFile);
 ABSL_DECLARE_FLAG(bool, properties);
 ABSL_DECLARE_FLAG(bool, verificationStage);
+ABSL_DECLARE_FLAG(bool, fingerprintProvided);
 
 namespace qtr {
 
@@ -52,6 +53,8 @@ namespace qtr {
 
     ADD_ARGUMENT(bool, verificationStage, true);
 
+    ADD_ARGUMENT(bool, fingerprintProvided, false);
+
     public:
         RunArgs(int argc, char *argv[]) : ArgsBase(argc, argv) {
             parseAndCheck_dbType();
@@ -63,6 +66,7 @@ namespace qtr {
             parseAndCheck_timeLimit();
             parse_properties();
             parse_verificationStage();
+            parse_fingerprintProvided();
 
             if (dbType() == DatabaseType::QtrRam ||
                 dbType() == DatabaseType::QtrDrive) {
@@ -72,6 +76,9 @@ namespace qtr {
             if (mode() == RunMode::Type::FromFile) {
                 parseAndCheck_queriesFile();
                 parse_summaryFile();
+            }
+            if (mode() != RunMode::Type::FromFile && fingerprintProvided()) {
+                logErrorAndExit("fingerprintProvided option is supported for FromFile mode only");
             }
 
             if (dbType() == DatabaseType::BingoNoSQL) {

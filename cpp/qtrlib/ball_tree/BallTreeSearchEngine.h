@@ -70,7 +70,6 @@ namespace qtr {
         for (size_t i = 0; i < treeSize; i++) {
             _nodes.emplace_back();
             _nodes.back().centroid.load(reader, _fingerprintLength);
-            // TODO: change 0 to fingerprint size for all load calls
         }
     }
 

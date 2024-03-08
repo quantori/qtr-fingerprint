@@ -11,11 +11,16 @@ namespace qtr {
                       double timeLimit, bool verificationStage);
 
         std::unique_ptr<QueryData<CIDType>>
-        search(const std::string &querySmiles, const PropertiesFilter::Bounds &queryBounds) override;
+        search(const SearchData::Query &query, const PropertiesFilter::Bounds &queryBounds) override;
 
 
         std::shared_ptr<const BallTreeSearchEngine> ballTree;
         std::shared_ptr<const IdConverter> idConverter;
-    };
 
+    private:
+        [[nodiscard]] std::unique_ptr<ByIdAnswerFilter>
+        getFilter(const SearchData::Query &query, const PropertiesFilter::Bounds &queryBounds) const;
+
+        static Fingerprint getFingerprint(const SearchData::Query &query);
+    };
 } // qtr

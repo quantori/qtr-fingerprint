@@ -59,10 +59,10 @@ namespace qtr {
                             lock_guard<mutex> lock(newTaskMutex);
                             smilesList.emplace_back(json["smiles"].s());
                             string &currSmiles = smilesList.back();
-
+                            SearchData::Query query(make_unique<string>(currSmiles), nullptr);
                             auto bounds = extractBounds(json);
                             size_t queryId = queries.size();
-                            auto queryData = _searchData->search(currSmiles, bounds);
+                            auto queryData = _searchData->search(query, bounds);
                             if (queryData == nullptr) {
                                 LOG(WARNING) << "Cannot start search for smilesList: " << currSmiles;
                                 return crow::response(to_string(-1));
@@ -91,10 +91,11 @@ namespace qtr {
                     if (!json)
                         return crow::json::wvalue(to_string(-1));
                     auto smiles = json["smiles"].s();
+                    SearchData::Query query(make_unique<string>(smiles), nullptr);
                     auto bounds = extractBounds(json);
 
                     lock_guard<mutex> lock(newTaskMutex);
-                    auto queryData = _searchData->search(smiles, bounds);
+                    auto queryData = _searchData->search(query, bounds);
                     if (queryData == nullptr) {
                         LOG(WARNING) << "Cannot start search for smilesList: " << smiles;
                         return crow::json::wvalue(to_string(-1));
