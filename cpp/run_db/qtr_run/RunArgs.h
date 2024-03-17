@@ -142,5 +142,9 @@ namespace qtr {
         [[nodiscard]] inline std::filesystem::path fingerprintLengthFile() const {
             return dbOtherDataDir() / "fingerprintLength";
         }
+
+        [[nodiscard]] inline std::filesystem::path totalMoleculesFile() const {
+            return dbOtherDataDir() / "totalMolecules";
+        }
     };
 }

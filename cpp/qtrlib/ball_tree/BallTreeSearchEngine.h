@@ -22,7 +22,7 @@ namespace qtr {
         template<typename BinaryReader>
         BallTreeSearchEngine(BinaryReader &nodesReader,
                              std::vector<std::filesystem::path> dataDirectories,
-                             size_t fingerprintLength);
+                             size_t fingerprintLength, uint64_t fingerprintsCount);
 
         void search(QueryDataWithFingerprint &queryData, size_t threads) const;
 
@@ -51,13 +51,14 @@ namespace qtr {
         void processLeafGroup(QueryDataWithFingerprint &queryData, const std::vector<uint64_t> &leaves) const;
 
         std::vector<std::filesystem::path> _leafDirPaths;
+        uint64_t _totalFingerprints;
     };
 
     template<typename BinaryReader>
     BallTreeSearchEngine::BallTreeSearchEngine(BinaryReader &nodesReader,
                                                std::vector<std::filesystem::path> dataDirectories,
-                                               size_t fingerprintLength)
-            : BallTree(dataDirectories, fingerprintLength) {
+                                               size_t fingerprintLength, uint64_t fingerprintsCount)
+            : BallTree(dataDirectories, fingerprintLength), _totalFingerprints(fingerprintsCount) {
         loadNodes(nodesReader);
         assert(__builtin_popcountll(_nodes.size() + 1) == 1);
         _depth = log2Floor(_nodes.size());

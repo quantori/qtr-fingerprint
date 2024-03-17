@@ -214,7 +214,7 @@ public:
         }
         buildBallTreeAndCheck(data);
         qtr::BufferedReader treeReader(getTreePath());
-        BallTreeType ballTree(treeReader, getTreeDirs(), qtr::IndigoFingerprintSize);
+        BallTreeType ballTree(treeReader, getTreeDirs(), qtr::IndigoFingerprintSize, data.size());
         for (const auto &[id, fingerprint]: data) {
             auto expectedAnswer = getAnswers(data, fingerprint);
             auto smiles = std::make_shared<std::string>("smiles" + std::to_string(id));

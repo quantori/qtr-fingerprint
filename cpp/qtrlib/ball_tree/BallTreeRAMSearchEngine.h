@@ -13,7 +13,7 @@ namespace qtr {
         template<typename BinaryReader>
         BallTreeRAMSearchEngine(BinaryReader &nodesReader,
                                 std::vector<std::filesystem::path> dataDirectories,
-                                size_t fingerprintLength);
+                                size_t fingerprintLength, size_t totalFingerprints);
 
         [[nodiscard]] std::vector<CIDType> searchInLeaf(size_t leafId, const Fingerprint &query) const override;
 
@@ -35,8 +35,9 @@ namespace qtr {
     template<typename BinaryReader>
     BallTreeRAMSearchEngine::BallTreeRAMSearchEngine(BinaryReader &nodesReader,
                                                      std::vector<std::filesystem::path> dataDirectories,
-                                                     size_t fingerprintLength)
-            :BallTreeSearchEngine(nodesReader, dataDirectories, fingerprintLength), _buckets(1ull << _depth) {
+                                                     size_t fingerprintLength, size_t totalFingerprints)
+            :BallTreeSearchEngine(nodesReader, dataDirectories, fingerprintLength, totalFingerprints),
+             _buckets(1ull << _depth) {
         std::vector<std::future<void>> tasks;
         auto groupedLeafFiles = groupedByDriveLeafFiles();
         for (const auto &[_, leafs]: groupedLeafFiles) {

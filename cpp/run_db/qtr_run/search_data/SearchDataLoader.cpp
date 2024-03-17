@@ -69,15 +69,25 @@ namespace {
         return res;
     }
 
+    size_t loadMoleculesCount(const RunArgs &args) {
+        ifstream in(args.totalMoleculesFile());
+        size_t res;
+        in >> res;
+        return res;
+    }
+
     shared_ptr<BallTreeSearchEngine> loadBallTree(const RunArgs &args) {
         BufferedReader ballTreeReader(args.ballTreePath());
         LOG(INFO) << "Start ball tree loading";
         shared_ptr<BallTreeSearchEngine> res;
         size_t fingerprintLength = loadFingerprintLength(args);
+        size_t moleculesCount = loadMoleculesCount(args);
         if (args.dbType() == DatabaseType::QtrRam)
-            res = make_shared<BallTreeRAMSearchEngine>(ballTreeReader, args.dbDataDirs(), fingerprintLength);
+            res = make_shared<BallTreeRAMSearchEngine>(ballTreeReader, args.dbDataDirs(), fingerprintLength,
+                                                       moleculesCount);
         else {
-            res = make_shared<BallTreeDriveSearchEngine>(ballTreeReader, args.dbDataDirs(), fingerprintLength);
+            res = make_shared<BallTreeDriveSearchEngine>(ballTreeReader, args.dbDataDirs(), fingerprintLength,
+                                                         moleculesCount);
         }
         LOG(INFO) << "Finish ball tree loading";
         return res;
