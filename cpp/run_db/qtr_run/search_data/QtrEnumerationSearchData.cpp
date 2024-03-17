@@ -13,17 +13,14 @@ namespace qtr {
 
         auto searchFunction = [this](QueryDataWithFingerprint& queryData) {
             auto& queryFingerprint = queryData.getQueryFingerprint();
-            assert(queryFingerprint.size() == 1024);
             std::vector<CIDType> answers;
-            for (size_t i = 0; i < _allFingerprints->size() && i < ansCount; i++) {
+            for (size_t i = 0; i < _allFingerprints->size() && i < ansCount && !queryData.checkTimeOut(); i++) {
                 auto& fingerprint = _allFingerprints->at(i);
                 if (queryFingerprint <= fingerprint)
                     answers.emplace_back(i);
                 if (i & ((1 << 16) - 1)) { // magic constant
                     queryData.addAnswers(answers);
                     answers.clear();
-                    if (queryData.checkTimeOut())
-                        break;
                 }
             }
             queryData.addAnswers(answers);

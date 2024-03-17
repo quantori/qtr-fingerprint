@@ -86,17 +86,43 @@ namespace {
     shared_ptr<vector<Fingerprint>> ballTreeToArray(shared_ptr<BallTreeSearchEngine> ballTree, size_t totalMolecules) {
         auto result = make_shared<vector<Fingerprint>>(totalMolecules);
         vector<future<void>> tasks;
-        for (size_t leafId: ballTree->getLeafIds()) {
-            tasks.push_back(async(std::launch::async, [&result, &ballTree](size_t id) {
-                for (auto &[i, fingerprint]: ballTree->getLeafContent(id)) {
-                    result->at(i) = fingerprint;
-                }
-            }, leafId));
+        vector<size_t> leafIds = ballTree->getLeafIds();
+
+        auto launchTask = [&result, &ballTree](size_t leafId) {
+            for (auto &[i, fingerprint] : ballTree->getLeafContent(leafId)) {
+                (*result)[i] = fingerprint;
+            }
+        };
+        size_t maxPool = 4 * max(thread::hardware_concurrency(), 2u); // 4 is a magic constant
+        for (size_t i = 0; i < leafIds.size(); ) {
+            if (tasks.size() < maxPool) {
+                tasks.push_back(async(std::launch::async, launchTask, leafIds[i++]));
+            } else {
+                tasks.erase(remove_if(begin(tasks), end(tasks), [](auto& task) {
+                    return task.wait_for(chrono::seconds(0)) == future_status::ready;
+                }), end(tasks));
+            }
         }
-        for (auto &task: tasks) {
+
+        // Wait for remaining tasks
+        for (auto &task : tasks) {
             task.wait();
         }
+
         return result;
+//        auto result = make_shared<vector<Fingerprint>>(totalMolecules);
+//        vector<future<void>> tasks;
+//        for (size_t leafId: ballTree->getLeafIds()) {
+//            tasks.push_back(async(std::launch::async, [&result, &ballTree](size_t id) {
+//                for (auto &[i, fingerprint]: ballTree->getLeafContent(id)) {
+//                    result->at(i) = fingerprint;
+//                }
+//            }, leafId));
+//        }
+//        for (auto &task: tasks) {
+//            task.wait();
+//        }
+//        return result;
     }
 
     shared_ptr<IdConverter> loadIdConverter(const filesystem::path &idToStringDirPath) {
