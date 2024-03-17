@@ -119,7 +119,12 @@ namespace {
     shared_ptr<SearchData> loadQtrRamSearchData(const RunArgs &args) {
         HuffmanCoder huffmanCoder = HuffmanCoder::load(args.huffmanCoderPath());
         auto loadBallTreeTask = async(launch::async, loadBallTree, cref(args));
-        auto loadCFStorageTask = async(launch::async, loadCFStorage, args.smilesTablePath());
+        auto loadCFStorageTask = [&args]() {
+            if (args.verificationStage())
+                return async(launch::async, loadCFStorage, args.smilesTablePath());
+            else
+                return async(launch::async, []() -> shared_ptr<CFStorage> {return nullptr;});
+        }();
         auto loadIdConverterTask = async(launch::async, loadIdConverter, args.idToStringDir());
 
         shared_ptr<vector<PropertiesFilter::Properties>> propertiesTablePtr = nullptr;

@@ -294,6 +294,9 @@ namespace qtr {
         copyIdToStrTablesTask.wait();
         size_t moleculesNumber = processTablesTask.get();
 
+        ofstream moleculesNumberOut(args.totalMoleculesFile());
+        moleculesNumberOut << moleculesNumber;
+
         LOG(INFO) << "Molecules number: " << moleculesNumber;
     }
 } // qtr

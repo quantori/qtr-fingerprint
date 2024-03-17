@@ -114,5 +114,9 @@ namespace qtr {
             }
             return res;
         }
+
+        [[nodiscard]] inline std::filesystem::path totalMoleculesFile() const {
+            return dbOtherDataPath() / "totalMolecules";
+        }
     };
 }
