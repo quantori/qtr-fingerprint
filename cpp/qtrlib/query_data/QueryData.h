@@ -115,7 +115,7 @@ namespace qtr {
 
     template<typename AnsType>
     bool QueryData<AnsType>::checkTimeOut() {
-        if (_timeLimit == -1)
+        if (_timeLimit == 0)
             return false;
         if (_wasTimeOut)
             return true;
