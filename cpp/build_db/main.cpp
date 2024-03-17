@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
         }
     }
     catch (std::exception &e) {
-        logErrorAndExit(e.what());
+        LOG_ERROR_AND_EXIT(e.what());
     }
 
     return 0;

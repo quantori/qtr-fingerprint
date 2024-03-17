@@ -52,10 +52,10 @@ namespace qtr {
                 parseAndCheck_treeDepth();
             } else if (dbType() == DatabaseType::BingoNoSQL) {
                 if (properties()) {
-                    logErrorAndExit("Cannot build BingoNoSQL database with properties (Not implemented).");
+                    LOG_ERROR_AND_EXIT("Cannot build BingoNoSQL database with properties (Not implemented).");
                 }
             } else {
-                logErrorAndExit("A case that should not have been executed has been executed");
+                LOG_ERROR_AND_EXIT("A case that should not have been executed has been executed");
             }
         }
 

@@ -52,7 +52,7 @@ namespace {
                 counter++;
             }
             catch (const std::exception &e) {
-                logErrorAndExit(e.what());
+                LOG_ERROR_AND_EXIT(e.what());
             }
             if (counter % 100000 == 0) {
                 LOG(INFO) << "CFStorage loading: processed " << counter << " molecules";
@@ -88,6 +88,7 @@ namespace {
         auto result = make_shared<vector<Fingerprint>>(totalMolecules);
         for (size_t leafId: ballTree->getLeafIds()) {
             for (auto &[i, fingerprint]: ballTree->getLeafContent(leafId)) {
+                assert(i < result->size());
                 result->at(i) = fingerprint;
             }
         }
@@ -154,7 +155,7 @@ namespace {
                                                      args.verificationStage());
         }
         catch (const IndigoException &e) {
-            logErrorAndExit(e.what());
+            LOG_ERROR_AND_EXIT(e.what());
         }
     }
 

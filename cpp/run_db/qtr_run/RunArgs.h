@@ -76,9 +76,9 @@ namespace qtr {
 
             if (dbType() == DatabaseType::QtrEnumeration) {
                 if (verificationStage())
-                    logErrorAndExit("Verification stage is not implemented for QtrEnumeration");
+                    LOG_ERROR_AND_EXIT("Verification stage is not implemented for QtrEnumeration");
                 if (properties())
-                    logErrorAndExit("Properties are not supported for QtrEnumeration");
+                    LOG_ERROR_AND_EXIT("Properties are not supported for QtrEnumeration");
             }
             if (dbType() == DatabaseType::QtrEnumeration && verificationStage()) {
             }
@@ -88,21 +88,21 @@ namespace qtr {
                 parse_summaryFile();
             }
             if (mode() != RunMode::Type::FromFile && fingerprintProvided()) {
-                logErrorAndExit("fingerprintProvided option is supported for FromFile mode only");
+                LOG_ERROR_AND_EXIT("fingerprintProvided option is supported for FromFile mode only");
             }
 
             if (dbType() == DatabaseType::BingoNoSQL) {
                 if (properties()) {
-                    logErrorAndExit("Only databases without properties are supported for BingoNoSQL");
+                    LOG_ERROR_AND_EXIT("Only databases without properties are supported for BingoNoSQL");
                 }
                 if (threads() != 1) {
-                    logErrorAndExit("Only single-threaded run is supported for BingoNoSQL");
+                    LOG_ERROR_AND_EXIT("Only single-threaded run is supported for BingoNoSQL");
                 }
                 if (dataDirs().size() != 1) {
-                    logErrorAndExit("Multiple data folders is not supported for BingoNoSQL");
+                    LOG_ERROR_AND_EXIT("Multiple data folders is not supported for BingoNoSQL");
                 }
                 if (!verificationStage()) {
-                    logErrorAndExit("verificationStage=false is not supported for BingoNoSQL");
+                    LOG_ERROR_AND_EXIT("verificationStage=false is not supported for BingoNoSQL");
                 }
             }
         }
