@@ -10,9 +10,10 @@
 #include "BallTree.h"
 #include "Fingerprint.h"
 #include "BallTreeTypes.h"
-#include "query_data/BallTreeQueryData.h"
+#include "query_data/QueryDataWithFingerprint.h"
 #include "answer_filtering/AnswerFilter.h"
 #include "answer_filtering/AlwaysTrueFilter.h"
+#include "fingerprint_table_io/FingerprintTableIOConsts.h"
 
 namespace qtr {
 
@@ -23,9 +24,13 @@ namespace qtr {
                              std::vector<std::filesystem::path> dataDirectories,
                              size_t fingerprintLength);
 
-        void search(BallTreeQueryData &queryData, size_t threads) const;
+        void search(QueryDataWithFingerprint &queryData, size_t threads) const;
 
         virtual ~BallTreeSearchEngine() = default;
+
+        [[nodiscard]] virtual std::vector<fingerprint_table_value_t> getLeafContent(size_t leafId) const = 0;
+
+        [[nodiscard]] std::vector<size_t> getLeafIds() const;
 
     protected:
         [[nodiscard]] const std::filesystem::path &getLeafDir(size_t nodeId) const;
@@ -35,8 +40,6 @@ namespace qtr {
         template<typename BinaryReader>
         void loadNodes(BinaryReader &reader);
 
-        [[nodiscard]] std::vector<size_t> getLeafIds() const;
-
         void findLeaves(const Fingerprint &fingerprint, size_t currentNode, std::vector<CIDType> &leaves) const;
 
         [[nodiscard]] virtual std::vector<CIDType>
@@ -45,7 +48,7 @@ namespace qtr {
         [[nodiscard]] virtual std::vector<std::vector<uint64_t>>
         divideLeavesIntoGroups(const std::vector<uint64_t> &leaves, size_t threads) const = 0;
 
-        void processLeafGroup(BallTreeQueryData &queryData, const std::vector<uint64_t> &leaves) const;
+        void processLeafGroup(QueryDataWithFingerprint &queryData, const std::vector<uint64_t> &leaves) const;
 
         std::vector<std::filesystem::path> _leafDirPaths;
     };

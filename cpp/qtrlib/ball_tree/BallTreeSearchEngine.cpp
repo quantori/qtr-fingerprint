@@ -38,7 +38,7 @@ namespace qtr {
     }
 
     void
-    BallTreeSearchEngine::processLeafGroup(BallTreeQueryData &queryData, const vector <uint64_t> &leaves) const {
+    BallTreeSearchEngine::processLeafGroup(QueryDataWithFingerprint &queryData, const vector <uint64_t> &leaves) const {
         ProfileScope("processLeafGroup");
         auto filterObject = queryData.getFilterObject();
         for (size_t i = 0; i < leaves.size() && !queryData.checkShouldStop(); i++) {
@@ -54,7 +54,7 @@ namespace qtr {
         queryData.tagFinishTask();
     }
 
-    void BallTreeSearchEngine::search(BallTreeQueryData &queryData, size_t threads) const {
+    void BallTreeSearchEngine::search(QueryDataWithFingerprint &queryData, size_t threads) const {
         ProfileScope("Search fingerprints in BallTree");
         vector<uint64_t> leaves;
         findLeaves(queryData.getQueryFingerprint(), root(), leaves);

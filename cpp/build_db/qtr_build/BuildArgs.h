@@ -45,7 +45,8 @@ namespace qtr {
             parseAndCheck_sourceDir();
             parseAndCheck_destDirs();
             parse_properties();
-            if (dbType() == DatabaseType::QtrDrive || dbType() == DatabaseType::QtrRam) {
+            if (dbType() == DatabaseType::QtrDrive || dbType() == DatabaseType::QtrRam ||
+                dbType() == DatabaseType::QtrEnumeration) {
                 parseAndCheck_otherDestDir();
                 parseAndCheck_parallelizeDepth();
                 parseAndCheck_treeDepth();

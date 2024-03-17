@@ -1,10 +1,10 @@
 #pragma once
 
-#include "QtrSearchData.h"
+#include "BallTreeSearchData.h"
 
 namespace qtr {
 
-    class QtrDriveSearchData : public QtrSearchData {
+    class QtrDriveSearchData : public BallTreeSearchData {
     public:
 
         QtrDriveSearchData(std::shared_ptr<const BallTreeSearchEngine> ballTree,

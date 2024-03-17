@@ -8,8 +8,8 @@ namespace qtr {
                                        size_t threadCount, double timeLimit, std::shared_ptr<CFStorage> cfStorage,
                                        std::shared_ptr<const std::vector<PropertiesFilter::Properties>> propertiesTable,
                                        bool verificationStage)
-            : QtrSearchData(std::move(ballTree), std::move(idConverter), ansCount, threadCount, timeLimit,
-                            verificationStage), cfStorage(std::move(cfStorage)),
+            : BallTreeSearchData(std::move(ballTree), std::move(idConverter), ansCount, threadCount, timeLimit,
+                                 verificationStage), cfStorage(std::move(cfStorage)),
               propertiesTable(std::move(propertiesTable)) {
     }
 } // qtr

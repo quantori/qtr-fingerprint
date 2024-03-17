@@ -17,6 +17,9 @@ namespace qtr {
 
         [[nodiscard]] std::vector<CIDType> searchInLeaf(size_t leafId, const Fingerprint &query) const override;
 
+        [[nodiscard]] std::vector<fingerprint_table_value_t> getLeafContent(size_t leafId) const override;
+
+
     protected:
         [[nodiscard]] std::map<std::string, std::vector<std::pair<size_t, std::filesystem::path>>>
         groupedByDriveLeafFiles() const;

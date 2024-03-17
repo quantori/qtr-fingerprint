@@ -50,4 +50,8 @@ namespace qtr {
         return std::move(result);
     }
 
+    std::vector<fingerprint_table_value_t> BallTreeRAMSearchEngine::getLeafContent(size_t leafId) const {
+        return _buckets.at(leafNumberById((leafId)));
+    }
+
 } // qtr

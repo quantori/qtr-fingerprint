@@ -30,4 +30,8 @@ public:
         const auto &[outerId, library] = it->second;
         return {outerId, _libraryIds[library]};
     }
+
+    inline size_t moleculesCount() const {
+        return _fromDbId.size();
+    }
 };

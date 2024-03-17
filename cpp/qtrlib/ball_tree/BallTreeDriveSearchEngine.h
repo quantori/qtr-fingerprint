@@ -11,6 +11,9 @@ namespace qtr {
         [[nodiscard]] std::vector<std::vector<uint64_t>>
         divideLeavesIntoGroups(const std::vector<uint64_t> &leaves, size_t threads) const override;
 
+        [[nodiscard]] std::vector<fingerprint_table_value_t> getLeafContent(size_t leafId) const override;
+
+
     public:
 
         using BallTreeSearchEngine::BallTreeSearchEngine;

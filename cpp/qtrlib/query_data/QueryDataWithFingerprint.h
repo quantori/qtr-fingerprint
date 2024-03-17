@@ -11,11 +11,11 @@
 
 namespace qtr {
 
-    class BallTreeQueryData : public QueryData<CIDType> {
+    class QueryDataWithFingerprint : public QueryData<CIDType> {
     public:
-        BallTreeQueryData(size_t stopAnswersCount, double timeLimit,
-                          const Fingerprint &query,
-                          std::unique_ptr<ByIdAnswerFilter> &&filter = std::make_unique<AlwaysTrueFilter<CIDType>>());
+        QueryDataWithFingerprint(size_t stopAnswersCount, double timeLimit,
+                                 const Fingerprint &query,
+                                 std::unique_ptr<ByIdAnswerFilter> &&filter = std::make_unique<AlwaysTrueFilter<CIDType>>());
 
         [[nodiscard]] const Fingerprint &getQueryFingerprint() const;
 

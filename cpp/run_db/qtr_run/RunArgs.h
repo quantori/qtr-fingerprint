@@ -69,8 +69,18 @@ namespace qtr {
             parse_fingerprintProvided();
 
             if (dbType() == DatabaseType::QtrRam ||
-                dbType() == DatabaseType::QtrDrive) {
+                dbType() == DatabaseType::QtrDrive ||
+                dbType() == DatabaseType::QtrEnumeration) {
                 parseAndCheck_otherDataDir();
+            }
+
+            if (dbType() == DatabaseType::QtrEnumeration) {
+                if (verificationStage())
+                    logErrorAndExit("Verification stage is not implemented for QtrEnumeration");
+                if (properties())
+                    logErrorAndExit("Properties are not supported for QtrEnumeration");
+            }
+            if (dbType() == DatabaseType::QtrEnumeration && verificationStage()) {
             }
 
             if (mode() == RunMode::Type::FromFile) {

@@ -36,4 +36,11 @@ namespace qtr {
         }
         return result;
     }
+
+    std::vector<fingerprint_table_value_t> BallTreeDriveSearchEngine::getLeafContent(size_t leafId) const {
+        std::vector<fingerprint_table_value_t> result;
+        FingerprintTableReader reader(getFingerprintTablePath(leafId));
+        copy(reader.begin(), reader.end(), back_inserter(result));
+        return result;
+    }
 } // qtr

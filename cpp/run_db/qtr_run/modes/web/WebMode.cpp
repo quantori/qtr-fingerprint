@@ -1,5 +1,5 @@
 #include "WebMode.h"
-#include "search_data/QtrSearchData.h"
+#include "search_data/BallTreeSearchData.h"
 
 #include <utility>
 
@@ -9,7 +9,7 @@ namespace qtr {
 
     namespace {
         pair <string, string> convertId(CIDType id, const shared_ptr <SearchData> &searchData) {
-            auto qtrSearchData = dynamic_cast<const QtrSearchData *>(searchData.get());
+            auto qtrSearchData = dynamic_cast<const BallTreeSearchData *>(searchData.get());
             if (qtrSearchData != nullptr)
                 return qtrSearchData->idConverter->fromDbId(id);
             else

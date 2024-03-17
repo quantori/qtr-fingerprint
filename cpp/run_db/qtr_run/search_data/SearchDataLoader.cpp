@@ -5,6 +5,7 @@
 #include "QtrRamSearchData.h"
 #include "QtrDriveSearchData.h"
 #include "BingoNoSQLSearchData.h"
+#include "QtrEnumerationSearchData.h"
 #include "properties_table_io/PropertiesTableReader.h"
 #include "BallTreeRAMSearchEngine.h"
 #include "HuffmanSmilesTable.h"
@@ -61,16 +62,18 @@ namespace {
         return result;
     }
 
+    size_t loadFingerprintLength(const RunArgs &args) {
+        ifstream in(args.fingerprintLengthFile());
+        size_t res;
+        in >> res;
+        return res;
+    }
+
     shared_ptr<BallTreeSearchEngine> loadBallTree(const RunArgs &args) {
         BufferedReader ballTreeReader(args.ballTreePath());
         LOG(INFO) << "Start ball tree loading";
         shared_ptr<BallTreeSearchEngine> res;
-        size_t fingerprintLength = [&]() {
-            ifstream in(args.fingerprintLengthFile());
-            size_t res;
-            in >> res;
-            return res;
-        }();
+        size_t fingerprintLength = loadFingerprintLength(args);
         if (args.dbType() == DatabaseType::QtrRam)
             res = make_shared<BallTreeRAMSearchEngine>(ballTreeReader, args.dbDataDirs(), fingerprintLength);
         else {
@@ -78,6 +81,22 @@ namespace {
         }
         LOG(INFO) << "Finish ball tree loading";
         return res;
+    }
+
+    shared_ptr<vector<Fingerprint>> ballTreeToArray(shared_ptr<BallTreeSearchEngine> ballTree, size_t totalMolecules) {
+        auto result = make_shared<vector<Fingerprint>>(totalMolecules);
+        vector<future<void>> tasks;
+        for (size_t leafId: ballTree->getLeafIds()) {
+            tasks.push_back(async(std::launch::async, [&result, &ballTree](size_t id) {
+                for (auto &[i, fingerprint]: ballTree->getLeafContent(id)) {
+                    result->at(i) = fingerprint;
+                }
+            }, leafId));
+        }
+        for (auto &task: tasks) {
+            task.wait();
+        }
+        return result;
     }
 
     shared_ptr<IdConverter> loadIdConverter(const filesystem::path &idToStringDirPath) {
@@ -138,6 +157,21 @@ namespace {
             logErrorAndExit(e.what());
         }
     }
+
+    shared_ptr<SearchData> loadQtrEnumerationSearchData(const RunArgs &args) {
+        auto loadBallTreeTask = async(launch::async, loadBallTree, cref(args));
+        auto loadIdConverterTask = async(launch::async, loadIdConverter, args.idToStringDir());
+
+        auto ballTreePtr = loadBallTreeTask.get();
+        auto idConverterPtr = loadIdConverterTask.get();
+
+        auto allFingerprints = ballTreeToArray(ballTreePtr, idConverterPtr->moleculesCount());
+
+
+        return make_unique<QtrEnumerationSearchData>(allFingerprints, args.ansCount(), args.threads(), args.timeLimit(),
+                                                     args.verificationStage());
+    }
+
 }
 
 shared_ptr<SearchData> SearchDataLoader::load(const RunArgs &args) {
@@ -148,6 +182,8 @@ shared_ptr<SearchData> SearchDataLoader::load(const RunArgs &args) {
         return loadQtrDriveSearchData(args);
     } else if (args.dbType() == DatabaseType::BingoNoSQL) {
         return loadBingoNoSQLSearchData(args);
+    } else if (args.dbType() == DatabaseType::QtrEnumeration) {
+        return loadQtrEnumerationSearchData(args);
     }
     throw logic_error("Undefined db type");
 }

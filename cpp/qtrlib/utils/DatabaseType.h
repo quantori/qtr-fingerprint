@@ -5,6 +5,7 @@ namespace qtr {
         BadType,
         QtrDrive,
         QtrRam,
-        BingoNoSQL
+        BingoNoSQL,
+        QtrEnumeration
     };
 } // qtr

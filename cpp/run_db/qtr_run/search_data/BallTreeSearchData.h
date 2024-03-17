@@ -4,11 +4,11 @@
 
 namespace qtr {
 
-    class QtrSearchData : public SearchData {
+    class BallTreeSearchData : public SearchData {
     public:
-        QtrSearchData(std::shared_ptr<const BallTreeSearchEngine> ballTree,
-                      std::shared_ptr<const IdConverter> idConverter, size_t ansCount, size_t threadCount,
-                      double timeLimit, bool verificationStage);
+        BallTreeSearchData(std::shared_ptr<const BallTreeSearchEngine> ballTree,
+                           std::shared_ptr<const IdConverter> idConverter, size_t ansCount, size_t threadCount,
+                           double timeLimit, bool verificationStage);
 
         std::unique_ptr<QueryData<CIDType>>
         search(const SearchData::Query &query, const PropertiesFilter::Bounds &queryBounds) override;

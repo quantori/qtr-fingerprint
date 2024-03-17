@@ -218,7 +218,7 @@ public:
         for (const auto &[id, fingerprint]: data) {
             auto expectedAnswer = getAnswers(data, fingerprint);
             auto smiles = std::make_shared<std::string>("smiles" + std::to_string(id));
-            qtr::BallTreeQueryData queryData(-1, _timeLimit, fingerprint);
+            qtr::QueryDataWithFingerprint queryData(-1, _timeLimit, fingerprint);
             ballTree.search(queryData, _threadsCount);
             queryData.waitAllTasks();
             auto actualAnswer = queryData.getAnswers(0, queryData.getCurrentAnswersCount()).second;

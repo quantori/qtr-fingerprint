@@ -40,7 +40,7 @@ namespace qtr {
             out << "   min: " << min << '\n';
             out << "median: " << median << '\n';
             out << percentilesStatStream.str() << '\n';
-            out << "overdue queries: " << BallTreeQueryData::timedOutCounter << '\n';
+            out << "overdue queries: " << QueryDataWithFingerprint::timedOutCounter << '\n';
         }
 
         inline static std::vector<SearchData::Query>

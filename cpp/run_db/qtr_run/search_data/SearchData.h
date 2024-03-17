@@ -17,6 +17,8 @@ namespace qtr {
         struct Query {
             std::unique_ptr<std::string> smiles;
             std::unique_ptr<Fingerprint> fingerprint;
+
+            [[nodiscard]] Fingerprint getFingerprint() const;
         };
 
         virtual std::unique_ptr<QueryData<CIDType>>
