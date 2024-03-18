@@ -147,6 +147,13 @@ namespace {
                                              args.verificationStage());
     }
 
+    shared_ptr<SearchData> loadQtrEnumerationSearchData(const RunArgs &args) {
+        auto searchData = dynamic_pointer_cast<QtrRamSearchData>(loadQtrRamSearchData(args));
+        assert(searchData != nullptr);
+        auto ans = make_shared<QtrEnumerationSearchData>(*searchData);
+        return ans;
+    }
+
     shared_ptr<SearchData> loadQtrDriveSearchData(const RunArgs &args) {
         auto loadBallTreeTask = async(launch::async, loadBallTree, cref(args));
         auto loadIdConverterTask = async(launch::async, loadIdConverter, args.idToStringDir());
@@ -167,20 +174,6 @@ namespace {
         catch (const IndigoException &e) {
             LOG_ERROR_AND_EXIT(e.what());
         }
-    }
-
-    shared_ptr<SearchData> loadQtrEnumerationSearchData(const RunArgs &args) {
-        auto loadBallTreeTask = async(launch::async, loadBallTree, cref(args));
-        auto loadIdConverterTask = async(launch::async, loadIdConverter, args.idToStringDir());
-
-        auto ballTreePtr = loadBallTreeTask.get();
-        auto idConverterPtr = loadIdConverterTask.get();
-
-        auto allFingerprints = ballTreeToArray(ballTreePtr, idConverterPtr->moleculesCount());
-
-
-        return make_unique<QtrEnumerationSearchData>(allFingerprints, args.ansCount(), args.threads(), args.timeLimit(),
-                                                     args.verificationStage());
     }
 
 }

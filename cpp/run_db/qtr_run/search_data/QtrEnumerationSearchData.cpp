@@ -11,19 +11,18 @@ namespace qtr {
         auto queryData = make_unique<QueryDataWithFingerprint>(ansCount, timeLimit, fingerprint,
                                                                make_unique<AlwaysTrueFilter<CIDType>>());
 
-        auto searchFunction = [this](QueryDataWithFingerprint& queryData) {
-            auto& queryFingerprint = queryData.getQueryFingerprint();
-            std::vector<CIDType> answers;
-            for (size_t i = 0; i < _allFingerprints->size() && i < ansCount && !queryData.checkTimeOut(); i++) {
-                auto& fingerprint = _allFingerprints->at(i);
-                if (queryFingerprint <= fingerprint)
-                    answers.emplace_back(i);
-                if (i & ((1 << 16) - 1)) { // magic constant
-                    queryData.addAnswers(answers);
-                    answers.clear();
+        assert(!verificationStage);
+
+        auto searchFunction = [this](QueryDataWithFingerprint &queryData) {
+            auto &queryFingerprint = queryData.getQueryFingerprint();
+            for (auto &leafId: ballTree->getLeafIds()) {
+                std::vector<CIDType> answers;
+                for (auto &[id, fp]: ballTree->getLeafContent(leafId)) {
+                    if (queryFingerprint <= fp)
+                        answers.emplace_back(id);
                 }
+                queryData.addAnswers(answers);
             }
-            queryData.addAnswers(answers);
             if (queryData.checkTimeOut()) {
                 LOG(INFO) << "Search stopped due to timeout";
             }
@@ -35,11 +34,7 @@ namespace qtr {
         return std::move(queryData);
     }
 
-    QtrEnumerationSearchData::QtrEnumerationSearchData(std::shared_ptr<std::vector<Fingerprint>> allFingerprints,
-                                                       size_t ansCount, size_t threadCount, double timeLimit,
-                                                       bool verificationStage) : SearchData(ansCount, threadCount, timeLimit, verificationStage),
-                                                                                 _allFingerprints(std::move(allFingerprints)) {
-        assert(threadCount == 1);
-        assert(!verificationStage);
+    QtrEnumerationSearchData::QtrEnumerationSearchData(QtrRamSearchData searchData) : QtrRamSearchData(
+            std::move(searchData)) {
     }
 } // qtr
