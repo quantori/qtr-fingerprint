@@ -16,15 +16,19 @@ namespace qtr {
         auto searchFunction = [this](QueryDataWithFingerprint &queryData) {
             auto &queryFingerprint = queryData.getQueryFingerprint();
             for (auto &leafId: ballTree->getLeafIds()) {
+                if (queryData.checkTimeOut()) {
+                    LOG(INFO) << "Search stopped due to timeout";
+                    break;
+                }
+                if (queryData.getCurrentAnswersCount() >= ansCount) {
+                    break;
+                }
                 std::vector<CIDType> answers;
                 for (auto &[id, fp]: ballTree->getLeafContent(leafId)) {
                     if (queryFingerprint <= fp)
                         answers.emplace_back(id);
                 }
                 queryData.addAnswers(answers);
-            }
-            if (queryData.checkTimeOut()) {
-                LOG(INFO) << "Search stopped due to timeout";
             }
             queryData.tagFinishTask();
         };
