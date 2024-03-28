@@ -41,15 +41,17 @@ namespace qtr {
     }
 
     unique_ptr<QueryData<CIDType>>
-    BingoNoSQLSearchData::search(const string &querySmiles, const PropertiesFilter::Bounds &) {
-        LOG(INFO) << "Start search: " << querySmiles;
+    BingoNoSQLSearchData::search(const SearchData::Query &query, const PropertiesFilter::Bounds &) {
+        assert(query.smiles != nullptr);
+        assert(query.fingerprint == nullptr);
+        LOG(INFO) << "Start search: " << *query.smiles;
         unique_ptr<IndigoQueryMolecule> molecule = nullptr;
         try {
-            molecule = make_unique<IndigoQueryMolecule>(db.session->loadQueryMolecule(querySmiles));
+            molecule = make_unique<IndigoQueryMolecule>(db.session->loadQueryMolecule(*query.smiles));
             molecule->aromatize();
         }
         catch (const IndigoException &e) {
-            LOG(ERROR) << "Cannot parse smiles: " << querySmiles << " (" << e.what() << ")";
+            LOG(ERROR) << "Cannot parse smiles: " << *query.smiles << " (" << e.what() << ")";
             return nullptr;
         }
 

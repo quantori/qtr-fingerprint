@@ -5,6 +5,7 @@
 #include "QtrRamSearchData.h"
 #include "QtrDriveSearchData.h"
 #include "BingoNoSQLSearchData.h"
+#include "QtrEnumerationSearchData.h"
 #include "properties_table_io/PropertiesTableReader.h"
 #include "BallTreeRAMSearchEngine.h"
 #include "HuffmanSmilesTable.h"
@@ -51,7 +52,7 @@ namespace {
                 counter++;
             }
             catch (const std::exception &e) {
-                logErrorAndExit(e.what());
+                LOG_ERROR_AND_EXIT(e.what());
             }
             if (counter % 100000 == 0) {
                 LOG(INFO) << "CFStorage loading: processed " << counter << " molecules";
@@ -61,17 +62,47 @@ namespace {
         return result;
     }
 
+    size_t loadFingerprintLength(const RunArgs &args) {
+        ifstream in(args.fingerprintLengthFile());
+        size_t res;
+        in >> res;
+        return res;
+    }
+
+    size_t loadMoleculesCount(const RunArgs &args) {
+        ifstream in(args.totalMoleculesFile());
+        size_t res;
+        in >> res;
+        return res;
+    }
+
     shared_ptr<BallTreeSearchEngine> loadBallTree(const RunArgs &args) {
         BufferedReader ballTreeReader(args.ballTreePath());
         LOG(INFO) << "Start ball tree loading";
         shared_ptr<BallTreeSearchEngine> res;
+        size_t fingerprintLength = loadFingerprintLength(args);
+        size_t moleculesCount = loadMoleculesCount(args);
         if (args.dbType() == DatabaseType::QtrRam)
-            res = make_shared<BallTreeRAMSearchEngine>(ballTreeReader, args.dbDataDirs());
+            res = make_shared<BallTreeRAMSearchEngine>(ballTreeReader, args.dbDataDirs(), fingerprintLength,
+                                                       moleculesCount);
         else {
-            res = make_shared<BallTreeDriveSearchEngine>(ballTreeReader, args.dbDataDirs());
+            res = make_shared<BallTreeDriveSearchEngine>(ballTreeReader, args.dbDataDirs(), fingerprintLength,
+                                                         moleculesCount);
         }
         LOG(INFO) << "Finish ball tree loading";
         return res;
+    }
+
+    shared_ptr<vector<Fingerprint>>
+    ballTreeToArray(const shared_ptr<BallTreeSearchEngine> &ballTree, size_t totalMolecules) {
+        auto result = make_shared<vector<Fingerprint>>(totalMolecules);
+        for (size_t leafId: ballTree->getLeafIds()) {
+            for (auto &[i, fingerprint]: ballTree->getLeafContent(leafId)) {
+                assert(i < result->size());
+                result->at(i) = fingerprint;
+            }
+        }
+        return result;
     }
 
     shared_ptr<IdConverter> loadIdConverter(const filesystem::path &idToStringDirPath) {
@@ -94,7 +125,12 @@ namespace {
     shared_ptr<SearchData> loadQtrRamSearchData(const RunArgs &args) {
         HuffmanCoder huffmanCoder = HuffmanCoder::load(args.huffmanCoderPath());
         auto loadBallTreeTask = async(launch::async, loadBallTree, cref(args));
-        auto loadCFStorageTask = async(launch::async, loadCFStorage, args.smilesTablePath());
+        auto loadCFStorageTask = [&args]() {
+            if (args.verificationStage())
+                return async(launch::async, loadCFStorage, args.smilesTablePath());
+            else
+                return async(launch::async, []() -> shared_ptr<CFStorage> { return nullptr; });
+        }();
         auto loadIdConverterTask = async(launch::async, loadIdConverter, args.idToStringDir());
 
         shared_ptr<vector<PropertiesFilter::Properties>> propertiesTablePtr = nullptr;
@@ -109,6 +145,13 @@ namespace {
         return make_shared<QtrRamSearchData>(ballTreePtr, idConverterPtr, args.ansCount(), args.threads(),
                                              args.timeLimit(), cfStoragePtr, propertiesTablePtr,
                                              args.verificationStage());
+    }
+
+    shared_ptr<SearchData> loadQtrEnumerationSearchData(const RunArgs &args) {
+        auto searchData = dynamic_pointer_cast<QtrRamSearchData>(loadQtrRamSearchData(args));
+        assert(searchData != nullptr);
+        auto ans = make_shared<QtrEnumerationSearchData>(*searchData);
+        return ans;
     }
 
     shared_ptr<SearchData> loadQtrDriveSearchData(const RunArgs &args) {
@@ -129,9 +172,10 @@ namespace {
                                                      args.verificationStage());
         }
         catch (const IndigoException &e) {
-            logErrorAndExit(e.what());
+            LOG_ERROR_AND_EXIT(e.what());
         }
     }
+
 }
 
 shared_ptr<SearchData> SearchDataLoader::load(const RunArgs &args) {
@@ -142,6 +186,8 @@ shared_ptr<SearchData> SearchDataLoader::load(const RunArgs &args) {
         return loadQtrDriveSearchData(args);
     } else if (args.dbType() == DatabaseType::BingoNoSQL) {
         return loadBingoNoSQLSearchData(args);
+    } else if (args.dbType() == DatabaseType::QtrEnumeration) {
+        return loadQtrEnumerationSearchData(args);
     }
     throw logic_error("Undefined db type");
 }

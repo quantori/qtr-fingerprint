@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
         unique_ptr<RunMode> mode = RunModeFactory::create(args, searchData);
         mode->run();
     } catch (const exception &e) {
-        logErrorAndExit(e.what());
+        LOG_ERROR_AND_EXIT(e.what());
     }
     return 0;
 }

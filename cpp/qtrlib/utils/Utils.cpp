@@ -44,13 +44,13 @@ namespace qtr {
         FLAGS_alsologtostderr = alsoLogToStderr;
     }
 
-    void logErrorAndExit(const string &message) {
-        LOG(ERROR) << message;
+    void logErrorAndExit(const string &message, const char *file, int line) {
+        LOG(ERROR) << file << ":" << line << " " << message;
         exit(-1);
     }
 
     void copyFileAndCheck(const std::filesystem::path &from, const std::filesystem::path &to) {
         if (!filesystem::copy_file(from, to))
-            logErrorAndExit("Cannot copy file from " + from.string() + " to " + to.string());
+            LOG_ERROR_AND_EXIT("Cannot copy file from " + from.string() + " to " + to.string());
     }
 } // namespace qtr

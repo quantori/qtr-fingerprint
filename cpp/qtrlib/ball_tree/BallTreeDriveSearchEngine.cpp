@@ -7,7 +7,7 @@
 using namespace std;
 
 namespace qtr {
-    vector <CIDType> BallTreeDriveSearchEngine::searchInLeaf(size_t leafId, const IndigoFingerprint &query) const {
+    vector <CIDType> BallTreeDriveSearchEngine::searchInLeaf(size_t leafId, const Fingerprint &query) const {
         vector<CIDType> result;
         for (const auto &[id, fingerprint]: FingerprintTableReader(getFingerprintTablePath(leafId))) {
             if (query <= fingerprint)
@@ -34,6 +34,13 @@ namespace qtr {
             result[it->second].emplace_back(leaf);
 
         }
+        return result;
+    }
+
+    std::vector<fingerprint_table_value_t> BallTreeDriveSearchEngine::getLeafContent(size_t leafId) const {
+        std::vector<fingerprint_table_value_t> result;
+        FingerprintTableReader reader(getFingerprintTablePath(leafId));
+        copy(reader.begin(), reader.end(), back_inserter(result));
         return result;
     }
 } // qtr

@@ -13,18 +13,17 @@ namespace qtr {
 
     using standardBitsetDataType = unsigned long long;
 
-    template<size_t S, typename T = standardBitsetDataType>
+    template<typename T = standardBitsetDataType>
     class Bitset {
         static_assert(std::is_unsigned_v<T>);
         static_assert(sizeof(T) >= sizeof(char));
 
     protected:
         static const size_t TypeSizeInBits = fromBytesToBits(sizeof(T));
-        static const size_t DataLength = divideIntegersCeil(S, TypeSizeInBits);
         static const size_t IndexShift = log2Floor(TypeSizeInBits);
         static_assert((1ull << IndexShift) == TypeSizeInBits);
-        static const size_t sizeInBytes = divideIntegersCeil(S, BIT_IN_BYTE);
-        T _data[DataLength];
+        std::vector<T> _data;
+        size_t _size{};
 
         class Proxy {
         private:
@@ -54,30 +53,40 @@ namespace qtr {
             }
         };
 
+        [[nodiscard]] size_t sizeInBytes() const {
+            return divideIntegersCeil(_size, BIT_IN_BYTE);
+        }
+
     public:
-        Bitset() {
+        explicit Bitset(size_t size) : _data(divideIntegersCeil(size, TypeSizeInBits), T(0)), _size(size) {
             reset();
         }
 
         Bitset(const Bitset &other) = default;
 
-        static constexpr size_t size() {
-            return S;
+        Bitset() = default;
+
+        [[nodiscard]] size_t size() const {
+            return _size;
         }
 
         template<typename BinaryWriter>
         void dump(BinaryWriter &writer) const {
-            writer.write((char *) _data, sizeInBytes);
+            writer.write((char *) _data.data(), sizeInBytes());
         }
 
         template<typename BinaryReader>
-        void load(BinaryReader &reader) {
-            _data[DataLength - 1] = 0; // init extra bits with zeros
-            reader.read((char *) _data, sizeInBytes);
+        void load(BinaryReader &reader, size_t size) {
+            assert(size != 0);
+            this->~Bitset();
+            new (this) Bitset(size);
+            _data.back() = 0; // init extra bits with zeros
+            reader.read((char *) _data.data(), sizeInBytes());
         }
 
         bool operator<=(const Bitset &other) const {
-            for (size_t i = 0; i < DataLength; i++) {
+            assert(_size == other._size);
+            for (size_t i = 0; i < _data.size(); i++) {
                 if (_data[i] & ~other._data[i])
                     return false;
             }
@@ -85,38 +94,37 @@ namespace qtr {
         }
 
         Bitset &reset() {
-            std::memset(_data, 0, sizeof _data);
+            std::memset(_data.data(), 0, sizeInBytes());
             return *this;
         }
 
         Bitset &set() {
-            std::memset(_data, 255, sizeof _data);
-            _data[DataLength - 1] &= T(1) << (size() % TypeSizeInBits) - 1;
+            std::memset(_data.data(), 255, sizeInBytes());
+            _data.back() &= T(1) << (size() % TypeSizeInBits) - 1;
             return *this;
         }
 
         T *data() {
-            return _data;
+            return _data.data();
         }
 
         Bitset operator|(const Bitset &other) const {
-            Bitset answer;
-            for (size_t i = 0; i < DataLength; i++) {
+            assert(_size == other._size);
+            Bitset answer(_size);
+            for (size_t i = 0; i < _data.size(); i++) {
                 answer._data[i] = _data[i] | other._data[i];
             }
             return answer;
         }
 
         bool operator==(const Bitset &other) const {
-            bool answer = true;
-            for (size_t i = 0; i < DataLength && answer; i++) {
-                answer &= (_data[i] == other._data[i]);
-            }
-            return answer;
+            assert(_size == other._size);
+            return _data == other._data;
         }
 
         Bitset &operator|=(const Bitset &other) {
-            for (size_t i = 0; i < DataLength; i++) {
+            assert(_size == other._size);
+            for (size_t i = 0; i < _data.size(); i++) {
                 _data[i] |= other._data[i];
             }
             return *this;

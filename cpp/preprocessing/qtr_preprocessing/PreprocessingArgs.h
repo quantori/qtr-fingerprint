@@ -14,6 +14,8 @@ ABSL_DECLARE_FLAG(bool, properties);
 
 ABSL_DECLARE_FLAG(std::string, molIdType);
 
+ABSL_DECLARE_FLAG(bool, fingerprintProvided);
+
 namespace qtr {
 
     enum class MolIdType {
@@ -32,7 +34,7 @@ namespace qtr {
 
         static inline const std::unordered_map<std::string, MolIdType> _strToMolIdType =
                 {{FLAG_NAME(SMILES), MolIdType::SMILES},
-                 {FLAG_NAME(UID), MolIdType::UID}};
+                 {FLAG_NAME(UID),    MolIdType::UID}};
 
         const static inline auto strToMolIdType = makeStringToEnumFunction(_strToMolIdType, MolIdType::BadType);
 
@@ -43,6 +45,8 @@ namespace qtr {
     ADD_ARGUMENT(std::filesystem::path, destDir, "");
 
     ADD_ARGUMENT(bool, properties, true);
+
+    ADD_ARGUMENT(bool, fingerprintProvided, false);
 
     ADD_ARGUMENT_WITH_PARSER(MolIdType, molIdType, MolIdType::BadType, strToMolIdType);
 
@@ -56,6 +60,7 @@ namespace qtr {
             }
             if (preprocessingType() == PreprocessingType::CSV) {
                 parse_properties();
+                parse_fingerprintProvided();
             }
         }
 
@@ -73,6 +78,10 @@ namespace qtr {
 
         [[nodiscard]] inline std::filesystem::path propertyTables() const {
             return destDir() / "propertyTables";
+        }
+
+        [[nodiscard]] inline std::filesystem::path fingerprintLengthFile() const {
+            return destDir() / "fingerprintLength";
         }
     };
 

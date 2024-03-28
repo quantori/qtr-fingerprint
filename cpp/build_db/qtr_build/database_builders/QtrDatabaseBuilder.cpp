@@ -98,8 +98,15 @@ namespace qtr {
 
             distributeFingerprintTables(args);
 
+            size_t fingerprintLength = [&]() {
+                ifstream in(args.fingerprintLengthDestFile());
+                size_t length;
+                in >> length;
+                return length;
+            }();
+
             BallTreeBuilder ballTree(args.treeDepth(), args.parallelizeDepth(), args.dbDataDirs(),
-                                     MaxDispersionBitSelector());
+                                     MaxDispersionBitSelector(), fingerprintLength);
             ofstream ballTreeWriter(args.ballTreePath());
             ballTree.dumpNodes(ballTreeWriter);
 
@@ -281,9 +288,14 @@ namespace qtr {
             exit(-1);
         }
 
+        filesystem::copy_file(args.fingerprintLengthSourceFile(), args.fingerprintLengthDestFile());
+
         buildBallTreeTask.wait();
         copyIdToStrTablesTask.wait();
         size_t moleculesNumber = processTablesTask.get();
+
+        ofstream moleculesNumberOut(args.totalMoleculesFile());
+        moleculesNumberOut << moleculesNumber;
 
         LOG(INFO) << "Molecules number: " << moleculesNumber;
     }

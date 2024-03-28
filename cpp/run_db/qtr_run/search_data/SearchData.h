@@ -14,8 +14,15 @@ namespace qtr {
 
         SearchData(size_t ansCount, size_t threadCount, double timeLimit, bool verificationStage);
 
+        struct Query {
+            std::unique_ptr<std::string> smiles;
+            std::unique_ptr<Fingerprint> fingerprint;
+
+            [[nodiscard]] Fingerprint getFingerprint() const;
+        };
+
         virtual std::unique_ptr<QueryData<CIDType>>
-        search(const std::string &querySmiles, const PropertiesFilter::Bounds &queryBounds) = 0;
+        search(const SearchData::Query &query, const PropertiesFilter::Bounds &queryBounds) = 0;
 
     protected:
         size_t ansCount;

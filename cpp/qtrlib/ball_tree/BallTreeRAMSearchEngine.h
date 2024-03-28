@@ -12,9 +12,13 @@ namespace qtr {
     public:
         template<typename BinaryReader>
         BallTreeRAMSearchEngine(BinaryReader &nodesReader,
-                                std::vector<std::filesystem::path> dataDirectories);
+                                std::vector<std::filesystem::path> dataDirectories,
+                                size_t fingerprintLength, size_t totalFingerprints);
 
-        [[nodiscard]] std::vector<CIDType> searchInLeaf(size_t leafId, const IndigoFingerprint &query) const override;
+        [[nodiscard]] std::vector<CIDType> searchInLeaf(size_t leafId, const Fingerprint &query) const override;
+
+        [[nodiscard]] std::vector<fingerprint_table_value_t> getLeafContent(size_t leafId) const override;
+
 
     protected:
         [[nodiscard]] std::map<std::string, std::vector<std::pair<size_t, std::filesystem::path>>>
@@ -30,8 +34,10 @@ namespace qtr {
 
     template<typename BinaryReader>
     BallTreeRAMSearchEngine::BallTreeRAMSearchEngine(BinaryReader &nodesReader,
-                                                     std::vector<std::filesystem::path> dataDirectories)
-            :BallTreeSearchEngine(nodesReader, dataDirectories), _buckets(1ull << _depth) {
+                                                     std::vector<std::filesystem::path> dataDirectories,
+                                                     size_t fingerprintLength, size_t totalFingerprints)
+            :BallTreeSearchEngine(nodesReader, dataDirectories, fingerprintLength, totalFingerprints),
+             _buckets(1ull << _depth) {
         std::vector<std::future<void>> tasks;
         auto groupedLeafFiles = groupedByDriveLeafFiles();
         for (const auto &[_, leafs]: groupedLeafFiles) {

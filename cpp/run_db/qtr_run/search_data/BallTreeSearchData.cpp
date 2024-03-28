@@ -1,4 +1,4 @@
-#include "QtrSearchData.h"
+#include "BallTreeSearchData.h"
 
 #include "IndigoException.h"
 #include "QtrRamSearchData.h"
@@ -19,6 +19,7 @@ namespace qtr {
         unique_ptr <ByIdAnswerFilter>
         createRamFilter(const QtrRamSearchData &searchData, const std::string &querySmiles,
                         const PropertiesFilter::Bounds queryBounds) {
+            assert(searchData.cfStorage != nullptr);
             auto indigoFilter = make_unique<IndigoCFRamFilter>(searchData.cfStorage, querySmiles);
             unique_ptr<ByIdAnswerFilter> filter = nullptr;
             if (searchData.propertiesTable != nullptr) {
@@ -41,7 +42,7 @@ namespace qtr {
             return std::move(filter);
         }
 
-        unique_ptr <ByIdAnswerFilter> createFilter(const QtrSearchData &searchData, const std::string &querySmiles,
+        unique_ptr <ByIdAnswerFilter> createFilter(const BallTreeSearchData &searchData, const std::string &querySmiles,
                                                    const PropertiesFilter::Bounds queryBounds) {
             unique_ptr<ByIdAnswerFilter> filter;
             if (dynamic_cast<const QtrRamSearchData *>(&searchData) != nullptr) {
@@ -57,31 +58,33 @@ namespace qtr {
         }
     }
 
-    QtrSearchData::QtrSearchData(shared_ptr<const BallTreeSearchEngine> ballTree,
-                                 shared_ptr<const IdConverter> idConverter, size_t ansCount, size_t threadCount,
-                                 double timeLimit, bool verificationStage) :
+    BallTreeSearchData::BallTreeSearchData(shared_ptr<const BallTreeSearchEngine> ballTree,
+                                           shared_ptr<const IdConverter> idConverter, size_t ansCount,
+                                           size_t threadCount,
+                                           double timeLimit, bool verificationStage) :
             SearchData(ansCount, threadCount, timeLimit, verificationStage),
             ballTree(std::move(ballTree)), idConverter(std::move(idConverter)) {}
 
-    unique_ptr<QueryData<CIDType>>
-    QtrSearchData::search(const string &querySmiles, const PropertiesFilter::Bounds &queryBounds) {
-        LOG(INFO) << "Start search: " << querySmiles;
-        IndigoFingerprint fingerprint;
-        try {
-            fingerprint = indigoFingerprintFromSmiles(querySmiles);
+    unique_ptr <QueryData<CIDType>>
+    BallTreeSearchData::search(const SearchData::Query &query,
+                               const PropertiesFilter::Bounds &queryBounds) {
+        assert(query.smiles != nullptr);
+        LOG(INFO) << "Start search: " << *query.smiles;
+        Fingerprint fingerprint = query.getFingerprint();
+        if (fingerprint.size() == 0) {
+            return nullptr;
         }
-        catch (const std::exception &exception) {
-            LOG(WARNING) << "Skip query:" << exception.what();
-            return {nullptr};
-        }
-        auto filter = [&]() -> unique_ptr<ByIdAnswerFilter> {
-           if (verificationStage)
-               return createFilter(*this, querySmiles, queryBounds);
-           else
-               return make_unique<AlwaysTrueFilter<CIDType>>();
-        }();
-        auto queryData = make_unique<BallTreeQueryData>(ansCount, timeLimit, fingerprint, std::move(filter));
+        auto filter = getFilter(query, queryBounds);
+        auto queryData = make_unique<QueryDataWithFingerprint>(ansCount, timeLimit, fingerprint, std::move(filter));
         ballTree->search(*queryData, threadsCount);
         return std::move(queryData);
+    }
+
+    std::unique_ptr<ByIdAnswerFilter>
+    BallTreeSearchData::getFilter(const SearchData::Query &query, const PropertiesFilter::Bounds &queryBounds) const {
+        if (verificationStage) {
+            return createFilter(*this, *query.smiles, queryBounds);
+        } else
+            return make_unique<AlwaysTrueFilter<CIDType>>();
     }
 } // qtr

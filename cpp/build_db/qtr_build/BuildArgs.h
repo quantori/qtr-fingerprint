@@ -45,16 +45,17 @@ namespace qtr {
             parseAndCheck_sourceDir();
             parseAndCheck_destDirs();
             parse_properties();
-            if (dbType() == DatabaseType::QtrDrive || dbType() == DatabaseType::QtrRam) {
+            if (dbType() == DatabaseType::QtrDrive || dbType() == DatabaseType::QtrRam ||
+                dbType() == DatabaseType::QtrEnumeration) {
                 parseAndCheck_otherDestDir();
                 parseAndCheck_parallelizeDepth();
                 parseAndCheck_treeDepth();
             } else if (dbType() == DatabaseType::BingoNoSQL) {
                 if (properties()) {
-                    logErrorAndExit("Cannot build BingoNoSQL database with properties (Not implemented).");
+                    LOG_ERROR_AND_EXIT("Cannot build BingoNoSQL database with properties (Not implemented).");
                 }
             } else {
-                logErrorAndExit("A case that should not have been executed has been executed");
+                LOG_ERROR_AND_EXIT("A case that should not have been executed has been executed");
             }
         }
 
@@ -72,6 +73,10 @@ namespace qtr {
 
         [[nodiscard]] inline std::filesystem::path propertyTablesSourceDir() const {
             return sourceDir() / "propertyTables";
+        }
+
+        [[nodiscard]] inline std::filesystem::path fingerprintLengthSourceFile() const {
+            return sourceDir() / "fingerprintLength";
         }
 
         [[nodiscard]] inline std::filesystem::path dbOtherDataPath() const {
@@ -98,12 +103,20 @@ namespace qtr {
             return dbOtherDataPath() / "propertyTable";
         }
 
+        [[nodiscard]] inline std::filesystem::path fingerprintLengthDestFile() const {
+            return dbOtherDataPath() / "fingerprintLength";
+        }
+
         [[nodiscard]] inline std::vector<std::filesystem::path> dbDataDirs() const {
             std::vector<std::filesystem::path> res;
             for (auto &dir: destDirs()) {
                 res.emplace_back(dir / dbName());
             }
             return res;
+        }
+
+        [[nodiscard]] inline std::filesystem::path totalMoleculesFile() const {
+            return dbOtherDataPath() / "totalMolecules";
         }
     };
 }

@@ -27,7 +27,7 @@ TEST_F(FingerprintTestFixture, SIZE) {
 }
 
 TEST_F(FingerprintTestFixture, CONVERSION) {
-    qtr::IndigoFingerprint fingerprint;
+    qtr::Fingerprint fingerprint(IndigoFingerprintSize);
     fingerprint.setBytes(_data);
     std::vector<std::byte> data = fingerprint.getBytes();
     compareTwoVectors(data, _data);

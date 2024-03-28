@@ -115,6 +115,8 @@ namespace qtr {
 
     template<typename AnsType>
     bool QueryData<AnsType>::checkTimeOut() {
+        if (_timeLimit == 0)
+            return false;
         if (_wasTimeOut)
             return true;
         auto now = std::chrono::steady_clock::now();

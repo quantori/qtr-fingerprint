@@ -32,8 +32,9 @@ namespace qtr {
         void deleteNodeFromFilesystem(size_t nodeId) const;
 
     public:
-        BallTreeBuilder(size_t depth, size_t parallelizationDepth, std::vector<std::filesystem::path> dataDirectories,
-                        const BitSelector &bitSelector);
+        BallTreeBuilder(size_t depth, size_t parallelizationDepth,
+                        std::vector<std::filesystem::path> dataDirectories, const BitSelector &bitSelector,
+                        size_t fingerprintLength);
 
         template<typename BinaryWriter>
         void dumpNodes(BinaryWriter &writer);

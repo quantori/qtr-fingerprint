@@ -68,6 +68,10 @@ namespace qtr {
                 filesStat.emplace_back(task.get());
                 summaryStat += filesStat.back();
             }
+            for (auto &stat: filesStat) {
+                if (stat.size() == 0)
+                    stat = ColumnsStatistic(summaryStat.size());
+            }
             return {filesStat, summaryStat};
         }
 
@@ -122,8 +126,9 @@ namespace qtr {
     } // namespace
 
     BallTreeBuilder::BallTreeBuilder(size_t depth, size_t parallelizationDepth,
-                                     std::vector<std::filesystem::path> dataDirectories,
-                                     const BitSelector &bitSelector) : BallTree(std::move(dataDirectories)) {
+                                     std::vector<std::filesystem::path> dataDirectories, const BitSelector &bitSelector,
+                                     size_t fingerprintLength) : BallTree(std::move(dataDirectories),
+                                                                          fingerprintLength) {
         _depth = depth;
         _nodes.resize((1ull << (depth + 1)) - 1);
         buildTree(depth, parallelizationDepth, bitSelector);
@@ -256,11 +261,17 @@ namespace qtr {
 
     void BallTreeBuilder::calculateCentroid(size_t nodeId) {
         if (isLeaf(nodeId)) {
-            _nodes[nodeId].centroid.reset();
+            auto &centroid = _nodes[nodeId].centroid;
+            assert(centroid.size() == 0);
+//            centroid.reset();
+//            _nodes[nodeId].centroid.reset();
             std::vector<std::filesystem::path> nodeFiles = getNodeFiles(nodeId);
             assert(nodeFiles.size() == 1);
             for (const auto &[_, fingerprint]: FingerprintTableReader(nodeFiles[0])) {
-                _nodes[nodeId].centroid |= fingerprint;
+                if (centroid.size() == 0)
+                    centroid = fingerprint;
+                else
+                    _nodes[nodeId].centroid |= fingerprint;
             }
         } else {
             calculateCentroid(leftChild(nodeId));

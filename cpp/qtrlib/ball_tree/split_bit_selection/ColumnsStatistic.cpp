@@ -13,7 +13,7 @@ namespace qtr {
         }
     }
 
-    ColumnsStatistic::ColumnsStatistic() : _zerosCount(IndigoFingerprint::size(), 0), _fingerprintsCount(0) {}
+    ColumnsStatistic::ColumnsStatistic(size_t columnsCount) : _zerosCount(columnsCount, 0), _fingerprintsCount(0) {}
 
     ColumnsStatistic::ColumnsStatistic(const std::filesystem::path &filePath) : ColumnsStatistic() {
         collectStatistic(filePath);
@@ -38,7 +38,11 @@ namespace qtr {
     void ColumnsStatistic::collectStatistic(const std::filesystem::path &filePath) {
         FingerprintTableReader reader(filePath);
         for (const auto &[_, fingerprint]: reader) {
-            for (size_t i = 0; i < IndigoFingerprint::size(); i++) {
+            if (_zerosCount.empty())
+                _zerosCount.resize(fingerprint.size());
+            else
+                assert(_zerosCount.size() == fingerprint.size());
+            for (size_t i = 0; i < columns(); i++) {
                 _zerosCount[i] += fingerprint[i];
             }
             _fingerprintsCount++;
@@ -56,11 +60,26 @@ namespace qtr {
     }
 
     ColumnsStatistic &ColumnsStatistic::operator+=(const ColumnsStatistic &otherStatistic) {
+        if (_zerosCount.empty()) {
+            return *this = otherStatistic;
+        }
+        if (otherStatistic._zerosCount.empty()) {
+            return *this;
+        }
+        assert(columns() == otherStatistic.columns());
         _fingerprintsCount += otherStatistic._fingerprintsCount;
-        for (size_t i = 0; i < IndigoFingerprint::size(); i++) {
+        for (size_t i = 0; i < columns(); i++) {
             _zerosCount[i] += otherStatistic._zerosCount[i];
         }
         return *this;
+    }
+
+    size_t ColumnsStatistic::columns() const {
+        return _zerosCount.size();
+    }
+
+    ColumnsStatistic::ColumnsStatistic() : ColumnsStatistic(0) {
+
     }
 
 

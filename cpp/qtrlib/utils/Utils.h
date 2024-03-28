@@ -195,7 +195,9 @@ namespace qtr {
         return oss.str();
     }
 
-    [[noreturn]] void logErrorAndExit(const std::string &message);
+#define LOG_ERROR_AND_EXIT(message) logErrorAndExit(message, __FILE__, __LINE__)
+
+    [[noreturn]] void logErrorAndExit(const std::string &message, const char *file, int line);
 
     void copyFileAndCheck(const std::filesystem::path &from, const std::filesystem::path &to);
 } // namespace qtr

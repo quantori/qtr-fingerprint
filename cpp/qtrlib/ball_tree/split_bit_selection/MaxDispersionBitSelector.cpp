@@ -16,7 +16,7 @@ namespace qtr {
     size_t MaxDispersionBitSelector::operator()(const ColumnsStatistic &statistic) const {
         size_t bestBit = 0;
         size_t bestBitVal = getBitValToMinimize(statistic, bestBit);
-        for (size_t i = 1; i < IndigoFingerprint::size(); i++) {
+        for (size_t i = 1; i < statistic.columns(); i++) {
             size_t iVal = getBitValToMinimize(statistic, i);
             if (iVal < bestBitVal) {
                 bestBit = i;

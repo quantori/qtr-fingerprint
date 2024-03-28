@@ -15,6 +15,7 @@ ABSL_DECLARE_FLAG(double, timeLimit);
 ABSL_DECLARE_FLAG(std::string, summaryFile);
 ABSL_DECLARE_FLAG(bool, properties);
 ABSL_DECLARE_FLAG(bool, verificationStage);
+ABSL_DECLARE_FLAG(bool, fingerprintProvided);
 
 namespace qtr {
 
@@ -52,6 +53,8 @@ namespace qtr {
 
     ADD_ARGUMENT(bool, verificationStage, true);
 
+    ADD_ARGUMENT(bool, fingerprintProvided, false);
+
     public:
         RunArgs(int argc, char *argv[]) : ArgsBase(argc, argv) {
             parseAndCheck_dbType();
@@ -63,29 +66,43 @@ namespace qtr {
             parseAndCheck_timeLimit();
             parse_properties();
             parse_verificationStage();
+            parse_fingerprintProvided();
 
             if (dbType() == DatabaseType::QtrRam ||
-                dbType() == DatabaseType::QtrDrive) {
+                dbType() == DatabaseType::QtrDrive ||
+                dbType() == DatabaseType::QtrEnumeration) {
                 parseAndCheck_otherDataDir();
+            }
+
+            if (dbType() == DatabaseType::QtrEnumeration) {
+                if (verificationStage())
+                    LOG_ERROR_AND_EXIT("Verification stage is not implemented for QtrEnumeration");
+                if (properties())
+                    LOG_ERROR_AND_EXIT("Properties are not supported for QtrEnumeration");
+            }
+            if (dbType() == DatabaseType::QtrEnumeration && verificationStage()) {
             }
 
             if (mode() == RunMode::Type::FromFile) {
                 parseAndCheck_queriesFile();
                 parse_summaryFile();
             }
+            if (mode() != RunMode::Type::FromFile && fingerprintProvided()) {
+                LOG_ERROR_AND_EXIT("fingerprintProvided option is supported for FromFile mode only");
+            }
 
             if (dbType() == DatabaseType::BingoNoSQL) {
                 if (properties()) {
-                    logErrorAndExit("Only databases without properties are supported for BingoNoSQL");
+                    LOG_ERROR_AND_EXIT("Only databases without properties are supported for BingoNoSQL");
                 }
                 if (threads() != 1) {
-                    logErrorAndExit("Only single-threaded run is supported for BingoNoSQL");
+                    LOG_ERROR_AND_EXIT("Only single-threaded run is supported for BingoNoSQL");
                 }
                 if (dataDirs().size() != 1) {
-                    logErrorAndExit("Multiple data folders is not supported for BingoNoSQL");
+                    LOG_ERROR_AND_EXIT("Multiple data folders is not supported for BingoNoSQL");
                 }
                 if (!verificationStage()) {
-                    logErrorAndExit("verificationStage=false is not supported for BingoNoSQL");
+                    LOG_ERROR_AND_EXIT("verificationStage=false is not supported for BingoNoSQL");
                 }
             }
         }
@@ -120,6 +137,14 @@ namespace qtr {
 
         [[nodiscard]] inline std::filesystem::path propertyTablePath() const {
             return dbOtherDataDir() / "propertyTable";
+        }
+
+        [[nodiscard]] inline std::filesystem::path fingerprintLengthFile() const {
+            return dbOtherDataDir() / "fingerprintLength";
+        }
+
+        [[nodiscard]] inline std::filesystem::path totalMoleculesFile() const {
+            return dbOtherDataDir() / "totalMolecules";
         }
     };
 }

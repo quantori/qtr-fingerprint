@@ -6,11 +6,11 @@
 #include "CFStorage.h"
 
 #include "SmilesTable.h"
-#include "QtrSearchData.h"
+#include "BallTreeSearchData.h"
 
 namespace qtr {
 
-    class QtrRamSearchData : public QtrSearchData {
+    class QtrRamSearchData : public BallTreeSearchData {
     public:
 
         QtrRamSearchData(std::shared_ptr<const BallTreeSearchEngine> ballTree,

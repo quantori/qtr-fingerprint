@@ -21,13 +21,17 @@ namespace qtr {
     BallTreeRAMSearchEngine::loadLeafFiles(const std::vector<std::pair<size_t, std::filesystem::path>> &leafsList) {
         LOG(INFO) << "Start loading leaf content from drive " << leafsList.front().second.parent_path().parent_path();
         for (auto &[leafId, leafFilePath]: leafsList) {
+            auto& bucket = _buckets[leafNumberById(leafId)];
             FingerprintTableReader reader(leafFilePath / ("data" + fingerprintTableExtension));
-            std::copy(reader.begin(), reader.end(), std::back_inserter(_buckets[leafNumberById(leafId)]));
+            for (const auto& [id, fingerprint] : reader) {
+                assert(id < _totalFingerprints);
+                bucket.emplace_back(id, fingerprint);
+            }
         }
         LOG(INFO) << "Finish loading leaf content from drive " << leafsList.front().second.parent_path().parent_path();
     }
 
-    std::vector<CIDType> BallTreeRAMSearchEngine::searchInLeaf(size_t leafId, const IndigoFingerprint &query) const {
+    std::vector<CIDType> BallTreeRAMSearchEngine::searchInLeaf(size_t leafId, const Fingerprint &query) const {
         ProfileScope("searchInLeaf");
         std::vector<CIDType> answers;
         for (const auto &[id, fingerprint]: _buckets[leafNumberById((leafId))]) {
@@ -48,6 +52,10 @@ namespace qtr {
             result[i % result.size()].emplace_back(shuffledLeaves[i]);
         }
         return std::move(result);
+    }
+
+    std::vector<fingerprint_table_value_t> BallTreeRAMSearchEngine::getLeafContent(size_t leafId) const {
+        return _buckets.at(leafNumberById((leafId)));
     }
 
 } // qtr
