@@ -29,5 +29,7 @@ RUN conda install -c conda-forge libstdcxx-ng
 
 ENV RDBASE /src/cpp/third_party/rdkit
 
+WORKDIR /src/cpp/third_party/rdkit
+
 
 SHELL ["/bin/bash", "-c"]
