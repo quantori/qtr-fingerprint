@@ -58,7 +58,7 @@ namespace {
         while (std::getline(in, line)) {
             auto lineElements = splitString(line);
             size_t expectedElements = 2 + size_t(args.properties()) * PropertiesFilter::Properties().size() +
-                                      size_t(args.fingerprintProvided());
+                                      size_t(args.fingerprintType() == qtr::FingerprintType::Custom);
             if (lineElements.size() != expectedElements) {
                 LOG(WARNING) << "Skip line with invalid (" << lineElements.size()
                              << ") number of arguments elements (expected" << expectedElements << ": " << line;
@@ -84,12 +84,16 @@ namespace {
 
             try {
                 Fingerprint fingerprint = [&]() {
-                    if (args.fingerprintProvided()) {
+                    if (args.fingerprintType() == qtr::FingerprintType::Custom) {
                         size_t fingerprintIndex = 2 + size_t(args.properties()) * PropertiesFilter::Properties().size();
                         std::string fingerprintStr = lineElements[fingerprintIndex];
                         return Fingerprint(fingerprintStr);
-                    } else {
+                    } else if (args.fingerprintType() == qtr::FingerprintType::Indigo) {
                         return indigoFingerprintFromSmiles(smiles);
+                    } else if (args.fingerprintType() == qtr::FingerprintType::RDKit) {
+                        return rdkitFingerprintFromSmiles(smiles);
+                    } else {
+                        throw std::logic_error("Undefined fingerprint type specified");
                     }
                 }();
 

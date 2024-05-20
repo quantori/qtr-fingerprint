@@ -46,6 +46,11 @@ namespace qtr {
         setBytes(f.data());
     }
 
+//    Fingerprint::Fingerprint(std::unique_ptr<ExplicitBitVect> f) {
+    // TODO
+
+//    }
+
     Fingerprint cutFullIndigoFingerprint(const Fingerprint &fullFingerprint) {
         assert(fullFingerprint.size() == FullIndigoFingerprintSize);
         Fingerprint fingerprint(IndigoFingerprintSize);
@@ -80,5 +85,13 @@ namespace qtr {
         Fingerprint fullIndigoFingerprint(subFingerprint);
         Fingerprint cutFingerprint = cutFullIndigoFingerprint(fullIndigoFingerprint);
         return cutFingerprint;
+    }
+
+    Fingerprint rdkitFingerprintFromSmiles(const std::string &smiles) {
+        // TODO
+        //        std::shared_ptr<RDKit::ROMol> mol3( RDKit::SmilesToMol( "Cc1cccc" ) );
+        //        std::unique_ptr<ExplicitBitVect> mfp(PatternFingerprintMol(*mol));
+        //        Cast ExplicitBitVect to Fingerprint
+        return Fingerprint();
     }
 };

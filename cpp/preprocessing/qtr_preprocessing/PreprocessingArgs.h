@@ -14,7 +14,7 @@ ABSL_DECLARE_FLAG(bool, properties);
 
 ABSL_DECLARE_FLAG(std::string, molIdType);
 
-ABSL_DECLARE_FLAG(bool, fingerprintProvided);
+ABSL_DECLARE_FLAG(std::string, fingerprintType);
 
 namespace qtr {
 
@@ -22,6 +22,13 @@ namespace qtr {
         BadType,
         SMILES,
         UID
+    };
+
+    enum class FingerprintType {
+        BadType,
+        Indigo,
+        RDKit,
+        Custom
     };
 
     class PreprocessingArgs : public ArgsBase {
@@ -38,6 +45,14 @@ namespace qtr {
 
         const static inline auto strToMolIdType = makeStringToEnumFunction(_strToMolIdType, MolIdType::BadType);
 
+        static inline const std::unordered_map<std::string, FingerprintType> _strToFingerprintType =
+                {{FLAG_NAME(Indigo), FingerprintType::Indigo},
+                 {FLAG_NAME(RDKit),  FingerprintType::RDKit},
+                 {FLAG_NAME(Custom), FingerprintType::Custom}};
+
+        const static inline auto strToFingerprintType = makeStringToEnumFunction(_strToFingerprintType,
+                                                                                 FingerprintType::BadType);
+
     ADD_ARGUMENT_WITH_PARSER(PreprocessingType, preprocessingType, PreprocessingType::BadType, strToPreprocessingType);
 
     ADD_ARGUMENT(std::filesystem::path, sourceDir, "");
@@ -46,7 +61,8 @@ namespace qtr {
 
     ADD_ARGUMENT(bool, properties, true);
 
-    ADD_ARGUMENT(bool, fingerprintProvided, false);
+    ADD_ARGUMENT_WITH_PARSER(FingerprintType, fingerprintType, FingerprintType::BadType, strToFingerprintType);
+
 
     ADD_ARGUMENT_WITH_PARSER(MolIdType, molIdType, MolIdType::BadType, strToMolIdType);
 
@@ -60,7 +76,7 @@ namespace qtr {
             }
             if (preprocessingType() == PreprocessingType::CSV) {
                 parse_properties();
-                parse_fingerprintProvided();
+                parseAndCheck_fingerprintType();
             }
         }
 

@@ -87,3 +87,6 @@ ABSL_FLAG(bool, verificationStage, true,
 ABSL_FLAG(bool, fingerprintProvided, false,
           "True if fingerprint are provided in CSV file (for " FLAG_NAME(CSV) " preprocessing type only). "
                                                                                "Otherwise IndigoFingerprint will be used");
+
+ABSL_FLAG(std::string, fingerprintType, "", "Type of fingerprint to be generated: " FLAG_NAME(Indigo) " or " FLAG_NAME(RDKit)
+            ". Specify " FLAG_NAME(Custom) " if fingerprint is provided");
