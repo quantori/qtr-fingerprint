@@ -176,6 +176,38 @@ namespace {
         }
     }
 
+
+    shared_ptr<SearchData> loadRDKitSearchData(const RunArgs &args) {
+        LOG(INFO) << "Start CFStorage table loading";
+        auto result = make_shared<RDKit::SubstructLibrary>();
+        size_t counter = 0;
+        for (const auto &[id, smiles]: StringTableReader(args.smilesTablePath())) {
+            try {
+                // TODO
+                //  load mol from smiles
+                //  add it to substruct lirary -> That is it
+//                BufferScanner scanner(smiles.c_str(), smiles.size(), false);
+//                SmilesLoader loader(scanner);
+//                Molecule molecule;
+//                loader.loadMolecule(molecule);
+//                molecule.aromatize(AromaticityOptions());
+//                bingo::IndexMolecule indexMolecule(molecule, AromaticityOptions());
+//                auto &cfArr = result->Add(id, std::move(Array<char>()));
+//                indexMolecule.buildCfString(cfArr);
+                counter++;
+            }
+            catch (const std::exception &e) {
+                LOG_ERROR_AND_EXIT(e.what());
+            }
+            if (counter % 100000 == 0) {
+                LOG(INFO) << "CFStorage loading: processed " << counter << " molecules";
+            }
+        }
+        // TODO: return RDKitSearchData with substruct library inside
+        LOG(INFO) << "Finish CFStorage table loading";
+        return result;
+    }
+
 }
 
 shared_ptr<SearchData> SearchDataLoader::load(const RunArgs &args) {
@@ -188,6 +220,8 @@ shared_ptr<SearchData> SearchDataLoader::load(const RunArgs &args) {
         return loadBingoNoSQLSearchData(args);
     } else if (args.dbType() == DatabaseType::QtrEnumeration) {
         return loadQtrEnumerationSearchData(args);
+    } else if (args.dbType() == DatabaseType::RDKit) {
+        return loadRDKitSearchData(args);
     }
     throw logic_error("Undefined db type");
 }

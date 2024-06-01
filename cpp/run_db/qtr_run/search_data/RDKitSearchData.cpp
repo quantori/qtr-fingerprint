@@ -37,22 +37,21 @@ namespace qtr {
     unique_ptr <QueryData<CIDType>>
     RDKitSearchData::search(const SearchData::Query &query, const PropertiesFilter::Bounds &) {
         // TODO: rewrite for RDKit
-//        assert(query.smiles != nullptr);
-//        assert(query.fingerprint == nullptr);
-//        LOG(INFO) << "Start search: " << *query.smiles;
-//        unique_ptr<IndigoQueryMolecule> molecule = nullptr;
-//        try {
-//            molecule = make_unique<IndigoQueryMolecule>(db.session->loadQueryMolecule(*query.smiles));
-//            molecule->aromatize();
-//        }
-//        catch (const IndigoException &e) {
+        assert(query.smiles != nullptr);
+        assert(query.fingerprint == nullptr);
+        LOG(INFO) << "Start search: " << *query.smiles;
+//        shared_ptr<RDKit::ROMol> molecule = nullptr;
+        try {
+//            molecule = shared_ptr<RDKit::ROMol>(RDKit::SmilesToMol(*query.smiles));
+        }
+        catch (const std::exception &e) {
 //            LOG(ERROR) << "Cannot parse smiles: " << *query.smiles << " (" << e.what() << ")";
 //            return nullptr;
-//        }
+        }
 //
-//        auto queryData = make_unique<QueryData<CIDType>>(ansCount, timeLimit, make_unique<AlwaysTrueFilter<CIDType>>());
+        auto queryData = make_unique<QueryData<CIDType>>(ansCount, timeLimit, make_unique<AlwaysTrueFilter<CIDType>>());
 //        queryData->addTask(std::async(launch::async, searchInRDKitDB, ref(*queryData), ansCount, std::ref(db),
-//                                      std::move(*molecule)));
-//        return std::move(queryData);
+//                                      std::move(molecule)));
+        return std::move(queryData);
     }
 } // qtr
