@@ -1,8 +1,6 @@
 set(CMAKE_CXX_STANDARD 20)
 find_package(OpenMP REQUIRED)
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/AddRDKit.cmake)
-
 add_executable(playground main.cpp)
 target_include_directories(playground
         PUBLIC .

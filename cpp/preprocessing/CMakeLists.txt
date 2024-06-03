@@ -13,7 +13,8 @@ target_include_directories(${This}
         )
 
 target_link_directories(${This} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../build/lib)
-target_link_libraries(${This} qtr_preprocessing ${RDKit_LIBS})
+target_link_libraries(${This} qtr_preprocessing)
+target_link_libraries(${This} ${LIBS} ${RDKit_LIBS})
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/SetOutputDirectory.cmake)
 
