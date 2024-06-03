@@ -1,5 +1,9 @@
 #include "Fingerprint.h"
 
+#include "GraphMol/GraphMol.h"
+#include "GraphMol/SmilesParse/SmilesParse.h"
+#include <GraphMol/Fingerprints/Fingerprints.h>
+
 namespace qtr {
 
     Fingerprint::Fingerprint(size_t size) : Bitset<>(size) {}
@@ -46,10 +50,11 @@ namespace qtr {
         setBytes(f.data());
     }
 
-//    Fingerprint::Fingerprint(std::unique_ptr<ExplicitBitVect> f) {
-    // TODO
-
-//    }
+    Fingerprint::Fingerprint(std::unique_ptr<ExplicitBitVect> f): Bitset<>(f->getNumBits()) {
+        for (size_t i = 0; i < f->getNumBits(); i++) {
+            (*this)[i] = f->getBit(i);
+        }
+    }
 
     Fingerprint cutFullIndigoFingerprint(const Fingerprint &fullFingerprint) {
         assert(fullFingerprint.size() == FullIndigoFingerprintSize);
@@ -88,10 +93,8 @@ namespace qtr {
     }
 
     Fingerprint rdkitFingerprintFromSmiles(const std::string &smiles) {
-        // TODO
-        //        std::shared_ptr<RDKit::ROMol> mol3( RDKit::SmilesToMol( "Cc1cccc" ) );
-        //        std::unique_ptr<ExplicitBitVect> mfp(PatternFingerprintMol(*mol));
-        //        Cast ExplicitBitVect to Fingerprint
-        return Fingerprint();
+        std::shared_ptr<RDKit::ROMol> mol(RDKit::SmilesToMol(smiles));
+        std::unique_ptr<ExplicitBitVect> mfp(RDKit::PatternFingerprintMol(*mol));
+        return Fingerprint(std::move(mfp));
     }
 };

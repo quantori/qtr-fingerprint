@@ -10,6 +10,7 @@ file(GLOB_RECURSE ${This}-sources
         "*.hpp"
         "*.cpp")
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/AddRDKit.cmake)
 
 add_library(${This} STATIC ${${This}-sources})
 

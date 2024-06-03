@@ -20,6 +20,7 @@ SET(ABSL_PROPAGATE_CXX_STD ON)
 # turn off GTEST because something wrong with GMOCK inside my docker  
 SET(WITH_GTEST OFF)
 
+include(cmake/AddRDKit.cmake)
 
 add_subdirectory(run_db)
 add_subdirectory(run_db/qtr_run)
