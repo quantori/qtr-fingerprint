@@ -13,17 +13,32 @@ using namespace std;
 using namespace qtr;
 
 namespace {
+    std::string strip(const std::string& input) {
+        size_t start = 0;
+        size_t end = input.length();
+        auto is_special_char = [](char c) {
+            return std::isspace(c) || c == '\n' || c == '\t' || c == '\r';
+        };
+        while (start < end && is_special_char(input[start])) {
+            ++start;
+        }
+        while (end > start && is_special_char(input[end - 1])) {
+            --end;
+        }
+        return input.substr(start, end - start);
+    }
+
     std::vector<std::string> splitString(const std::string &str) {
         static const char delimiter = '\t';
         std::vector<std::string> substrings;
         std::size_t start = 0;
         std::size_t end = str.find(delimiter);
         while (end != std::string::npos) {
-            substrings.push_back(str.substr(start, end - start));
+            substrings.push_back(strip(str.substr(start, end - start)));
             start = end + 1;
             end = str.find(delimiter, start);
         }
-        substrings.push_back(str.substr(start, end));
+        substrings.push_back(strip(str.substr(start, end)));
         return substrings;
     }
 

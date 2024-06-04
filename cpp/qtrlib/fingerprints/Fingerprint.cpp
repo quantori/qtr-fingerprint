@@ -94,6 +94,9 @@ namespace qtr {
 
     Fingerprint rdkitFingerprintFromSmiles(const std::string &smiles) {
         std::shared_ptr<RDKit::ROMol> mol(RDKit::SmilesToMol(smiles));
+        if (mol == nullptr) {
+            throw std::runtime_error("Cannot parse molecule: " + smiles);
+        }
         std::unique_ptr<ExplicitBitVect> mfp(RDKit::PatternFingerprintMol(*mol));
         return Fingerprint(std::move(mfp));
     }
