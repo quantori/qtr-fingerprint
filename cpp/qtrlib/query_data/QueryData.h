@@ -178,8 +178,8 @@ namespace qtr {
     template<typename AnsType>
     QueryData<AnsType>::QueryData(size_t stopAnswersCount, double timeLimit,
                                   std::unique_ptr<AnswerFilter<AnsType>> &&filter) :
-            _timeLimit(timeLimit), _stopAnswersNumber(stopAnswersCount), _filter(std::move(filter)),
+            _stopAnswersNumber(stopAnswersCount), _timeLimit(timeLimit), _filter(std::move(filter)),
             _startedTasksCount(0), _finishedTasksCount(0), _shouldStopProcess(false), _tasks(), _wasTimeOut(false),
-            _startTimePoint(std::chrono::steady_clock::now()) {}
+            _startTimePoint(std::chrono::steady_clock::now()), _resultLock() {}
 
 } // qtr

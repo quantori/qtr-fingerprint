@@ -5,6 +5,7 @@
 #include "QtrRamSearchData.h"
 #include "QtrDriveSearchData.h"
 #include "BingoNoSQLSearchData.h"
+#include "RDKitSearchData.h"
 #include "QtrEnumerationSearchData.h"
 #include "properties_table_io/PropertiesTableReader.h"
 #include "BallTreeRAMSearchEngine.h"
@@ -16,6 +17,8 @@
 #include "base_cpp/scanner.h"
 #include "src/bingo_object.h"
 #include "molecule/smiles_loader.h"
+
+#include "GraphMol/SubstructLibrary/SubstructLibrary.h"
 
 using namespace std;
 using namespace indigo_cpp;
@@ -176,36 +179,17 @@ namespace {
         }
     }
 
-
     shared_ptr<SearchData> loadRDKitSearchData(const RunArgs &args) {
-        LOG(INFO) << "Start CFStorage table loading";
-        auto result = make_shared<RDKit::SubstructLibrary>();
-        size_t counter = 0;
-        for (const auto &[id, smiles]: StringTableReader(args.smilesTablePath())) {
-            try {
-                // TODO
-                //  load mol from smiles
-                //  add it to substruct lirary -> That is it
-//                BufferScanner scanner(smiles.c_str(), smiles.size(), false);
-//                SmilesLoader loader(scanner);
-//                Molecule molecule;
-//                loader.loadMolecule(molecule);
-//                molecule.aromatize(AromaticityOptions());
-//                bingo::IndexMolecule indexMolecule(molecule, AromaticityOptions());
-//                auto &cfArr = result->Add(id, std::move(Array<char>()));
-//                indexMolecule.buildCfString(cfArr);
-                counter++;
-            }
-            catch (const std::exception &e) {
-                LOG_ERROR_AND_EXIT(e.what());
-            }
-            if (counter % 100000 == 0) {
-                LOG(INFO) << "CFStorage loading: processed " << counter << " molecules";
-            }
+        filesystem::path dbDataDir = args.dbDataDirs()[0];
+        filesystem::path moleculesDir = dbDataDir / "molecules";
+        filesystem::path fingerprintsDir = dbDataDir / "fingerprintTables";
+        try {
+            return make_shared<RDKitSearchData>(moleculesDir, fingerprintsDir, args.ansCount(), args.threads(),
+                                                args.timeLimit(), args.verificationStage());
         }
-        // TODO: return RDKitSearchData with substruct library inside
-        LOG(INFO) << "Finish CFStorage table loading";
-        return result;
+        catch (const exception &e) {
+            LOG_ERROR_AND_EXIT(e.what());
+        }
     }
 
 }

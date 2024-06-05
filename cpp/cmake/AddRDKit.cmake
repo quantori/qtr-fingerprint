@@ -25,7 +25,7 @@ set(RDKit_LIBS RDKitChemReactions RDKitFileParsers RDKitSmilesParse RDKitDepicto
         RDKitMolDraw2D RDKitGraphMol RDKitDistGeometry RDKitDistGeomHelpers
         RDKitMolAlign RDKitOptimizer RDKitForceField RDKitForceFieldHelpers
         RDKitAlignment RDKitForceField  RDKitMolTransforms RDKitEigenSolvers
-        RDKitFingerprints)
+        RDKitFingerprints RDKitDataStructs RDKitSubstructLibrary)
 
 #set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR})
 
