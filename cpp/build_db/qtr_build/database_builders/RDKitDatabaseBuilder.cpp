@@ -6,6 +6,7 @@
 #include "GraphMol/GraphMol.h"
 #include "GraphMol/SmilesParse/SmilesParse.h"
 #include "GraphMol/MolPickler.h"
+#include "GraphMol/SubstructLibrary/SubstructLibrary.h"
 
 #include <future>
 
@@ -13,27 +14,20 @@ using namespace std;
 
 namespace qtr {
     namespace {
-        void storeSmilesTableInPickle(std::ofstream &pickleOstream, mutex &mutex,
+        void storeSmilesTableInPickle(const filesystem::path &moleculesDir,
                                       const filesystem::path &smilesTablePath) {
             LOG(INFO) << "Start " << smilesTablePath << " parsing";
             size_t processedNumber = 0;
             size_t failuresNumber = 0;
 
-            // TODO: maybe use MOLBundle?
-            // TODO: use XQMol instead of ROMol?
-
+            std::ofstream out(moleculesDir / (smilesTablePath.stem().string() + ".pkl"), ios::binary);
             for (const auto &[id, smiles]: StringTableReader(smilesTablePath)) {
                 try {
                     std::shared_ptr<RDKit::ROMol> mol(RDKit::SmilesToMol(smiles));
                     if (mol == nullptr) {
                         throw std::runtime_error("Cannot parse molecule: " + smiles);
                     }
-                    string pickle;
-                      RDKit::MolPickler::pickleMol(*mol, pickle);
-                    {
-                        lock_guard<std::mutex> guard(mutex);
-                        pickleOstream << pickle;
-                    }
+                    RDKit::MolPickler::pickleMol(*mol, out);
                     ++processedNumber;
                 } catch (const std::exception &e) {
                     LOG(ERROR) << "Indigo error: " << e.what();
@@ -41,7 +35,6 @@ namespace qtr {
                 }
 
             }
-            pickleOstream.close();
             LOG(INFO) << "Finish " << smilesTablePath << " parsing " <<
                       "(" << processedNumber << " processed, " << failuresNumber << " failures)";
         }
@@ -61,10 +54,19 @@ namespace qtr {
             LOG_ERROR_AND_EXIT("Destination directory (" + destDir.string() + ") does not exist");
         }
         vector<future<void>> tasks;
-        ofstream out(destDir  / "molecules.pkl", ios::binary);
-        mutex mutex;
+        filesystem::path moleculesDir = destDir / "molecules";
+        filesystem::create_directory(moleculesDir);
         for (const auto &entry: filesystem::directory_iterator(args.smilesSourceDir())) {
-            tasks.push_back(async(launch::async, storeSmilesTableInPickle, ref(out), ref(mutex), entry.path()));
+            tasks.push_back(
+                    async(launch::async, storeSmilesTableInPickle, cref(moleculesDir), entry.path()));
+        }
+
+        auto fingerprintsDir = destDir / "fingerprintTables";
+        filesystem::create_directory(fingerprintsDir);
+        for (const auto &entry: filesystem::directory_iterator(args.fingerprintTablesSourceDir())) {
+            tasks.push_back(async(launch::async, [entry, fingerprintsDir] {
+                filesystem::copy_file(entry.path(), fingerprintsDir / entry.path().filename());
+            }));
         }
         for (auto &task: tasks) {
             task.wait();

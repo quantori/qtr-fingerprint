@@ -13,4 +13,3 @@ namespace qtr {
     };
 
 } // qtr 
-a
