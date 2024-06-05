@@ -16,7 +16,7 @@ namespace qtr {
         else if (databaseType == DatabaseType::BingoNoSQL)
             return make_unique<BingoNoSQLDatabaseBuilder>();
         else if (databaseType == DatabaseType::RDKit) {
-            return make_unique<QtrRamDatabaseBuilder>(); // No specific builder => Use QtrRam builder
+            return make_unique<RDKitDatabaseBuilder>();
         }
         throw logic_error("DatabaseBuilderFactory: Cannot create DatabaseBuilder of given type");
     }
