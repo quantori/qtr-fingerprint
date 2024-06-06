@@ -73,7 +73,7 @@ namespace qtr {
 
 
         void addElementsToHandlers(const filesystem::path &moleculesFile, const filesystem::path &fingerprintTableFile,
-                                   const boost::shared_ptr<RDKit::MolHolder> &molHandler,
+                                   const boost::shared_ptr<RDKit::CachedMolHolder> &molHandler,
                                    const boost::shared_ptr<RDKit::PatternHolder> &patternHolder,
                                    const boost::shared_ptr<RDKit::KeyFromPropHolder> &keyHolder,
                                    std::mutex &mutex) {
@@ -107,7 +107,7 @@ namespace qtr {
                                      const std::filesystem::path &fingerprintTablesDir,
                                      size_t ansCount, size_t threadsCount, double timeLimit, bool verificationStage) :
             SearchData(ansCount, threadsCount, timeLimit, verificationStage) {
-        auto molHandler = boost::make_shared<RDKit::MolHolder>();
+        auto molHandler = boost::make_shared<RDKit::CachedMolHolder>();
         auto fpHandler = boost::make_shared<RDKit::PatternHolder>();
         auto idHandler = boost::make_shared<RDKit::KeyFromPropHolder>();
         std::mutex mutex;
