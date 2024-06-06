@@ -2,6 +2,7 @@
 
 #include "ArgsBase.h"
 #include "modes/RunMode.h"
+#include "BaseLibrary.h"
 
 ABSL_DECLARE_FLAG(std::string, dbName);
 ABSL_DECLARE_FLAG(std::string, dbType);
@@ -16,7 +17,7 @@ ABSL_DECLARE_FLAG(std::string, summaryFile);
 ABSL_DECLARE_FLAG(bool, properties);
 ABSL_DECLARE_FLAG(bool, verificationStage);
 ABSL_DECLARE_FLAG(bool, fingerprintProvided);
-//ABSL_DECLARE_FLAG(std::string, baseLibrary);
+ABSL_DECLARE_FLAG(std::string, baseLibrary);
 ABSL_DECLARE_FLAG(uint64_t, fromFileWorkers);
 
 namespace qtr {
@@ -30,6 +31,13 @@ namespace qtr {
         };
 
         const static inline auto strToMode = makeStringToEnumFunction(_strToMode, RunMode::Type::BadType);
+
+        const static inline std::unordered_map<std::string, BaseLibrary> _strToBaseLibrary = {
+                {"Indigo", BaseLibrary::Indigo},
+                {"RDKit",  BaseLibrary::RDKit}
+        };
+
+        const static inline auto strToBaseLibrary = makeStringToEnumFunction(_strToBaseLibrary, BaseLibrary::BadOption);
 
     ADD_ARGUMENT_WITH_PARSER(DatabaseType, dbType, DatabaseType::BadType, strToDataBaseType)
 
@@ -59,6 +67,8 @@ namespace qtr {
 
     ADD_ARGUMENT(uint64_t, fromFileWorkers, 1);
 
+    ADD_ARGUMENT_WITH_PARSER(BaseLibrary, baseLibrary, BaseLibrary::BadOption, strToBaseLibrary);
+
     public:
         RunArgs(int argc, char *argv[]) : ArgsBase(argc, argv) {
             parseAndCheck_dbType();
@@ -76,6 +86,7 @@ namespace qtr {
                 dbType() == DatabaseType::QtrDrive ||
                 dbType() == DatabaseType::QtrEnumeration) {
                 parseAndCheck_otherDataDir();
+                parseAndCheck_baseLibrary();
             }
 
             if (dbType() == DatabaseType::QtrEnumeration) {

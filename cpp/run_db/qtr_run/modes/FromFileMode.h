@@ -45,7 +45,7 @@ namespace qtr {
         }
 
         inline static std::vector<SearchData::Query>
-        loadQueriesFromFile(const std::filesystem::path &inputFile, bool fingerprintProvided) {
+        loadQueriesFromFile(const std::filesystem::path &inputFile, bool fingerprintProvided, BaseLibrary baseLibrary) {
             std::ifstream input(inputFile);
             std::vector<SearchData::Query> queries;
             while (input.peek() != EOF) {
@@ -59,7 +59,7 @@ namespace qtr {
                 }
                 std::string otherInfoInLine;
                 std::getline(input, otherInfoInLine);
-                queries.emplace_back(std::move(smiles), std::move(fingerprint));
+                queries.emplace_back(std::move(smiles), std::move(fingerprint), baseLibrary);
             }
             LOG(INFO) << "Loaded " << queries.size() << " queries";
             return queries;
@@ -113,7 +113,8 @@ namespace qtr {
                 }();
 
                 auto queryDuration = profilingTimer.stop();
-                LOG(INFO) << queryDuration << " seconds spent to process molecule " << i << ": " << *group[i].smiles;
+                LOG(INFO) << queryDuration << " seconds spent to process molecule " << i * workers + worker << ": "
+                          << *group[i].smiles;
 
                 {
                     std::lock_guard<std::mutex> guard(mutex);
@@ -123,9 +124,8 @@ namespace qtr {
             }
         }
 
-
         inline void run() override {
-            auto queries = loadQueriesFromFile(_inputFile, _fingerprintProvided);
+            auto queries = loadQueriesFromFile(_inputFile, _fingerprintProvided, _searchData->getBaseLibrary());
             std::vector<float> times(queries.size());
             std::vector<size_t> answerCounters(queries.size());
             std::mutex mutex;

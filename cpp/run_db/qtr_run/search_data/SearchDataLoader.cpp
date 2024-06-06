@@ -125,15 +125,45 @@ namespace {
         return res;
     }
 
+    shared_ptr<RDKit::CachedMolHolder> loadCachedMolHandler(const RunArgs &args) {
+        LOG(INFO) << "Start CachedMolHolder loading";
+        auto result = make_shared<RDKit::CachedMolHolder>();
+        size_t counter = 0;
+        for (const auto &[id, smiles]: StringTableReader(args.smilesTablePath())) {
+            try {
+                auto mol = shared_ptr<RDKit::ROMol>(RDKit::SmilesToMol(smiles));
+                if (mol == nullptr) {
+                    LOG_ERROR_AND_EXIT("Invalid mol in the dataset");
+                }
+                result->addMol(*mol);
+                counter++;
+            }
+            catch (const std::exception &e) {
+                LOG_ERROR_AND_EXIT(e.what());
+            }
+            if (counter % 100000 == 0) {
+                LOG(INFO) << "CachedMolHolder loading: processed " << counter << " molecules";
+            }
+        }
+        LOG(INFO) << "Finish CachedMolHolder loading";
+        return result;
+    }
+
+    pair<shared_ptr<RDKit::MolHolderBase>, shared_ptr<CFStorage>> loadMoleculesStorage(const RunArgs &args) {
+        if (!args.verificationStage()) {
+            return {nullptr, nullptr};
+        } else if (args.baseLibrary() == BaseLibrary::RDKit) {
+            return {loadCachedMolHandler(args), nullptr};
+        } else if (args.baseLibrary() == BaseLibrary::Indigo) {
+            return {nullptr, loadCFStorage(args.smilesTablePath())};
+        }
+        throw invalid_argument("Invalid base library provided");
+    }
+
     shared_ptr<SearchData> loadQtrRamSearchData(const RunArgs &args) {
         HuffmanCoder huffmanCoder = HuffmanCoder::load(args.huffmanCoderPath());
         auto loadBallTreeTask = async(launch::async, loadBallTree, cref(args));
-        auto loadCFStorageTask = [&args]() {
-            if (args.verificationStage())
-                return async(launch::async, loadCFStorage, args.smilesTablePath());
-            else
-                return async(launch::async, []() -> shared_ptr<CFStorage> { return nullptr; });
-        }();
+        auto loadMolStorageTask = async(launch::async, loadMoleculesStorage, cref(args));
         auto loadIdConverterTask = async(launch::async, loadIdConverter, args.idToStringDir());
 
         shared_ptr<vector<PropertiesFilter::Properties>> propertiesTablePtr = nullptr;
@@ -142,11 +172,11 @@ namespace {
             propertiesTablePtr = loadPropertyTableTask.get();
         }
         auto ballTreePtr = loadBallTreeTask.get();
-        auto cfStoragePtr = loadCFStorageTask.get();
+        auto [molHolderPtr, cfStoragePtr] = loadMolStorageTask.get();
         auto idConverterPtr = loadIdConverterTask.get();
 
         return make_shared<QtrRamSearchData>(ballTreePtr, idConverterPtr, args.ansCount(), args.threads(),
-                                             args.timeLimit(), cfStoragePtr, propertiesTablePtr,
+                                             args.timeLimit(), cfStoragePtr, molHolderPtr, propertiesTablePtr,
                                              args.verificationStage());
     }
 

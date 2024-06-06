@@ -13,7 +13,6 @@ namespace qtr {
         std::unique_ptr<QueryData<CIDType>>
         search(const SearchData::Query &query, const PropertiesFilter::Bounds &queryBounds) override;
 
-
         std::shared_ptr<const BallTreeSearchEngine> ballTree;
         std::shared_ptr<const IdConverter> idConverter;
 
