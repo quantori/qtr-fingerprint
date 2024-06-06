@@ -103,7 +103,7 @@ namespace qtr {
                      std::vector<size_t> &answerCounters, std::vector<float> &times) {
             for (size_t i = 0; i < group.size(); i++) {
                 assert(group[i].smiles != nullptr);
-                LOG(INFO) << "Start search for " << i << ": " << *group[i].smiles;
+                LOG(INFO) << "Start search for " << i * workers + worker << ": " << *group[i].smiles;
                 ProfilingTimer profilingTimer("Query processing");
 
                 auto queryData = searchData->search(group[i], PropertiesFilter::Bounds());
