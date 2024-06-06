@@ -146,6 +146,7 @@ namespace {
         molPickles.resize(molecules.size());
         size_t threads = thread::hardware_concurrency() <= 2 ? 1 : thread::hardware_concurrency() - 2;
         auto moleculeGroups = splitMolecules(std::move(molecules), threads);
+        molecules.clear();
         for (size_t group = 0; group < threads; group++) {
             for (const auto &[id, smiles]: moleculeGroups[group]) {
                 try {
