@@ -137,7 +137,6 @@ namespace {
     shared_ptr<RDKit::CachedMolHolder> loadCachedMolHandler(const RunArgs &args) {
         LOG(INFO) << "Start CachedMolHolder loading";
         auto result = make_shared<RDKit::CachedMolHolder>();
-        size_t counter = 0;
         auto reader = StringTableReader(args.smilesTablePath());
         LOG(INFO) << "Start reading molecules file";
         vector<pair<uint64_t, string>> molecules(reader.begin(), reader.end());
@@ -147,26 +146,34 @@ namespace {
         size_t threads = thread::hardware_concurrency() <= 2 ? 1 : thread::hardware_concurrency() - 2;
         auto moleculeGroups = splitMolecules(std::move(molecules), threads);
         molecules.clear();
+        vector<future<void>> tasks;
         for (size_t group = 0; group < threads; group++) {
-            for (const auto &[id, smiles]: moleculeGroups[group]) {
-                try {
-                    auto mol = shared_ptr<RDKit::ROMol>(RDKit::SmilesToMol(smiles));
-                    if (mol == nullptr) {
-                        LOG_ERROR_AND_EXIT("Invalid mol in the dataset");
-                    }
-                    RDKit::MolPickler::pickleMol(*mol, molPickles[id]);
-                    counter++;
-                }
-                catch (const std::exception &e) {
-                    LOG_ERROR_AND_EXIT(e.what());
-                }
-                if (counter % 100000 == 0) {
-                    LOG(INFO) << "CachedMolHolder loading: processed " << counter << " molecules from group "
-                              << group + 1 << "/" << threads;
-                }
-            }
-            LOG(INFO) << "Finish CachedMolHolder loading";
+            tasks.push_back(async(launch::async, [group, &moleculeGroups, &molPickles, threads] {
+                                      size_t counter = 0;
+                                      for (const auto &[id, smiles]: moleculeGroups[group]) {
+                                          try {
+                                              auto mol = shared_ptr<RDKit::ROMol>(RDKit::SmilesToMol(smiles));
+                                              if (mol == nullptr) {
+                                                  LOG_ERROR_AND_EXIT("Invalid mol in the dataset");
+                                              }
+                                              RDKit::MolPickler::pickleMol(*mol, molPickles[id]);
+                                              counter++;
+                                          }
+                                          catch (const std::exception &e) {
+                                              LOG_ERROR_AND_EXIT(e.what());
+                                          }
+                                          if (counter % 100000 == 0) {
+                                              LOG(INFO) << "CachedMolHolder loading: processed " << counter << " molecules from group "
+                                                        << group + 1 << "/" << threads;
+                                          }
+                                      }
+                                  }
+            ));
         }
+        for (auto &task: tasks) {
+            task.wait();
+        }
+        LOG(INFO) << "Finish CachedMolHolder loading";
         return result;
     }
 
