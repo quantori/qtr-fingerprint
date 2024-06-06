@@ -17,7 +17,7 @@ namespace qtr {
                 result = make_unique<InteractiveMode>(searchData);
             else if (args.mode() == RunMode::Type::FromFile)
                 result = make_unique<FromFileMode>(searchData, args.queriesFile(), args.summaryFile(),
-                                                   args.fingerprintProvided());
+                                                   args.fingerprintProvided(), args.fromFileWorkers());
             else if (args.mode() == RunMode::Type::Web)
                 result = make_unique<WebMode>(searchData);
             return result;

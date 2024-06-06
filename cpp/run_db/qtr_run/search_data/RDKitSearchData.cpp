@@ -57,8 +57,7 @@ namespace qtr {
                         results.emplace_back(stoi(substructLib.getKeys().getKey(i)));
                     }
                     queryData.addAnswers(results);
-                }
-                if (queryData.checkShouldStop() || queryData.checkTimeOut()) {
+                }if (queryData.checkShouldStop() || queryData.checkTimeOut()) {
                     break;
                 }
                 if (maxResults != -1) {

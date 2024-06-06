@@ -17,6 +17,7 @@ ABSL_DECLARE_FLAG(bool, properties);
 ABSL_DECLARE_FLAG(bool, verificationStage);
 ABSL_DECLARE_FLAG(bool, fingerprintProvided);
 //ABSL_DECLARE_FLAG(std::string, baseLibrary);
+ABSL_DECLARE_FLAG(uint64_t, fromFileWorkers);
 
 namespace qtr {
 
@@ -56,6 +57,8 @@ namespace qtr {
 
     ADD_ARGUMENT(bool, fingerprintProvided, false);
 
+    ADD_ARGUMENT(uint64_t, fromFileWorkers, 1);
+
     public:
         RunArgs(int argc, char *argv[]) : ArgsBase(argc, argv) {
             parseAndCheck_dbType();
@@ -87,6 +90,7 @@ namespace qtr {
             if (mode() == RunMode::Type::FromFile) {
                 parseAndCheck_queriesFile();
                 parse_summaryFile();
+                parse_fromFileWorkers();
             }
             if (mode() != RunMode::Type::FromFile && fingerprintProvided()) {
                 LOG_ERROR_AND_EXIT("fingerprintProvided option is supported for FromFile mode only");

@@ -13,12 +13,13 @@ namespace qtr {
         std::filesystem::path _inputFile;
         std::filesystem::path _summaryFile;
         bool _fingerprintProvided;
+        uint64_t _workers;
 
     public:
         inline FromFileMode(std::shared_ptr<SearchData> searchData, std::filesystem::path inputFile,
-                            std::filesystem::path summaryFile, bool fingerprintProvided)
+                            std::filesystem::path summaryFile, bool fingerprintProvided, uint64_t workers)
                 : RunMode(std::move(searchData)), _inputFile(std::move(inputFile)),
-                  _summaryFile(std::move(summaryFile)), _fingerprintProvided(fingerprintProvided) {}
+                  _summaryFile(std::move(summaryFile)), _fingerprintProvided(fingerprintProvided), _workers(workers) {}
 
         inline static void showStatistics(std::vector<float> times, size_t skippedQueries, std::ostream &out) {
             double mean = std::accumulate(times.begin(), times.end(), 0.0) / double(times.size());
@@ -72,20 +73,6 @@ namespace qtr {
             for (float i: answerCounters) {
                 out << i << '\n';
             }
-        }
-
-        inline static size_t getWorkers() {
-            std::string workersStr;
-            std::cout << "Please, enter number of workers to process queries from file: ";
-            std::cin >> workersStr;
-            if (workersStr.empty() || workersStr == "0" ||
-                (workersStr.size() > 5 && !std::all_of(workersStr.begin(), workersStr.end(), [](char a) {
-                    return '0' <= a && a <= '9';
-                }))) {
-                LOG_ERROR_AND_EXIT("Wrong number of workers is specified: " + workersStr);
-            }
-            size_t workers = std::stoul(workersStr);
-            return workers;
         }
 
         inline static std::vector<std::vector<SearchData::Query>>
@@ -143,18 +130,17 @@ namespace qtr {
             std::vector<size_t> answerCounters(queries.size());
             std::mutex mutex;
             size_t skipped = 0;
-            size_t workers = getWorkers();
 
             std::vector<std::future<void>> tasks;
-            auto queriesGrouped = splitQueries(std::move(queries), workers);
-            for (size_t worker = 0; worker < workers; worker++) {
+            auto queriesGrouped = splitQueries(std::move(queries), _workers);
+            for (size_t worker = 0; worker < _workers; worker++) {
                 auto &group = queriesGrouped[worker];
                 tasks.emplace_back(std::async(std::launch::async, processGroup,
                                               std::cref(group), this->_searchData, std::ref(skipped),
-                                              std::ref(mutex), worker, workers, std::ref(answerCounters),
+                                              std::ref(mutex), worker, this->_workers, std::ref(answerCounters),
                                               std::ref(times)));
             }
-            for (auto& task : tasks) {
+            for (auto &task: tasks) {
                 task.wait();
             }
 
