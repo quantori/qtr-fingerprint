@@ -52,7 +52,7 @@ namespace qtr {
                 const auto &driveSearchData = dynamic_cast<const QtrDriveSearchData &>(searchData);
                 filter = createDriveFilter(driveSearchData, querySmiles, queryBounds);
             } else {
-                assert(false && "Undefined search data type");
+                LOG_ERROR_AND_EXIT("Undefined search data type");
             }
             return std::move(filter);
         }

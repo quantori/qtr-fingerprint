@@ -74,34 +74,90 @@ namespace qtr {
             }
         }
 
-        inline void run() override {
-            auto queries = loadQueriesFromFile(_inputFile, _fingerprintProvided);
-            std::vector<float> times;
-            std::vector<size_t> answerCounters;
-            size_t skipped = 0;
+        inline static size_t getWorkers() {
+            std::string workersStr;
+            std::cout << "Please, enter number of workers to process queries from file: ";
+            std::cin >> workersStr;
+            if (workersStr.empty() || workersStr == "0" ||
+                (workersStr.size() > 5 && !std::all_of(workersStr.begin(), workersStr.end(), [](char a) {
+                    return '0' <= a && a <= '9';
+                }))) {
+                LOG_ERROR_AND_EXIT("Wrong number of workers is specified: " + workersStr);
+            }
+            size_t workers = std::stoul(workersStr);
+            return workers;
+        }
+
+        inline static std::vector<std::vector<SearchData::Query>>
+        splitQueries(std::vector<SearchData::Query> &&queries, size_t count) {
+            std::vector<std::vector<SearchData::Query>> result(count);
             for (size_t i = 0; i < queries.size(); i++) {
-                assert(queries[i].smiles != nullptr);
-                LOG(INFO) << "Start search for " << i << ": " << *queries[i].smiles;
+                result[i % count].push_back(std::move(queries[i]));
+            }
+            return result;
+        }
+
+        inline static void
+        processGroup(const std::vector<SearchData::Query> &group, const std::shared_ptr<SearchData> &searchData,
+                     size_t &skipped, std::mutex &mutex, size_t worker, size_t workers,
+                     std::vector<size_t> &answerCounters, std::vector<float> &times) {
+            for (size_t i = 0; i < group.size(); i++) {
+                assert(group[i].smiles != nullptr);
+                LOG(INFO) << "Start search for " << i << ": " << *group[i].smiles;
                 ProfilingTimer profilingTimer("Query processing");
-                auto queryData = this->_searchData->search(queries[i], PropertiesFilter::Bounds());
+
+                auto queryData = searchData->search(group[i], PropertiesFilter::Bounds());
                 if (queryData == nullptr) {
+                    std::lock_guard<std::mutex> guard(mutex);
                     ++skipped;
                     continue;
                 }
+
                 queryData->waitAllTasks();
                 auto ansCount = queryData->getCurrentAnswersCount();
                 auto answers = queryData->getAnswers(0, std::min((size_t) 10, ansCount)).second;
-                answerCounters.emplace_back(ansCount);
+
                 LOG(INFO) << "Found " << ansCount << " answers. Examples: " << [&answers]() {
                     std::stringstream s;
-                    for (auto &ans: answers)
+                    for (auto &ans: answers) {
                         s << ans << ' ';
+                    }
                     return s.str();
                 }();
+
                 auto queryDuration = profilingTimer.stop();
-                LOG(INFO) << queryDuration << " seconds spent to process molecule " << i << ": " << *queries[i].smiles;
-                times.emplace_back(queryDuration);
+                LOG(INFO) << queryDuration << " seconds spent to process molecule " << i << ": " << *group[i].smiles;
+
+                {
+                    std::lock_guard<std::mutex> guard(mutex);
+                    answerCounters[i * workers + worker] = ansCount;
+                    times[i * workers + worker] = queryDuration;
+                }
             }
+        }
+
+
+        inline void run() override {
+            auto queries = loadQueriesFromFile(_inputFile, _fingerprintProvided);
+            std::vector<float> times(queries.size());
+            std::vector<size_t> answerCounters(queries.size());
+            std::mutex mutex;
+            size_t skipped = 0;
+            size_t workers = getWorkers();
+
+            std::vector<std::future<void>> tasks;
+            auto queriesGrouped = splitQueries(std::move(queries), workers);
+            for (size_t worker = 0; worker < workers; worker++) {
+                auto &group = queriesGrouped[worker];
+                tasks.emplace_back(std::async(std::launch::async, processGroup,
+                                              std::cref(group), this->_searchData, std::ref(skipped),
+                                              std::ref(mutex), worker, workers, std::ref(answerCounters),
+                                              std::ref(times)));
+            }
+            for (auto& task : tasks) {
+                task.wait();
+            }
+
 
             showStatistics(times, skipped, std::cout);
             showSummary(answerCounters, _summaryFile);

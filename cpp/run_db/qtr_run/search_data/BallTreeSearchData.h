@@ -20,7 +20,5 @@ namespace qtr {
     private:
         [[nodiscard]] std::unique_ptr<ByIdAnswerFilter>
         getFilter(const SearchData::Query &query, const PropertiesFilter::Bounds &queryBounds) const;
-
-        static Fingerprint getFingerprint(const SearchData::Query &query);
     };
 } // qtr

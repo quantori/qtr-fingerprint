@@ -16,6 +16,7 @@ ABSL_DECLARE_FLAG(std::string, summaryFile);
 ABSL_DECLARE_FLAG(bool, properties);
 ABSL_DECLARE_FLAG(bool, verificationStage);
 ABSL_DECLARE_FLAG(bool, fingerprintProvided);
+//ABSL_DECLARE_FLAG(std::string, baseLibrary);
 
 namespace qtr {
 
