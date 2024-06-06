@@ -27,6 +27,15 @@ using namespace bingo;
 using namespace qtr;
 
 namespace {
+    std::vector<std::vector<pair<uint64_t, string>>>
+    splitMolecules(std::vector<pair<uint64_t, string>> &&queries, size_t count) {
+        std::vector<std::vector<pair<uint64_t, string>>> result(count);
+        for (size_t i = 0; i < queries.size(); i++) {
+            result[i % count].push_back(std::move(queries[i]));
+        }
+        return result;
+    }
+
     shared_ptr<SmilesTable>
     loadSmilesTable(const filesystem::path &smilesTablePath, const HuffmanCoder &huffmanCoder) {
         LOG(INFO) << "Start smiles table loading";
@@ -129,23 +138,34 @@ namespace {
         LOG(INFO) << "Start CachedMolHolder loading";
         auto result = make_shared<RDKit::CachedMolHolder>();
         size_t counter = 0;
-        for (const auto &[id, smiles]: StringTableReader(args.smilesTablePath())) {
-            try {
-                auto mol = shared_ptr<RDKit::ROMol>(RDKit::SmilesToMol(smiles));
-                if (mol == nullptr) {
-                    LOG_ERROR_AND_EXIT("Invalid mol in the dataset");
+        auto reader = StringTableReader(args.smilesTablePath());
+        LOG(INFO) << "Start reading molecules file";
+        vector<pair<uint64_t, string>> molecules(reader.begin(), reader.end());
+        LOG(INFO) << "Finish reading molecules file. Start smiles parsing";
+        auto &molPickles = result->getMols();
+        molPickles.resize(molecules.size());
+        size_t threads = thread::hardware_concurrency() <= 2 ? 1 : thread::hardware_concurrency() - 2;
+        auto moleculeGroups = splitMolecules(std::move(molecules), threads);
+        for (size_t group = 0; group < threads; group++) {
+            for (const auto &[id, smiles]: moleculeGroups[group]) {
+                try {
+                    auto mol = shared_ptr<RDKit::ROMol>(RDKit::SmilesToMol(smiles));
+                    if (mol == nullptr) {
+                        LOG_ERROR_AND_EXIT("Invalid mol in the dataset");
+                    }
+                    RDKit::MolPickler::pickleMol(*mol, molPickles[id]);
+                    counter++;
                 }
-                result->addMol(*mol);
-                counter++;
+                catch (const std::exception &e) {
+                    LOG_ERROR_AND_EXIT(e.what());
+                }
+                if (counter % 100000 == 0) {
+                    LOG(INFO) << "CachedMolHolder loading: processed " << counter << " molecules from group "
+                              << group + 1 << "/" << threads;
+                }
             }
-            catch (const std::exception &e) {
-                LOG_ERROR_AND_EXIT(e.what());
-            }
-            if (counter % 100000 == 0) {
-                LOG(INFO) << "CachedMolHolder loading: processed " << counter << " molecules";
-            }
+            LOG(INFO) << "Finish CachedMolHolder loading";
         }
-        LOG(INFO) << "Finish CachedMolHolder loading";
         return result;
     }
 
