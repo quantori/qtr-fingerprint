@@ -27,12 +27,15 @@ using namespace bingo;
 using namespace qtr;
 
 namespace {
-    std::vector<std::vector<pair<uint64_t, string>>>
-    splitMolecules(std::vector<pair<uint64_t, string>> &&queries, size_t count) {
-        std::vector<std::vector<pair<uint64_t, string>>> result(count);
-        for (size_t i = 0; i < queries.size(); i++) {
-            result[i % count].push_back(std::move(queries[i]));
+    vector<list<pair<uint64_t, string>>>
+    splitMolecules(list<pair<uint64_t, string>> &queries, size_t count) {
+        std::vector<std::list<pair<uint64_t, string>>> result(count);
+        size_t n = queries.size();
+        for (size_t i = 0; i < n; i++) {
+            result[i % count].emplace_back(std::move(queries.front()));
+            queries.pop_front();
         }
+        assert(queries.empty());
         return result;
     }
 
@@ -139,34 +142,36 @@ namespace {
         auto result = make_shared<RDKit::CachedMolHolder>();
         auto reader = StringTableReader(args.smilesTablePath());
         LOG(INFO) << "Start reading molecules file";
-        vector<pair<uint64_t, string>> molecules(reader.begin(), reader.end());
+        list<pair<uint64_t, string>> molecules(reader.begin(), reader.end());
         LOG(INFO) << "Finish reading molecules file. Start smiles parsing";
         auto &molPickles = result->getMols();
         molPickles.resize(molecules.size());
         size_t threads = thread::hardware_concurrency() <= 2 ? 1 : thread::hardware_concurrency() - 2;
-        auto moleculeGroups = splitMolecules(std::move(molecules), threads);
+        auto moleculeGroups = splitMolecules(molecules, threads);
         molecules.clear();
         vector<future<void>> tasks;
         for (size_t group = 0; group < threads; group++) {
             tasks.push_back(async(launch::async, [group, &moleculeGroups, &molPickles, threads] {
-                                      size_t counter = 0;
-                                      for (const auto &[id, smiles]: moleculeGroups[group]) {
+                                      size_t groupSize = moleculeGroups[group].size();
+                                      for (size_t i = 0; i < groupSize; i++) {
+                                          auto &[id, smiles] = moleculeGroups[group].front();
                                           try {
                                               auto mol = shared_ptr<RDKit::ROMol>(RDKit::SmilesToMol(smiles));
                                               if (mol == nullptr) {
                                                   LOG_ERROR_AND_EXIT("Invalid mol in the dataset");
                                               }
                                               RDKit::MolPickler::pickleMol(*mol, molPickles[id]);
-                                              counter++;
                                           }
                                           catch (const std::exception &e) {
                                               LOG_ERROR_AND_EXIT(e.what());
                                           }
-                                          if (counter % 100000 == 0) {
-                                              LOG(INFO) << "CachedMolHolder loading: processed " << counter << " molecules from group "
-                                                        << group + 1 << "/" << threads;
+                                          if (i % 100000 == 0) {
+                                              LOG(INFO) << "CachedMolHolder loading: processed " << i << "/" << groupSize
+                                                        << " molecules from group " << group + 1 << "/" << threads;
                                           }
+                                          moleculeGroups[group].pop_front();
                                       }
+                                      assert(moleculeGroups[group].empty());
                                   }
             ));
         }
