@@ -10,7 +10,7 @@ namespace qtr {
     namespace {
         pair <string, string> convertId(CIDType id, const shared_ptr <SearchData> &searchData) {
             auto qtrSearchData = dynamic_cast<const BallTreeSearchData *>(searchData.get());
-            if (qtrSearchData != nullptr)
+            if (qtrSearchData != nullptr && qtrSearchData->idConverter != nullptr)
                 return qtrSearchData->idConverter->fromDbId(id);
             else
                 return {to_string(id), ""};

@@ -120,8 +120,12 @@ namespace {
         return result;
     }
 
-    shared_ptr<IdConverter> loadIdConverter(const filesystem::path &idToStringDirPath) {
-        return make_shared<IdConverter>(idToStringDirPath);
+    shared_ptr<IdConverter> loadIdConverter(const RunArgs& args) {
+        if (args.mode() == qtr::RunMode::Type::Web) { // load id converter for web mode only
+            return make_shared<IdConverter>(args.idToStringDir());
+        } else {
+            return nullptr;
+        }
     }
 
     shared_ptr<vector<PropertiesFilter::Properties>>
@@ -197,7 +201,7 @@ namespace {
         HuffmanCoder huffmanCoder = HuffmanCoder::load(args.huffmanCoderPath());
         auto loadBallTreeTask = async(launch::async, loadBallTree, cref(args));
         auto loadMolStorageTask = async(launch::async, loadMoleculesStorage, cref(args));
-        auto loadIdConverterTask = async(launch::async, loadIdConverter, args.idToStringDir());
+        auto loadIdConverterTask = async(launch::async, loadIdConverter, cref(args));
 
         shared_ptr<vector<PropertiesFilter::Properties>> propertiesTablePtr = nullptr;
         if (args.properties()) {
@@ -222,7 +226,7 @@ namespace {
 
     shared_ptr<SearchData> loadQtrDriveSearchData(const RunArgs &args) {
         auto loadBallTreeTask = async(launch::async, loadBallTree, cref(args));
-        auto loadIdConverterTask = async(launch::async, loadIdConverter, args.idToStringDir());
+        auto loadIdConverterTask = async(launch::async, loadIdConverter, cref(args));
 
         auto ballTreePtr = loadBallTreeTask.get();
         auto idConverterPtr = loadIdConverterTask.get();
