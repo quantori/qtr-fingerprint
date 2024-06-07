@@ -42,28 +42,31 @@ namespace qtr {
         ProfileScope("processLeafGroup");
         auto filterObject = queryData.getFilterObject();
         for (size_t i = 0; i < leaves.size() && !queryData.checkShouldStop(); i++) {
-            auto res = searchInLeaf(leaves[i], queryData.getQueryFingerprint());
-            if (res.empty())
-                continue;
-            tryInitBallTreeLeaf(*filterObject, getLeafDir(leaves[i]));
-            queryData.filterAndAddAnswers(res, *filterObject);
+            processLeaf(queryData, leaves[i], *filterObject);
         }
         if (queryData.checkTimeOut()) {
-                LOG(INFO) << "Search stopped due to timeout";
+            LOG(INFO) << "Search stopped due to timeout";
         }
         queryData.tagFinishTask();
     }
 
     void BallTreeSearchEngine::search(QueryDataWithFingerprint &queryData, size_t threads) const {
-        ProfileScope("Search fingerprints in BallTree");
-        vector<uint64_t> leaves;
-        findLeaves(queryData.getQueryFingerprint(), root(), leaves);
-        LOG(INFO) << "Search in " << leaves.size() << " leaves";
-        auto leafGroups = divideLeavesIntoGroups(leaves, threads);
-        for (auto &leafGroup: leafGroups) {
-            auto task = async(launch::async, &BallTreeSearchEngine::processLeafGroup, this,
-                              ref(queryData), leafGroup);
-            queryData.addTask(std::move(task));
+        if (threads == 1) {
+            queryData.addTask(async(launch::async, [this, &queryData] {
+                auto filterObject = queryData.getFilterObject();
+                oneThreadSearch(queryData, root(), *filterObject);
+            }));
+        } else {
+            ProfileScope("Search fingerprints in BallTree");
+            vector<uint64_t> leaves;
+            findLeaves(queryData.getQueryFingerprint(), root(), leaves);
+            LOG(INFO) << "Search in " << leaves.size() << " leaves";
+            auto leafGroups = divideLeavesIntoGroups(leaves, threads);
+            for (auto &leafGroup: leafGroups) {
+                auto task = async(launch::async, &BallTreeSearchEngine::processLeafGroup, this,
+                                  ref(queryData), leafGroup);
+                queryData.addTask(std::move(task));
+            }
         }
     }
 
@@ -83,6 +86,33 @@ namespace qtr {
         }
         findLeaves(fingerprint, leftChild(currentNode), leaves);
         findLeaves(fingerprint, rightChild(currentNode), leaves);
+    }
+
+    void BallTreeSearchEngine::oneThreadSearch(QueryDataWithFingerprint &queryData, size_t currentNode,
+                                               ByIdAnswerFilter &filterObject) const {
+        if (queryData.checkShouldStop()) {
+            return;
+        }
+        if (!(queryData.getQueryFingerprint() <= _nodes[currentNode].centroid))
+            return;
+        if (isLeaf(currentNode)) {
+            if ((currentNode & ((1 << 10) - 1)) == 0 && queryData.checkTimeOut()) { // check timeout once per 1024 leaves
+                return;
+            }
+            processLeaf(queryData, currentNode, filterObject);
+            return;
+        }
+        oneThreadSearch(queryData, leftChild(currentNode), filterObject);
+        oneThreadSearch(queryData, rightChild(currentNode), filterObject);
+    }
+
+    void BallTreeSearchEngine::processLeaf(QueryDataWithFingerprint &queryData, uint64_t leafId,
+                                           ByIdAnswerFilter &filterObject) const {
+        auto res = searchInLeaf(leafId, queryData.getQueryFingerprint());
+        if (res.empty())
+            return;
+        tryInitBallTreeLeaf(filterObject, getLeafDir(leafId));
+        queryData.filterAndAddAnswers(res, filterObject);
     }
 
 } // qtr

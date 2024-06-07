@@ -50,6 +50,11 @@ namespace qtr {
 
         void processLeafGroup(QueryDataWithFingerprint &queryData, const std::vector<uint64_t> &leaves) const;
 
+        void
+        oneThreadSearch(QueryDataWithFingerprint &queryData, size_t currentNode, ByIdAnswerFilter &filterObject) const;
+
+        void processLeaf(QueryDataWithFingerprint &queryData, uint64_t leafId, ByIdAnswerFilter &filterObject) const;
+
         std::vector<std::filesystem::path> _leafDirPaths;
         uint64_t _totalFingerprints;
     };
