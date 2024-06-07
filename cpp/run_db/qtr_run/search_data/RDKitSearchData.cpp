@@ -46,7 +46,7 @@ namespace qtr {
             params.useChirality = true;
             params.useQueryQueryMatches = false;
             int maxResults = ansCount == uint64_t(-1) ? -1 : int(ansCount);
-            const unsigned int STEP = 100; // check timeout every STEP iterations
+            const unsigned int STEP = 100000; // check timeout every STEP iterations
             for (unsigned int block = 0; block < substructLib.size() && maxResults != 0; block += STEP) {
                 auto matches = substructLib.getMatches(*mol, block, std::min(substructLib.size(), block + STEP), params,
                                                        1, maxResults);
