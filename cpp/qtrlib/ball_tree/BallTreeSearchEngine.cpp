@@ -90,13 +90,14 @@ namespace qtr {
 
     void BallTreeSearchEngine::oneThreadSearch(QueryDataWithFingerprint &queryData, size_t currentNode,
                                                ByIdAnswerFilter &filterObject) const {
-        if (queryData.checkShouldStop()) {
+        if (queryData.checkFoundEnoughAnswers()) {
             return;
         }
         if (!(queryData.getQueryFingerprint() <= _nodes[currentNode].centroid))
             return;
         if (isLeaf(currentNode)) {
-            if ((currentNode & ((1 << 10) - 1)) == 0 && queryData.checkTimeOut()) { // check timeout once per 1024 leaves
+            if ((currentNode & ((1 << 10) - 1)) == 0 &&
+                (queryData.checkTimeOut() || queryData.checkShouldStop())) { // check timeout once per 1024 leaves
                 return;
             }
             processLeaf(queryData, currentNode, filterObject);
