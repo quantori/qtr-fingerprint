@@ -51,7 +51,8 @@ namespace qtr {
         void processLeafGroup(QueryDataWithFingerprint &queryData, const std::vector<uint64_t> &leaves) const;
 
         void
-        oneThreadSearch(QueryDataWithFingerprint &queryData, size_t currentNode, ByIdAnswerFilter &filterObject) const;
+        oneThreadSearch(QueryDataWithFingerprint &queryData, size_t currentNode,
+                        ByIdAnswerFilter &filterObject, bool &stopFlag) const;
 
         void processLeaf(QueryDataWithFingerprint &queryData, uint64_t leafId, ByIdAnswerFilter &filterObject) const;
 

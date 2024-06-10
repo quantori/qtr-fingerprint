@@ -54,7 +54,8 @@ namespace qtr {
         if (threads == 1) {
             queryData.addTask(async(launch::async, [this, &queryData] {
                 auto filterObject = queryData.getFilterObject();
-                oneThreadSearch(queryData, root(), *filterObject);
+                bool stopFalg = false;
+                oneThreadSearch(queryData, root(), *filterObject, stopFalg);
             }));
         } else {
             ProfileScope("Search fingerprints in BallTree");
@@ -89,8 +90,8 @@ namespace qtr {
     }
 
     void BallTreeSearchEngine::oneThreadSearch(QueryDataWithFingerprint &queryData, size_t currentNode,
-                                               ByIdAnswerFilter &filterObject) const {
-        if (queryData.checkFoundEnoughAnswers()) {
+                                               ByIdAnswerFilter &filterObject, bool &stopFlag) const {
+        if (stopFlag || queryData.checkFoundEnoughAnswers()) {
             return;
         }
         if (!(queryData.getQueryFingerprint() <= _nodes[currentNode].centroid))
@@ -98,13 +99,14 @@ namespace qtr {
         if (isLeaf(currentNode)) {
             if ((currentNode & ((1 << 10) - 1)) == 0 &&
                 (queryData.checkTimeOut() || queryData.checkShouldStop())) { // check timeout once per 1024 leaves
+                stopFlag = true;
                 return;
             }
             processLeaf(queryData, currentNode, filterObject);
             return;
         }
-        oneThreadSearch(queryData, leftChild(currentNode), filterObject);
-        oneThreadSearch(queryData, rightChild(currentNode), filterObject);
+        oneThreadSearch(queryData, leftChild(currentNode), filterObject, stopFlag);
+        oneThreadSearch(queryData, rightChild(currentNode), filterObject, stopFlag);
     }
 
     void BallTreeSearchEngine::processLeaf(QueryDataWithFingerprint &queryData, uint64_t leafId,
