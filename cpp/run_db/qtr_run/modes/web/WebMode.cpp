@@ -10,7 +10,7 @@ namespace qtr {
     namespace {
         pair <string, string> convertId(CIDType id, const shared_ptr <SearchData> &searchData) {
             auto qtrSearchData = dynamic_cast<const BallTreeSearchData *>(searchData.get());
-            if (qtrSearchData != nullptr)
+            if (qtrSearchData != nullptr && qtrSearchData->idConverter != nullptr)
                 return qtrSearchData->idConverter->fromDbId(id);
             else
                 return {to_string(id), ""};
@@ -59,7 +59,8 @@ namespace qtr {
                             lock_guard<mutex> lock(newTaskMutex);
                             smilesList.emplace_back(json["smiles"].s());
                             string &currSmiles = smilesList.back();
-                            SearchData::Query query(make_unique<string>(currSmiles), nullptr);
+                            SearchData::Query query(make_unique<string>(currSmiles), nullptr,
+                                                    _searchData->getBaseLibrary());
                             auto bounds = extractBounds(json);
                             size_t queryId = queries.size();
                             auto queryData = _searchData->search(query, bounds);
@@ -91,7 +92,7 @@ namespace qtr {
                     if (!json)
                         return crow::json::wvalue(to_string(-1));
                     auto smiles = json["smiles"].s();
-                    SearchData::Query query(make_unique<string>(smiles), nullptr);
+                    SearchData::Query query(make_unique<string>(smiles), nullptr, _searchData->getBaseLibrary());
                     auto bounds = extractBounds(json);
 
                     lock_guard<mutex> lock(newTaskMutex);

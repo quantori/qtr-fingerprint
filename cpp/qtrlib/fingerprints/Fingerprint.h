@@ -19,6 +19,8 @@
 #include "molecule/smiles_loader.h"
 #include "molecule/molecule_fingerprint.h"
 
+#include <DataStructs/ExplicitBitVect.h>
+
 #include "Utils.h"
 #include "Bitset.h"
 #include "QtrIndigoFingerprint.h"
@@ -51,6 +53,8 @@ namespace qtr {
 
         explicit Fingerprint(const QtrIndigoFingerprint &f);
 
+        explicit Fingerprint(std::unique_ptr<ExplicitBitVect> f);
+
         void setBytes(const std::vector<std::byte> &bytes);
 
         [[nodiscard]] std::vector<std::byte> getBytes() const;
@@ -70,4 +74,7 @@ namespace qtr {
     Fingerprint cutFullIndigoFingerprint(const Fingerprint &fullFingerprint);
 
     Fingerprint indigoFingerprintFromSmiles(const std::string &smiles);
+
+    Fingerprint rdkitFingerprintFromSmiles(const std::string &smiles);
+
 } // namespace qtr

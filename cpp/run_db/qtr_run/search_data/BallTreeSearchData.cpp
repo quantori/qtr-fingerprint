@@ -9,6 +9,7 @@
 #include "CompoundFilter.h"
 #include "AlwaysTrueFilter.h"
 #include "QtrDriveSearchData.h"
+#include "RDKitSubstructFilter.h"
 
 
 using namespace std;
@@ -17,19 +18,38 @@ using namespace indigo_cpp;
 namespace qtr {
     namespace {
         unique_ptr <ByIdAnswerFilter>
-        createRamFilter(const QtrRamSearchData &searchData, const std::string &querySmiles,
-                        const PropertiesFilter::Bounds queryBounds) {
-            assert(searchData.cfStorage != nullptr);
-            auto indigoFilter = make_unique<IndigoCFRamFilter>(searchData.cfStorage, querySmiles);
-            unique_ptr<ByIdAnswerFilter> filter = nullptr;
+        getSubstructFilter(const QtrRamSearchData &searchData, const string &querySmiles) {
+            unique_ptr<ByIdAnswerFilter> substructFilter;
+            assert(searchData.cfStorage == nullptr ^ searchData.molHolder == nullptr);
+            if (searchData.molHolder != nullptr) {
+                assert(searchData.cfStorage == nullptr);
+                substructFilter = make_unique<RDKitSubstructFilter>(searchData.molHolder, querySmiles);
+            } else if (searchData.cfStorage != nullptr) {
+                assert(searchData.molHolder == nullptr);
+                substructFilter = make_unique<IndigoCFRamFilter>(searchData.cfStorage, querySmiles);
+            } else {
+                LOG_ERROR_AND_EXIT("Cannot create Ram Filter because no molecules storage specified");
+            }
+            return substructFilter;
+        }
+
+        unique_ptr <ByIdAnswerFilter>
+        addPropertiesToFilter(unique_ptr <ByIdAnswerFilter> filter, const QtrRamSearchData &searchData,
+                              const PropertiesFilter::Bounds queryBounds) {
             if (searchData.propertiesTable != nullptr) {
                 auto propertiesFilter = make_unique<PropertiesRamFilter>(searchData.propertiesTable,
                                                                          queryBounds);
-                filter = make_unique<CompoundFilter<CIDType>>(std::move(propertiesFilter), std::move(indigoFilter));
+                return make_unique<CompoundFilter<CIDType>>(std::move(propertiesFilter), std::move(filter));
             } else {
-                filter = std::move(indigoFilter);
+                return filter;
             }
-            return std::move(filter);
+        }
+
+        unique_ptr <ByIdAnswerFilter>
+        createRamFilter(const QtrRamSearchData &searchData, const std::string &querySmiles,
+                        const PropertiesFilter::Bounds queryBounds) {
+            auto substructFilter = getSubstructFilter(searchData, querySmiles);
+            return addPropertiesToFilter(std::move(substructFilter), searchData, queryBounds);
         }
 
         unique_ptr <ByIdAnswerFilter>
@@ -52,7 +72,7 @@ namespace qtr {
                 const auto &driveSearchData = dynamic_cast<const QtrDriveSearchData &>(searchData);
                 filter = createDriveFilter(driveSearchData, querySmiles, queryBounds);
             } else {
-                assert(false && "Undefined search data type");
+                LOG_ERROR_AND_EXIT("Undefined search data type");
             }
             return std::move(filter);
         }

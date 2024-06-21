@@ -22,7 +22,7 @@ namespace qtr {
                 std::cin >> smiles;
                 if (smiles.empty())
                     break;
-                SearchData::Query query(std::make_unique<std::string>(smiles), nullptr);
+                SearchData::Query query(std::make_unique<std::string>(smiles), nullptr, _searchData->getBaseLibrary());
                 ProfilingTimer profilingTimer("Query processing");
                 try {
                     auto queryData = this->_searchData->search(query, PropertiesFilter::Bounds());
@@ -35,7 +35,7 @@ namespace qtr {
                     auto answers = queryData->getAnswers(0, 5).second;
                     LOG(INFO) << "Answer examples:";
                     if (dynamic_cast<const QtrDriveSearchData *>(this->_searchData.get()) != nullptr
-                                 || dynamic_cast<const QtrRamSearchData *>(this->_searchData.get()) != nullptr) {
+                        || dynamic_cast<const QtrRamSearchData *>(this->_searchData.get()) != nullptr) {
                         for (auto &i: answers) {
                             LOG(INFO) << i;
                         }

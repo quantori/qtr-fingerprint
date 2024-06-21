@@ -5,6 +5,7 @@
 #include "QtrRamSearchData.h"
 #include "QtrDriveSearchData.h"
 #include "BingoNoSQLSearchData.h"
+#include "RDKitSearchData.h"
 #include "QtrEnumerationSearchData.h"
 #include "properties_table_io/PropertiesTableReader.h"
 #include "BallTreeRAMSearchEngine.h"
@@ -17,6 +18,8 @@
 #include "src/bingo_object.h"
 #include "molecule/smiles_loader.h"
 
+#include "GraphMol/SubstructLibrary/SubstructLibrary.h"
+
 using namespace std;
 using namespace indigo_cpp;
 using namespace indigo;
@@ -24,6 +27,18 @@ using namespace bingo;
 using namespace qtr;
 
 namespace {
+    vector<list<pair<uint64_t, string>>>
+    splitMolecules(list<pair<uint64_t, string>> &queries, size_t count) {
+        std::vector<std::list<pair<uint64_t, string>>> result(count);
+        size_t n = queries.size();
+        for (size_t i = 0; i < n; i++) {
+            result[i % count].emplace_back(std::move(queries.front()));
+            queries.pop_front();
+        }
+        assert(queries.empty());
+        return result;
+    }
+
     shared_ptr<SmilesTable>
     loadSmilesTable(const filesystem::path &smilesTablePath, const HuffmanCoder &huffmanCoder) {
         LOG(INFO) << "Start smiles table loading";
@@ -105,8 +120,12 @@ namespace {
         return result;
     }
 
-    shared_ptr<IdConverter> loadIdConverter(const filesystem::path &idToStringDirPath) {
-        return make_shared<IdConverter>(idToStringDirPath);
+    shared_ptr<IdConverter> loadIdConverter(const RunArgs& args) {
+        if (args.mode() == qtr::RunMode::Type::Web) { // load id converter for web mode only
+            return make_shared<IdConverter>(args.idToStringDir());
+        } else {
+            return nullptr;
+        }
     }
 
     shared_ptr<vector<PropertiesFilter::Properties>>
@@ -122,16 +141,67 @@ namespace {
         return res;
     }
 
+    shared_ptr<RDKit::CachedMolHolder> loadCachedMolHandler(const RunArgs &args) {
+        LOG(INFO) << "Start CachedMolHolder loading";
+        auto result = make_shared<RDKit::CachedMolHolder>();
+        auto reader = StringTableReader(args.smilesTablePath());
+        LOG(INFO) << "Start reading molecules file";
+        list<pair<uint64_t, string>> molecules(reader.begin(), reader.end());
+        LOG(INFO) << "Finish reading molecules file. Start smiles parsing";
+        auto &molPickles = result->getMols();
+        molPickles.resize(molecules.size());
+        size_t threads = thread::hardware_concurrency() <= 2 ? 1 : thread::hardware_concurrency() - 2;
+        auto moleculeGroups = splitMolecules(molecules, threads);
+        molecules.clear();
+        vector<future<void>> tasks;
+        for (size_t group = 0; group < threads; group++) {
+            tasks.push_back(async(launch::async, [group, &moleculeGroups, &molPickles, threads] {
+                                      size_t groupSize = moleculeGroups[group].size();
+                                      for (size_t i = 0; i < groupSize; i++) {
+                                          auto &[id, smiles] = moleculeGroups[group].front();
+                                          try {
+                                              auto mol = shared_ptr<RDKit::ROMol>(RDKit::SmilesToMol(smiles));
+                                              if (mol == nullptr) {
+                                                  LOG_ERROR_AND_EXIT("Invalid mol in the dataset");
+                                              }
+                                              RDKit::MolPickler::pickleMol(*mol, molPickles[id]);
+                                          }
+                                          catch (const std::exception &e) {
+                                              LOG_ERROR_AND_EXIT(e.what());
+                                          }
+                                          if (i % 100000 == 0) {
+                                              LOG(INFO) << "CachedMolHolder loading: processed " << i << "/" << groupSize
+                                                        << " molecules from group " << group + 1 << "/" << threads;
+                                          }
+                                          moleculeGroups[group].pop_front();
+                                      }
+                                      assert(moleculeGroups[group].empty());
+                                  }
+            ));
+        }
+        for (auto &task: tasks) {
+            task.wait();
+        }
+        LOG(INFO) << "Finish CachedMolHolder loading";
+        return result;
+    }
+
+    pair<shared_ptr<RDKit::MolHolderBase>, shared_ptr<CFStorage>> loadMoleculesStorage(const RunArgs &args) {
+        if (!args.verificationStage()) {
+            return {nullptr, nullptr};
+        } else if (args.baseLibrary() == BaseLibrary::RDKit) {
+            return {loadCachedMolHandler(args), nullptr};
+        } else if (args.baseLibrary() == BaseLibrary::Indigo) {
+            return {nullptr, loadCFStorage(args.smilesTablePath())};
+        }
+        throw invalid_argument("Invalid base library provided");
+    }
+
     shared_ptr<SearchData> loadQtrRamSearchData(const RunArgs &args) {
         HuffmanCoder huffmanCoder = HuffmanCoder::load(args.huffmanCoderPath());
         auto loadBallTreeTask = async(launch::async, loadBallTree, cref(args));
-        auto loadCFStorageTask = [&args]() {
-            if (args.verificationStage())
-                return async(launch::async, loadCFStorage, args.smilesTablePath());
-            else
-                return async(launch::async, []() -> shared_ptr<CFStorage> { return nullptr; });
-        }();
-        auto loadIdConverterTask = async(launch::async, loadIdConverter, args.idToStringDir());
+        auto loadMolStorageTask = async(launch::async, loadMoleculesStorage, cref(args));
+        auto loadIdConverterTask = async(launch::async, loadIdConverter, cref(args));
 
         shared_ptr<vector<PropertiesFilter::Properties>> propertiesTablePtr = nullptr;
         if (args.properties()) {
@@ -139,11 +209,11 @@ namespace {
             propertiesTablePtr = loadPropertyTableTask.get();
         }
         auto ballTreePtr = loadBallTreeTask.get();
-        auto cfStoragePtr = loadCFStorageTask.get();
+        auto [molHolderPtr, cfStoragePtr] = loadMolStorageTask.get();
         auto idConverterPtr = loadIdConverterTask.get();
 
         return make_shared<QtrRamSearchData>(ballTreePtr, idConverterPtr, args.ansCount(), args.threads(),
-                                             args.timeLimit(), cfStoragePtr, propertiesTablePtr,
+                                             args.timeLimit(), cfStoragePtr, molHolderPtr, propertiesTablePtr,
                                              args.verificationStage());
     }
 
@@ -156,7 +226,7 @@ namespace {
 
     shared_ptr<SearchData> loadQtrDriveSearchData(const RunArgs &args) {
         auto loadBallTreeTask = async(launch::async, loadBallTree, cref(args));
-        auto loadIdConverterTask = async(launch::async, loadIdConverter, args.idToStringDir());
+        auto loadIdConverterTask = async(launch::async, loadIdConverter, cref(args));
 
         auto ballTreePtr = loadBallTreeTask.get();
         auto idConverterPtr = loadIdConverterTask.get();
@@ -176,6 +246,19 @@ namespace {
         }
     }
 
+    shared_ptr<SearchData> loadRDKitSearchData(const RunArgs &args) {
+        filesystem::path dbDataDir = args.dbDataDirs()[0];
+        filesystem::path moleculesDir = dbDataDir / "molecules";
+        filesystem::path fingerprintsDir = dbDataDir / "fingerprintTables";
+        try {
+            return make_shared<RDKitSearchData>(moleculesDir, fingerprintsDir, args.ansCount(), args.threads(),
+                                                args.timeLimit(), args.verificationStage());
+        }
+        catch (const exception &e) {
+            LOG_ERROR_AND_EXIT(e.what());
+        }
+    }
+
 }
 
 shared_ptr<SearchData> SearchDataLoader::load(const RunArgs &args) {
@@ -188,6 +271,8 @@ shared_ptr<SearchData> SearchDataLoader::load(const RunArgs &args) {
         return loadBingoNoSQLSearchData(args);
     } else if (args.dbType() == DatabaseType::QtrEnumeration) {
         return loadQtrEnumerationSearchData(args);
+    } else if (args.dbType() == DatabaseType::RDKit) {
+        return loadRDKitSearchData(args);
     }
     throw logic_error("Undefined db type");
 }

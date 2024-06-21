@@ -54,8 +54,12 @@ namespace qtr {
                 if (properties()) {
                     LOG_ERROR_AND_EXIT("Cannot build BingoNoSQL database with properties (Not implemented).");
                 }
+            } else if (dbType() == DatabaseType::RDKit) {
+                if (properties()) {
+                    LOG_ERROR_AND_EXIT("Cannot build RDKit database with properties (Not implemented).");
+                }
             } else {
-                LOG_ERROR_AND_EXIT("A case that should not have been executed has been executed");
+                LOG_ERROR_AND_EXIT("Found unsupported dbType");
             }
         }
 

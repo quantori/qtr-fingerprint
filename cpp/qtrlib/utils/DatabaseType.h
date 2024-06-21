@@ -6,6 +6,7 @@ namespace qtr {
         QtrDrive,
         QtrRam,
         BingoNoSQL,
-        QtrEnumeration
+        QtrEnumeration,
+        RDKit,
     };
 } // qtr

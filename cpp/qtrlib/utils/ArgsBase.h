@@ -51,10 +51,11 @@ namespace qtr {
 
     private:
         static inline const std::unordered_map<std::string, DatabaseType> _strToDataBaseType =
-                {{"QtrDrive",    DatabaseType::QtrDrive},
-                 {"QtrRam",      DatabaseType::QtrRam},
-                 {"BingoNoSQL",  DatabaseType::BingoNoSQL},
-                 {"QtrEnumeration", DatabaseType::QtrEnumeration},};
+                {{"QtrDrive",       DatabaseType::QtrDrive},
+                 {"QtrRam",         DatabaseType::QtrRam},
+                 {"BingoNoSQL",     DatabaseType::BingoNoSQL},
+                 {"QtrEnumeration", DatabaseType::QtrEnumeration},
+                 {"RDKit",          DatabaseType::RDKit}};
 
     protected:
         static std::vector<std::filesystem::path> vecStrToVecPath(const std::vector<std::string> &v);
