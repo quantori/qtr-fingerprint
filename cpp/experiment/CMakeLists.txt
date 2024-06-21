@@ -2,6 +2,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 set(This experiment)
 find_package(glog REQUIRED)
+find_package(absl CONFIG REQUIRED)
 
 file(GLOB_RECURSE sources *.cpp *.h)
 
@@ -10,6 +11,7 @@ include(../cmake/AddRDKit.cmake)
 add_executable(${This} main.cpp ${sources})
 
 target_link_libraries(${This} PRIVATE glog::glog)
+target_link_libraries(experiment PRIVATE absl::flags absl::flags_parse)
 
 target_include_directories(${This}
         PUBLIC Fingerprints

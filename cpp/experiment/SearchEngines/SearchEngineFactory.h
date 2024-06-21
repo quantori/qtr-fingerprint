@@ -2,6 +2,9 @@
 
 #include "SearchEngine.h"
 
+#include <filesystem>
+
+
 enum class SearchEngineType {
     QtrRDKit,
     QtrIndigo,
@@ -11,5 +14,5 @@ enum class SearchEngineType {
 
 class SearchEngineFactory {
 public:
-    static SearchEngine create(SearchEngineType type);
+    static std::unique_ptr<SearchEngine> create(SearchEngineType type, const std::filesystem::path &datasetDir);
 };
