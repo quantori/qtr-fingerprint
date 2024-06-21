@@ -6,13 +6,7 @@
 #include <ranges>
 
 namespace {
-    std::string trim(const std::string &str) {
-        auto front = std::find_if_not(str.begin(), str.end(),
-                                      [](int c) { return std::isspace(c) || c == '\n' || c == '\r'; });
-        auto back = std::find_if_not(str.rbegin(), str.rend(),
-                                     [](int c) { return std::isspace(c) || c == '\n' || c == '\r'; }).base();
-        return front < back ? std::string(front, back) : std::string();
-    }
+
 
     void addFileToHandlers(const std::filesystem::path &smilesFile,
                            const boost::shared_ptr<RDKit::CachedMolHolder> &molHandler,

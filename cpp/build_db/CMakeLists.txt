@@ -2,8 +2,6 @@ set(CMAKE_CXX_STANDARD 20)
 
 file(GLOB_RECURSE sources *.cpp *.h)
 
-include(../cmake/AddRDKit.cmake)
-
 add_executable(build_db ${sources})
 
 target_include_directories(build_db

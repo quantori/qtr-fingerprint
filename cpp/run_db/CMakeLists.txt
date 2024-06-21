@@ -3,8 +3,6 @@ find_package(OpenMP REQUIRED)
 
 file(GLOB_RECURSE sources *.cpp *.h)
 
-include(../cmake/AddRDKit.cmake)
-
 add_executable(run_db main.cpp ${sources})
 
 target_include_directories(run_db

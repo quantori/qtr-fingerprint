@@ -1,8 +1,6 @@
 set(CMAKE_CXX_STANDARD 20)
 set(This preprocessing)
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/AddRDKit.cmake)
-
 file(GLOB_RECURSE sources *.cpp *.h)
 
 add_executable(${This} main.cpp ${sources})

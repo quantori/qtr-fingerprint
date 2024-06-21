@@ -17,6 +17,8 @@ SET(BUILD_INDIGO_UTILS OFF CACHE BOOL "BUILD_INDIGO_UTILS Indigo option")
 SET(WITH_STATIC ON CACHE BOOL "WITH_STATIC Indigo option")
 SET(ABSL_PROPAGATE_CXX_STD ON)
 
+include(cmake/AddRDKit.cmake)
+
 # turn off GTEST because something wrong with GMOCK inside my docker  
 SET(WITH_GTEST OFF)
 
