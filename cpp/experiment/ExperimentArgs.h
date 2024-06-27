@@ -2,8 +2,7 @@
 
 #include <string>
 #include <filesystem>
-
-#include "SearchEngineFactory.h"
+#include "SearchEngineConcept.h"
 
 struct ExperimentArgs {
     SearchEngineType searchEngineType;

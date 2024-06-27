@@ -5,8 +5,10 @@
 #include <thread>
 
 #include "ExperimentArgs.h"
-#include "SearchEngineFactory.h"
 #include "ExperimentStat.h"
+
+#include "SearchEngineConcept.h"
+#include "RDKitSearchEngine.h"
 
 #include "GraphMol/GraphMol.h"
 #include "GraphMol/SmilesParse/SmilesParse.h"
@@ -71,7 +73,8 @@ void checkTimeout(ExperimentInfo &info) {
     }
 }
 
-void conductExperiment(SearchEngine &searchEngine,
+template<SearchEngine SE>
+void conductExperiment(SE &searchEngine,
                        const std::vector<std::string> &queries,
                        int maxResults,
                        double timeLimit,
@@ -110,9 +113,19 @@ int main(int argc, char *argv[]) {
 
     ExperimentArgs args(argc, argv);
 
-    auto searchEngine = SearchEngineFactory::create(args.searchEngineType, args.datasetDir);
     auto queries = parseMoleculesFromFile(args.queriesFile);
     std::ofstream statOut(args.statisticsFile);
-    conductExperiment(*searchEngine, queries, args.maxResults, args.timeLimit, statOut);
+
+    auto startExperiment = [&](auto &searchEngine) {
+        conductExperiment(searchEngine, queries, args.maxResults, args.timeLimit, statOut);
+    };
+
+    if (args.searchEngineType == SearchEngineType::RDKit) {
+        auto se = RDKitSearchEngine(args.datasetDir);
+        startExperiment(se);
+    } else {
+        LOG(ERROR) << "Specified SearchEngineType is not supported yet";
+    }
+
     return 0;
 }

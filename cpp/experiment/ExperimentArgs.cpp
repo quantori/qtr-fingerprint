@@ -6,8 +6,6 @@
 
 #include <map>
 
-#include "SearchEngineFactory.h"
-
 namespace {
 
     const std::map<std::string, SearchEngineType> stringToSearchEngineType = {
