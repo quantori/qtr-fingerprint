@@ -9,17 +9,18 @@ namespace {
 
 
     void addFileToHandlers(const std::filesystem::path &smilesFile,
-                           const boost::shared_ptr<RDKit::CachedMolHolder> &molHandler,
-                           const boost::shared_ptr<RDKit::PatternHolder> &patternHolder,
+                           const boost::shared_ptr <RDKit::CachedMolHolder> &molHandler,
+                           const boost::shared_ptr <RDKit::PatternHolder> &patternHolder,
                            std::mutex &mutex) {
         std::ifstream in(smilesFile);
-        std::string line;
-        while (std::getline(in, line)) {
-            std::string smiles(line.begin(), std::find_if(line.begin(), line.end(), [](int c) {
-                return std::isspace(c) || c == '\n' || c == '\r' || c == '\t';
-            }));
+        std::string smiles;
+        while (in.peek() != EOF) {
+            std::string id;
+            in >> id >> smiles;
+            std::string lineEnding;
+            std::getline(in, lineEnding);
             if (smiles.empty()) {
-                LOG(WARNING) << "Found line with wrong formatting and skipped it: \"" << line << "\"";
+                LOG(WARNING) << "Found line with wrong formatting and skipped it: \"" << smiles << lineEnding << "\"";
                 continue;
             }
             std::unique_ptr<RDKit::ROMol> mol(RDKit::SmilesToMol(smiles));
@@ -56,6 +57,7 @@ RDKitSearchEngine::RDKitSearchEngine(const std::filesystem::path &datasetDir) {
     for (auto &task: tasks) {
         task.wait();
     }
+
     _substructLibrary = std::make_shared<RDKit::SubstructLibrary>(molHandler, fpHandler);
 }
 

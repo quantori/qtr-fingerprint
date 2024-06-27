@@ -74,13 +74,13 @@ ExperimentArgs::ExperimentArgs(int argc, char **argv) {
 
     queriesFile = absl::GetFlag(FLAGS_QueriesFile);
     if (!std::filesystem::exists(queriesFile)) {
-        LOG(ERROR) << "Queries file does not exist: " << queriesFile;
+        LOG(ERROR) << "QueriesFile does not exist: " << queriesFile;
         exit(1);
     }
 
     datasetDir = absl::GetFlag(FLAGS_DatasetDir);
     if (!std::filesystem::exists(datasetDir)) {
-        LOG(ERROR) << "Dataset directory does not exist: " << datasetDir;
+        LOG(ERROR) << "DatasetDir does not exist: " << datasetDir;
         exit(1);
     }
     if (!std::filesystem::is_directory(datasetDir)) {
@@ -90,7 +90,7 @@ ExperimentArgs::ExperimentArgs(int argc, char **argv) {
 
     statisticsFile = absl::GetFlag(FLAGS_StatisticsFile);
     if (statisticsFile.empty()) {
-        LOG(ERROR) << "Statistics file path cannot be empty.";
+        LOG(ERROR) << "StatisticsFile path cannot be empty.";
         exit(1);
     }
 }
