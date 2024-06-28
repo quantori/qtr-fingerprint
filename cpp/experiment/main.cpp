@@ -6,30 +6,15 @@
 
 #include "ExperimentArgs.h"
 #include "ExperimentStat.h"
-
 #include "SearchEngineConcept.h"
 #include "RDKitSearchEngine.h"
+#include "QtrRDKitSearchEngine.h"
+#include "QueriesParser.h"
+#include "SmilesDirParser.h"
 
 #include "GraphMol/GraphMol.h"
 #include "GraphMol/SmilesParse/SmilesParse.h"
 
-
-std::vector<std::string> parseMoleculesFromFile(const std::filesystem::path &moleculesFile) {
-    std::ifstream in(moleculesFile);
-    std::vector<std::string> result;
-    while (in.peek() != EOF) {
-        std::string smiles;
-        in >> smiles;
-        std::string lineEnding;
-        std::getline(in, lineEnding);
-        if (smiles.empty()) {
-            LOG(ERROR) << "Wrong formatting in queries file";
-        }
-        result.push_back(smiles);
-    }
-    LOG(INFO) << "Loaded " << result.size() << " molecules from file " << moleculesFile;
-    return result;
-}
 
 struct ExperimentInfo {
     bool stopFlag;
@@ -73,7 +58,7 @@ void checkTimeout(ExperimentInfo &info) {
     }
 }
 
-template<SearchEngine SE>
+template<typename Mol, SearchEngine<Mol> SE>
 void conductExperiment(SE &searchEngine,
                        const std::vector<std::string> &queries,
                        int maxResults,
@@ -88,10 +73,18 @@ void conductExperiment(SE &searchEngine,
     ExperimentStat stat;
     for (auto &query: queries) {
         LOG(INFO) << "Start " << query << " processing";
-        info.startExperiment();
-        auto matches = searchEngine.getMatches(query, maxResults, info.stopFlag);
+        decltype(searchEngine.smilesToMolecule(query)) mol;
+        try {
+            mol = searchEngine.smilesToMolecule(query);
+        } catch (std::exception &e) {
+            LOG(ERROR) << "Cannot parse query " << query << ": " << e.what();
+            exit(1);
+        }
 
+        info.startExperiment();
+        auto matches = searchEngine.getMatches(*mol, maxResults, info.stopFlag);
         auto experimentDuration = info.finishExperiment();
+
         stat.add(ExperimentStat::Entity{
                 .duration = experimentDuration,
                 .resultsFound = (int) matches.size()
@@ -113,16 +106,16 @@ int main(int argc, char *argv[]) {
 
     ExperimentArgs args(argc, argv);
 
-    auto queries = parseMoleculesFromFile(args.queriesFile);
+    auto queries = QueriesParser(args.queriesFile).parse();
     std::ofstream statOut(args.statisticsFile);
-
-    auto startExperiment = [&](auto &searchEngine) {
-        conductExperiment(searchEngine, queries, args.maxResults, args.timeLimit, statOut);
-    };
+    auto smilesDataset = SmilesDirParser(args.datasetDir).parse();
 
     if (args.searchEngineType == SearchEngineType::RDKit) {
-        auto se = RDKitSearchEngine(args.datasetDir);
-        startExperiment(se);
+        auto se = RDKitSearchEngine(smilesDataset);
+        conductExperiment<RDKit::ROMol>(se, queries, args.maxResults, args.timeLimit, statOut);
+    } else if (args.searchEngineType == SearchEngineType::QtrRDKit) {
+        auto se = QtrRDKitSearchEngine(smilesDataset);
+        conductExperiment<RDKit::ROMol>(se, queries, args.maxResults, args.timeLimit, statOut);
     } else {
         LOG(ERROR) << "Specified SearchEngineType is not supported yet";
     }

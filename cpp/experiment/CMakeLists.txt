@@ -14,6 +14,7 @@ target_link_libraries(${This} PRIVATE absl::flags absl::flags_parse)
 target_link_libraries(${This} PRIVATE ${LIBS} ${RDKit_LIBS})
 
 target_include_directories(${This}
+        PUBLIC .
         PUBLIC fingerprints
         PUBLIC search_engines
         PUBLIC parsers
