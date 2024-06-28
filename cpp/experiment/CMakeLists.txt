@@ -16,6 +16,7 @@ target_link_libraries(${This} PRIVATE ${LIBS} ${RDKit_LIBS})
 target_include_directories(${This}
         PUBLIC fingerprints
         PUBLIC search_engines
+        PUBLIC parsers
 )
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/SetOutputDirectory.cmake)
