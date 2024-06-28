@@ -159,8 +159,7 @@ public:
     }
 
     explicit BallTree(std::vector<std::pair<std::unique_ptr<Mol>, std::unique_ptr<FP>>> &&data) {
-        _depth = 2; // TODO: temporary for debug
-//        _depth = std::max((size_t) 2, (size_t) std::ceil(std::log2(data.size() / 50))); // TODO: 50 - magic constant
+        _depth = std::max((size_t) 2, (size_t) std::ceil(std::log2(data.size() / 50))); // TODO: 50 - magic constant
         _leafSearchEngines.resize(1ull << _depth); // TODO: check +- 1
         _nodes.resize((2ull << _depth) - 1);
         std::vector<std::vector<std::pair<std::unique_ptr<Mol>, std::unique_ptr<FP>>>> nodesData(

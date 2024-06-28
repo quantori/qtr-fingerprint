@@ -71,8 +71,9 @@ void conductExperiment(SE &searchEngine,
     };
     auto checkTimeoutThread = std::thread(checkTimeout, std::ref(info));
     ExperimentStat stat;
-    for (auto &query: queries) {
-        LOG(INFO) << "Start " << query << " processing";
+    for (size_t i = 0; i < queries.size(); i++) {
+        auto& query = queries[i];
+        LOG(INFO) << "Start " << query << " processing (" << i + 1 << ")";
         decltype(searchEngine.smilesToMolecule(query)) mol;
         try {
             mol = searchEngine.smilesToMolecule(query);
