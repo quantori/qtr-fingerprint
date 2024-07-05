@@ -118,7 +118,7 @@ private:
         auto bitStat = countBitStat(data);
         auto splitBit = selectSplitBit(bitStat);
         for (auto &[mol, fp]: data) {
-            auto &destData = leftData.size() * 2 > data.size()
+            auto &destData = leftData.size() * 2 >= data.size()
                              || (rightData.size() * 2 < data.size() && fp->getBit(splitBit) == 1) ? rightData
                                                                                                   : leftData;
             destData.emplace_back(std::move(mol), std::move(fp));
@@ -159,6 +159,7 @@ public:
     }
 
     explicit BallTree(std::vector<std::pair<std::unique_ptr<Mol>, std::unique_ptr<FP>>> &&data) {
+//        _depth = 3;
         _depth = std::max((size_t) 2, (size_t) std::ceil(std::log2(data.size() / 50))); // TODO: 50 - magic constant
         _leafSearchEngines.resize(1ull << _depth); // TODO: check +- 1
         _nodes.resize((2ull << _depth) - 1);

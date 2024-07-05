@@ -46,7 +46,18 @@ RDKitSearchEngine::RDKitSearchEngine(const std::vector<std::string> &smiles) {
     auto fpHandler = boost::make_shared<RDKit::PatternHolder>();
     _substructLibrary = std::make_shared<RDKit::SubstructLibrary>(molHandler, fpHandler);
     for (auto &s: smiles) {
-        auto mol = smilesToMolecule(s);
+        std::unique_ptr<RDKit::ROMol> mol;
+        try {
+            mol = smilesToMolecule(s);
+        } catch (const std::exception& e) {
+            LOG(WARNING) << "Skip smiles: " << s << " error: " << e.what();
+            continue;
+        }
+        if (mol == nullptr) {
+            LOG(WARNING) << "Can't parse smiles: " << s;
+            continue;
+        }
+        auto fp = std::make_unique<RDKitFingerprint>(*mol);
         _substructLibrary->addMol(*mol);
     }
 }

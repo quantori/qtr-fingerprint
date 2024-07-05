@@ -11,7 +11,17 @@ std::unique_ptr<RDKit::ROMol> QtrRDKitSearchEngine::smilesToMolecule(const std::
 QtrRDKitSearchEngine::QtrRDKitSearchEngine(const std::vector<std::string> &smilesDataset) {
     std::vector<std::pair<std::unique_ptr<RDKit::ROMol>, std::unique_ptr<RDKitFingerprint>>> data;
     for (auto &smiles: smilesDataset) {
-        auto mol = smilesToMolecule(smiles);
+        std::unique_ptr<RDKit::ROMol> mol;
+        try {
+            mol = smilesToMolecule(smiles);
+        } catch (const std::exception& e) {
+            LOG(WARNING) << "Skip smiles: " << smiles << " error: " << e.what();
+            continue;
+        }
+        if (mol == nullptr) {
+            LOG(WARNING) << "Can't parse smiles: " << smiles;
+            continue;
+        }
         auto fp = std::make_unique<RDKitFingerprint>(*mol);
         data.emplace_back(std::move(mol), std::move(fp));
     }
