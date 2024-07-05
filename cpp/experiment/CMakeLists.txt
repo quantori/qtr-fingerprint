@@ -12,6 +12,7 @@ add_executable(${This} main.cpp ${sources})
 target_link_libraries(${This} PRIVATE glog::glog)
 target_link_libraries(${This} PRIVATE absl::flags absl::flags_parse)
 target_link_libraries(${This} PRIVATE ${LIBS} ${RDKit_LIBS})
+target_link_libraries(${This} PRIVATE indigo-core indigo-cpp bingo-nosql bingo-nosql-object)
 
 target_include_directories(${This}
         PUBLIC .
