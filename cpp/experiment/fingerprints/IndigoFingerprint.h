@@ -14,7 +14,11 @@
 
 class IndigoFingerprint {
 public:
-    explicit IndigoFingerprint(indigo_cpp::IndigoMolecule &mol);
+    using MoleculeType = indigo_cpp::IndigoBaseMolecule;
+
+    explicit IndigoFingerprint(const MoleculeType &mol);
+
+    explicit IndigoFingerprint(const std::string &smiles);
 
     IndigoFingerprint();
 
@@ -22,7 +26,7 @@ public:
 
     [[nodiscard]] bool getBit(size_t index) const;
 
-    [[nodiscard]] static size_t size() ;
+    [[nodiscard]] static size_t size();
 
     IndigoFingerprint &operator|=(const IndigoFingerprint &other);
 

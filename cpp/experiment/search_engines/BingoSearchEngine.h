@@ -26,10 +26,11 @@ public:
 
     static std::unique_ptr<MoleculeType> smilesToMolecule(const std::string &smiles);
 
+    static std::unique_ptr<QueryMoleculeType> smilesToQueryMolecule(const std::string &smiles);
+
 private:
 
     BingoSearchEngine();
 
-    std::unique_ptr<indigo_cpp::BingoMolecule> _db;
-    std::filesystem::path _dbDir;
+    indigo_cpp::BingoMolecule _db;
 };

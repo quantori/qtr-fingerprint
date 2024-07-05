@@ -9,11 +9,16 @@
 
 #include <string>
 
-template<typename Mol, Fingerprint<Mol> FP, SearchEngine<Mol> SE>
+template<SearchEngine SE>
 class BallTree {
+//    static_assert(std::is_same<typename FP::MoleculeType, typename SE::MoleculeType>::value);
+// TODO: think about static asserts
+    using MoleculeType = typename SE::MoleculeType;
+    using QueryMoleculeType = typename SE::QueryMoleculeType;
+    using FingerprintType = typename SE::FingerprintType;
 private:
     struct Node {
-        FP centroid;
+        FingerprintType centroid;
     };
 
     std::vector<Node> _nodes;
@@ -73,7 +78,7 @@ private:
         }
     }
 
-    void searchInLeafNode(const RDKit::ROMol &mol, int maxResults, bool &stopFlag, size_t nodeId,
+    void searchInLeafNode(const QueryMoleculeType &mol, int maxResults, bool &stopFlag, size_t nodeId,
                           std::vector<uint64_t> &results) {
         assert(isLeaf(nodeId));
         size_t leafId = nodeIdToLeafId(nodeId);
@@ -85,7 +90,7 @@ private:
     }
 
     static std::vector<size_t>
-    countBitStat(const std::vector<std::pair<std::unique_ptr<Mol>, std::unique_ptr<FP>>> &data) {
+    countBitStat(const std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType>>> &data) {
         std::vector<size_t> bitStat(data[0].second->size());
         for (auto &[mol, fp]: data) {
             assert(fp->size() == bitStat.size());
@@ -112,9 +117,9 @@ private:
     }
 
     static void
-    splitData(std::vector<std::pair<std::unique_ptr<Mol>, std::unique_ptr<FP>>> &&data,
-              std::vector<std::pair<std::unique_ptr<Mol>, std::unique_ptr<FP>>> &leftData,
-              std::vector<std::pair<std::unique_ptr<Mol>, std::unique_ptr<FP>>> &rightData) {
+    splitData(std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType>>> &&data,
+              std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType>>> &leftData,
+              std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType>>> &rightData) {
         auto bitStat = countBitStat(data);
         auto splitBit = selectSplitBit(bitStat);
         for (auto &[mol, fp]: data) {
@@ -128,8 +133,9 @@ private:
     }
 
 
-    static FP evaluateCentroid(const std::vector<std::pair<std::unique_ptr<Mol>, std::unique_ptr<FP>>> &data) {
-        FP res;
+    static FingerprintType evaluateCentroid(
+            const std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType >>> &data) {
+        FingerprintType res;
         for (auto &[mol, fp]: data) {
             res |= *fp;
         }
@@ -137,10 +143,10 @@ private:
     }
 
 public:
-    std::vector<uint64_t> getMatches(const RDKit::ROMol &mol, int maxResults, bool &stopFlag) {
+    std::vector<uint64_t> getMatches(const QueryMoleculeType &mol, int maxResults, bool &stopFlag) {
         size_t nodeId = root();
         std::vector<uint64_t> results;
-        FP queryFingerprint(mol);
+        FingerprintType queryFingerprint(mol);
         while (nodeId != endNodeId()
                && !stopFlag
                && (int) results.size() < maxResults) {
@@ -158,12 +164,12 @@ public:
         return results;
     }
 
-    explicit BallTree(std::vector<std::pair<std::unique_ptr<Mol>, std::unique_ptr<FP>>> &&data) {
+    explicit BallTree(std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType>>> &&data) {
 //        _depth = 3;
         _depth = std::max((size_t) 2, (size_t) std::ceil(std::log2(data.size() / 50))); // TODO: 50 - magic constant
         _leafSearchEngines.resize(1ull << _depth); // TODO: check +- 1
         _nodes.resize((2ull << _depth) - 1);
-        std::vector<std::vector<std::pair<std::unique_ptr<Mol>, std::unique_ptr<FP>>>> nodesData(
+        std::vector<std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType>>>> nodesData(
                 (1u << _depth) * 2 - 1);
         nodesData[root()] = std::move(data);
         for (size_t nodeId = root(); nodeId < nodesData.size(); nodeId++) {

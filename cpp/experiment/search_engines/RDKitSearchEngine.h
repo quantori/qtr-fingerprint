@@ -23,6 +23,8 @@ public:
 
     static std::unique_ptr<MoleculeType> smilesToMolecule(const std::string &smiles);
 
+    static std::unique_ptr<MoleculeType> smilesToQueryMolecule(const std::string &smiles);
+
 private:
     std::shared_ptr<RDKit::SubstructLibrary> _substructLibrary;
 };

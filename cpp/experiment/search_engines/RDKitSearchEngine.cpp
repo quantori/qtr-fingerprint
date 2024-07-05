@@ -49,7 +49,7 @@ RDKitSearchEngine::RDKitSearchEngine(const std::vector<std::string> &smiles) {
         std::unique_ptr<MoleculeType> mol;
         try {
             mol = smilesToMolecule(s);
-        } catch (const std::exception& e) {
+        } catch (const std::exception &e) {
             LOG(WARNING) << "Skip smiles: " << s << " error: " << e.what();
             continue;
         }
@@ -81,4 +81,8 @@ RDKitSearchEngine::RDKitSearchEngine(
         fpHandler->addFingerprint(fp->bitVector());
     }
     _substructLibrary = std::make_shared<RDKit::SubstructLibrary>(molHandler, fpHandler);
+}
+
+std::unique_ptr<RDKitSearchEngine::MoleculeType> RDKitSearchEngine::smilesToQueryMolecule(const std::string &smiles) {
+    return smilesToMolecule(smiles);
 }

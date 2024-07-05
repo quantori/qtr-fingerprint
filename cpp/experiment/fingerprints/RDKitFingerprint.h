@@ -5,7 +5,9 @@
 
 class RDKitFingerprint {
 public:
-    explicit RDKitFingerprint(const RDKit::ROMol &mol);
+    using MoleculeType = RDKit::ROMol;
+
+    explicit RDKitFingerprint(const MoleculeType &mol);
 
     RDKitFingerprint();
 

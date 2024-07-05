@@ -8,7 +8,8 @@
 #include "ExperimentStat.h"
 #include "SearchEngineConcept.h"
 #include "RDKitSearchEngine.h"
-#include "QtrRDKitSearchEngine.h"
+#include "BingoSearchEngine.h"
+#include "QtrSearchEngine.h"
 #include "QueriesParser.h"
 #include "SmilesDirParser.h"
 
@@ -58,7 +59,7 @@ void checkTimeout(ExperimentInfo &info) {
     }
 }
 
-template<typename Mol, SearchEngine<Mol> SE>
+template<SearchEngine SE>
 void conductExperiment(SE &searchEngine,
                        const std::vector<std::string> &queries,
                        int maxResults,
@@ -74,9 +75,9 @@ void conductExperiment(SE &searchEngine,
     for (size_t i = 0; i < queries.size(); i++) {
         auto& query = queries[i];
         LOG(INFO) << "Start " << query << " processing (" << i + 1 << ")";
-        decltype(searchEngine.smilesToMolecule(query)) mol;
+        decltype(searchEngine.smilesToQueryMolecule(query)) mol;
         try {
-            mol = searchEngine.smilesToMolecule(query);
+            mol = searchEngine.smilesToQueryMolecule(query);
         } catch (std::exception &e) {
             LOG(ERROR) << "Cannot parse query " << query << ": " << e.what();
             exit(1);
@@ -113,10 +114,16 @@ int main(int argc, char *argv[]) {
 
     if (args.searchEngineType == SearchEngineType::RDKit) {
         auto se = RDKitSearchEngine(smilesDataset);
-        conductExperiment<RDKit::ROMol>(se, queries, args.maxResults, args.timeLimit, statOut);
+        conductExperiment(se, queries, args.maxResults, args.timeLimit, statOut);
     } else if (args.searchEngineType == SearchEngineType::QtrRDKit) {
-        auto se = QtrRDKitSearchEngine(smilesDataset);
-        conductExperiment<RDKit::ROMol>(se, queries, args.maxResults, args.timeLimit, statOut);
+        auto se = QtrSearchEngine<RDKitSearchEngine>(smilesDataset);
+        conductExperiment(se, queries, args.maxResults, args.timeLimit, statOut);
+    } else if (args.searchEngineType == SearchEngineType::Indigo) {
+        auto se = BingoSearchEngine(smilesDataset);
+        conductExperiment(se, queries, args.maxResults, args.timeLimit, statOut);
+    } else if (args.searchEngineType == SearchEngineType::QtrIndigo) {
+        auto se = QtrSearchEngine<BingoSearchEngine>(smilesDataset);
+        conductExperiment(se, queries, args.maxResults, args.timeLimit, statOut);
     } else {
         LOG(ERROR) << "Specified SearchEngineType is not supported yet";
     }
