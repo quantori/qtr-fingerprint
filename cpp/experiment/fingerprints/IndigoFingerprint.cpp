@@ -4,11 +4,17 @@ namespace {
     const Indigo indigoInstance;
 }
 
-IndigoFingerprint::IndigoFingerprint(indigo::Molecule &mol) {
-    assert(mol.isAromatized());
-    bingo::IndexMolecule indexMolecule(mol, indigo::AromaticityOptions());
+IndigoFingerprint::IndigoFingerprint(indigo_cpp::IndigoMolecule &mol) {
+    // TODO: is it possible to cast indigo_cpp::IndigoMolecule to indigo::Molecule directly?
+    std::string smiles = mol.smiles();
+    indigo::BufferScanner scanner(smiles.c_str(), smiles.size(), false);
+    indigo::SmilesLoader loader(scanner);
+    indigo::Molecule molecule;
+    molecule.aromatize(indigo::AromaticityOptions());
+    assert(molecule.isAromatized());
+    bingo::IndexMolecule indexMolecule(molecule, indigo::AromaticityOptions());
     _fingerprint = std::make_unique<indigo::Array<byte>>();
-    indigo::MoleculeFingerprintBuilder fingerprintBuilder(mol, indigoInstance.fp_params);
+    indigo::MoleculeFingerprintBuilder fingerprintBuilder(molecule, indigoInstance.fp_params);
     fingerprintBuilder.parseFingerprintType("sub", false);
     fingerprintBuilder.process();
     _fingerprint->copy(fingerprintBuilder.get(), indigoInstance.fp_params.fingerprintSize());

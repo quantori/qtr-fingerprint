@@ -14,7 +14,7 @@
 
 class IndigoFingerprint {
 public:
-    explicit IndigoFingerprint(indigo::Molecule &mol);
+    explicit IndigoFingerprint(indigo_cpp::IndigoMolecule &mol);
 
     IndigoFingerprint();
 

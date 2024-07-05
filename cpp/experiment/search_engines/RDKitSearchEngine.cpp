@@ -22,7 +22,7 @@
  * @note TODO: Implement a version without time limit checks and perform full tests on a large dataset
  *             to ensure that these checks do not affect performance.
  */
-std::vector<uint64_t> RDKitSearchEngine::getMatches(const RDKit::ROMol &queryMol, int maxResults, bool &stopFlag) {
+std::vector<uint64_t> RDKitSearchEngine::getMatches(const MoleculeType &queryMol, int maxResults, bool &stopFlag) {
     RDKit::SubstructMatchParameters params;
     params.recursionPossible = true;
     params.useChirality = true;
@@ -37,8 +37,8 @@ std::vector<uint64_t> RDKitSearchEngine::getMatches(const RDKit::ROMol &queryMol
     return result;
 }
 
-std::unique_ptr<RDKit::ROMol> RDKitSearchEngine::smilesToMolecule(const std::string &smiles) {
-    return std::unique_ptr<RDKit::ROMol>(RDKit::SmilesToMol(smiles));
+std::unique_ptr<RDKitSearchEngine::MoleculeType> RDKitSearchEngine::smilesToMolecule(const std::string &smiles) {
+    return std::unique_ptr<MoleculeType>(RDKit::SmilesToMol(smiles));
 }
 
 RDKitSearchEngine::RDKitSearchEngine(const std::vector<std::string> &smiles) {
@@ -46,7 +46,7 @@ RDKitSearchEngine::RDKitSearchEngine(const std::vector<std::string> &smiles) {
     auto fpHandler = boost::make_shared<RDKit::PatternHolder>();
     _substructLibrary = std::make_shared<RDKit::SubstructLibrary>(molHandler, fpHandler);
     for (auto &s: smiles) {
-        std::unique_ptr<RDKit::ROMol> mol;
+        std::unique_ptr<MoleculeType> mol;
         try {
             mol = smilesToMolecule(s);
         } catch (const std::exception& e) {
@@ -62,7 +62,7 @@ RDKitSearchEngine::RDKitSearchEngine(const std::vector<std::string> &smiles) {
     }
 }
 
-RDKitSearchEngine::RDKitSearchEngine(std::vector<std::unique_ptr<RDKit::ROMol>> &&molecules) {
+RDKitSearchEngine::RDKitSearchEngine(std::vector<std::unique_ptr<MoleculeType>> &&molecules) {
     auto molHandler = boost::make_shared<RDKit::CachedMolHolder>();
     auto fpHandler = boost::make_shared<RDKit::PatternHolder>();
     _substructLibrary = std::make_shared<RDKit::SubstructLibrary>(molHandler, fpHandler);
@@ -73,7 +73,7 @@ RDKitSearchEngine::RDKitSearchEngine(std::vector<std::unique_ptr<RDKit::ROMol>> 
 }
 
 RDKitSearchEngine::RDKitSearchEngine(
-        std::vector<std::pair<std::unique_ptr<RDKit::ROMol>, std::unique_ptr<FingerprintType>>> &&data) {
+        std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType>>> &&data) {
     auto molHandler = boost::make_shared<RDKit::CachedMolHolder>();
     auto fpHandler = boost::make_shared<RDKit::PatternHolder>();
     for (auto &[mol, fp]: data) {
