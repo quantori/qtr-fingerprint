@@ -1,9 +1,22 @@
 #include "RDKitSearchEngine.h"
 
+#include "GraphMol/Substruct/SubstructMatch.h"
+
 #include <glog/logging.h>
 
 #include <future>
 #include <ranges>
+
+namespace {
+
+    RDKit::SubstructMatchParameters getSubstructMatchParameters() {
+        RDKit::SubstructMatchParameters params;
+        params.recursionPossible = true;
+        params.useChirality = true;
+        params.useQueryQueryMatches = false;
+        return params;
+    }
+}
 
 /**
  * @brief Searches for substructure matches in the RDKit substructure library.
@@ -23,16 +36,33 @@
  *             to ensure that these checks do not affect performance.
  */
 std::vector<uint64_t> RDKitSearchEngine::getMatches(const MoleculeType &queryMol, int maxResults, bool &stopFlag) {
-    RDKit::SubstructMatchParameters params;
-    params.recursionPossible = true;
-    params.useChirality = true;
-    params.useQueryQueryMatches = false;
     const unsigned int STEP = 100000;
     std::vector<uint64_t> result;
     for (unsigned int block = 0; block < _substructLibrary->size() && maxResults > 0 && !stopFlag; block += STEP) {
-        auto matches = _substructLibrary->getMatches(queryMol, block, block + STEP, params, 1, maxResults);
+        auto matches = _substructLibrary->getMatches(queryMol, block, block + STEP, getSubstructMatchParameters(), 1,
+                                                     maxResults);
         maxResults -= (int) matches.size();
         result.insert(result.end(), matches.begin(), matches.end());
+    }
+    return result;
+}
+
+std::vector<uint64_t> RDKitSearchEngine::getMatches(const RDKitSearchEngine::QueryMoleculeType &queryMol,
+                                                    const RDKitSearchEngine::FingerprintType &fingerprint,
+                                                    int maxResults, bool &stopFlag) {
+    std::vector<uint64_t> result;
+    auto &molecules = _substructLibrary->getMolecules();
+    auto &fingerprints = _substructLibrary->getFingerprints();
+    auto params = getSubstructMatchParameters();
+    assert(molecules.size() == fingerprints.size());
+    for (uint64_t i = 0; i < molecules.size() && !stopFlag && result.size() < maxResults; i++) {
+        if (!fingerprints.passesFilter(i, fingerprint.bitVector())) {
+            continue;
+        }
+        auto mol = molecules.getMol(i);
+        if (!SubstructMatch(*mol, queryMol, params).empty()) {
+            result.push_back(i);
+        }
     }
     return result;
 }

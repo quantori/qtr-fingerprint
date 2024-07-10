@@ -76,3 +76,10 @@ BingoSearchEngine::smilesToQueryMolecule(const std::string &smiles) {
     mol->aromatize();
     return mol;
 }
+
+std::vector<uint64_t> BingoSearchEngine::getMatches(const BingoSearchEngine::QueryMoleculeType &mol,
+                                                    const BingoSearchEngine::FingerprintType &fingerprint,
+                                                    int maxResults, bool &stopFlag) {
+    // TODO: do not ignore fingerprint
+    return getMatches(mol, maxResults, stopFlag);
+}

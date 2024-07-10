@@ -17,9 +17,12 @@ public:
     explicit RDKitSearchEngine(std::vector<std::unique_ptr<MoleculeType>> &&molecules);
 
     explicit RDKitSearchEngine(
-            std::vector<std::pair<std::unique_ptr<MoleculeType >, std::unique_ptr<FingerprintType>>> &&data);
+            std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType>>> &&data);
 
     std::vector<uint64_t> getMatches(const QueryMoleculeType &queryMol, int maxResults, bool &stopFlag);
+
+    std::vector<uint64_t>
+    getMatches(const QueryMoleculeType &queryMol, const FingerprintType &fingerprint, int maxResults, bool &stopFlag);
 
     static std::unique_ptr<MoleculeType> smilesToMolecule(const std::string &smiles);
 

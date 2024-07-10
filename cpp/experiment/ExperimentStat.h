@@ -19,7 +19,7 @@ public:
 
     void add(const Entity &entity);
 
-    [[nodiscard]] std::vector<double> Percentages(std::initializer_list<double> percetages) const;
+    [[nodiscard]] std::vector<double> quantiles(std::initializer_list<double> quantiles) const;
 };
 
 std::ostream& operator << (std::ostream& out, const ExperimentStat& stat);

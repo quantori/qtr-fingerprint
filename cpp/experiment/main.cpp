@@ -73,7 +73,7 @@ void conductExperiment(SE &searchEngine,
     auto checkTimeoutThread = std::thread(checkTimeout, std::ref(info));
     ExperimentStat stat;
     for (size_t i = 0; i < queries.size(); i++) {
-        auto& query = queries[i];
+        auto &query = queries[i];
         LOG(INFO) << "Start " << query << " processing (" << i + 1 << ")";
         decltype(searchEngine.smilesToQueryMolecule(query)) mol;
         try {
@@ -99,6 +99,10 @@ void conductExperiment(SE &searchEngine,
     LOG(INFO) << "Wait timeout checker to finish";
     checkTimeoutThread.join();
     statOut << stat << std::endl;
+    auto quantiles = stat.quantiles({0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00});
+    for (size_t i = 0; i < quantiles.size(); i++) {
+        std::cout << (i + 1) * 10 << "%: " << std::setprecision(5) << std::fixed << quantiles[i] << std::endl;
+    }
 }
 
 int main(int argc, char *argv[]) {

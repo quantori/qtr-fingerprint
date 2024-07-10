@@ -78,14 +78,15 @@ private:
         }
     }
 
-    void searchInLeafNode(const QueryMoleculeType &mol, int maxResults, bool &stopFlag, size_t nodeId,
-                          std::vector<uint64_t> &results) {
+    void
+    searchInLeafNode(const QueryMoleculeType &mol, const FingerprintType &fingerprint, int maxResults, bool &stopFlag,
+                     size_t nodeId,
+                     std::vector<uint64_t> &results) {
         assert(isLeaf(nodeId));
         size_t leafId = nodeIdToLeafId(nodeId);
-        std::vector<uint64_t> leafResults = _leafSearchEngines[leafId]->getMatches(mol,
+        std::vector<uint64_t> leafResults = _leafSearchEngines[leafId]->getMatches(mol, fingerprint,
                                                                                    maxResults - results.size(),
                                                                                    stopFlag);
-        // TODO: maybe optimize and pass fingerprint here. Problem: How to handle this case
         results.insert(results.end(), leafResults.begin(), leafResults.end());
     }
 
@@ -143,19 +144,19 @@ private:
     }
 
 public:
-    std::vector<uint64_t> getMatches(const QueryMoleculeType &mol, int maxResults, bool &stopFlag) {
+    std::vector<uint64_t>
+    getMatches(const QueryMoleculeType &mol, const FingerprintType &fingerprint, int maxResults, bool &stopFlag) {
         size_t nodeId = root();
         std::vector<uint64_t> results;
-        FingerprintType queryFingerprint(mol);
         while (nodeId != endNodeId()
                && !stopFlag
                && (int) results.size() < maxResults) {
             auto &node = _nodes[nodeId];
-            bool skipSubtree = !queryFingerprint.isSubFingerprintOf(node.centroid);
-            if (!skipSubtree && isLeaf(nodeId)) {
-                searchInLeafNode(mol, maxResults, stopFlag, nodeId, results);
+            bool shouldSkipSubtree = !fingerprint.isSubFingerprintOf(node.centroid);
+            if (!shouldSkipSubtree && isLeaf(nodeId)) {
+                searchInLeafNode(mol, fingerprint, maxResults, stopFlag, nodeId, results);
             }
-            if (skipSubtree) {
+            if (shouldSkipSubtree) {
                 nodeId = traverseUp(nodeId);
             } else {
                 nodeId = traverseDown(nodeId);
@@ -164,9 +165,14 @@ public:
         return results;
     }
 
+    std::vector<uint64_t> getMatches(const QueryMoleculeType &mol, int maxResults, bool &stopFlag) {
+        FingerprintType queryFingerprint(mol);
+        return getMatches(mol, queryFingerprint, maxResults, stopFlag);
+    }
+
     explicit BallTree(std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType>>> &&data) {
-//        _depth = 3;
-        _depth = std::max((size_t) 2, (size_t) std::ceil(std::log2(data.size() / 50))); // TODO: 50 - magic constant
+//        _depth = 1;
+        _depth = std::max((size_t) 2, (size_t) std::ceil(std::log2(data.size() / 10))); // TODO: 50 - magic constant
         _leafSearchEngines.resize(1ull << _depth); // TODO: check +- 1
         _nodes.resize((2ull << _depth) - 1);
         std::vector<std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType>>>> nodesData(
@@ -186,18 +192,18 @@ public:
             _nodes[nodeId].centroid |= _nodes[leftChild(nodeId)].centroid;
             _nodes[nodeId].centroid |= _nodes[rightChild(nodeId)].centroid;
         }
-        LOG(INFO) << "Ball Tree:";
-        for (size_t i = 0; i < _nodes.size(); i++) {
-            if (!isLeaf(i)) {
-                assert(_nodes[leftChild(i)].centroid.isSubFingerprintOf(_nodes[i].centroid));
-                assert(_nodes[rightChild(i)].centroid.isSubFingerprintOf(_nodes[i].centroid));
-            }
+//        LOG(INFO) << "Ball Tree:";
+//        for (size_t i = 0; i < _nodes.size(); i++) {
+//            if (!isLeaf(i)) {
+//                assert(_nodes[leftChild(i)].centroid.isSubFingerprintOf(_nodes[i].centroid));
+//                assert(_nodes[rightChild(i)].centroid.isSubFingerprintOf(_nodes[i].centroid));
+//            }
 //            std::stringstream ss;
 //            ss << i << ": ";
 //            for (size_t j = 0; j < _nodes[i].centroid.size(); j++) {
 //                ss << _nodes[i].centroid.getBit(j);
 //            }
 //            LOG(INFO) << ss.str();
-        }
+//        }
     }
 };

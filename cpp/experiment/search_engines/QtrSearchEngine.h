@@ -16,7 +16,7 @@ public:
             std::unique_ptr<MoleculeType> mol;
             try {
                 mol = smilesToMolecule(smiles);
-            } catch (const std::exception& e) {
+            } catch (const std::exception &e) {
                 LOG(WARNING) << "Skip smiles: " << smiles << " error: " << e.what();
                 continue;
             }
@@ -46,6 +46,11 @@ public:
 
     std::vector<uint64_t> getMatches(const QueryMoleculeType &queryMol, int maxResults, bool &stopFlag) {
         return _ballTree->getMatches(queryMol, maxResults, stopFlag);
+    }
+
+    std::vector<uint64_t>
+    getMatches(const QueryMoleculeType &mol, const FingerprintType &fingerprint, int maxResults, bool &stopFlag) {
+        return _ballTree->getMatches(mol, fingerprint, maxResults, stopFlag);
     }
 
     static std::unique_ptr<MoleculeType> smilesToMolecule(const std::string &smiles) {
