@@ -30,6 +30,8 @@ public:
 
     IndigoFingerprint &operator|=(const IndigoFingerprint &other);
 
+    const indigo::Array<byte>& array() const;
+
 private:
     std::unique_ptr<indigo::Array<byte>> _fingerprint;
 };

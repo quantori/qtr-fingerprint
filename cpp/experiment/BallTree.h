@@ -15,6 +15,7 @@ class BallTree {
 // TODO: think about static asserts
     using MoleculeType = typename SE::MoleculeType;
     using QueryMoleculeType = typename SE::QueryMoleculeType;
+    using StorageMoleculeType = typename SE::StorageMoleculeType;
     using FingerprintType = typename SE::FingerprintType;
 private:
     struct Node {
@@ -91,7 +92,7 @@ private:
     }
 
     static std::vector<size_t>
-    countBitStat(const std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType>>> &data) {
+    countBitStat(const std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>> &data) {
         std::vector<size_t> bitStat(data[0].second->size());
         for (auto &[mol, fp]: data) {
             assert(fp->size() == bitStat.size());
@@ -118,9 +119,9 @@ private:
     }
 
     static void
-    splitData(std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType>>> &&data,
-              std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType>>> &leftData,
-              std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType>>> &rightData) {
+    splitData(std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>> &&data,
+              std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>> &leftData,
+              std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>> &rightData) {
         auto bitStat = countBitStat(data);
         auto splitBit = selectSplitBit(bitStat);
         for (auto &[mol, fp]: data) {
@@ -135,7 +136,7 @@ private:
 
 
     static FingerprintType evaluateCentroid(
-            const std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType >>> &data) {
+            const std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType >>> &data) {
         FingerprintType res;
         for (auto &[mol, fp]: data) {
             res |= *fp;
@@ -170,12 +171,13 @@ public:
         return getMatches(mol, queryFingerprint, maxResults, stopFlag);
     }
 
-    explicit BallTree(std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType>>> &&data) {
+    explicit BallTree(
+            std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>> &&data) {
 //        _depth = 1;
         _depth = std::max((size_t) 2, (size_t) std::ceil(std::log2(data.size() / 10))); // TODO: 50 - magic constant
         _leafSearchEngines.resize(1ull << _depth); // TODO: check +- 1
         _nodes.resize((2ull << _depth) - 1);
-        std::vector<std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType>>>> nodesData(
+        std::vector<std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>>> nodesData(
                 (1u << _depth) * 2 - 1);
         nodesData[root()] = std::move(data);
         for (size_t nodeId = root(); nodeId < nodesData.size(); nodeId++) {

@@ -5,6 +5,7 @@
 #include "BingoNoSQL.h"
 #include "IndigoSession.h"
 #include "indigo.h"
+#include "QtrBingoNoSQL.h"
 
 #include <filesystem>
 
@@ -12,6 +13,7 @@ class BingoSearchEngine {
 public:
     using FingerprintType = IndigoFingerprint;
     using MoleculeType = indigo_cpp::IndigoMolecule;
+    using StorageMoleculeType = indigo_cpp::IndigoMolecule;
     using QueryMoleculeType = indigo_cpp::IndigoQueryMolecule;
 
     explicit BingoSearchEngine(const std::vector<std::string> &smiles);
@@ -30,6 +32,11 @@ public:
 
     static std::unique_ptr<QueryMoleculeType> smilesToQueryMolecule(const std::string &smiles);
 
+    static std::unique_ptr<MoleculeType> storageMoleculeToMolecule(const StorageMoleculeType& storageMolecule);
+
+    static std::unique_ptr<StorageMoleculeType> moleculeToStorageMolecule(const MoleculeType& molecule);
+
+
     ~BingoSearchEngine();
 
 private:
@@ -37,5 +44,7 @@ private:
     BingoSearchEngine();
 
     std::filesystem::path _dbFilePath;
-    indigo_cpp::BingoMolecule _db;
+    QtrBingoNoSQL _db;
+//    indigo_cpp::BingoMolecule _db;
+
 };

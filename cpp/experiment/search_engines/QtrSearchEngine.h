@@ -8,10 +8,12 @@ class QtrSearchEngine {
 public:
     using FingerprintType = SE::FingerprintType;
     using MoleculeType = SE::MoleculeType;
+    using StorageMoleculeType = SE::StorageMoleculeType;
     using QueryMoleculeType = SE::QueryMoleculeType;
 
+
     explicit QtrSearchEngine(const std::vector<std::string> &smilesDataset) {
-        std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType>>> data;
+        std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>> data;
         for (auto &smiles: smilesDataset) {
             std::unique_ptr<MoleculeType> mol;
             try {
@@ -25,22 +27,24 @@ public:
                 continue;
             }
             auto fp = std::make_unique<FingerprintType>(*mol);
-            data.emplace_back(std::move(mol), std::move(fp));
+            auto storageMol = moleculeToStorageMolecule(*mol);
+            data.emplace_back(std::move(storageMol), std::move(fp));
         }
         _ballTree = std::make_unique<BallTreeType>(std::move(data));
     }
 
-    explicit QtrSearchEngine(std::vector<std::unique_ptr<MoleculeType>> &&moleculesDataset) {
-        std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType>>> data;
-        for (auto &mol: moleculesDataset) {
+    explicit QtrSearchEngine(std::vector<std::unique_ptr<StorageMoleculeType>> &&moleculesDataset) {
+        std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>> data;
+        for (auto &storageMol: moleculesDataset) {
+            auto mol = storageMoleculeToMolecule(*storageMol);
             auto fp = std::make_unique<FingerprintType>(*mol);
-            data.emplace_back(std::move(mol), std::move(fp));
+            data.emplace_back(std::move(storageMol), std::move(fp));
         }
         _ballTree = std::make_unique<BallTreeType>(std::move(data));
     }
 
     explicit QtrSearchEngine(
-            std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType>>> &&data) {
+            std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>> &&data) {
         _ballTree = std::make_unique<BallTreeType>(std::move(data));
     }
 
@@ -59,6 +63,14 @@ public:
 
     static std::unique_ptr<QueryMoleculeType> smilesToQueryMolecule(const std::string &smiles) {
         return SE::smilesToQueryMolecule(smiles);
+    }
+
+    static std::unique_ptr<MoleculeType> storageMoleculeToMolecule(const StorageMoleculeType &storageMolecule) {
+        return SE::storageMoleculeToMolecule(storageMolecule);
+    }
+
+    static std::unique_ptr<StorageMoleculeType> moleculeToStorageMolecule(const MoleculeType &molecule) {
+        return SE::moleculeToStorageMolecule(molecule);
     }
 
 private:

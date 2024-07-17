@@ -6,6 +6,8 @@
 #include "bingo-nosql.h"
 #include "GlobalIndigoSession.h"
 
+#include "QtrBingoNoSQL.h"
+
 namespace {
     std::mt19937 random_generator(0);
 
@@ -16,7 +18,7 @@ namespace {
             std::string dirName = "bingoDb_" + std::to_string(dirId);
             res = std::filesystem::temp_directory_path() / dirName;
         } while (std::filesystem::exists(res));
-        LOG(INFO) << "Generated name: " << res;
+//        LOG(INFO) << "Generated name: " << res;
         return res;
     }
 }
@@ -44,13 +46,12 @@ BingoSearchEngine::BingoSearchEngine(
 }
 
 BingoSearchEngine::BingoSearchEngine() : _dbFilePath(generateDBPath()), _db(
-        indigo_cpp::BingoMolecule::createDatabaseFile(globalIndigoSession, _dbFilePath, "")) {
+        QtrBingoNoSQL::createDatabaseFile(globalIndigoSession, _dbFilePath, "")) {
 
 }
 
 std::vector<uint64_t>
 BingoSearchEngine::getMatches(const BingoSearchEngine::QueryMoleculeType &queryMol, int maxResults, bool &stopFlag) {
-    // TODO: check molecule aromatized?
     std::vector<uint64_t> result;
     auto subMatcher = _db.searchSub(queryMol, "");
     for (auto &mol: subMatcher) {
@@ -78,13 +79,33 @@ BingoSearchEngine::smilesToQueryMolecule(const std::string &smiles) {
     return mol;
 }
 
-std::vector<uint64_t> BingoSearchEngine::getMatches(const BingoSearchEngine::QueryMoleculeType &mol,
+std::vector<uint64_t> BingoSearchEngine::getMatches(const BingoSearchEngine::QueryMoleculeType &queryMol,
                                                     const BingoSearchEngine::FingerprintType &fingerprint,
                                                     int maxResults, bool &stopFlag) {
-    // TODO: do not ignore fingerprint
-    return getMatches(mol, maxResults, stopFlag);
+    std::vector<uint64_t> result;
+    auto subMatcher = _db.searchSub(queryMol, fingerprint.array(), "");
+    for (auto &mol: subMatcher) {
+        if (stopFlag) {
+            break;
+        }
+        result.push_back(mol.getId()); // TODO: Fix abstract Ids?
+        if (result.size() >= maxResults) {
+            break;
+        }
+    }
+    return result;
 }
 
 BingoSearchEngine::~BingoSearchEngine() {
     std::filesystem::remove_all(_dbFilePath);
+}
+
+std::unique_ptr<BingoSearchEngine::MoleculeType>
+BingoSearchEngine::storageMoleculeToMolecule(const BingoSearchEngine::StorageMoleculeType &storageMolecule) {
+    return std::make_unique<MoleculeType>(storageMolecule);
+}
+
+std::unique_ptr<BingoSearchEngine::StorageMoleculeType>
+BingoSearchEngine::moleculeToStorageMolecule(const BingoSearchEngine::MoleculeType &molecule) {
+    return std::make_unique<StorageMoleculeType>(molecule);
 }

@@ -92,22 +92,24 @@ RDKitSearchEngine::RDKitSearchEngine(const std::vector<std::string> &smiles) {
     }
 }
 
-RDKitSearchEngine::RDKitSearchEngine(std::vector<std::unique_ptr<MoleculeType>> &&molecules) {
+RDKitSearchEngine::RDKitSearchEngine(std::vector<std::unique_ptr<StorageMoleculeType>> &&molecules) {
     auto molHandler = boost::make_shared<RDKit::CachedMolHolder>();
     auto fpHandler = boost::make_shared<RDKit::PatternHolder>();
     _substructLibrary = std::make_shared<RDKit::SubstructLibrary>(molHandler, fpHandler);
-    for (auto &mol: molecules) {
-        _substructLibrary->addMol(*mol);
+    for (auto &molPickle: molecules) {
+        RDKit::ROMol mol;
+        RDKit::MolPickler::molFromPickle(*molPickle, mol);
+        _substructLibrary->addMol(mol);
     }
 
 }
 
 RDKitSearchEngine::RDKitSearchEngine(
-        std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType>>> &&data) {
+        std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>> &&data) {
     auto molHandler = boost::make_shared<RDKit::CachedMolHolder>();
     auto fpHandler = boost::make_shared<RDKit::PatternHolder>();
-    for (auto &[mol, fp]: data) {
-        molHandler->addMol(*mol);
+    for (auto &[molPickle, fp]: data) {
+        molHandler->addBinary(*molPickle);
         fpHandler->addFingerprint(fp->bitVector());
     }
     _substructLibrary = std::make_shared<RDKit::SubstructLibrary>(molHandler, fpHandler);
@@ -116,3 +118,18 @@ RDKitSearchEngine::RDKitSearchEngine(
 std::unique_ptr<RDKitSearchEngine::MoleculeType> RDKitSearchEngine::smilesToQueryMolecule(const std::string &smiles) {
     return smilesToMolecule(smiles);
 }
+
+std::unique_ptr<RDKitSearchEngine::StorageMoleculeType>
+RDKitSearchEngine::moleculeToStorageMolecule(const RDKitSearchEngine::MoleculeType &molecule) {
+    auto storageMol = std::make_unique<StorageMoleculeType>();
+    RDKit::MolPickler::pickleMol(molecule, *storageMol);
+    return storageMol;
+}
+
+std::unique_ptr<RDKitSearchEngine::MoleculeType>
+RDKitSearchEngine::storageMoleculeToMolecule(const RDKitSearchEngine::StorageMoleculeType &storageMolecule) {
+    auto mol = std::make_unique<MoleculeType>();
+    RDKit::MolPickler::molFromPickle(storageMolecule, *mol);
+    return mol;
+}
+

@@ -14,21 +14,18 @@ enum class SearchEngineType {
 
 template<typename T>
 concept SearchEngine = requires(T t, const std::string &querySmiles, int maxResults, bool &stopFlag,
-                                const T::QueryMoleculeType &queryMolecule, const T::FingerprintType& queryFingerprint) {
+                                const T::QueryMoleculeType &queryMolecule, const T::FingerprintType& queryFingerprint,
+                                const T::StorageMoleculeType& storageMolecule, const T::MoleculeType& molecule) {
     { t.getMatches(queryMolecule, maxResults, stopFlag) } -> std::convertible_to<std::vector<uint64_t>>;
     { t.getMatches(queryMolecule, queryFingerprint, maxResults, stopFlag) } -> std::convertible_to<std::vector<uint64_t>>;
 
-// TODO: add it later
-//    { t.idToSmiles(std::declval<uint64_t>()) } -> std::convertible_to<std::string>;
-//    { t.idToMolecule(std::declval<uint64_t>()) } -> std::convertible_to<Mol>;
-
     { t.smilesToMolecule(querySmiles) } -> std::convertible_to<std::unique_ptr<typename T::MoleculeType>>;
     { t.smilesToQueryMolecule(querySmiles) } -> std::convertible_to<std::unique_ptr<typename T::QueryMoleculeType>>;
-// TODO: add it later
-//    { t.moleculeToSmiles(molecule) } -> std::convertible_to<std::string>;
+    { t.storageMoleculeToMolecule(storageMolecule) } -> std::convertible_to<std::unique_ptr<typename T::MoleculeType>>;
+    { t.moleculeToStorageMolecule(molecule) } -> std::convertible_to<std::unique_ptr<typename T::StorageMoleculeType>>;
 
     requires std::constructible_from<T, const std::vector<std::string> &>;
-    requires std::constructible_from<T, std::vector<std::unique_ptr<typename T::MoleculeType>> &&>;
-    requires std::constructible_from<T, std::vector<std::pair<std::unique_ptr<typename T::MoleculeType>, std::unique_ptr<typename T::FingerprintType>>> &&>;
+    requires std::constructible_from<T, std::vector<std::unique_ptr<typename T::StorageMoleculeType>> &&>;
+    requires std::constructible_from<T, std::vector<std::pair<std::unique_ptr<typename T::StorageMoleculeType>, std::unique_ptr<typename T::FingerprintType>>> &&>;
 };
 

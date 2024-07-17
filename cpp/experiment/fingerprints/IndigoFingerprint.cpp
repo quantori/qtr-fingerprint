@@ -55,3 +55,7 @@ IndigoFingerprint::IndigoFingerprint(const std::string &smiles) {
     _fingerprint->copy(fingerprintBuilder.get(), indigoInstance.fp_params.fingerprintSize());
     assert(_fingerprint->size() * 8 == size());
 }
+
+const indigo::Array<byte> &IndigoFingerprint::array() const {
+    return *_fingerprint;
+}

@@ -19,6 +19,8 @@ target_include_directories(${This}
         PUBLIC fingerprints
         PUBLIC search_engines
         PUBLIC parsers
+        PUBLIC qtr_bingo
+        PUBLIC ../third_party/Indigo/api/c/bingo-nosql/src/
 )
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/SetOutputDirectory.cmake)
