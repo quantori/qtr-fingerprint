@@ -43,8 +43,9 @@ BingoSearchEngine::BingoSearchEngine(
     }
 }
 
-BingoSearchEngine::BingoSearchEngine() : _db(
-        indigo_cpp::BingoMolecule::createDatabaseFile(globalIndigoSession, generateDBPath(), "")) {
+BingoSearchEngine::BingoSearchEngine() : _dbFilePath(generateDBPath()), _db(
+        indigo_cpp::BingoMolecule::createDatabaseFile(globalIndigoSession, _dbFilePath, "")) {
+
 }
 
 std::vector<uint64_t>
@@ -82,4 +83,8 @@ std::vector<uint64_t> BingoSearchEngine::getMatches(const BingoSearchEngine::Que
                                                     int maxResults, bool &stopFlag) {
     // TODO: do not ignore fingerprint
     return getMatches(mol, maxResults, stopFlag);
+}
+
+BingoSearchEngine::~BingoSearchEngine() {
+    std::filesystem::remove_all(_dbFilePath);
 }

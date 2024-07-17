@@ -5,7 +5,6 @@
 #include "BingoNoSQL.h"
 #include "IndigoSession.h"
 #include "indigo.h"
-//#include "../../third_party/Indigo/api/cpp/src/IndigoQueryMolecule.h"
 
 #include <filesystem>
 
@@ -31,9 +30,12 @@ public:
 
     static std::unique_ptr<QueryMoleculeType> smilesToQueryMolecule(const std::string &smiles);
 
+    ~BingoSearchEngine();
+
 private:
 
     BingoSearchEngine();
 
+    std::filesystem::path _dbFilePath;
     indigo_cpp::BingoMolecule _db;
 };
