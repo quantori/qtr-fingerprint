@@ -23,7 +23,7 @@ namespace {
     }
 }
 
-BingoSearchEngine::BingoSearchEngine(const std::vector<std::string> &smiles) : BingoSearchEngine() {
+BingoSearchEngine::BingoSearchEngine(std::vector<std::string> &&smiles) : BingoSearchEngine() {
     for (auto &s: smiles) {
         MoleculeType mol = globalIndigoSession->loadMolecule(s);
         _db.insertRecord(mol);

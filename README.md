@@ -116,9 +116,9 @@ between `QtrRam` and `BingoNoSQL`. The runs were performed with the following ar
 
 * `CMake 3.13 or higher`
 * `ninja 1.7.2 or higher`
-* `libfreetype6-dev`, `libfontconfig1-dev`, `libasio-dev`, `libgflags-dev` libs
+* `libfreetype6-dev`, `libfontconfig1-dev`, `libasio-dev`, `libgflags-dev`, `libtbb-dev` libs
 
-```apt-get install libfreetype6-dev libfontconfig1-dev libasio-dev libgflags-dev```
+```apt-get install libfreetype6-dev libfontconfig1-dev libasio-dev libgflags-dev libtbb-dev```
 to install them all
 
 * `g++ 9.4 or higher`

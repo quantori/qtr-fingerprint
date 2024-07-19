@@ -3,6 +3,7 @@
 #include <fstream>
 #include <future>
 #include <thread>
+#include <execution>
 
 #include "ExperimentArgs.h"
 #include "ExperimentStat.h"
@@ -72,14 +73,16 @@ void conductExperiment(SE &searchEngine,
     };
     auto checkTimeoutThread = std::thread(checkTimeout, std::ref(info));
     ExperimentStat stat;
-    for (size_t i = 0; i < queries.size(); i++) {
-        auto &query = queries[i];
+    std::mutex statMutex;
+    std::atomic_int64_t counter = 0;
+    std::for_each(std::execution::par, queries.begin(), queries.end(), [&](const std::string &query) {
+        auto i = counter++;
         LOG(INFO) << "Start " << query << " processing (" << i + 1 << ")";
         decltype(searchEngine.smilesToQueryMolecule(query)) mol;
         try {
             mol = searchEngine.smilesToQueryMolecule(query);
         } catch (std::exception &e) {
-            LOG(ERROR) << "Cannot parse query " << query << ": " << e.what();
+            LOG(ERROR) << "Cannot parse query " << query << " (" << i + 1 << "): " << e.what();
             exit(1);
         }
 
@@ -87,14 +90,18 @@ void conductExperiment(SE &searchEngine,
         auto matches = searchEngine.getMatches(*mol, maxResults, info.stopFlag);
         auto experimentDuration = info.finishExperiment();
 
-        stat.add(ExperimentStat::Entity{
-                .duration = experimentDuration,
-                .resultsFound = (int) matches.size()
-        });
-        LOG(INFO) << "Finished " << query << " processing."
-                  << "\n\tDuration: " << experimentDuration
-                  << "\n\tresultsFound: " << matches.size();
-    }
+        {
+            std::lock_guard<std::mutex> lockGuard(statMutex);
+            stat.add(ExperimentStat::Entity{
+                    .duration = experimentDuration,
+                    .resultsFound = (int) matches.size()
+            });
+            LOG(INFO) << "Finished " << query << " processing (" << i + 1 << ")"
+                      << "\n\tDuration: " << experimentDuration
+                      << "\n\tresultsFound: " << matches.size();
+        }
+
+    });
     info.experimentFinished.test_and_set();
     LOG(INFO) << "Wait timeout checker to finish";
     checkTimeoutThread.join();
@@ -114,19 +121,22 @@ int main(int argc, char *argv[]) {
 
     auto queries = QueriesParser(args.queriesFile).parse();
     std::ofstream statOut(args.statisticsFile);
-    auto smilesDataset = SmilesDirParser(args.datasetDir).parse();
+    std::vector<std::string> smilesDataset;
+    std::mutex smilesDatasetMutex;
+    SmilesDirParser smilesParser(args.datasetDir);
+    smilesParser.parse(smilesDataset, smilesDatasetMutex);
 
     if (args.searchEngineType == SearchEngineType::RDKit) {
-        auto se = RDKitSearchEngine(smilesDataset);
+        auto se = RDKitSearchEngine(std::move(smilesDataset));
         conductExperiment(se, queries, args.maxResults, args.timeLimit, statOut);
     } else if (args.searchEngineType == SearchEngineType::QtrRDKit) {
-        auto se = QtrSearchEngine<RDKitSearchEngine>(smilesDataset);
+        auto se = QtrSearchEngine<RDKitSearchEngine>(std::move(smilesDataset));
         conductExperiment(se, queries, args.maxResults, args.timeLimit, statOut);
     } else if (args.searchEngineType == SearchEngineType::Indigo) {
-        auto se = BingoSearchEngine(smilesDataset);
+        auto se = BingoSearchEngine(std::move(smilesDataset));
         conductExperiment(se, queries, args.maxResults, args.timeLimit, statOut);
     } else if (args.searchEngineType == SearchEngineType::QtrIndigo) {
-        auto se = QtrSearchEngine<BingoSearchEngine>(smilesDataset);
+        auto se = QtrSearchEngine<BingoSearchEngine>(std::move(smilesDataset));
         conductExperiment(se, queries, args.maxResults, args.timeLimit, statOut);
     } else {
         LOG(ERROR) << "Specified SearchEngineType is not supported yet";

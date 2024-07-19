@@ -12,7 +12,7 @@ public:
     using QueryMoleculeType = SE::QueryMoleculeType;
 
 
-    explicit QtrSearchEngine(const std::vector<std::string> &smilesDataset) {
+    explicit QtrSearchEngine(std::vector<std::string> &&smilesDataset) {
         std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>> data;
         for (auto &smiles: smilesDataset) {
             std::unique_ptr<MoleculeType> mol;

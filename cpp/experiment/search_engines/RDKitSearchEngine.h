@@ -14,7 +14,7 @@ public:
     using StorageMoleculeType = std::string;
 
 
-    explicit RDKitSearchEngine(const std::vector<std::string> &smiles);
+    explicit RDKitSearchEngine(std::vector<std::string> &&smiles);
 
     explicit RDKitSearchEngine(std::vector<std::unique_ptr<StorageMoleculeType>> &&molecules);
 

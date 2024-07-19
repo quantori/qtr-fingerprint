@@ -2,15 +2,15 @@
 
 #include <glog/logging.h>
 #include <fstream>
+#include <mutex>
 
 SmilesCSVParser::SmilesCSVParser(std::filesystem::path filePath) : _filePath(std::move(filePath)) {
 
 }
 
-std::vector<std::string> SmilesCSVParser::parse() const {
+void SmilesCSVParser::parse(std::vector<std::string> &dest, std::mutex &m) const {
     std::ifstream in(_filePath);
     std::string smiles;
-    std::vector<std::string> results;
     while (in.peek() != EOF) {
         std::string id;
         in >> id >> smiles;
@@ -20,7 +20,9 @@ std::vector<std::string> SmilesCSVParser::parse() const {
             LOG(WARNING) << "Found line with wrong formatting and skipped it: \"" << smiles << lineEnding << "\"";
             continue;
         }
-        results.push_back(smiles);
+        {
+            std::lock_guard<std::mutex> lockGuard(m);
+            dest.push_back(smiles);
+        }
     }
-    return results;
 }

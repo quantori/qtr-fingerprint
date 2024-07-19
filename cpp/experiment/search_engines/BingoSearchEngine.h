@@ -16,7 +16,7 @@ public:
     using StorageMoleculeType = indigo_cpp::IndigoMolecule;
     using QueryMoleculeType = indigo_cpp::IndigoQueryMolecule;
 
-    explicit BingoSearchEngine(const std::vector<std::string> &smiles);
+    explicit BingoSearchEngine(std::vector<std::string> &&smiles);
 
     explicit BingoSearchEngine(std::vector<std::unique_ptr<MoleculeType>> &&molecules);
 

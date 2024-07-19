@@ -24,7 +24,7 @@ concept SearchEngine = requires(T t, const std::string &querySmiles, int maxResu
     { t.storageMoleculeToMolecule(storageMolecule) } -> std::convertible_to<std::unique_ptr<typename T::MoleculeType>>;
     { t.moleculeToStorageMolecule(molecule) } -> std::convertible_to<std::unique_ptr<typename T::StorageMoleculeType>>;
 
-    requires std::constructible_from<T, const std::vector<std::string> &>;
+    requires std::constructible_from<T, std::vector<std::string> &&>;
     requires std::constructible_from<T, std::vector<std::unique_ptr<typename T::StorageMoleculeType>> &&>;
     requires std::constructible_from<T, std::vector<std::pair<std::unique_ptr<typename T::StorageMoleculeType>, std::unique_ptr<typename T::FingerprintType>>> &&>;
 };
