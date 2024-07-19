@@ -1,5 +1,7 @@
 #pragma once
 
+#include <execution>
+
 #include "BallTree.h"
 #include "SearchEngineConcept.h"
 
@@ -14,22 +16,26 @@ public:
 
     explicit QtrSearchEngine(std::vector<std::string> &&smilesDataset) {
         std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>> data;
-        for (auto &smiles: smilesDataset) {
+        std::mutex dataMutex;
+        std::for_each(std::execution::par, smilesDataset.begin(), smilesDataset.end(), [&](const std::string& smiles) {
             std::unique_ptr<MoleculeType> mol;
             try {
                 mol = smilesToMolecule(smiles);
             } catch (const std::exception &e) {
                 LOG(WARNING) << "Skip smiles: " << smiles << " error: " << e.what();
-                continue;
+                return;
             }
             if (mol == nullptr) {
                 LOG(WARNING) << "Can't parse smiles: " << smiles;
-                continue;
+                return;
             }
             auto fp = std::make_unique<FingerprintType>(*mol);
             auto storageMol = moleculeToStorageMolecule(*mol);
-            data.emplace_back(std::move(storageMol), std::move(fp));
-        }
+            {
+                std::lock_guard<std::mutex> lockGuard(dataMutex);
+                data.emplace_back(std::move(storageMol), std::move(fp));
+            }
+        });
         _ballTree = std::make_unique<BallTreeType>(std::move(data));
     }
 
