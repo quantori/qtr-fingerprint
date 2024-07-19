@@ -75,9 +75,8 @@ std::unique_ptr<RDKitSearchEngine::MoleculeType> RDKitSearchEngine::smilesToMole
 RDKitSearchEngine::RDKitSearchEngine(std::vector<std::string> &&smiles) {
     auto molHandler = boost::make_shared<RDKit::CachedMolHolder>();
     auto fpHandler = boost::make_shared<RDKit::PatternHolder>();
-    _substructLibrary = std::make_shared<RDKit::SubstructLibrary>(molHandler, fpHandler);
     std::mutex substructureLibraryMutex;
-    std::for_each(std::execution::par_unseq, smiles.begin(), smiles.end(), [&](std::string &s) {
+    std::for_each(std::execution::par, smiles.begin(), smiles.end(), [&](std::string &s) {
         std::unique_ptr<MoleculeType> mol;
         try {
             mol = smilesToMolecule(s);
@@ -90,11 +89,15 @@ RDKitSearchEngine::RDKitSearchEngine(std::vector<std::string> &&smiles) {
             return;
         }
         auto fp = std::make_unique<RDKitFingerprint>(*mol);
+        std::string molPickle;
+        RDKit::MolPickler::pickleMol(*mol, molPickle);
         {
             std::lock_guard<std::mutex> lockGuard(substructureLibraryMutex);
-            _substructLibrary->addMol(*mol);
+            fpHandler->addFingerprint(fp->bitVector());
+            molHandler->addBinary(molPickle);
         }
     });
+    _substructLibrary = std::make_shared<RDKit::SubstructLibrary>(molHandler, fpHandler);
 }
 
 RDKitSearchEngine::RDKitSearchEngine(std::vector<std::unique_ptr<StorageMoleculeType>> &&molecules) {
