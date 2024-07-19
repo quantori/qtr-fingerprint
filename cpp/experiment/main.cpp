@@ -52,8 +52,8 @@ struct ExperimentInfo {
 };
 
 void checkTimeout(ExperimentInfo &info) {
-    // Duration is bounded by 0.1 and 1.0 to prevent too often and too rare checks
-    std::chrono::duration<double> sleepDuration(std::max(0.1, std::min(1.0, info.timeLimit)));
+    // Duration is bounded by 0.001 and 0.01 to prevent too often and too rare checks
+    std::chrono::duration<double> sleepDuration(std::max(0.001, std::min(0.01, info.timeLimit)));
     while (!info.experimentFinished.test()) {
         std::this_thread::sleep_for(sleepDuration);
         info.checkTimeout();
@@ -66,12 +66,6 @@ void conductExperiment(SE &searchEngine,
                        int maxResults,
                        double timeLimit,
                        std::ofstream &statOut) {
-    ExperimentInfo info = {
-            .stopFlag = false,
-            .experimentFinished = false,
-            .timeLimit = timeLimit,
-    };
-    auto checkTimeoutThread = std::thread(checkTimeout, std::ref(info));
     ExperimentStat stat;
     std::mutex statMutex;
     std::atomic_int64_t counter = 0;
@@ -85,11 +79,16 @@ void conductExperiment(SE &searchEngine,
             LOG(ERROR) << "Cannot parse query " << query << " (" << i + 1 << "): " << e.what();
             exit(1);
         }
-
+        ExperimentInfo info = {
+                .stopFlag = false,
+                .experimentFinished = false,
+                .timeLimit = timeLimit,
+        };
+        auto checkTimeoutThread = std::thread(checkTimeout, std::ref(info));
         info.startExperiment();
         auto matches = searchEngine.getMatches(*mol, maxResults, info.stopFlag);
         auto experimentDuration = info.finishExperiment();
-
+        info.experimentFinished.test_and_set();
         {
             std::lock_guard<std::mutex> lockGuard(statMutex);
             stat.add(ExperimentStat::Entity{
@@ -100,11 +99,8 @@ void conductExperiment(SE &searchEngine,
                       << "\n\tDuration: " << experimentDuration
                       << "\n\tresultsFound: " << matches.size();
         }
-
+        checkTimeoutThread.join();
     });
-    info.experimentFinished.test_and_set();
-    LOG(INFO) << "Wait timeout checker to finish";
-    checkTimeoutThread.join();
     statOut << stat << std::endl;
     auto quantiles = stat.quantiles({0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00});
     for (size_t i = 0; i < quantiles.size(); i++) {
