@@ -23,24 +23,25 @@ namespace {
     }
 }
 
-BingoSearchEngine::BingoSearchEngine(std::vector<std::string> &&smiles) : BingoSearchEngine() {
-    for (auto &s: smiles) {
+BingoSearchEngine::BingoSearchEngine(std::unique_ptr<std::vector<std::string>> &&smiles) : BingoSearchEngine() {
+    for (auto &s: *smiles) { // TODO: parallelize
         MoleculeType mol = globalIndigoSession->loadMolecule(s);
         _db.insertRecord(mol);
     }
 }
 
-BingoSearchEngine::BingoSearchEngine(std::vector<std::unique_ptr<MoleculeType>> &&molecules) : BingoSearchEngine() {
-    for (auto &mol: molecules) {
+BingoSearchEngine::BingoSearchEngine(
+        std::unique_ptr<std::vector<std::unique_ptr<MoleculeType>>> &&molecules) : BingoSearchEngine() {
+    for (auto &mol: *molecules) { // TODO: parallelize?
         _db.insertRecord(*mol);
     }
 }
 
 BingoSearchEngine::BingoSearchEngine(
-        std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType>>> &&data)
+        std::unique_ptr<std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType>>>> &&data)
         : BingoSearchEngine() {
     // TODO: is it possible to do not ignore fingerprint?
-    for (auto &[mol, _]: data) {
+    for (auto &[mol, _]: *data) { // TODO: parallelize?
         _db.insertRecord(*mol);
     }
 }

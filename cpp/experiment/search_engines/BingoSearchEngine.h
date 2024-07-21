@@ -16,12 +16,12 @@ public:
     using StorageMoleculeType = indigo_cpp::IndigoMolecule;
     using QueryMoleculeType = indigo_cpp::IndigoQueryMolecule;
 
-    explicit BingoSearchEngine(std::vector<std::string> &&smiles);
+    explicit BingoSearchEngine(std::unique_ptr<std::vector<std::string>> &&smiles);
 
-    explicit BingoSearchEngine(std::vector<std::unique_ptr<MoleculeType>> &&molecules);
+    explicit BingoSearchEngine(std::unique_ptr<std::vector<std::unique_ptr<MoleculeType>>> &&molecules);
 
     explicit BingoSearchEngine(
-            std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType>>> &&data);
+            std::unique_ptr<std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType>>>> &&data);
 
     std::vector<uint64_t> getMatches(const QueryMoleculeType &queryMol, int maxResults, bool &stopFlag);
 

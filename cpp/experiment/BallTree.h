@@ -92,7 +92,8 @@ private:
     }
 
     static std::vector<size_t>
-    countBitStat(const std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>> &data) {
+    countBitStat(
+            const std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>> &data) {
         std::vector<size_t> bitStat(data[0].second->size());
         for (auto &[mol, fp]: data) {
             assert(fp->size() == bitStat.size());
@@ -118,20 +119,20 @@ private:
         return resBit;
     }
 
-    static void
-    splitData(std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>> &&data,
-              std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>> &leftData,
-              std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>> &rightData) {
-        auto bitStat = countBitStat(data);
+    static void splitData(
+            std::unique_ptr<std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>>> &&data,
+            std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>> &leftData,
+            std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>> &rightData) {
+        auto bitStat = countBitStat(*data);
         auto splitBit = selectSplitBit(bitStat);
-        for (auto &[mol, fp]: data) {
-            auto &destData = leftData.size() * 2 >= data.size()
-                             || (rightData.size() * 2 < data.size() && fp->getBit(splitBit) == 1) ? rightData
-                                                                                                  : leftData;
+        for (auto &[mol, fp]: *data) {
+            auto &destData = leftData.size() * 2 >= data->size()
+                             || (rightData.size() * 2 < data->size() && fp->getBit(splitBit) == 1) ? rightData
+                                                                                                   : leftData;
             destData.emplace_back(std::move(mol), std::move(fp));
         }
-        assert(leftData.size() * 2 <= data.size() + 1);
-        assert(rightData.size() * 2 <= data.size() + 1);
+        assert(leftData.size() * 2 <= data->size() + 1);
+        assert(rightData.size() * 2 <= data->size() + 1);
     }
 
 
@@ -172,21 +173,23 @@ public:
     }
 
     explicit BallTree(
-            std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>> &&data) {
+            std::unique_ptr<std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>>> &&data) {
+        using NodeDataType = std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>>;
 //        _depth = 1;
-        _depth = std::max((size_t) 2, (size_t) std::ceil(std::log2(data.size() / 10))); // TODO: 50 - magic constant
+        _depth = std::max((size_t) 2, (size_t) std::ceil(std::log2(data->size() / 25))); // TODO: 25 - magic constant
         _leafSearchEngines.resize(1ull << _depth); // TODO: check +- 1
         _nodes.resize((2ull << _depth) - 1);
-        std::vector<std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>>> nodesData(
-                (1u << _depth) * 2 - 1);
+        std::vector<std::unique_ptr<NodeDataType>> nodesData((1u << _depth) * 2 - 1);
         nodesData[root()] = std::move(data);
         for (size_t nodeId = root(); nodeId < nodesData.size(); nodeId++) {
             if (isLeaf(nodeId)) {
                 size_t leafId = nodeIdToLeafId(nodeId);
-                _nodes[nodeId].centroid = evaluateCentroid(nodesData[nodeId]);
+                _nodes[nodeId].centroid = evaluateCentroid(*nodesData[nodeId]);
                 _leafSearchEngines[leafId] = std::make_unique<SE>(std::move(nodesData[nodeId]));
             } else {
-                splitData(std::move(nodesData[nodeId]), nodesData[leftChild(nodeId)], nodesData[rightChild(nodeId)]);
+                nodesData[leftChild(nodeId)] = std::make_unique<NodeDataType>();
+                nodesData[rightChild(nodeId)] = std::make_unique<NodeDataType>();
+                splitData(std::move(nodesData[nodeId]), *nodesData[leftChild(nodeId)], *nodesData[rightChild(nodeId)]);
             }
         }
         for (int nodeId = (1u << _depth) - 2; nodeId >= 0; nodeId--) {
