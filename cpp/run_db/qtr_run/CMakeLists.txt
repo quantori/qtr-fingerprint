@@ -10,9 +10,9 @@ file(GLOB_RECURSE ${This}-sources
 
 add_library(${This} STATIC ${${This}-sources})
 
-target_link_libraries(${This} qtrlib)
-target_link_libraries(${This} Crow::Crow)
-target_link_libraries(${This} bingo-nosql-object)
+target_link_libraries(${This} PRIVATE qtrlib)
+target_link_libraries(${This} PRIVATE Crow::Crow)
+target_link_libraries(${This} PRIVATE bingo-nosql-object)
 
 target_include_directories(${This}
         PUBLIC .

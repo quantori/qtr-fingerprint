@@ -1,9 +1,13 @@
 # How to build:
 on our cloud servers:
+
+- install boost
+
 1. Build rdkit library
-cd src/cpp/third_party/rdkit
-cmake -DPy_ENABLE_SHARED=1   -DRDK_INSTALL_INTREE=ON   -DRDK_INSTALL_STATIC_LIBS=OFF   -DRDK_BUILD_CPP_TESTS=ON -DRDK_BUILD_INCHI_SUPPORT=ON -DRDKIT_RDINCHILIB_BUILD=ON -DPYTHON_NUMPY_INCLUDE_PATH="$(python -c 'import numpy ; print(numpy.get_include())')"   -DBOOST_ROOT="$CONDA_PREFIX" .
-make -j15
+   - `cd src/cpp/third_party/rdkit`
+   - `cmake -DPy_ENABLE_SHARED=1 -DRDK_INSTALL_INTREE=ON -DRDK_INSTALL_STATIC_LIBS=OFF -DRDK_BUILD_CPP_TESTS=ON -DRDK_BUILD_INCHI_SUPPORT=ON -DRDKIT_RDINCHILIB_BUILD=ON -DPYTHON_NUMPY_INCLUDE_PATH="$(python -c 'import numpy ; print(numpy.get_include())')" -DBOOST_ROOT="$CONDA_PREFIX" .`
+   - `make -j15`
+
 2. Build example:
 src/cpp
 cmake .

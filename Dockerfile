@@ -1,43 +1,64 @@
+# Use the official Ubuntu 22.04 as a base image
 FROM ubuntu:22.04
-LABEL Description="rdkit build environment"
 
-ENV HOME /root
+# Set environment variables for non-interactive apt installs
+ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get -y install cmake && apt-get -y install build-essential
-RUN apt-get -y install libasio-dev
-RUN apt-get -y install libgflags-dev
-RUN apt-get install -y libfreetype-dev libfreetype6 libfreetype6-dev libfontconfig1-dev
-RUN apt-get -y install curl
-RUN apt-get -y install git
+# Install essential packages and dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    git \
+    wget \
+    python3 \
+    python3-pip \
+    libfreetype6-dev \
+    libfontconfig1-dev \
+    libasio-dev \
+    libgflags-dev \
+    libtbb-dev \
+    g++-9 \
+    && apt-get clean
 
-RUN curl -O https://repo.anaconda.com/archive/Anaconda3-2024.02-1-Linux-x86_64.sh
-RUN chmod +x Anaconda3-2024.02-1-Linux-x86_64.sh
-RUN ./Anaconda3-2024.02-1-Linux-x86_64.sh -b
+# Set GCC-9 as the default compiler
+RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 100 \
+    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 100
 
-ENV PATH /root/anaconda3/bin:$PATH
+# Install Boost and numpy
+RUN pip3 install numpy
 
-RUN conda update -y conda
-RUN conda update -y --all
+# Clone the qtr-fingerprint repository
+COPY ./ /qtr-fingerprint
 
-RUN conda create -y -n my-rdkit-env
-RUN conda init
+# Move to qtr-fingerprint directory
+WORKDIR /qtr-fingerprint
 
-#RUN conda activate my-rdkit-env
-#RUN conda install -y numpy 
-#RUN conda install -y cmake cairo pillow eigen pkg-config
-#RUN conda install -y boost-cpp boost py-boost
-#RUN conda install -y -c conda-forge libstdcxx-ng ????
-#RUN conda install -c conda-forge libstdcxx-ng=12 - works
+# Build RDKit
+WORKDIR /qtr-fingerprint/cpp/third_party/rdkit
 
-ENV RDBASE /src/cpp/third_party/rdkit
+RUN apt-get install -y  \
+    catch2 \
+    libboost-all-dev
 
-WORKDIR /src/cpp/third_party/rdkit
+# Configure and build RDKit (adjust paths if necessary)
+RUN mkdir build \
+    && cd build  \
+    && cmake -DPy_ENABLE_SHARED=1  \
+    -DRDK_INSTALL_INTREE=ON  \
+    -DRDK_INSTALL_STATIC_LIBS=OFF  \
+    -DRDK_BUILD_CPP_TESTS=ON  \
+    -DRDK_BUILD_INCHI_SUPPORT=ON  \
+    -DRDKIT_RDINCHILIB_BUILD=ON  \
+    -DBOOST_ROOT=/usr/include/boost .. \
+    && make -j15
 
-RUN conda install -y numpy 
-RUN conda install -y cmake cairo pillow eigen pkg-config
-RUN conda install -y boost-cpp boost py-boost
-RUN conda install -y -c conda-forge libstdcxx-ng 
-#COPY conda_shell.sh .
-#RUN ./conda_shell.sh
+## Build qtr-fingerprint code
+WORKDIR /qtr-fingerprint/cpp
 
-SHELL ["/bin/bash", "-c"]
+RUN cmake -DCMAKE_BUILD_TYPE=Release -S ./ -B ./cmake-build-release \
+    && cmake --build ./cmake-build-release --target preprocessing -j 15
+
+# Executables will be located in qtr-fingerprint/cpp/cmake-build-release/bin
+WORKDIR /qtr-fingerprint/cpp/cmake-build-release/bin
+
+CMD ["/bin/bash"]

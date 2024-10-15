@@ -115,7 +115,6 @@ between `QtrRam` and `BingoNoSQL`. The runs were performed with the following ar
 ## Requirements
 
 * `CMake 3.13 or higher`
-* `ninja 1.7.2 or higher`
 * `libfreetype6-dev`, `libfontconfig1-dev`, `libasio-dev`, `libgflags-dev`, `libtbb-dev` libs
 
 ```apt-get install libfreetype6-dev libfontconfig1-dev libasio-dev libgflags-dev libtbb-dev```
@@ -126,12 +125,26 @@ to install them all
 ## Build and run
 
 1. `git clone https://github.com/quantori/qtr-fingerprint.git`
-2. `cd ./qtr-fingerprint/cpp`
+2. `cd ./qtr-fingerprint`
 3. `git submodule update --init --recursive`
-4. `cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_MAKE_PROGRAM=ninja -G Ninja -S ./cpp -B ./cpp/cmake-build-release`
-5. `cmake --build ./cpp/cmake-build-release --target preprocessing -j 16`
-   (Possible targets: `preprocessing`, `build_db`, `run_db`, `tests`)
-6. Executables are located in `./cpp/cmake-build-release/bin`
+4. Build RDKit ([Check for details here](https://www.rdkit.org/docs/Install.html)):
+   1. Install boost and numpy
+   2. `cd cpp/third_party/rdkit`
+   3. Configure cmake: 
+      ```
+      cmake -DPy_ENABLE_SHARED=1 -DRDK_INSTALL_INTREE=ON -DRDK_INSTALL_STATIC_LIBS=OFF -DRDK_BUILD_CPP_TESTS=ON -DRDK_BUILD_INCHI_SUPPORT=ON -DRDKIT_RDINCHILIB_BUILD=ON .
+      ```
+      Note:
+      - One may need to specify the numpy location explicitly: `-DPYTHON_NUMPY_INCLUDE_PATH="$(python -c 'import numpy ; print(numpy.get_include())')"`
+      - One may need to specify the boost location explicitly: `-DBOOST_ROOT="/path/to/boost"`
+   4. Build RDKit: 
+      - `make -j15`
+5. Compile qtr-fingerprint code:
+    - Get back to `qtr-fingerprint/cpp`: `cd ../../`
+    - `cmake -DCMAKE_BUILD_TYPE=Release -S ./ -B ./cmake-build-release`
+    - `cmake --build ./cmake-build-release --target preprocessing -j 16`
+      (Possible targets: `preprocessing`, `build_db`, `run_db`, `tests`)
+6. Compiled executables are located in `qtr-fingerprint/cpp/cmake-build-release/bin`
 
 ## Testing
 

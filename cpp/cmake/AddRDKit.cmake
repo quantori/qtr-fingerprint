@@ -2,7 +2,7 @@ set(Boost_NO_BOOST_CMAKE ON)
 
 cmake_minimum_required( VERSION 3.5 )
 
-set(RDBASE $ENV{RDBASE})
+set(RDBASE "${CMAKE_SOURCE_DIR}/third_party/rdkit")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${RDBASE}/Code/cmake/Modules")
 
 # note that if you haven't installed/built the toolkit with CoordGen, you'll
@@ -35,4 +35,4 @@ set(RDKit_THREAD_LIBS Threads::Threads)
 set( LIBS ${RDKIT_LIBRARIES} Boost::iostreams ${RDKit_THREAD_LIBS}
         ${CAIRO_LIBRARIES} z  )
 
-include_directories(${RDKIT_INCLUDE_DIR})
+include_directories(SYSTEM ${RDKIT_INCLUDE_DIR})
