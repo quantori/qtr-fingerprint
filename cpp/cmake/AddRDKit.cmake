@@ -2,7 +2,7 @@ set(Boost_NO_BOOST_CMAKE ON)
 
 cmake_minimum_required( VERSION 3.5 )
 
-set(RDBASE "${CMAKE_SOURCE_DIR}/third_party/rdkit")
+set(RDBASE "${CMAKE_SOURCE_DIR}/third_party/rdkit/")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${RDBASE}/Code/cmake/Modules")
 
 # note that if you haven't installed/built the toolkit with CoordGen, you'll
@@ -18,7 +18,7 @@ find_package( Cairo REQUIRED )
 
 # specify where CMake can find the RDKit libraries
 include_directories ( ${RDBASE}/Code ${CAIRO_INCLUDE_DIRS} )
-link_directories ( ${RDBASE}/lib )
+link_directories ( ${RDBASE}/build/lib )
 
 set(RDKit_LIBS RDKitChemReactions RDKitFileParsers RDKitSmilesParse RDKitDepictor
         RDKitRDGeometryLib RDKitRDGeneral RDKitSubstructMatch RDKitSubgraphs

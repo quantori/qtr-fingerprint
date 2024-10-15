@@ -130,9 +130,10 @@ to install them all
 4. Build RDKit ([Check for details here](https://www.rdkit.org/docs/Install.html)):
    1. Install boost and numpy
    2. `cd cpp/third_party/rdkit`
+   3. `mkdir build && cd build`
    3. Configure cmake: 
       ```
-      cmake -DPy_ENABLE_SHARED=1 -DRDK_INSTALL_INTREE=ON -DRDK_INSTALL_STATIC_LIBS=OFF -DRDK_BUILD_CPP_TESTS=ON -DRDK_BUILD_INCHI_SUPPORT=ON -DRDKIT_RDINCHILIB_BUILD=ON .
+      cmake -DPy_ENABLE_SHARED=1 -DRDK_INSTALL_INTREE=ON -DRDK_INSTALL_STATIC_LIBS=OFF -DRDK_BUILD_CPP_TESTS=ON -DRDK_BUILD_INCHI_SUPPORT=ON -DRDKIT_RDINCHILIB_BUILD=ON ..
       ```
       Note:
       - One may need to specify the numpy location explicitly: `-DPYTHON_NUMPY_INCLUDE_PATH="$(python -c 'import numpy ; print(numpy.get_include())')"`
@@ -140,9 +141,9 @@ to install them all
    4. Build RDKit: 
       - `make -j15`
 5. Compile qtr-fingerprint code:
-    - Get back to `qtr-fingerprint/cpp`: `cd ../../`
-    - `cmake -DCMAKE_BUILD_TYPE=Release -S ./ -B ./cmake-build-release`
-    - `cmake --build ./cmake-build-release --target preprocessing -j 16`
+    - Get back to `qtr-fingerprint/cpp`: `cd ../../../`
+     - `cmake -DCMAKE_BUILD_TYPE=Release -S ./ -B ./cmake-build-release`
+    - `cmake --build ./cmake-build-release --target preprocessing -j 15`
       (Possible targets: `preprocessing`, `build_db`, `run_db`, `tests`)
 6. Compiled executables are located in `qtr-fingerprint/cpp/cmake-build-release/bin`
 
