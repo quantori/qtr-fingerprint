@@ -9,10 +9,11 @@
 namespace {
 
     const std::map<std::string, SearchEngineType> stringToSearchEngineType = {
-            {"QtrRDKit",  SearchEngineType::QtrRDKit},
-            {"QtrIndigo", SearchEngineType::QtrIndigo},
-            {"RDKit",     SearchEngineType::RDKit},
-            {"Indigo",    SearchEngineType::Indigo},
+            {"QtrRDKit",         SearchEngineType::QtrRDKit},
+            {"QtrIndigo",        SearchEngineType::QtrIndigo},
+            {"RDKit",            SearchEngineType::RDKit},
+            {"Indigo",           SearchEngineType::Indigo},
+            {"IndigoBruteForce", SearchEngineType::IndigoBruteForce},
     };
 
     const std::string allSearchEngineTypes = [] {

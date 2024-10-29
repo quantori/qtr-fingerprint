@@ -6,8 +6,6 @@
 #include "bingo-nosql.h"
 #include "GlobalIndigoSession.h"
 
-#include "QtrBingoNoSQL.h"
-
 namespace {
     std::mt19937 random_generator(0);
 
@@ -47,8 +45,7 @@ BingoSearchEngine::BingoSearchEngine(
 }
 
 BingoSearchEngine::BingoSearchEngine() : _dbFilePath(generateDBPath()), _db(
-        QtrBingoNoSQL::createDatabaseFile(globalIndigoSession, _dbFilePath, "")) {
-
+        indigo_cpp::BingoMolecule::createDatabaseFile(globalIndigoSession, _dbFilePath, "")) {
 }
 
 std::vector<uint64_t>
@@ -84,7 +81,7 @@ std::vector<uint64_t> BingoSearchEngine::getMatches(const BingoSearchEngine::Que
                                                     const BingoSearchEngine::FingerprintType &fingerprint,
                                                     int maxResults, bool &stopFlag) {
     std::vector<uint64_t> result;
-    auto subMatcher = _db.searchSub(queryMol, fingerprint.array(), "");
+    auto subMatcher = _db.searchSub(queryMol, "");
     for (auto &mol: subMatcher) {
         if (stopFlag) {
             break;

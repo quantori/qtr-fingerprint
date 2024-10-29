@@ -10,6 +10,7 @@ enum class SearchEngineType {
     QtrIndigo,
     RDKit,
     Indigo,
+    IndigoBruteForce,
 };
 
 template<typename T>

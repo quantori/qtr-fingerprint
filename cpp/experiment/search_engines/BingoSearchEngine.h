@@ -5,7 +5,6 @@
 #include "BingoNoSQL.h"
 #include "IndigoSession.h"
 #include "indigo.h"
-#include "QtrBingoNoSQL.h"
 
 #include <filesystem>
 
@@ -44,7 +43,5 @@ private:
     BingoSearchEngine();
 
     std::filesystem::path _dbFilePath;
-    QtrBingoNoSQL _db;
-//    indigo_cpp::BingoMolecule _db;
-
+    indigo_cpp::BingoMolecule _db;
 };

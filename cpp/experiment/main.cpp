@@ -11,6 +11,7 @@
 #include "RDKitSearchEngine.h"
 #include "BingoSearchEngine.h"
 #include "QtrSearchEngine.h"
+#include "IndigoBruteForceSearchEngine.h"
 #include "QueriesParser.h"
 #include "SmilesDirParser.h"
 
@@ -132,7 +133,10 @@ int main(int argc, char *argv[]) {
         auto se = BingoSearchEngine(std::move(smilesDataset));
         conductExperiment(se, queries, args.maxResults, args.timeLimit, statOut);
     } else if (args.searchEngineType == SearchEngineType::QtrIndigo) {
-        auto se = QtrSearchEngine<BingoSearchEngine>(std::move(smilesDataset));
+        auto se = QtrSearchEngine<IndigoBruteForceSearchEngine>(std::move(smilesDataset));
+        conductExperiment(se, queries, args.maxResults, args.timeLimit, statOut);
+    } else if (args.searchEngineType == SearchEngineType::IndigoBruteForce) {
+        auto se = IndigoBruteForceSearchEngine(std::move(smilesDataset));
         conductExperiment(se, queries, args.maxResults, args.timeLimit, statOut);
     } else {
         LOG(ERROR) << "Specified SearchEngineType is not supported yet";
@@ -140,27 +144,3 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
-
-// Qtr rdkit
-// 10%: 0.00145
-//20%: 0.00179
-//30%: 0.00216
-//40%: 0.00270
-//50%: 0.00373
-//60%: 0.00622
-//70%: 0.01304
-//80%: 0.03005
-//90%: 0.07607
-//100%: 76.19454
-
-// RDKit
-//10%: 0.00234
-//20%: 0.00277
-//30%: 0.00327
-//40%: 0.00412
-//50%: 0.00542
-//60%: 0.00818
-//70%: 0.01495
-//80%: 0.02995
-//90%: 0.07756
-//100%: 70.49553
