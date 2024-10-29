@@ -9,7 +9,7 @@
 #include "ExperimentStat.h"
 #include "SearchEngineConcept.h"
 #include "RDKitSearchEngine.h"
-#include "BingoSearchEngine.h"
+#include "IndigoSearchEngine.h"
 #include "QtrSearchEngine.h"
 #include "IndigoBruteForceSearchEngine.h"
 #include "QueriesParser.h"
@@ -130,7 +130,7 @@ int main(int argc, char *argv[]) {
         auto se = QtrSearchEngine<RDKitSearchEngine>(std::move(smilesDataset));
         conductExperiment(se, queries, args.maxResults, args.timeLimit, statOut);
     } else if (args.searchEngineType == SearchEngineType::Indigo) {
-        auto se = BingoSearchEngine(std::move(smilesDataset));
+        auto se = IndigoSearchEngine(std::move(smilesDataset));
         conductExperiment(se, queries, args.maxResults, args.timeLimit, statOut);
     } else if (args.searchEngineType == SearchEngineType::QtrIndigo) {
         auto se = QtrSearchEngine<IndigoBruteForceSearchEngine>(std::move(smilesDataset));

@@ -12,7 +12,7 @@
 #include "IndigoQueryMolecule.h"
 #include "IndigoMolecule.h"
 #include "IndigoFingerprint.h"
-#include "BingoSearchEngine.h"
+#include "IndigoSearchEngine.h"
 #include "GlobalIndigoSession.h"
 #include "IndigoSubstructureMatcher.h"
 
@@ -77,19 +77,19 @@ public:
     }
 
     static std::unique_ptr<MoleculeType> smilesToMolecule(const std::string &smiles) {
-        return BingoSearchEngine::smilesToMolecule(smiles);
+        return IndigoSearchEngine::smilesToMolecule(smiles);
     }
 
     static std::unique_ptr<QueryMoleculeType> smilesToQueryMolecule(const std::string &smiles) {
-        return BingoSearchEngine::smilesToQueryMolecule(smiles);
+        return IndigoSearchEngine::smilesToQueryMolecule(smiles);
     }
 
     static std::unique_ptr<MoleculeType> storageMoleculeToMolecule(const StorageMoleculeType &storageMolecule) {
-        return BingoSearchEngine::storageMoleculeToMolecule(storageMolecule);
+        return IndigoSearchEngine::storageMoleculeToMolecule(storageMolecule);
     }
 
     static std::unique_ptr<StorageMoleculeType> moleculeToStorageMolecule(const MoleculeType &molecule) {
-        return BingoSearchEngine::moleculeToStorageMolecule(molecule);
+        return IndigoSearchEngine::moleculeToStorageMolecule(molecule);
     }
 
 private:

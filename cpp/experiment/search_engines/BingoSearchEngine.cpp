@@ -1,6 +1,6 @@
 #include <glog/logging.h>
 
-#include "BingoSearchEngine.h"
+#include "IndigoSearchEngine.h"
 #include "indigo_molecule.h"
 #include "indigo.h"
 #include "bingo-nosql.h"
@@ -21,35 +21,35 @@ namespace {
     }
 }
 
-BingoSearchEngine::BingoSearchEngine(std::unique_ptr<std::vector<std::string>> &&smiles) : BingoSearchEngine() {
+IndigoSearchEngine::IndigoSearchEngine(std::unique_ptr<std::vector<std::string>> &&smiles) : IndigoSearchEngine() {
     for (auto &s: *smiles) { // TODO: parallelize
         MoleculeType mol = globalIndigoSession->loadMolecule(s);
         _db.insertRecord(mol);
     }
 }
 
-BingoSearchEngine::BingoSearchEngine(
-        std::unique_ptr<std::vector<std::unique_ptr<MoleculeType>>> &&molecules) : BingoSearchEngine() {
+IndigoSearchEngine::IndigoSearchEngine(
+        std::unique_ptr<std::vector<std::unique_ptr<MoleculeType>>> &&molecules) : IndigoSearchEngine() {
     for (auto &mol: *molecules) { // TODO: parallelize?
         _db.insertRecord(*mol);
     }
 }
 
-BingoSearchEngine::BingoSearchEngine(
+IndigoSearchEngine::IndigoSearchEngine(
         std::unique_ptr<std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType>>>> &&data)
-        : BingoSearchEngine() {
+        : IndigoSearchEngine() {
     // TODO: is it possible to do not ignore fingerprint?
     for (auto &[mol, _]: *data) { // TODO: parallelize?
         _db.insertRecord(*mol);
     }
 }
 
-BingoSearchEngine::BingoSearchEngine() : _dbFilePath(generateDBPath()), _db(
+IndigoSearchEngine::IndigoSearchEngine() : _dbFilePath(generateDBPath()), _db(
         indigo_cpp::BingoMolecule::createDatabaseFile(globalIndigoSession, _dbFilePath, "")) {
 }
 
 std::vector<uint64_t>
-BingoSearchEngine::getMatches(const BingoSearchEngine::QueryMoleculeType &queryMol, int maxResults, bool &stopFlag) {
+IndigoSearchEngine::getMatches(const IndigoSearchEngine::QueryMoleculeType &queryMol, int maxResults, bool &stopFlag) {
     std::vector<uint64_t> result;
     auto subMatcher = _db.searchSub(queryMol, "");
     for (auto &mol: subMatcher) {
@@ -64,22 +64,22 @@ BingoSearchEngine::getMatches(const BingoSearchEngine::QueryMoleculeType &queryM
     return result;
 }
 
-std::unique_ptr<BingoSearchEngine::MoleculeType> BingoSearchEngine::smilesToMolecule(const std::string &smiles) {
+std::unique_ptr<IndigoSearchEngine::MoleculeType> IndigoSearchEngine::smilesToMolecule(const std::string &smiles) {
     auto mol = std::make_unique<MoleculeType>(globalIndigoSession->loadMolecule(smiles));
     mol->aromatize();
     return mol;
 }
 
-std::unique_ptr<BingoSearchEngine::QueryMoleculeType>
-BingoSearchEngine::smilesToQueryMolecule(const std::string &smiles) {
+std::unique_ptr<IndigoSearchEngine::QueryMoleculeType>
+IndigoSearchEngine::smilesToQueryMolecule(const std::string &smiles) {
     auto mol = std::make_unique<QueryMoleculeType>(globalIndigoSession->loadQueryMolecule(smiles));
     mol->aromatize();
     return mol;
 }
 
-std::vector<uint64_t> BingoSearchEngine::getMatches(const BingoSearchEngine::QueryMoleculeType &queryMol,
-                                                    const BingoSearchEngine::FingerprintType &fingerprint,
-                                                    int maxResults, bool &stopFlag) {
+std::vector<uint64_t> IndigoSearchEngine::getMatches(const IndigoSearchEngine::QueryMoleculeType &queryMol,
+                                                     const IndigoSearchEngine::FingerprintType &fingerprint,
+                                                     int maxResults, bool &stopFlag) {
     std::vector<uint64_t> result;
     auto subMatcher = _db.searchSub(queryMol, "");
     for (auto &mol: subMatcher) {
@@ -94,16 +94,16 @@ std::vector<uint64_t> BingoSearchEngine::getMatches(const BingoSearchEngine::Que
     return result;
 }
 
-BingoSearchEngine::~BingoSearchEngine() {
+IndigoSearchEngine::~IndigoSearchEngine() {
     std::filesystem::remove_all(_dbFilePath);
 }
 
-std::unique_ptr<BingoSearchEngine::MoleculeType>
-BingoSearchEngine::storageMoleculeToMolecule(const BingoSearchEngine::StorageMoleculeType &storageMolecule) {
+std::unique_ptr<IndigoSearchEngine::MoleculeType>
+IndigoSearchEngine::storageMoleculeToMolecule(const IndigoSearchEngine::StorageMoleculeType &storageMolecule) {
     return std::make_unique<MoleculeType>(storageMolecule);
 }
 
-std::unique_ptr<BingoSearchEngine::StorageMoleculeType>
-BingoSearchEngine::moleculeToStorageMolecule(const BingoSearchEngine::MoleculeType &molecule) {
+std::unique_ptr<IndigoSearchEngine::StorageMoleculeType>
+IndigoSearchEngine::moleculeToStorageMolecule(const IndigoSearchEngine::MoleculeType &molecule) {
     return std::make_unique<StorageMoleculeType>(molecule);
 }
