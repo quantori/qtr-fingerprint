@@ -10,7 +10,8 @@
 #include "SearchEngineConcept.h"
 #include "RDKitSearchEngine.h"
 #include "IndigoSearchEngine.h"
-#include "QtrSearchEngine.h"
+#include "BallTreeSearchEngine.h"
+#include "TrieSearchEngine.h"
 #include "IndigoBruteForceSearchEngine.h"
 #include "QueriesParser.h"
 #include "SmilesDirParser.h"
@@ -126,14 +127,20 @@ int main(int argc, char *argv[]) {
     if (args.searchEngineType == SearchEngineType::RDKit) {
         auto se = RDKitSearchEngine(std::move(smilesDataset));
         conductExperiment(se, queries, args.maxResults, args.timeLimit, statOut);
-    } else if (args.searchEngineType == SearchEngineType::QtrRDKit) {
-        auto se = QtrSearchEngine<RDKitSearchEngine>(std::move(smilesDataset));
+    } else if (args.searchEngineType == SearchEngineType::BallTreeRDKit) {
+        auto se = BallTreeSearchEngine<RDKitSearchEngine>(std::move(smilesDataset));
         conductExperiment(se, queries, args.maxResults, args.timeLimit, statOut);
+    } else if (args.searchEngineType == SearchEngineType::TrieRDKit) {
+        LOG(ERROR) << "TrieRDKit is not implemented yet.";
+        return 1;
     } else if (args.searchEngineType == SearchEngineType::Indigo) {
         auto se = IndigoSearchEngine(std::move(smilesDataset));
         conductExperiment(se, queries, args.maxResults, args.timeLimit, statOut);
-    } else if (args.searchEngineType == SearchEngineType::QtrIndigo) {
-        auto se = QtrSearchEngine<IndigoBruteForceSearchEngine>(std::move(smilesDataset));
+    } else if (args.searchEngineType == SearchEngineType::BallTreeIndigo) {
+        auto se = BallTreeSearchEngine<IndigoBruteForceSearchEngine>(std::move(smilesDataset));
+        conductExperiment(se, queries, args.maxResults, args.timeLimit, statOut);
+    } else if (args.searchEngineType == SearchEngineType::TrieIndigo) {
+        auto se = TrieSearchEngine<IndigoBruteForceSearchEngine>(std::move(smilesDataset), 10000);
         conductExperiment(se, queries, args.maxResults, args.timeLimit, statOut);
     } else if (args.searchEngineType == SearchEngineType::IndigoBruteForce) {
         auto se = IndigoBruteForceSearchEngine(std::move(smilesDataset));
@@ -141,6 +148,5 @@ int main(int argc, char *argv[]) {
     } else {
         LOG(ERROR) << "Specified SearchEngineType is not supported yet";
     }
-
     return 0;
 }

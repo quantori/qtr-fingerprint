@@ -9,8 +9,10 @@
 namespace {
 
     const std::map<std::string, SearchEngineType> stringToSearchEngineType = {
-            {"QtrRDKit",         SearchEngineType::QtrRDKit},
-            {"QtrIndigo",        SearchEngineType::QtrIndigo},
+            {"BallTreeRDKit",    SearchEngineType::BallTreeRDKit},
+            {"BallTreeIndigo",   SearchEngineType::BallTreeIndigo},
+            {"TrieRDKit",        SearchEngineType::TrieRDKit},
+            {"TrieIndigo",       SearchEngineType::TrieIndigo},
             {"RDKit",            SearchEngineType::RDKit},
             {"Indigo",           SearchEngineType::Indigo},
             {"IndigoBruteForce", SearchEngineType::IndigoBruteForce},

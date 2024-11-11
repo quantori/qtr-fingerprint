@@ -15,14 +15,7 @@
 #include "IndigoSearchEngine.h"
 #include "GlobalIndigoSession.h"
 #include "IndigoSubstructureMatcher.h"
-
-namespace {
-    bool isSubstructure(const indigo_cpp::IndigoQueryMolecule &queryMolecule,
-                        const indigo_cpp::IndigoMolecule &candidateMol) {
-        auto matcher = globalIndigoSession->substructureMatcher(candidateMol);
-        return bool(indigoMatch(matcher.id(), queryMolecule.id()));
-    }
-}
+#include "IndigoUtils.h"
 
 class IndigoBruteForceSearchEngine {
 public:

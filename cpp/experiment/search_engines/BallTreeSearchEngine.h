@@ -6,7 +6,7 @@
 #include "SearchEngineConcept.h"
 
 template<SearchEngine SE>
-class QtrSearchEngine {
+class BallTreeSearchEngine {
 public:
     using FingerprintType = SE::FingerprintType;
     using MoleculeType = SE::MoleculeType;
@@ -14,7 +14,7 @@ public:
     using QueryMoleculeType = SE::QueryMoleculeType;
 
 
-    explicit QtrSearchEngine(std::unique_ptr<std::vector<std::string>> &&smilesDataset) {
+    explicit BallTreeSearchEngine(std::unique_ptr<std::vector<std::string>> &&smilesDataset) {
         auto data = std::make_unique<std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>>>();
         std::mutex dataMutex;
         std::for_each(std::execution::par, smilesDataset->begin(), smilesDataset->end(),
@@ -40,7 +40,8 @@ public:
         _ballTree = std::make_unique<BallTreeType>(std::move(data));
     }
 
-    explicit QtrSearchEngine(std::unique_ptr<std::vector<std::unique_ptr<StorageMoleculeType>>> &&moleculesDataset) {
+    explicit BallTreeSearchEngine(
+            std::unique_ptr<std::vector<std::unique_ptr<StorageMoleculeType>>> &&moleculesDataset) {
         auto data = std::make_unique<std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>>>;
         std::mutex m;
         std::for_each(std::execution::par, moleculesDataset->begin(), moleculesDataset->end(),
@@ -55,7 +56,7 @@ public:
         _ballTree = std::make_unique<BallTreeType>(std::move(data));
     }
 
-    explicit QtrSearchEngine(
+    explicit BallTreeSearchEngine(
             std::unique_ptr<std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>>> &&data) {
         _ballTree = std::make_unique<BallTreeType>(std::move(data));
     }

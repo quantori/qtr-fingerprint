@@ -17,6 +17,8 @@ class BallTree {
     using QueryMoleculeType = typename SE::QueryMoleculeType;
     using StorageMoleculeType = typename SE::StorageMoleculeType;
     using FingerprintType = typename SE::FingerprintType;
+
+    const int MAGIC_CONST = 5; // TODO: rewrite without magic constants
 private:
     struct Node {
         FingerprintType centroid;
@@ -176,7 +178,7 @@ public:
             std::unique_ptr<std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>>> &&data) {
         using NodeDataType = std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>>;
 //        _depth = 1;
-        _depth = std::max((size_t) 2, (size_t) std::ceil(std::log2(data->size() / 25))); // TODO: 25 - magic constant
+        _depth = std::max((size_t) 2, (size_t) std::ceil(std::log2(data->size() / MAGIC_CONST)));
         _leafSearchEngines.resize(1ull << _depth); // TODO: check +- 1
         _nodes.resize((2ull << _depth) - 1);
         std::vector<std::unique_ptr<NodeDataType>> nodesData((1u << _depth) * 2 - 1);

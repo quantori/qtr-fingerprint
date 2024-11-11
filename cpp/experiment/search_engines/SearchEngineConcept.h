@@ -6,8 +6,10 @@
 #include "FingerprintConcept.h"
 
 enum class SearchEngineType {
-    QtrRDKit,
-    QtrIndigo,
+    BallTreeRDKit,
+    BallTreeIndigo,
+    TrieRDKit,
+    TrieIndigo,
     RDKit,
     Indigo,
     IndigoBruteForce,
