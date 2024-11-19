@@ -18,10 +18,10 @@ if (QTR_PROFILING)
     message(STATUS "Enabling QTR_PROFILING because QTR_PROFILING=ON")
 endif (QTR_PROFILING)
 
-target_link_libraries(${This} PRIVATE glog::glog)
-target_link_libraries(${This} PRIVATE indigo-core indigo-cpp bingo-nosql bingo-nosql-object)
-target_link_libraries(${This} PRIVATE absl::flags absl::flags_parse)
-target_link_libraries(${This} PRIVATE ${LIBS} ${RDKit_LIBS})
+target_link_libraries(${This} PUBLIC glog::glog)
+target_link_libraries(${This} PUBLIC indigo-core indigo-cpp bingo-nosql bingo-nosql-object)
+target_link_libraries(${This} PUBLIC absl::flags absl::flags_parse)
+target_link_libraries(${This} PUBLIC ${LIBS} ${RDKit_LIBS})
 
 target_include_directories(${This}
         PUBLIC .
