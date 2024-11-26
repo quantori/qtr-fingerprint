@@ -22,6 +22,11 @@ include(cmake/AddRDKit.cmake)
 # turn off GTEST because something wrong with GMOCK inside my docker  
 SET(WITH_GTEST OFF)
 
+add_subdirectory(third_party/Indigo)
+add_subdirectory(third_party/glog)
+add_subdirectory(third_party/Crow)
+add_subdirectory(third_party/abseil-cpp)
+
 add_subdirectory(run_db)
 add_subdirectory(run_db/qtr_run)
 add_subdirectory(build_db)
@@ -32,8 +37,3 @@ add_subdirectory(playground)
 add_subdirectory(qtrlib)
 add_subdirectory(experiment)
 add_subdirectory(tests)
-
-add_subdirectory(third_party/Indigo)
-add_subdirectory(third_party/glog)
-add_subdirectory(third_party/Crow)
-add_subdirectory(third_party/abseil-cpp)

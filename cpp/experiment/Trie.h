@@ -147,7 +147,7 @@ private:
         return {std::move(zeroData), std::move(oneData)};
     }
 
-    void search(const QueryMoleculeType &mol, const FingerprintType &fingerprint, int maxResults, bool &stopFlag,
+    void search(QueryMoleculeType &mol, const FingerprintType &fingerprint, int maxResults, bool &stopFlag,
                 Node &node, std::vector<uint64_t> &results) const {
         std::vector<std::pair<Node *, size_t>> stack;
         stack.emplace_back(&node, 0);
@@ -185,14 +185,15 @@ private:
         return false;
     }
 
-    void processLeafNode(const Node &node, const QueryMoleculeType &mol, int maxResults, bool &stopFlag,
+    void processLeafNode(const Node &node, QueryMoleculeType &mol, int maxResults, bool &stopFlag,
                          std::vector<uint64_t> &results) const {
         for (const auto &[storedMol, storedFp]: node.data.leaf.molecules) {
             if ((int64_t) results.size() >= maxResults || stopFlag) {
                 return;
             }
             if (isSubstructure(mol, *storedMol)) {
-                results.push_back(storedMol->hash());
+                // TODO: use indices or other information about molecules
+                results.push_back(-2); // -2 is a random selected number
             }
         }
     }
@@ -206,14 +207,14 @@ private:
     }
 
 public:
-    std::vector<uint64_t> getMatches(const QueryMoleculeType &mol, const FingerprintType &fingerprint,
+    std::vector<uint64_t> getMatches(QueryMoleculeType &mol, const FingerprintType &fingerprint,
                                      int maxResults, bool &stopFlag) {
         std::vector<uint64_t> results;
         search(mol, fingerprint, maxResults, stopFlag, *_root, results);
         return results;
     }
 
-    std::vector<uint64_t> getMatches(const QueryMoleculeType &mol, int maxResults, bool &stopFlag) {
+    std::vector<uint64_t> getMatches(QueryMoleculeType &mol, int maxResults, bool &stopFlag) {
         FingerprintType queryFingerprint(mol);
         return getMatches(mol, queryFingerprint, maxResults, stopFlag);
     }

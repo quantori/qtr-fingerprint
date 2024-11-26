@@ -17,8 +17,8 @@ enum class SearchEngineType {
 
 template<typename T>
 concept SearchEngine = requires(T t, const std::string &querySmiles, int maxResults, bool &stopFlag,
-                                const T::QueryMoleculeType &queryMolecule, const T::FingerprintType& queryFingerprint,
-                                const T::StorageMoleculeType& storageMolecule, const T::MoleculeType& molecule) {
+        T::QueryMoleculeType &queryMolecule, T::FingerprintType& queryFingerprint,
+        T::StorageMoleculeType& storageMolecule, T::MoleculeType& molecule) {
     { t.getMatches(queryMolecule, maxResults, stopFlag) } -> std::convertible_to<std::vector<uint64_t>>;
     { t.getMatches(queryMolecule, queryFingerprint, maxResults, stopFlag) } -> std::convertible_to<std::vector<uint64_t>>;
 

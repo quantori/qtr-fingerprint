@@ -19,6 +19,7 @@
 #include "GraphMol/GraphMol.h"
 #include "GraphMol/SmilesParse/SmilesParse.h"
 
+#include "Profiling.h"
 
 struct ExperimentInfo {
     bool stopFlag;
@@ -68,10 +69,12 @@ void conductExperiment(SE &searchEngine,
                        int maxResults,
                        double timeLimit,
                        std::ofstream &statOut) {
+    ProfileScope("Experiment");
     ExperimentStat stat;
     std::mutex statMutex;
     std::atomic_int64_t counter = 0;
-    std::for_each(std::execution::par, queries.begin(), queries.end(), [&](const std::string &query) {
+    // TODO:: change to std::execution::par
+    std::for_each(std::execution::seq, queries.begin(), queries.end(), [&](const std::string &query) {
         auto i = counter++;
         LOG(INFO) << "Start " << query << " processing (" << i + 1 << ")";
         decltype(searchEngine.smilesToQueryMolecule(query)) mol;
@@ -148,5 +151,6 @@ int main(int argc, char *argv[]) {
     } else {
         LOG(ERROR) << "Specified SearchEngineType is not supported yet";
     }
+    qtr::ProfilingPool::showStatistics(std::cout);
     return 0;
 }

@@ -14,7 +14,7 @@
 
 class IndigoFingerprint {
 public:
-    using MoleculeType = indigo_cpp::IndigoBaseMolecule;
+    using MoleculeType = indigo::BaseMolecule;
 
     explicit IndigoFingerprint(const MoleculeType &mol);
 

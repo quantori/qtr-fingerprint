@@ -1,9 +1,10 @@
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(This experiment)
 
-find_package(glog REQUIRED)
-find_package(absl CONFIG REQUIRED)
+#find_package(glog REQUIRED)
+#find_package(absl CONFIG REQUIRED)2
 find_package(TBB REQUIRED)
 
 file(GLOB_RECURSE sources *.cpp *.h)

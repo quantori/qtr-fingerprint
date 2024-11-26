@@ -17,7 +17,8 @@ public:
     explicit BallTreeSearchEngine(std::unique_ptr<std::vector<std::string>> &&smilesDataset) {
         auto data = std::make_unique<std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>>>();
         std::mutex dataMutex;
-        std::for_each(std::execution::par, smilesDataset->begin(), smilesDataset->end(),
+        // TODO: change to std::execution:par
+        std::for_each(std::execution::seq, smilesDataset->begin(), smilesDataset->end(),
                       [&](const std::string &smiles) {
                           std::unique_ptr<MoleculeType> mol;
                           try {
@@ -61,12 +62,12 @@ public:
         _ballTree = std::make_unique<BallTreeType>(std::move(data));
     }
 
-    std::vector<uint64_t> getMatches(const QueryMoleculeType &queryMol, int maxResults, bool &stopFlag) {
+    std::vector<uint64_t> getMatches(QueryMoleculeType &queryMol, int maxResults, bool &stopFlag) {
         return _ballTree->getMatches(queryMol, maxResults, stopFlag);
     }
 
     std::vector<uint64_t>
-    getMatches(const QueryMoleculeType &mol, const FingerprintType &fingerprint, int maxResults, bool &stopFlag) {
+    getMatches(QueryMoleculeType &mol, const FingerprintType &fingerprint, int maxResults, bool &stopFlag) {
         return _ballTree->getMatches(mol, fingerprint, maxResults, stopFlag);
     }
 
@@ -78,11 +79,11 @@ public:
         return SE::smilesToQueryMolecule(smiles);
     }
 
-    static std::unique_ptr<MoleculeType> storageMoleculeToMolecule(const StorageMoleculeType &storageMolecule) {
+    static std::unique_ptr<MoleculeType> storageMoleculeToMolecule(StorageMoleculeType &storageMolecule) {
         return SE::storageMoleculeToMolecule(storageMolecule);
     }
 
-    static std::unique_ptr<StorageMoleculeType> moleculeToStorageMolecule(const MoleculeType &molecule) {
+    static std::unique_ptr<StorageMoleculeType> moleculeToStorageMolecule(MoleculeType &molecule) {
         return SE::moleculeToStorageMolecule(molecule);
     }
 

@@ -82,7 +82,7 @@ private:
     }
 
     void
-    searchInLeafNode(const QueryMoleculeType &mol, const FingerprintType &fingerprint, int maxResults, bool &stopFlag,
+    searchInLeafNode(QueryMoleculeType &mol, const FingerprintType &fingerprint, int maxResults, bool &stopFlag,
                      size_t nodeId,
                      std::vector<uint64_t> &results) {
         assert(isLeaf(nodeId));
@@ -149,7 +149,7 @@ private:
 
 public:
     std::vector<uint64_t>
-    getMatches(const QueryMoleculeType &mol, const FingerprintType &fingerprint, int maxResults, bool &stopFlag) {
+    getMatches(QueryMoleculeType &mol, const FingerprintType &fingerprint, int maxResults, bool &stopFlag) {
         size_t nodeId = root();
         std::vector<uint64_t> results;
         while (nodeId != endNodeId()
@@ -169,7 +169,7 @@ public:
         return results;
     }
 
-    std::vector<uint64_t> getMatches(const QueryMoleculeType &mol, int maxResults, bool &stopFlag) {
+    std::vector<uint64_t> getMatches(QueryMoleculeType &mol, int maxResults, bool &stopFlag) {
         FingerprintType queryFingerprint(mol);
         return getMatches(mol, queryFingerprint, maxResults, stopFlag);
     }

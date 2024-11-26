@@ -20,9 +20,9 @@
 class IndigoBruteForceSearchEngine {
 public:
     using FingerprintType = IndigoFingerprint;
-    using MoleculeType = indigo_cpp::IndigoMolecule;
-    using StorageMoleculeType = indigo_cpp::IndigoMolecule;
-    using QueryMoleculeType = indigo_cpp::IndigoQueryMolecule;
+    using MoleculeType = indigo::Molecule;
+    using StorageMoleculeType = indigo::Molecule;
+    using QueryMoleculeType = indigo::QueryMolecule;
 
     explicit IndigoBruteForceSearchEngine(std::unique_ptr<std::vector<std::string>> &&smiles) {
         for (const auto &smile: *smiles) {
@@ -52,13 +52,13 @@ public:
         }
     }
 
-    std::vector<uint64_t> getMatches(const QueryMoleculeType &queryMol, int maxResults, bool &stopFlag) {
+    std::vector<uint64_t> getMatches(QueryMoleculeType &queryMol, int maxResults, bool &stopFlag) {
         FingerprintType queryFingerprint(queryMol);
         return getMatches(queryMol, queryFingerprint, maxResults, stopFlag);
     }
 
     std::vector<uint64_t>
-    getMatches(const QueryMoleculeType &queryMol, const FingerprintType &queryFingerprint, int maxResults,
+    getMatches(QueryMoleculeType &queryMol, const FingerprintType &queryFingerprint, int maxResults,
                bool &stopFlag) {
         std::vector<uint64_t> matches;
         for (size_t i = 0; i < fingerprints.size() && matches.size() < (size_t) maxResults && !stopFlag; i++) {
@@ -70,19 +70,31 @@ public:
     }
 
     static std::unique_ptr<MoleculeType> smilesToMolecule(const std::string &smiles) {
-        return IndigoSearchEngine::smilesToMolecule(smiles);
+        BufferScanner bufferScanner(smiles.c_str(), smiles.size(), false);
+        SmilesLoader loader(bufferScanner);
+        auto mol = std::make_unique<MoleculeType>();
+        loader.loadMolecule(*mol);
+        return mol;
     }
 
     static std::unique_ptr<QueryMoleculeType> smilesToQueryMolecule(const std::string &smiles) {
-        return IndigoSearchEngine::smilesToQueryMolecule(smiles);
+        BufferScanner bufferScanner(smiles.c_str(), smiles.size(), false);
+        SmilesLoader loader(bufferScanner);
+        auto mol = std::make_unique<QueryMoleculeType>();
+        loader.loadQueryMolecule(*mol);
+        return mol;
     }
 
-    static std::unique_ptr<MoleculeType> storageMoleculeToMolecule(const StorageMoleculeType &storageMolecule) {
-        return IndigoSearchEngine::storageMoleculeToMolecule(storageMolecule);
+    static std::unique_ptr<MoleculeType> storageMoleculeToMolecule(StorageMoleculeType &storageMolecule) {
+        auto mol = std::make_unique<MoleculeType>();
+        storageMolecule.clone(*mol);
+        return mol;
     }
 
-    static std::unique_ptr<StorageMoleculeType> moleculeToStorageMolecule(const MoleculeType &molecule) {
-        return IndigoSearchEngine::moleculeToStorageMolecule(molecule);
+    static std::unique_ptr<StorageMoleculeType> moleculeToStorageMolecule(MoleculeType &molecule) {
+        auto storageMol = std::make_unique<MoleculeType>();
+        molecule.clone(*storageMol);
+        return storageMol;
     }
 
 private:

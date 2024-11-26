@@ -20,7 +20,7 @@ endif (QTR_PROFILING)
 
 target_link_libraries(${This} PUBLIC glog::glog)
 target_link_libraries(${This} PUBLIC indigo-core indigo-cpp bingo-nosql bingo-nosql-object)
-target_link_libraries(${This} PUBLIC absl::flags absl::flags_parse)
+#target_link_libraries(${This} PUBLIC absl::flags absl::flags_parse)
 target_link_libraries(${This} PUBLIC ${LIBS} ${RDKit_LIBS})
 
 target_include_directories(${This}

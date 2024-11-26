@@ -4,9 +4,12 @@
 #include "IndigoSubstructureMatcher.h"
 #include "Profiling.h"
 
-inline bool isSubstructure(const indigo_cpp::IndigoQueryMolecule &queryMolecule,
-                    const indigo_cpp::IndigoMolecule &candidateMol) {
+inline bool isSubstructure(indigo::QueryMolecule &queryMolecule,
+                           indigo::Molecule &candidateMol) {
     ProfileScope("isSubstructure");
-    auto matcher = globalIndigoSession->substructureMatcher(candidateMol);
-    return bool(indigoMatch(matcher.id(), queryMolecule.id()));
+    // TODO: maybe delete aromatize?
+    candidateMol.aromatize(AromaticityOptions());
+    MoleculeSubstructureMatcher msm(candidateMol);
+    msm.setQuery(queryMolecule);
+    return msm.find();
 }

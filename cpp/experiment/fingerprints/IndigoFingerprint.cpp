@@ -1,11 +1,20 @@
 #include "IndigoFingerprint.h"
 
+#include "Profiling.h"
+
 namespace {
     const Indigo indigoInstance;
 }
 
-IndigoFingerprint::IndigoFingerprint(const MoleculeType &mol) : IndigoFingerprint(mol.smiles()) {
-    // TODO: is it possible to avoid smiles cast?
+IndigoFingerprint::IndigoFingerprint(const MoleculeType &mol) {
+    // Maybe one needs to aromatize
+    //    mol.aromatize(indigo::AromaticityOptions());
+    indigo::MoleculeFingerprintBuilder fingerprintBuilder((MoleculeType &)mol, indigoInstance.fp_params);
+    fingerprintBuilder.parseFingerprintType("sub", false);
+    fingerprintBuilder.process();
+    _fingerprint = std::make_unique<indigo::Array<byte>>();
+    _fingerprint->copy(fingerprintBuilder.get(), indigoInstance.fp_params.fingerprintSize());
+    assert(_fingerprint->size() * 8 == size());
 }
 
 IndigoFingerprint::IndigoFingerprint() {
@@ -14,6 +23,7 @@ IndigoFingerprint::IndigoFingerprint() {
 }
 
 bool IndigoFingerprint::isSubFingerprintOf(const IndigoFingerprint &other) const {
+    ProfileScope("IndigoFingerprint::isSubFingerprintOf");
     assert(_fingerprint->size() * 8 == size());
     assert(other.size() == size());
     bool res = true;
@@ -47,7 +57,6 @@ IndigoFingerprint::IndigoFingerprint(const std::string &smiles) {
     indigo::Molecule molecule;
     molecule.aromatize(indigo::AromaticityOptions());
     assert(molecule.isAromatized());
-    bingo::IndexMolecule indexMolecule(molecule, indigo::AromaticityOptions());
     _fingerprint = std::make_unique<indigo::Array<byte>>();
     indigo::MoleculeFingerprintBuilder fingerprintBuilder(molecule, indigoInstance.fp_params);
     fingerprintBuilder.parseFingerprintType("sub", false);
