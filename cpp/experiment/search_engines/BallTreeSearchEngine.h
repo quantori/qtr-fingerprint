@@ -17,8 +17,7 @@ public:
     explicit BallTreeSearchEngine(std::unique_ptr<std::vector<std::string>> &&smilesDataset) {
         auto data = std::make_unique<std::vector<std::pair<std::unique_ptr<StorageMoleculeType>, std::unique_ptr<FingerprintType>>>>();
         std::mutex dataMutex;
-        // TODO: change to std::execution:par
-        std::for_each(std::execution::seq, smilesDataset->begin(), smilesDataset->end(),
+        std::for_each(std::execution::par, smilesDataset->begin(), smilesDataset->end(),
                       [&](const std::string &smiles) {
                           std::unique_ptr<MoleculeType> mol;
                           try {

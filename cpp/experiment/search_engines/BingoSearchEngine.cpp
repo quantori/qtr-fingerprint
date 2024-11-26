@@ -1,10 +1,13 @@
 #include <glog/logging.h>
+#include <execution>
 
 #include "IndigoSearchEngine.h"
 #include "indigo_molecule.h"
 #include "indigo.h"
 #include "bingo-nosql.h"
 #include "GlobalIndigoSession.h"
+#include "IndigoException.h"
+
 
 namespace {
     std::mt19937 random_generator(0);
@@ -22,26 +25,36 @@ namespace {
 }
 
 IndigoSearchEngine::IndigoSearchEngine(std::unique_ptr<std::vector<std::string>> &&smiles) : IndigoSearchEngine() {
-    for (auto &s: *smiles) { // TODO: parallelize
-        MoleculeType mol = globalIndigoSession->loadMolecule(s);
-        _db.insertRecord(mol);
-    }
+    std::for_each(std::execution::par, smiles->begin(), smiles->end(), [&](const std::string &smiles) {
+        try {
+            MoleculeType mol = globalIndigoSession->loadMolecule(smiles);
+            mol.aromatize();
+            {
+                // no mutex as _db must be thread safe
+                _db.insertRecord(mol);
+            }
+        }
+        catch (const indigo_cpp::IndigoException &e) {
+            LOG(ERROR) << "Indigo error: " << e.what();
+        }
+    });
 }
 
 IndigoSearchEngine::IndigoSearchEngine(
         std::unique_ptr<std::vector<std::unique_ptr<MoleculeType>>> &&molecules) : IndigoSearchEngine() {
-    for (auto &mol: *molecules) { // TODO: parallelize?
+    // no mutex as _db must be thread safe
+    std::for_each(std::execution::par, molecules->begin(), molecules->end(), [&](std::unique_ptr<MoleculeType>& mol) {
         _db.insertRecord(*mol);
-    }
+    });
 }
 
 IndigoSearchEngine::IndigoSearchEngine(
         std::unique_ptr<std::vector<std::pair<std::unique_ptr<MoleculeType>, std::unique_ptr<FingerprintType>>>> &&data)
         : IndigoSearchEngine() {
     // TODO: is it possible to do not ignore fingerprint?
-    for (auto &[mol, _]: *data) { // TODO: parallelize?
-        _db.insertRecord(*mol);
-    }
+    std::for_each(std::execution::par, data->begin(), data->end(), [&](decltype(data->operator[](0))& entity) {
+        _db.insertRecord(*entity.first);
+    });
 }
 
 IndigoSearchEngine::IndigoSearchEngine() : _dbFilePath(generateDBPath()), _db(

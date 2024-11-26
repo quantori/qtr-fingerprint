@@ -73,7 +73,7 @@ void conductExperiment(SE &searchEngine,
     ExperimentStat stat;
     std::mutex statMutex;
     std::atomic_int64_t counter = 0;
-    // TODO:: change to std::execution::par
+    // TODO:: can it be changed to std::execution::par
     std::for_each(std::execution::seq, queries.begin(), queries.end(), [&](const std::string &query) {
         auto i = counter++;
         LOG(INFO) << "Start " << query << " processing (" << i + 1 << ")";
