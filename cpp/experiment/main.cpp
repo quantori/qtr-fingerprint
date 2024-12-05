@@ -143,8 +143,10 @@ int main(int argc, char *argv[]) {
         auto se = BallTreeSearchEngine<IndigoBruteForceSearchEngine>(std::move(smilesDataset));
         conductExperiment(se, queries, args.maxResults, args.timeLimit, statOut);
     } else if (args.searchEngineType == SearchEngineType::TrieIndigo) {
-        auto se = TrieSearchEngine<IndigoBruteForceSearchEngine>(std::move(smilesDataset), 10000);
-        conductExperiment(se, queries, args.maxResults, args.timeLimit, statOut);
+        LOG(ERROR) << "TrieIndigo is not implemented yet.";
+        return 1;
+//        auto se = TrieSearchEngine<IndigoBruteForceSearchEngine>(std::move(smilesDataset), 10000);
+//        conductExperiment(se, queries, args.maxResults, args.timeLimit, statOut);
     } else if (args.searchEngineType == SearchEngineType::IndigoBruteForce) {
         auto se = IndigoBruteForceSearchEngine(std::move(smilesDataset));
         conductExperiment(se, queries, args.maxResults, args.timeLimit, statOut);

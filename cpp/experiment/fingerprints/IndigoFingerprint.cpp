@@ -12,30 +12,34 @@ IndigoFingerprint::IndigoFingerprint(const MoleculeType &mol) {
     indigo::MoleculeFingerprintBuilder fingerprintBuilder((MoleculeType &)mol, indigoInstance.fp_params);
     fingerprintBuilder.parseFingerprintType("sub", false);
     fingerprintBuilder.process();
-    _fingerprint = std::make_unique<indigo::Array<byte>>();
-    _fingerprint->copy(fingerprintBuilder.get(), indigoInstance.fp_params.fingerprintSize());
-    assert(_fingerprint->size() * 8 == size());
+    indigo::Array<byte> rawFingerprint;
+    rawFingerprint.copy(fingerprintBuilder.get(), indigoInstance.fp_params.fingerprintSize());
+    
+    // Pack the raw fingerprint bytes into the vector of type T
+    _fingerprint.resize((size() + sizeof(T) * 8 - 1) / (sizeof(T) * 8));
+    for (size_t i = 0; i < rawFingerprint.size(); ++i) {
+        _fingerprint[i / sizeof(T)] |= static_cast<T>(rawFingerprint[i]) << ((i % sizeof(T)) * 8);
+    }
 }
 
 IndigoFingerprint::IndigoFingerprint() {
-    _fingerprint = std::make_unique<indigo::Array<byte>>();
-    _fingerprint->resize(size() / 8);
+    _fingerprint.resize((size() + sizeof(T) * 8 - 1) / (sizeof(T) * 8));
 }
 
 bool IndigoFingerprint::isSubFingerprintOf(const IndigoFingerprint &other) const {
     ProfileScope("IndigoFingerprint::isSubFingerprintOf");
-    assert(_fingerprint->size() * 8 == size());
-    assert(other.size() == size());
-    bool res = true;
-    for (int i = 0; i < (int) _fingerprint->size() && res; i++) {
-        res &= _fingerprint->operator[](i) <= other._fingerprint->operator[](i);
+    assert(_fingerprint.size() == other._fingerprint.size());
+    
+    for (size_t i = 0; i < _fingerprint.size(); ++i) {
+        if ((_fingerprint[i] & other._fingerprint[i]) != _fingerprint[i]) {
+            return false;
+        }
     }
-    return res;
+    return true;
 }
 
 bool IndigoFingerprint::getBit(size_t index) const {
-    byte elem = _fingerprint->operator[]((int) index / 8);
-    return bool(elem >> (index % 8) & 1);
+    return bool(_fingerprint[index / (sizeof(T) * 8)] >> (index % (sizeof(T) * 8)) & 1);
 }
 
 size_t IndigoFingerprint::size() {
@@ -43,10 +47,10 @@ size_t IndigoFingerprint::size() {
 }
 
 IndigoFingerprint &IndigoFingerprint::operator|=(const IndigoFingerprint &other) {
-    assert(_fingerprint->size() == other._fingerprint->size());
-    assert(_fingerprint->size() * 8 == size());
-    for (int i = 0; i < _fingerprint->size(); i++) {
-        _fingerprint->operator[](i) |= other._fingerprint->operator[](i);
+    assert(_fingerprint.size() == other._fingerprint.size());
+    assert(_fingerprint.size() * 8 == size());
+    for (int i = 0; i < _fingerprint.size(); i++) {
+        _fingerprint[i] |= other._fingerprint[i];
     }
     return *this;
 }
@@ -57,14 +61,15 @@ IndigoFingerprint::IndigoFingerprint(const std::string &smiles) {
     indigo::Molecule molecule;
     molecule.aromatize(indigo::AromaticityOptions());
     assert(molecule.isAromatized());
-    _fingerprint = std::make_unique<indigo::Array<byte>>();
     indigo::MoleculeFingerprintBuilder fingerprintBuilder(molecule, indigoInstance.fp_params);
     fingerprintBuilder.parseFingerprintType("sub", false);
     fingerprintBuilder.process();
-    _fingerprint->copy(fingerprintBuilder.get(), indigoInstance.fp_params.fingerprintSize());
-    assert(_fingerprint->size() * 8 == size());
-}
-
-const indigo::Array<byte> &IndigoFingerprint::array() const {
-    return *_fingerprint;
+    indigo::Array<byte> rawFingerprint;
+    rawFingerprint.copy(fingerprintBuilder.get(), indigoInstance.fp_params.fingerprintSize());
+    
+    // Pack the raw fingerprint bytes into the vector of type T
+    _fingerprint.resize((size() + sizeof(T) * 8 - 1) / (sizeof(T) * 8));
+    for (size_t i = 0; i < rawFingerprint.size(); ++i) {
+        _fingerprint[i / sizeof(T)] |= static_cast<T>(rawFingerprint[i]) << ((i % sizeof(T)) * 8);
+    }
 }

@@ -21,7 +21,7 @@ class IndigoBruteForceSearchEngine {
 public:
     using FingerprintType = IndigoFingerprint;
     using MoleculeType = indigo::Molecule;
-    using StorageMoleculeType = indigo::Molecule;
+    using StorageMoleculeType = indigo::Array<char>;;
     using QueryMoleculeType = indigo::QueryMolecule;
 
     explicit IndigoBruteForceSearchEngine(std::unique_ptr<std::vector<std::string>> &&smiles) {
@@ -38,7 +38,7 @@ public:
         for (auto &storageMol: *mols) {
             auto mol = storageMoleculeToMolecule(*storageMol);
             auto fingerprint = std::make_unique<FingerprintType>(*mol);
-            molecules.emplace_back(std::move(mol));
+            molecules.emplace_back(std::move(storageMol));
             fingerprints.emplace_back(std::move(fingerprint));
         }
     }
@@ -62,7 +62,11 @@ public:
                bool &stopFlag) {
         std::vector<uint64_t> matches;
         for (size_t i = 0; i < fingerprints.size() && matches.size() < (size_t) maxResults && !stopFlag; i++) {
-            if (queryFingerprint.isSubFingerprintOf(*fingerprints[i]) && isSubstructure(queryMol, *molecules[i])) {
+            if (!queryFingerprint.isSubFingerprintOf(*fingerprints[i])) {
+                continue;
+            }
+            auto mol = storageMoleculeToMolecule(*molecules[i]);
+            if (isSubstructure(queryMol, *mol)) {
                 matches.push_back(i);
             }
         }
@@ -74,6 +78,7 @@ public:
         SmilesLoader loader(bufferScanner);
         auto mol = std::make_unique<MoleculeType>();
         loader.loadMolecule(*mol);
+        mol->aromatize(AromaticityOptions());
         return mol;
     }
 
@@ -82,18 +87,26 @@ public:
         SmilesLoader loader(bufferScanner);
         auto mol = std::make_unique<QueryMoleculeType>();
         loader.loadQueryMolecule(*mol);
+        mol->aromatize(AromaticityOptions());
         return mol;
     }
 
     static std::unique_ptr<MoleculeType> storageMoleculeToMolecule(StorageMoleculeType &storageMolecule) {
+
+        BufferScanner scanner(storageMolecule);
+        CmfLoader cmfLoader(scanner);
         auto mol = std::make_unique<MoleculeType>();
-        storageMolecule.clone(*mol);
+        {
+            ProfileScope("IndigoBruteForceSearchEngine::storageMoleculeToMolecule");
+            cmfLoader.loadMolecule(*mol);
+        }
         return mol;
     }
 
     static std::unique_ptr<StorageMoleculeType> moleculeToStorageMolecule(MoleculeType &molecule) {
-        auto storageMol = std::make_unique<MoleculeType>();
-        molecule.clone(*storageMol);
+        auto storageMol = std::make_unique<StorageMoleculeType>();
+        bingo::IndexMolecule indexMolecule(molecule, AromaticityOptions());
+        indexMolecule.buildCfString(*storageMol);
         return storageMol;
     }
 

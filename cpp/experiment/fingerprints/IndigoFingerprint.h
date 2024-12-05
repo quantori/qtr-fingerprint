@@ -12,9 +12,12 @@
 #include "molecule/smiles_loader.h"
 #include "molecule/molecule_fingerprint.h"
 
+#include <vector>
+
 class IndigoFingerprint {
 public:
     using MoleculeType = indigo::BaseMolecule;
+    using T = unsigned long long;
 
     explicit IndigoFingerprint(const MoleculeType &mol);
 
@@ -30,8 +33,6 @@ public:
 
     IndigoFingerprint &operator|=(const IndigoFingerprint &other);
 
-    const indigo::Array<byte>& array() const;
-
 private:
-    std::unique_ptr<indigo::Array<byte>> _fingerprint;
+    std::vector<T> _fingerprint;
 };
