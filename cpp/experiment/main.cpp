@@ -23,7 +23,7 @@
 
 struct ExperimentInfo {
     bool stopFlag;
-    std::atomic_flag experimentFinished;
+    std::atomic<bool> experimentFinished{false};
     double timeLimit;
     std::chrono::time_point<std::chrono::system_clock, std::chrono::system_clock::duration> startTime;
     std::mutex mutex;
@@ -48,20 +48,48 @@ struct ExperimentInfo {
         startTime = std::chrono::high_resolution_clock::now();
     }
 
-    [[nodiscard]] double finishExperiment() const {
+    [[nodiscard]] double finishExperiment() {
         std::chrono::duration<double> duration = std::chrono::high_resolution_clock::now() - startTime;
+        experimentFinished.store(true, std::memory_order_release);
         return duration.count();
     }
 };
 
 void checkTimeout(ExperimentInfo &info) {
-    // Duration is bounded by 0.001 and 0.01 to prevent too often and too rare checks
     std::chrono::duration<double> sleepDuration(std::max(0.001, std::min(0.01, info.timeLimit)));
-    while (!info.experimentFinished.test()) {
+    while (!info.experimentFinished.load(std::memory_order_relaxed)) {
         std::this_thread::sleep_for(sleepDuration);
         info.checkTimeout();
     }
 }
+
+class ExperimentSession {
+    ExperimentInfo info;
+    std::jthread timeoutThread;
+
+public:
+    explicit ExperimentSession(double timeLimit) 
+        : info{
+            .stopFlag = false,
+            .experimentFinished = false,
+            .timeLimit = timeLimit
+          }
+        , timeoutThread(checkTimeout, std::ref(info))
+    {
+    }
+
+    void start() {
+        info.startExperiment();
+    }
+
+    [[nodiscard]] double finish() {
+        return info.finishExperiment();
+    }
+
+    [[nodiscard]] bool& stopFlag() {
+        return info.stopFlag;
+    }
+};
 
 template<SearchEngine SE>
 void conductExperiment(SE &searchEngine,
@@ -73,39 +101,45 @@ void conductExperiment(SE &searchEngine,
     ExperimentStat stat;
     std::mutex statMutex;
     std::atomic_int64_t counter = 0;
-    // TODO:: can it be changed to std::execution::par
+    
     std::for_each(std::execution::seq, queries.begin(), queries.end(), [&](const std::string &query) {
         auto i = counter++;
         LOG(INFO) << "Start " << query << " processing (" << i + 1 << ")";
-        decltype(searchEngine.smilesToQueryMolecule(query)) mol;
+        
         try {
-            mol = searchEngine.smilesToQueryMolecule(query);
-        } catch (std::exception &e) {
-            LOG(ERROR) << "Cannot parse query " << query << " (" << i + 1 << "): " << e.what();
-            exit(1);
+            decltype(searchEngine.smilesToQueryMolecule(query)) mol;
+            try {
+                mol = searchEngine.smilesToQueryMolecule(query);
+            } catch (std::exception &e) {
+                LOG(ERROR) << "Cannot parse query " << query << " (" << i + 1 << "): " << e.what();
+                return;
+            }
+
+            ExperimentSession session(timeLimit);
+            session.start();
+            
+            auto matches = searchEngine.getMatches(*mol, maxResults, session.stopFlag());
+            auto experimentDuration = session.finish();
+            
+            {
+                std::lock_guard<std::mutex> lockGuard(statMutex);
+                stat.add(ExperimentStat::Entity{
+                        .duration = experimentDuration,
+                        .resultsFound = (int) matches.size()
+                });
+                LOG(INFO) << "Finished " << query << " processing (" << i + 1 << ")"
+                          << "\n\tDuration: " << experimentDuration
+                          << "\n\tresultsFound: " << matches.size();
+            }
+        } catch (const std::exception& e) {
+            LOG(ERROR) << "Exception in experiment loop: " << e.what() 
+                      << " for query " << query << " (" << i + 1 << ")";
+        } catch (...) {
+            LOG(ERROR) << "Unknown exception in experiment loop"
+                      << " for query " << query << " (" << i + 1 << ")";
         }
-        ExperimentInfo info = {
-                .stopFlag = false,
-                .experimentFinished = false,
-                .timeLimit = timeLimit,
-        };
-        auto checkTimeoutThread = std::thread(checkTimeout, std::ref(info));
-        info.startExperiment();
-        auto matches = searchEngine.getMatches(*mol, maxResults, info.stopFlag);
-        auto experimentDuration = info.finishExperiment();
-        info.experimentFinished.test_and_set();
-        {
-            std::lock_guard<std::mutex> lockGuard(statMutex);
-            stat.add(ExperimentStat::Entity{
-                    .duration = experimentDuration,
-                    .resultsFound = (int) matches.size()
-            });
-            LOG(INFO) << "Finished " << query << " processing (" << i + 1 << ")"
-                      << "\n\tDuration: " << experimentDuration
-                      << "\n\tresultsFound: " << matches.size();
-        }
-        checkTimeoutThread.join();
     });
+    
     statOut << stat << std::endl;
     auto quantiles = stat.quantiles({0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00});
     for (size_t i = 0; i < quantiles.size(); i++) {
