@@ -60,7 +60,11 @@ void checkTimeout(ExperimentInfo &info) {
     while (!info.experimentFinished.load(std::memory_order_relaxed)) {
         std::this_thread::sleep_for(sleepDuration);
         info.checkTimeout();
+        if (info.stopFlag) {
+            LOG(INFO) << "Timeout thread detected stop flag, waiting for experiment to finish...";
+        }
     }
+    LOG(INFO) << "Timeout thread finishing...";
 }
 
 class ExperimentSession {
@@ -76,6 +80,10 @@ public:
           }
         , timeoutThread(checkTimeout, std::ref(info))
     {
+    }
+
+    ~ExperimentSession() {
+        info.experimentFinished.store(true, std::memory_order_release);
     }
 
     void start() {
@@ -118,7 +126,10 @@ void conductExperiment(SE &searchEngine,
             ExperimentSession session(timeLimit);
             session.start();
             
+            LOG(INFO) << "Starting getMatches for query " << i + 1;
             auto matches = searchEngine.getMatches(*mol, maxResults, session.stopFlag());
+            LOG(INFO) << "getMatches completed for query " << i + 1;
+            
             auto experimentDuration = session.finish();
             
             {
