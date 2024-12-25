@@ -38,7 +38,7 @@ struct ExperimentInfo {
         bool timeout = duration.count() > timeLimit;
         stopFlag = timeout;
         if (timeout) {
-            LOG(INFO) << "Timout detected";
+            LOG(INFO) << "Timeout detected";
         }
     }
 
