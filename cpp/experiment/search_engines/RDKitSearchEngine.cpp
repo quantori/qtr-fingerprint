@@ -8,6 +8,8 @@
 #include <ranges>
 #include <execution>
 
+#include "QueryFingerprint.h"
+
 namespace {
 
     RDKit::SubstructMatchParameters getSubstructMatchParameters() {
@@ -17,6 +19,10 @@ namespace {
         params.useQueryQueryMatches = false;
         return params;
     }
+
+//    bool isSubFingerprint(const QueryFingerprint<RDKitFingerprint>& queryFingerprint, const ExplicitBitVect& fingerprint) {
+//
+//    }
 }
 
 /**
@@ -39,10 +45,12 @@ namespace {
 std::vector<uint64_t> RDKitSearchEngine::getMatches(const MoleculeType &queryMol, int maxResults, bool &stopFlag) {
     const unsigned int STEP = 100000;
     std::vector<uint64_t> result;
+    totalCount += _substructLibrary->size();
+    auto params = getSubstructMatchParameters();
     for (unsigned int block = 0; block < _substructLibrary->size() && maxResults > 0 && !stopFlag; block += STEP) {
-        auto matches = _substructLibrary->getMatches(queryMol, block, block + STEP, getSubstructMatchParameters(), 1,
-                                                     maxResults);
+        auto matches = _substructLibrary->getMatches(queryMol, block, block + STEP, params, 1, maxResults);
         maxResults -= (int) matches.size();
+        substructureCount += matches.size();
         result.insert(result.end(), matches.begin(), matches.end());
     }
     return result;
@@ -61,8 +69,10 @@ std::vector<uint64_t> RDKitSearchEngine::getMatches(const RDKitSearchEngine::Que
             continue;
         }
         auto mol = molecules.getMol(i);
+        totalCount++;
         if (!SubstructMatch(*mol, queryMol, params).empty()) {
             result.push_back(i);
+            substructureCount++;
         }
     }
     return result;

@@ -13,6 +13,8 @@ public:
     using QueryMoleculeType = RDKit::ROMol;
     using StorageMoleculeType = std::string;
 
+    inline static size_t substructureCount = 0;
+    inline static size_t totalCount = 0;
 
     explicit RDKitSearchEngine(std::unique_ptr<std::vector<std::string>> &&smiles);
 

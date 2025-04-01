@@ -31,6 +31,7 @@ public:
                               return;
                           }
                           auto fp = std::make_unique<FingerprintType>(*mol);
+                          assert(fp != nullptr);
                           auto storageMol = moleculeToStorageMolecule(*mol);
                           {
                               std::lock_guard<std::mutex> lockGuard(dataMutex);

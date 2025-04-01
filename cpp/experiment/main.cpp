@@ -72,14 +72,12 @@ class ExperimentSession {
     std::jthread timeoutThread;
 
 public:
-    explicit ExperimentSession(double timeLimit) 
-        : info{
+    explicit ExperimentSession(double timeLimit)
+            : info{
             .stopFlag = false,
             .experimentFinished = false,
             .timeLimit = timeLimit
-          }
-        , timeoutThread(checkTimeout, std::ref(info))
-    {
+    }, timeoutThread(checkTimeout, std::ref(info)) {
     }
 
     ~ExperimentSession() {
@@ -94,7 +92,7 @@ public:
         return info.finishExperiment();
     }
 
-    [[nodiscard]] bool& stopFlag() {
+    [[nodiscard]] bool &stopFlag() {
         return info.stopFlag;
     }
 };
@@ -109,11 +107,11 @@ void conductExperiment(SE &searchEngine,
     ExperimentStat stat;
     std::mutex statMutex;
     std::atomic_int64_t counter = 0;
-    
+
     std::for_each(std::execution::seq, queries.begin(), queries.end(), [&](const std::string &query) {
         auto i = counter++;
         LOG(INFO) << "Start " << query << " processing (" << i + 1 << ")";
-        
+
         try {
             decltype(searchEngine.smilesToQueryMolecule(query)) mol;
             try {
@@ -125,13 +123,13 @@ void conductExperiment(SE &searchEngine,
 
             ExperimentSession session(timeLimit);
             session.start();
-            
+
             LOG(INFO) << "Starting getMatches for query " << i + 1;
             auto matches = searchEngine.getMatches(*mol, maxResults, session.stopFlag());
             LOG(INFO) << "getMatches completed for query " << i + 1;
-            
+
             auto experimentDuration = session.finish();
-            
+
             {
                 std::lock_guard<std::mutex> lockGuard(statMutex);
                 stat.add(ExperimentStat::Entity{
@@ -142,15 +140,15 @@ void conductExperiment(SE &searchEngine,
                           << "\n\tDuration: " << experimentDuration
                           << "\n\tresultsFound: " << matches.size();
             }
-        } catch (const std::exception& e) {
-            LOG(ERROR) << "Exception in experiment loop: " << e.what() 
-                      << " for query " << query << " (" << i + 1 << ")";
+        } catch (const std::exception &e) {
+            LOG(ERROR) << "Exception in experiment loop: " << e.what()
+                       << " for query " << query << " (" << i + 1 << ")";
         } catch (...) {
             LOG(ERROR) << "Unknown exception in experiment loop"
-                      << " for query " << query << " (" << i + 1 << ")";
+                       << " for query " << query << " (" << i + 1 << ")";
         }
     });
-    
+
     statOut << stat << std::endl;
     auto quantiles = stat.quantiles({0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00});
     for (size_t i = 0; i < quantiles.size(); i++) {
@@ -199,5 +197,11 @@ int main(int argc, char *argv[]) {
         LOG(ERROR) << "Specified SearchEngineType is not supported yet";
     }
     qtr::ProfilingPool::showStatistics(std::cout);
+
+    LOG(INFO) << "RDKitSearchEngine::substructureCount " << RDKitSearchEngine::substructureCount;
+    LOG(INFO) << "RDKitSearchEngine::totalCount " << RDKitSearchEngine::totalCount;
+    LOG(INFO) << "RDKitSearchEngine::rate "
+              << (double) RDKitSearchEngine::substructureCount / (double) RDKitSearchEngine::totalCount;
+
     return 0;
 }

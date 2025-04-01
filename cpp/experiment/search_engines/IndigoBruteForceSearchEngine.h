@@ -62,9 +62,9 @@ public:
                bool &stopFlag) {
         std::vector<uint64_t> matches;
         for (size_t i = 0; i < fingerprints.size() && matches.size() < (size_t) maxResults && !stopFlag; i++) {
-            if (!queryFingerprint.isSubFingerprintOf(*fingerprints[i])) {
-                continue;
-            }
+//            if (!queryFingerprint.isSubFingerprintOf(*fingerprints[i])) {
+//                continue;
+//            }
             auto mol = storageMoleculeToMolecule(*molecules[i]);
             if (isSubstructure(queryMol, *mol)) {
                 matches.push_back(i);

@@ -14,3 +14,9 @@ concept Fingerprint = requires(T t, size_t index) {
     { t.size() } -> std::convertible_to<size_t>;
     { t |= t };
 };
+
+//template<typename T, typename BaseFingerprintT>
+//concept QueryFingerprint = requires(T t, const BaseFingerprintT& fp) {
+//    requires std::constructible_from<T, const BaseFingerprintT&>;
+//    { t.isSubFingerprintOf(fp) } -> std::convertible_to<bool>;
+//};
