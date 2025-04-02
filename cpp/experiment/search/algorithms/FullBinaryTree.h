@@ -3,15 +3,11 @@
 #include <vector>
 #include <cassert>
 
-/**
- * Generic full binary tree implementation.
- * Provides common binary tree operations and structure.
- */
 template<typename NodeType>
 class FullBinaryTree {
 protected:
-    std::vector<NodeType> _nodes;
     size_t _depth;
+    std::vector<NodeType> _nodes;
 
     // Tree structure methods
     [[nodiscard]] static size_t leftChild(size_t nodeId) {
@@ -42,11 +38,14 @@ protected:
         return -1;
     }
 
+    [[nodiscard]] size_t lastInternalNodeId() {
+        return (1u << _depth) - 2;
+    }
+
     [[nodiscard]] bool isLeaf(size_t nodeId) const {
         return leftChild(nodeId) >= _nodes.size();
     }
 
-    // Tree traversal methods
     [[nodiscard]] size_t traverseUp(size_t nodeId) const {
         while (true) {
             if (nodeId == root()) {
@@ -69,6 +68,14 @@ protected:
         }
     }
 
+    [[nodiscard]] size_t traverseToNextNode(size_t nodeId, bool skipSubtree) const {
+        if (skipSubtree) {
+            return traverseUp(nodeId);
+        } else {
+            return traverseDown(nodeId);
+        }
+    }
+
     [[nodiscard]] size_t nodeIdToLeafId(size_t leafId) const {
         assert((1ull << _depth) - 1 <= leafId);
         leafId -= (1ull << _depth) - 1;
@@ -77,21 +84,22 @@ protected:
     }
 
 public:
-    explicit FullBinaryTree(size_t depth) 
-        : _depth(depth)
-        , _nodes((2ull << depth) - 1) {
+    explicit FullBinaryTree(size_t depth)
+            : _depth(depth), _nodes((2ull << depth) - 1) {
     }
 
     [[nodiscard]] size_t depth() const { return _depth; }
+
     [[nodiscard]] size_t nodeCount() const { return _nodes.size(); }
+
     [[nodiscard]] size_t leafCount() const { return 1ull << _depth; }
-    
-    [[nodiscard]] const NodeType& node(size_t nodeId) const {
+
+    [[nodiscard]] const NodeType &node(size_t nodeId) const {
         assert(nodeId < _nodes.size());
         return _nodes[nodeId];
     }
-    
-    [[nodiscard]] NodeType& node(size_t nodeId) {
+
+    [[nodiscard]] NodeType &node(size_t nodeId) {
         assert(nodeId < _nodes.size());
         return _nodes[nodeId];
     }

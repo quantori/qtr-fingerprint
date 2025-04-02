@@ -20,10 +20,14 @@ target_link_libraries(${This} PRIVATE TBB::tbb)
 
 target_include_directories(${This}
         PUBLIC .
-        PUBLIC fingerprints
-        PUBLIC search_engines
-        PUBLIC parsers
-        PUBLIC qtr_bingo
+        PUBLIC io
+        PUBLIC frameworks
+        PUBLIC search/engines
+        PUBLIC search/engines/RDKit
+        PUBLIC search/engines/BallTree
+        PUBLIC dataset
+        PUBLIC benchmarking
+        PUBLIC benchmarking/stats
         PUBLIC ../third_party/Indigo/api/c/bingo-nosql/src/
 )
 

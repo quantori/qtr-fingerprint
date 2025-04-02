@@ -11,11 +11,11 @@ namespace {
     const std::map<std::string, SearchEngineType> stringToSearchEngineType = {
             {"BallTreeRDKit",    SearchEngineType::BallTreeRDKit},
             {"BallTreeIndigo",   SearchEngineType::BallTreeIndigo},
-            {"TrieRDKit",        SearchEngineType::TrieRDKit},
-            {"TrieIndigo",       SearchEngineType::TrieIndigo},
+//            {"TrieRDKit",        SearchEngineType::TrieRDKit},
+//            {"TrieIndigo",       SearchEngineType::TrieIndigo},
             {"RDKit",            SearchEngineType::RDKit},
             {"Indigo",           SearchEngineType::Indigo},
-            {"IndigoBruteForce", SearchEngineType::IndigoBruteForce},
+//            {"IndigoBruteForce", SearchEngineType::IndigoBruteForce},
     };
 
     const std::string allSearchEngineTypes = [] {
