@@ -14,6 +14,7 @@
 #include "dataset/CachedDataset.h"
 #include "search/algorithms/BallTreeSplitter.h"
 #include "search/utils/BallTreeSearchResult.h"
+#include "Profiling.h"
 
 template<typename FingerprintT>
 class BallTreeNode {
@@ -86,7 +87,7 @@ public:
             if (checkShouldStopSearch(query, *result)) {
                 break;
             }
-            bool skipSubtree = shouldSkipSubtree(nodeId, query.fingerprint());
+            bool skipSubtree = shouldSkipSubtree(nodeId, query.fingerprint(), *result);
             if (!skipSubtree && Tree::isLeaf(nodeId)) {
                 searchInLeafNode(nodeId, query, *result);
             }
@@ -118,7 +119,9 @@ public:
 private:
     CachedDataset<FrameworkT> _dataset;
 
-    void searchInLeafNode(size_t nodeId, const ExtendedQueryT &query, SearchResult &result) const {
+    void searchInLeafNode(size_t nodeId, const ExtendedQueryT &query, BallTreeSearchResult &result) const {
+        ProfileScope("BallTree searchInLeafNode");
+        result.leavesVisited++;
         assert(Tree::isLeaf(nodeId));
         auto &node = this->node(nodeId);
         auto &bucket = node.getLeafData().moleculeIndices;
@@ -131,7 +134,7 @@ private:
         }
     }
 
-    bool shouldSkipSubtree(size_t nodeId, const FingerprintT &queryFingerprint) const {
+    bool shouldSkipSubtree(size_t nodeId, const FingerprintT &queryFingerprint, BallTreeSearchResult &result) const {
         if (nodeId == Tree::root() || Tree::isRightChild(nodeId)) {
             return false;
         }
@@ -139,11 +142,15 @@ private:
         auto &parNode = this->node(par);
         if (Tree::isLeaf(nodeId)) {
             // check whole fingerprint at leaves
-            return FrameworkT::isSubFingerprint(queryFingerprint, getCentroid(par));
+            bool skip = !FrameworkT::isSubFingerprint(queryFingerprint, getCentroid(par));
+            result.leavesSKipped += skip;
+            return skip;
         }
         // check only a split bit at internal nodes
         size_t splitBit = parNode.getInternalData().splitBit;
-        return queryFingerprint.getBit(splitBit) <= parNode.centroid.getBit(splitBit);
+        bool skip = queryFingerprint.getBit(splitBit) > parNode.centroid.getBit(splitBit);
+        result.internalNodesSkipped += skip;
+        return skip;
     }
 
     static size_t calculateDepth(size_t datasetSize, size_t bucketSize) {

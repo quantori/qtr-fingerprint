@@ -17,6 +17,8 @@ public:
 
     static std::unique_ptr<MoleculeT> moleculeFromSmiles(const std::string &smiles);
 
+    static std::string moleculeToSmiles(const MoleculeT &molecule);
+
     static std::unique_ptr<QueryMoleculeT> queryMoleculeFromSmiles(const std::string &smiles);
 
     static std::unique_ptr<FingerprintT> fingerprintFromMolecule(const MoleculeT &molecule);

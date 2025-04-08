@@ -17,6 +17,10 @@ concept FrameworkInterface = requires {
     } -> std::same_as<std::unique_ptr<typename FrameworkT::MoleculeT>>;
 
     {
+    FrameworkT::moleculeToSmiles(std::declval<typename FrameworkT::MoleculeT &>())
+    } -> std::convertible_to<std::string>;
+
+    {
     FrameworkT::queryMoleculeFromSmiles(std::declval<const std::string &>())
     } -> std::same_as<std::unique_ptr<typename FrameworkT::QueryMoleculeT>>;
 

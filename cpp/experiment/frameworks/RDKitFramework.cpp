@@ -42,6 +42,7 @@ RDKitFramework::decompressMolecule(const RDKitFramework::StorageMoleculeT &compr
 
 bool RDKitFramework::isSubstructure(const RDKitFramework::QueryMoleculeT &queryMolecule,
                                     const RDKitFramework::MoleculeT &molecule) {
+    ProfileScope("RDKitFramework::isSubstructure");
     auto params = RDKitFramework::getSubstructMatchParameters();
     return !SubstructMatch(molecule, queryMolecule, params).empty();
 }
@@ -79,4 +80,8 @@ bool RDKitFramework::isSubFingerprint(const RDKitFramework::FingerprintT &finger
         }
     }
     return true;
+}
+
+std::string RDKitFramework::moleculeToSmiles(const RDKitFramework::MoleculeT &molecule) {
+    return RDKit::MolToSmiles(molecule);
 }
