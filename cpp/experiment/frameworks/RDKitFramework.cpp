@@ -35,6 +35,7 @@ RDKitFramework::compressMolecule(const MoleculeT &molecule) {
 
 std::unique_ptr<RDKitFramework::MoleculeT>
 RDKitFramework::decompressMolecule(const RDKitFramework::StorageMoleculeT &compressedMolecule) {
+    ProfileScope("RDKitFramework::decompressMolecule");
     std::unique_ptr<RDKitFramework::MoleculeT> mol(new RDKit::ROMol);
     RDKit::MolPickler::molFromPickle(compressedMolecule, mol.get());
     return mol;
