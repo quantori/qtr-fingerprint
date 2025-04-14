@@ -24,10 +24,10 @@ namespace {
     }
 }
 
-std::unique_ptr<SearchResult> RDKitSearchEngine::search(const SearchQuery &query) const {
+std::unique_ptr<RDKitSearchEngine::ResultT> RDKitSearchEngine::search(const SearchQuery &query) const {
     auto queryMol = FrameworkT::queryMoleculeFromSmiles(query.smiles());
     auto fp = FrameworkT::fingerprintFromMolecule(*queryMol);
-    auto result = std::make_unique<SearchResult>();
+    auto result = std::make_unique<ResultT>();
     int maxResults = query.maxResults() == std::numeric_limits<size_t>::max() ? -1 : (int) query.maxResults();
     auto params = RDKitFramework::getSubstructMatchParameters();
     const unsigned int SearchBlockSize = 100000;
@@ -39,18 +39,10 @@ std::unique_ptr<SearchResult> RDKitSearchEngine::search(const SearchQuery &query
         auto matches = _substructLibrary->getMatches(*queryMol, block, block + SearchBlockSize, params, 1, maxResults);
         maxResults -= (int) matches.size();
         for (size_t matchIdx: matches) {
-            result->addResultByIndex(matchIdx);
+            result->addResult(*_substructLibrary->getMol(matchIdx));
         }
     }
     return result;
-}
-
-std::unique_ptr<RDKitSearchEngine::FrameworkT::MoleculeT>
-RDKitSearchEngine::getMolFromResult(size_t resultIdx, const SearchResult &searchResult) const {
-    auto molIdx = searchResult.getNthResult(resultIdx);
-    auto mol = _substructLibrary->getMol(molIdx);
-    auto molCopy = std::make_unique<RDKitSearchEngine::FrameworkT::MoleculeT>(*mol);
-    return molCopy;
 }
 
 RDKitSearchEngine::RDKitSearchEngine(SmilesStorage &&dataset) {

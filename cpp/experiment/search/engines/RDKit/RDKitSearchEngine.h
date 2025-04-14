@@ -11,16 +11,13 @@
 class RDKitSearchEngine {
 public:
     using FrameworkT = RDKitFramework;
+    using ResultT = SearchResult<FrameworkT>;
 
     RDKitSearchEngine() = delete;
 
     explicit RDKitSearchEngine(SmilesStorage &&dataset);
 
-    [[nodiscard]] std::unique_ptr<SearchResult> search(const SearchQuery &query) const;
-
-    [[nodiscard]] std::unique_ptr<FrameworkT::MoleculeT>
-    getMolFromResult(size_t resultIdx, const SearchResult &searchResult) const;
-
+    [[nodiscard]] std::unique_ptr<ResultT> search(const SearchQuery &query) const;
 private:
     std::unique_ptr<RDKit::SubstructLibrary> _substructLibrary;
 };

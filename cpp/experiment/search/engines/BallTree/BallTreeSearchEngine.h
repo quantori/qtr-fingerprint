@@ -14,6 +14,7 @@ public:
     using FrameworkT = FrameworkType;
     using CachedDatasetT = CachedDataset<FrameworkT>;
     using ExtendedSearchQueryT = ExtendedSearchQuery<FrameworkT>;
+    using ResultT = BallTreeSearchResult<FrameworkT>;
 
     static inline const int BucketSize = 2;
 
@@ -22,16 +23,16 @@ public:
     explicit BallTreeSearchEngine(SmilesStorage &&dataset) : _ballTree(CachedDatasetT(std::move(dataset)), BucketSize) {
     }
 
-    [[nodiscard]] std::unique_ptr<BallTreeSearchResult> search(SearchQuery query) const {
+    [[nodiscard]] std::unique_ptr<ResultT> search(SearchQuery query) const {
         ExtendedSearchQueryT extendedQuery(query);
         auto res = _ballTree.search(extendedQuery);
         return res;
     }
 
     [[nodiscard]] std::unique_ptr<typename FrameworkT::MoleculeT>
-    getMolFromResult(size_t resultIdx, const SearchResult &searchResult) const {
+    getMolFromResult(size_t resultIdx, const ResultT &searchResult) const {
         const CachedDataset<FrameworkT> &dataset = _ballTree.dataset();
-        size_t datasetIdx = searchResult.getNthResult(resultIdx);
+        size_t datasetIdx = searchResult.get(resultIdx);
         return dataset.molecule(datasetIdx);
     }
 

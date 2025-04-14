@@ -54,18 +54,18 @@ private:
         TimingManager timingManager(args.timeLimit);
         timingManager.start();
         SearchQuery query(smiles, args.maxResults, timingManager.getStopFlag());
-        std::unique_ptr<SearchResult> result = searchEngine.search(query);
+        auto result = searchEngine.search(query);
         auto duration = timingManager.finish();
         LOG(INFO) << "Search finished in " << duration << " seconds. Found " << result->size() << " answers";
         if (result->size() > 0) {
             LOG(INFO) << "Example results:";
             for (size_t i = 0; i < result->size() && i < 5; i++) {
-                auto mol = searchEngine.getMolFromResult(i, *result);
-                auto s = FrameworkT::moleculeToSmiles(*mol);
+                const auto& mol = result->get(i);
+                auto s = FrameworkT::moleculeToSmiles(mol);
                 LOG(INFO) << s;
             }
         }
-        if (BallTreeSearchResult *btResult = dynamic_cast<BallTreeSearchResult *>(result.get())) {
+        if (auto *btResult = dynamic_cast<BallTreeSearchResult<FrameworkT> *>(result.get())) {
             LOG(INFO) << "\n\tLeaves visited: " << btResult->leavesVisited
                       << "\n\tLeaves skipped: " << btResult->leavesSKipped
                       << "\n\tInternal Nodes skipped: " << btResult->internalNodesSkipped;

@@ -79,9 +79,10 @@ public:
     using Node = BallTreeNode<FingerprintT>;
     using Tree = FullBinaryTree<Node>;
     using ExtendedQueryT = ExtendedSearchQuery<FrameworkT>;
+    using ResultT = BallTreeSearchResult<FrameworkT>;
 
-    std::unique_ptr<BallTreeSearchResult> search(const ExtendedQueryT &query) const {
-        auto result = std::make_unique<BallTreeSearchResult>();
+    std::unique_ptr<ResultT > search(const ExtendedQueryT &query) const {
+        auto result = std::make_unique<ResultT>();
         size_t nodeId = Tree::root();
         while (nodeId != Tree::endNodeId()) {
             if (checkShouldStopSearch(query, *result)) {
@@ -119,7 +120,7 @@ public:
 private:
     CachedDataset<FrameworkT> _dataset;
 
-    void searchInLeafNode(size_t nodeId, const ExtendedQueryT &query, BallTreeSearchResult &result) const {
+    void searchInLeafNode(size_t nodeId, const ExtendedQueryT &query, ResultT &result) const {
         ProfileScope("BallTree searchInLeafNode");
         result.leavesVisited++;
         assert(Tree::isLeaf(nodeId));
@@ -129,12 +130,12 @@ private:
         for (size_t molIdx: bucket) {
             auto mol = _dataset.molecule(molIdx);
             if (FrameworkT::isSubstructure(query.molecule(), *mol)) {
-                result.addResultByIndex(molIdx);
+                result.addResult(*mol);
             }
         }
     }
 
-    bool shouldSkipSubtree(size_t nodeId, const FingerprintT &queryFingerprint, BallTreeSearchResult &result) const {
+    bool shouldSkipSubtree(size_t nodeId, const FingerprintT &queryFingerprint, ResultT &result) const {
         if (nodeId == Tree::root() || Tree::isRightChild(nodeId)) {
             return false;
         }

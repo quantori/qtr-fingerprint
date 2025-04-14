@@ -10,26 +10,17 @@
 #include "frameworks/FrameworkInterface.h"
 #include "dataset/SmilesStorage.h"
 
-template<typename T>
-concept DerivedSearchResultPtr =
-requires {
-    typename T::element_type;
-} &&
-std::derived_from<typename T::element_type, SearchResult> &&
-std::same_as<T, std::unique_ptr<typename T::element_type>>;
-
 template<typename SearchEngineT>
 concept SearchEngineInterface = requires(SearchEngineT searchEngine) {
     typename SearchEngineT::FrameworkT;
+    typename SearchEngineT::ResultT;
 
     requires FrameworkInterface<typename SearchEngineT::FrameworkT>;
+    requires std::derived_from<typename SearchEngineT::ResultT, SearchResult<typename SearchEngineT::FrameworkT>>;
+
     requires std::constructible_from<SearchEngineT, SmilesStorage &&>;
 
     {
     searchEngine.search(std::declval<SearchQuery>())
-    } -> DerivedSearchResultPtr;
-
-    {
-    searchEngine.getMolFromResult(std::declval<size_t>(), std::declval<const SearchResult &>())
-    } -> std::same_as<std::unique_ptr<typename SearchEngineT::FrameworkT::MoleculeT>>;
+    } -> std::same_as<std::unique_ptr<typename SearchEngineT::ResultT>>;
 };

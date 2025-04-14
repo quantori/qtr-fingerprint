@@ -12,6 +12,10 @@ concept FrameworkInterface = requires {
     typename FrameworkT::QueryMoleculeT;
     typename FrameworkT::StorageMoleculeT;
 
+    requires std::is_copy_constructible_v<typename FrameworkT::MoleculeT>;
+    requires std::is_copy_constructible_v<typename FrameworkT::QueryMoleculeT>;
+    requires std::is_copy_constructible_v<typename FrameworkT::StorageMoleculeT>;
+
     {
     FrameworkT::moleculeFromSmiles(std::declval<const std::string &>())
     } -> std::same_as<std::unique_ptr<typename FrameworkT::MoleculeT>>;

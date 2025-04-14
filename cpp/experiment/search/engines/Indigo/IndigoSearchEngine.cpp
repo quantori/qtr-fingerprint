@@ -47,15 +47,15 @@ IndigoSearchEngine::IndigoSearchEngine() : _dbFilePath(generateDBPath()), _db(
         indigo_cpp::BingoMolecule::createDatabaseFile(FrameworkT::getGlobalIndigoSession(), _dbFilePath, "")) {
 }
 
-std::unique_ptr<SearchResult> IndigoSearchEngine::search(const SearchQuery &query) const {
-    auto result = std::make_unique<SearchResult>();
+std::unique_ptr<IndigoSearchEngine::ResultT> IndigoSearchEngine::search(const SearchQuery &query) const {
+    auto result = std::make_unique<ResultT>();
     auto queryMol = FrameworkT::queryMoleculeFromSmiles(query.smiles());
     auto subMatcher = _db.searchSub(*queryMol, "");
     for (auto &mol: subMatcher) {
         if (query.checkStopFlag()) {
             break;
         }
-        result->addResultByIndex(mol.getId());
+        result->addResult(mol.getTarget());
         if (result->size() >= query.maxResults()) {
             break;
         }
@@ -65,16 +65,4 @@ std::unique_ptr<SearchResult> IndigoSearchEngine::search(const SearchQuery &quer
 
 IndigoSearchEngine::~IndigoSearchEngine() {
     std::filesystem::remove_all(_dbFilePath);
-}
-
-std::unique_ptr<IndigoSearchEngine::FrameworkT::MoleculeT>
-IndigoSearchEngine::getMolFromResult(size_t resultIdx, const SearchResult &searchResult) const {
-    auto molIdx = searchResult.getNthResult(resultIdx);
-    INDIGO_BEGIN
-            {
-                auto session = FrameworkT::getGlobalIndigoSession();
-                auto result = std::make_unique<FrameworkT::MoleculeT>(molIdx, session);
-                return result;
-            };
-    INDIGO_END(nullptr);
 }
