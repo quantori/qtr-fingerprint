@@ -33,6 +33,7 @@ std::unique_ptr<IndigoFramework::QueryMoleculeT> IndigoFramework::queryMoleculeF
 
 std::unique_ptr<IndigoFramework::FingerprintT>
 IndigoFramework::fingerprintFromMolecule(const IndigoFramework::MoleculeT &molecule) {
+    
     INDIGO_BEGIN
             {
                 indigo::Molecule &mol = self.getObject(molecule.id()).getMolecule();
@@ -61,15 +62,8 @@ IndigoFramework::decompressMolecule(const IndigoFramework::StorageMoleculeT &com
 bool IndigoFramework::isSubstructure(const IndigoFramework::QueryMoleculeT &queryMolecule,
                                      const IndigoFramework::MoleculeT &molecule) {
     ProfileScope("IndigoFramework::isSubstructure");
-    INDIGO_BEGIN
-            {
-                indigo::Molecule &mol = self.getObject(molecule.id()).getMolecule();
-                indigo::QueryMolecule &queryMol = self.getObject(queryMolecule.id()).getQueryMolecule();
-                MoleculeSubstructureMatcher msm(mol);
-                msm.setQuery(queryMol);
-                return msm.find();
-            }
-    INDIGO_END(false);
+    auto matcher = IndigoFramework::getGlobalIndigoSession()->substructureMatcher(molecule);
+    return matcher.match(queryMolecule);
 }
 
 size_t IndigoFramework::getFingerprintSize() {
@@ -110,6 +104,12 @@ bool IndigoFramework::isSubFingerprint(const IndigoFramework::FingerprintT &fing
 
 std::shared_ptr<indigo_cpp::IndigoSession> IndigoFramework::getGlobalIndigoSession() {
     return globalIndigoSession;
+}
+
+IndigoFramework::FingerprintT IndigoFramework::getEmptyFingerprint() {
+    FingerprintT fp;
+    fp.resize((int)getFingerprintSize());
+    return fp;
 }
 
 

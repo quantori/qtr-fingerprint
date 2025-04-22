@@ -43,6 +43,9 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case SearchEngineType::BallTreeIndigo: {
+                auto runner = BenchmarkRunner<BallTreeSearchEngine<IndigoFramework>>();
+                runner.run(std::move(dataSmiles), benchmarkArgs);
+                break;
                 throw std::runtime_error("BallTree Indigo Search Engine is not implemented");
                 break;
             }

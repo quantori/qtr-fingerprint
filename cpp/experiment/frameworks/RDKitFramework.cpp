@@ -86,3 +86,8 @@ bool RDKitFramework::isSubFingerprint(const RDKitFramework::FingerprintT &finger
 std::string RDKitFramework::moleculeToSmiles(const RDKitFramework::MoleculeT &molecule) {
     return RDKit::MolToSmiles(molecule);
 }
+
+RDKitFramework::FingerprintT RDKitFramework::getEmptyFingerprint() {
+    ExplicitBitVect fp((int)getFingerprintSize());
+    return fp;
+}

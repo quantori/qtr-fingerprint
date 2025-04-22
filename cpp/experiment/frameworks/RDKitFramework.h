@@ -5,6 +5,7 @@
 #include "GraphMol/ROMol.h"
 #include "GraphMol/Fingerprints/Fingerprints.h"
 #include "GraphMol/Substruct/SubstructMatch.h"
+#include "DataStructs/ExplicitBitVect.h"
 
 #include "frameworks/FrameworkInterface.h"
 
@@ -38,6 +39,8 @@ public:
     static void setFingerprintBit(FingerprintT& fingerprint, size_t idx, bool val);
 
     static bool isSubFingerprint(const FingerprintT& fingerprint1, const FingerprintT& fingerprint2);
+
+    static FingerprintT getEmptyFingerprint();
 };
 
 static_assert(FrameworkInterface<RDKitFramework>, "RDKitFramework must satisfy FrameworkInterface");

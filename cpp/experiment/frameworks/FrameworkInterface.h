@@ -33,6 +33,10 @@ concept FrameworkInterface = requires {
     } -> std::same_as<std::unique_ptr<typename FrameworkT::FingerprintT>>;
 
     {
+    FrameworkT::getEmptyFingerprint()
+    } -> std::same_as<typename FrameworkT::FingerprintT>;
+
+    {
     FrameworkT::compressMolecule(std::declval<const typename FrameworkT::MoleculeT &>())
     } -> std::same_as<std::unique_ptr<typename FrameworkT::StorageMoleculeT>>;
 

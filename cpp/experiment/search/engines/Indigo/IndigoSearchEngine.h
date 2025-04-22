@@ -2,10 +2,9 @@
 
 #include <filesystem>
 
-#include "base_cpp/array.h"
-#include "indigo.h"
-#include "frameworks/IndigoFramework.h"
+#include "bingo-nosql.h"
 
+#include "frameworks/IndigoFramework.h"
 #include "search/engines/SearchEngineInterface.h"
 
 
@@ -20,13 +19,14 @@ public:
 
     ~IndigoSearchEngine();
 
+    // TODO: rewrite framework using indigo instead of indigo_cpp? Use custom class to make Molecule copy constructible,
+    //      run code with all checks possible
 private:
 
     IndigoSearchEngine();
 
     std::filesystem::path _dbFilePath;
     indigo_cpp::BingoMolecule _db;
-    std::vector<FrameworkT::MoleculeT> _aliveMolecules; // Trick to make
 };
 
 static_assert(SearchEngineInterface<IndigoSearchEngine>, "IndigoSearchEngine must satisfy SearchEngineInterface");

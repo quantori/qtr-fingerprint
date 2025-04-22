@@ -16,10 +16,10 @@
 #include "search/utils/BallTreeSearchResult.h"
 #include "Profiling.h"
 
-template<typename FingerprintT>
+template<typename FrameworkT> requires FrameworkInterface<FrameworkT>
 class BallTreeNode {
 public:
-    FingerprintT centroid;
+    using FingerprintT = FrameworkT::FingerprintT;
 
     struct LeafData {
         std::vector<size_t> moleculeIndices;
@@ -32,19 +32,10 @@ public:
 
     using NodeData = std::variant<LeafData, InternalData>;
 
-    BallTreeNode() = default;
+    FingerprintT centroid;
+    std::optional<NodeData> data;
 
-    static BallTreeNode makeLeaf(FingerprintT &&centroid, std::vector<size_t> &&indices) {
-        BallTreeNode node(std::move(centroid));
-        node.data.emplace(LeafData{std::move(indices)});
-        return node;
-    }
-
-    static BallTreeNode makeInternal(FingerprintT &&centroid, size_t splitBit, bool centroidAtSplitBit) {
-        BallTreeNode node(std::move(centroid));
-        node.data.emplace(InternalData{splitBit, centroidAtSplitBit});
-        return node;
-    }
+    BallTreeNode(): centroid(FrameworkT::getEmptyFingerprint()) {}
 
     [[nodiscard]] bool isLeaf() const {
         return data && std::holds_alternative<LeafData>(*data);
@@ -62,21 +53,18 @@ public:
         return std::get<InternalData>(*data);
     }
 
-private:
-    std::optional<NodeData> data;
-
     explicit BallTreeNode(FingerprintT &&centroid)
             : centroid(std::move(centroid)) {}
 };
 
 template<typename FrameworkT> requires FrameworkInterface<FrameworkT>
-class BallTree : public FullBinaryTree<BallTreeNode<typename FrameworkT::FingerprintT>> {
+class BallTree : public FullBinaryTree<BallTreeNode<FrameworkT>> {
 public:
     using MoleculeT = typename FrameworkT::MoleculeT;
     using QueryMoleculeT = typename FrameworkT::QueryMoleculeT;
     using StorageMoleculeT = typename FrameworkT::StorageMoleculeT;
     using FingerprintT = typename FrameworkT::FingerprintT;
-    using Node = BallTreeNode<FingerprintT>;
+    using Node = BallTreeNode<FrameworkT>;
     using Tree = FullBinaryTree<Node>;
     using ExtendedQueryT = ExtendedSearchQuery<FrameworkT>;
     using ResultT = BallTreeSearchResult<FrameworkT>;
@@ -149,7 +137,8 @@ private:
         }
         // check only a split bit at internal nodes
         size_t splitBit = parNode.getInternalData().splitBit;
-        bool skip = queryFingerprint.getBit(splitBit) > parNode.centroid.getBit(splitBit);
+        bool skip = FrameworkT::getFingerprintBit(queryFingerprint, splitBit) >
+                    FrameworkT::getFingerprintBit(parNode.centroid, splitBit);
         result.internalNodesSkipped += skip;
         return skip;
     }
@@ -166,26 +155,25 @@ private:
 
     void buildLeaf(size_t nodeId, BallTreeSplitter<FrameworkT> &splitter) {
         assert(Tree::isLeaf(nodeId));
-        auto molIndices = splitter.extractIndices(nodeId);
-
-        auto centroid = calculateLeafCentroid(molIndices);
         Node &node = this->node(nodeId);
-        node = Node::makeLeaf(std::move(centroid), std::move(molIndices));
+        assert(!node.isInitialized());
+        auto molIndices = splitter.extractIndices(nodeId);
+        calculateLeafCentroid(node.centroid, molIndices);
+        node.data.emplace(typename Node::LeafData(molIndices));
     }
 
     void buildInternalNode(size_t nodeId, BallTreeSplitter<FrameworkT> &splitter) {
         assert(!Tree::isLeaf(nodeId));
-        FingerprintT centroid = calculateInternalNodeCentroid(nodeId);
-        size_t splitBit = splitter.getSplitBit(nodeId);
-        bool centroidAtSplitBit = FrameworkT::getFingerprintBit(centroid, splitBit);
-
         Node &node = this->node(nodeId);
-        node = Node::makeInternal(std::move(centroid), splitBit, centroidAtSplitBit);
+        assert(!node.isInitialized());
+        calculateInternalNodeCentroid(nodeId);
+        size_t splitBit = splitter.getSplitBit(nodeId);
+        bool centroidAtSplitBit = FrameworkT::getFingerprintBit(node.centroid, splitBit);
+        node.data.emplace(typename Node::InternalData(splitBit, centroidAtSplitBit));
     }
 
-    FingerprintT calculateLeafCentroid(const std::vector<size_t> &moleculeIndices) {
+    void calculateLeafCentroid(FingerprintT& centroid, const std::vector<size_t> &moleculeIndices) {
         assert(!moleculeIndices.empty());
-        FingerprintT centroid = _dataset.fingerprint(moleculeIndices.at(0));
         for (size_t j = 0; j < FrameworkT::getFingerprintSize(); j++) {
             for (auto &idx: moleculeIndices) {
                 if (FrameworkT::getFingerprintBit(centroid, j)) {
@@ -197,20 +185,20 @@ private:
                 }
             }
         }
-        return centroid;
     }
 
-    FingerprintT calculateInternalNodeCentroid(size_t nodeId) {
+    void calculateInternalNodeCentroid(size_t nodeId) {
         assert(!Tree::isLeaf(nodeId));
-        FingerprintT centroid = getCentroid(Tree::leftChild(nodeId));
+        auto& node = this->node(nodeId);
+        FingerprintT& centroid = node.centroid;
 
-        auto &fp2 = getCentroid(Tree::rightChild(nodeId));
+        auto& fpLeft = getCentroid(Tree::leftChild(nodeId));
+        auto &fpRight = getCentroid(Tree::rightChild(nodeId));
         for (size_t idx = 0; idx < FrameworkT::getFingerprintSize(); idx++) {
-            if (FrameworkT::getFingerprintBit(fp2, idx)) {
+            if (FrameworkT::getFingerprintBit(fpLeft, idx) || FrameworkT::getFingerprintBit(fpRight, idx)) {
                 FrameworkT::setFingerprintBit(centroid, idx, true);
             }
         }
-        return centroid;
     }
 
     const FrameworkT::FingerprintT &getCentroid(size_t nodeId) const {

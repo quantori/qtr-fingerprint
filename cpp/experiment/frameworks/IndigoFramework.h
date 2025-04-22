@@ -30,15 +30,17 @@ public:
 
     static bool isSubstructure(const QueryMoleculeT &queryMolecule, const MoleculeT &molecule);
 
-    static bool getFingerprintBit(const FingerprintT& fingerprint, size_t idx);
+    static bool getFingerprintBit(const FingerprintT &fingerprint, size_t idx);
 
     static size_t getFingerprintSize();
 
-    static void setFingerprintBit(FingerprintT& fingerprint, size_t idx, bool val);
+    static void setFingerprintBit(FingerprintT &fingerprint, size_t idx, bool val);
 
-    static bool isSubFingerprint(const FingerprintT& fingerprint1, const FingerprintT& fingerprint2);
+    static bool isSubFingerprint(const FingerprintT &fingerprint1, const FingerprintT &fingerprint2);
 
     static std::shared_ptr<indigo_cpp::IndigoSession> getGlobalIndigoSession();
+
+    static FingerprintT getEmptyFingerprint();
 };
 
 static_assert(FrameworkInterface<IndigoFramework>, "IndigoFramework must satisfy FrameworkInterface");
