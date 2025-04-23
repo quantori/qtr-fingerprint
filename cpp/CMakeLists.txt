@@ -2,6 +2,25 @@ cmake_minimum_required(VERSION 3.13)
 
 project(QtrFingerprint LANGUAGES CXX)
 
+## Sanitizers and debug-friendly flags
+#set(SANITIZER_FLAGS
+#        -fsanitize=address
+#        -fsanitize=undefined
+#        -fsanitize=leak
+#        -fsanitize=null
+#        -fsanitize=bounds
+#        -fsanitize=vptr
+#        -fno-sanitize=alignment
+#        -fno-sanitize-recover
+#        -fno-omit-frame-pointer
+#        -fno-common
+#        -fstack-protector
+#)
+#
+#message("Added Sanitizer flags for debug")
+#add_compile_options(${SANITIZER_FLAGS})
+#add_link_options(${SANITIZER_FLAGS})
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 

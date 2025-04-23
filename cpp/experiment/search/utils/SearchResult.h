@@ -4,16 +4,16 @@
 
 #include "frameworks/FrameworkInterface.h"
 
-template<typename FrameworkT> requires FrameworkInterface<FrameworkT>
+template<typename ResultT>
 class SearchResult {
 public:
     SearchResult() = default;
 
-    void addResult(const FrameworkT::MoleculeT &molecule) {
+    void addResult(const ResultT &molecule) {
         _results.emplace_back(molecule);
     }
 
-    [[nodiscard]] const FrameworkT::MoleculeT get(size_t n) const {
+    [[nodiscard]] const ResultT &get(size_t n) const {
         return _results.at(n);
     }
 
@@ -24,5 +24,5 @@ public:
     virtual ~SearchResult() = default;
 
 protected:
-    std::vector<typename FrameworkT::MoleculeT> _results;
+    std::vector<ResultT> _results;
 };

@@ -60,9 +60,13 @@ private:
         if (result->size() > 0) {
             LOG(INFO) << "Example results:";
             for (size_t i = 0; i < result->size() && i < 5; i++) {
-                const auto& mol = result->get(i);
-                auto s = FrameworkT::moleculeToSmiles(mol);
-                LOG(INFO) << s;
+                const auto &res = result->get(i);
+                if constexpr (std::is_same_v<typename FrameworkT::MoleculeT, typename SearchEngineT::ResultT>) {
+                    auto resSmiles = FrameworkT::moleculeToSmiles(res);
+                    LOG(INFO) << resSmiles;
+                } else {
+                    LOG(INFO) << res;
+                }
             }
         }
         if (auto *btResult = dynamic_cast<BallTreeSearchResult<FrameworkT> *>(result.get())) {

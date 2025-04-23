@@ -46,8 +46,6 @@ int main(int argc, char *argv[]) {
                 auto runner = BenchmarkRunner<BallTreeSearchEngine<IndigoFramework>>();
                 runner.run(std::move(dataSmiles), benchmarkArgs);
                 break;
-                throw std::runtime_error("BallTree Indigo Search Engine is not implemented");
-                break;
             }
         }
         qtr::ProfilingPool::showStatistics(std::cout);

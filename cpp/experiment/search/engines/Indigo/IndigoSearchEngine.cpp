@@ -47,15 +47,17 @@ IndigoSearchEngine::IndigoSearchEngine() : _dbFilePath(generateDBPath()), _db(
         indigo_cpp::BingoMolecule::createDatabaseFile(FrameworkT::getGlobalIndigoSession(), _dbFilePath, "")) {
 }
 
-std::unique_ptr<IndigoSearchEngine::ResultT> IndigoSearchEngine::search(const SearchQuery &query) const {
-    auto result = std::make_unique<ResultT>();
+std::unique_ptr<SearchResult<IndigoSearchEngine::ResultT>> IndigoSearchEngine::search(const SearchQuery &query) const {
+    auto result = std::make_unique<SearchResult<ResultT>>();
     auto queryMol = FrameworkT::queryMoleculeFromSmiles(query.smiles());
     auto subMatcher = _db.searchSub(*queryMol, "");
-    for (auto &mol: subMatcher) {
+    for (auto &searchResult: subMatcher) {
         if (query.checkStopFlag()) {
             break;
         }
-        result->addResult(mol.getTarget());
+        // TODO: fix abstract IDs once Bingo NoSQL is fixed: https://github.com/epam/Indigo/issues/2864
+        //        result->addResult(mol.getTarget());
+        result->addResult(searchResult.getId());
         if (result->size() >= query.maxResults()) {
             break;
         }

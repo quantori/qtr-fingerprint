@@ -2,8 +2,8 @@
 
 #include "search/utils/SearchResult.h"
 
-template<typename FrameworkT>
-class BallTreeSearchResult : public SearchResult<FrameworkT> {
+template<typename ResultT>
+class BallTreeSearchResult : public SearchResult<ResultT> {
 public:
     size_t leavesVisited = 0;
     size_t leavesSKipped = 0;

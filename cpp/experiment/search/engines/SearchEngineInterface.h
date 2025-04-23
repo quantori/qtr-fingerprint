@@ -16,11 +16,10 @@ concept SearchEngineInterface = requires(SearchEngineT searchEngine) {
     typename SearchEngineT::ResultT;
 
     requires FrameworkInterface<typename SearchEngineT::FrameworkT>;
-    requires std::derived_from<typename SearchEngineT::ResultT, SearchResult<typename SearchEngineT::FrameworkT>>;
 
     requires std::constructible_from<SearchEngineT, SmilesStorage &&>;
 
     {
     searchEngine.search(std::declval<SearchQuery>())
-    } -> std::same_as<std::unique_ptr<typename SearchEngineT::ResultT>>;
+    } -> std::same_as<std::unique_ptr<SearchResult<typename SearchEngineT::ResultT>>>;
 };

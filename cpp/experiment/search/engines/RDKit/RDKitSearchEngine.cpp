@@ -24,10 +24,10 @@ namespace {
     }
 }
 
-std::unique_ptr<RDKitSearchEngine::ResultT> RDKitSearchEngine::search(const SearchQuery &query) const {
+std::unique_ptr<SearchResult<RDKitSearchEngine::ResultT>> RDKitSearchEngine::search(const SearchQuery &query) const {
     auto queryMol = FrameworkT::queryMoleculeFromSmiles(query.smiles());
     auto fp = FrameworkT::fingerprintFromMolecule(*queryMol);
-    auto result = std::make_unique<ResultT>();
+    auto result = std::make_unique<SearchResult<ResultT>>();
     int maxResults = query.maxResults() == std::numeric_limits<size_t>::max() ? -1 : (int) query.maxResults();
     auto params = RDKitFramework::getSubstructMatchParameters();
     const unsigned int SearchBlockSize = 100000;

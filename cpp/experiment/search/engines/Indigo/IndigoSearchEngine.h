@@ -11,11 +11,11 @@
 class IndigoSearchEngine {
 public:
     using FrameworkT = IndigoFramework;
-    using ResultT = SearchResult<FrameworkT>;
+    using ResultT = int;
 
     explicit IndigoSearchEngine(SmilesStorage &&dataset);
 
-    [[nodiscard]] std::unique_ptr<ResultT> search(const SearchQuery &query) const;
+    [[nodiscard]] std::unique_ptr<SearchResult<ResultT>> search(const SearchQuery &query) const;
 
     ~IndigoSearchEngine();
 
