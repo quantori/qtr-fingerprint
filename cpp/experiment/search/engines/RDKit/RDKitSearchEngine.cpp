@@ -62,3 +62,8 @@ RDKitSearchEngine::RDKitSearchEngine(SmilesStorage &&dataset) {
     _substructLibrary = std::make_unique<RDKit::SubstructLibrary>(molHandler, fpHandler);
 }
 
+StatRow RDKitSearchEngine::getStat() const {
+    // Statistics for RDKitSearchEngine is not collected
+    return StatRow();
+}
+

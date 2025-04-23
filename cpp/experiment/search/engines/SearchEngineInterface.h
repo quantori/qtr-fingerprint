@@ -9,6 +9,7 @@
 #include "search/utils/SearchResult.h"
 #include "frameworks/FrameworkInterface.h"
 #include "dataset/SmilesStorage.h"
+#include "stats/StatRow.h"
 
 template<typename SearchEngineT>
 concept SearchEngineInterface = requires(SearchEngineT searchEngine) {
@@ -22,4 +23,8 @@ concept SearchEngineInterface = requires(SearchEngineT searchEngine) {
     {
     searchEngine.search(std::declval<SearchQuery>())
     } -> std::same_as<std::unique_ptr<SearchResult<typename SearchEngineT::ResultT>>>;
+
+    {
+    searchEngine.getStat()
+    } -> std::same_as<StatRow>;
 };

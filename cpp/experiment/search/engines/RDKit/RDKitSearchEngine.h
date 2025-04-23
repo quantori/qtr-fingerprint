@@ -18,6 +18,8 @@ public:
     explicit RDKitSearchEngine(SmilesStorage &&dataset);
 
     [[nodiscard]] std::unique_ptr<SearchResult<ResultT>> search(const SearchQuery &query) const;
+
+    StatRow getStat() const;
 private:
     std::unique_ptr<RDKit::SubstructLibrary> _substructLibrary;
 };

@@ -28,16 +28,17 @@ public:
         return res;
     }
 
-    [[nodiscard]] std::unique_ptr<typename FrameworkT::MoleculeT>
-    getMolFromResult(size_t resultIdx, const SearchResult<typename FrameworkT::MoleculeT> &searchResult) const {
-        const CachedDataset<FrameworkT> &dataset = _ballTree.dataset();
-        size_t datasetIdx = searchResult.get(resultIdx);
-        return dataset.molecule(datasetIdx);
-    }
+    StatRow getStat() const;
 
 private:
     BallTree<FrameworkT> _ballTree;
 };
+
+template<typename FrameworkType>
+requires FrameworkInterface<FrameworkType>StatRow BallTreeSearchEngine<FrameworkType>::getStat() const {
+    // TODO
+    return StatRow();
+}
 
 static_assert(SearchEngineInterface<BallTreeSearchEngine<RDKitFramework>>,
               "BallTreeSearchEngine must satisfy SearchEngineInterface");

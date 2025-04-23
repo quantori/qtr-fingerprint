@@ -54,18 +54,12 @@ private:
         writer.writeToFile(args.queriesStatFile, csvTable);
     }
 
-    void runOneQuery(SearchEngineT &searchEngine, const std::string &smiles, const BenchmarkArgs &args,
-                     StatTable& statTable) {
-        TimingManager timingManager(args.timeLimit);
-        timingManager.start();
-        SearchQuery query(smiles, args.maxResults, timingManager.getStopFlag());
-        auto result = searchEngine.search(query);
-        auto duration = timingManager.finish();
-        LOG(INFO) << "Search finished in " << duration << " seconds. Found " << result->size() << " answers";
-        if (result->size() > 0) {
+    void logOneQueryResult(double duration, const SearchResult<typename SearchEngineT::ResultT> &result) {
+        LOG(INFO) << "Search finished in " << duration << " seconds. Found " << result.size() << " answers";
+        if (result.size() > 0) {
             LOG(INFO) << "Example results:";
-            for (size_t i = 0; i < result->size() && i < 5; i++) {
-                const auto &res = result->get(i);
+            for (size_t i = 0; i < result.size() && i < 5; i++) {
+                const auto &res = result.get(i);
                 if constexpr (std::is_same_v<typename FrameworkT::MoleculeT, typename SearchEngineT::ResultT>) {
                     auto resSmiles = FrameworkT::moleculeToSmiles(res);
                     LOG(INFO) << resSmiles;
@@ -74,7 +68,28 @@ private:
                 }
             }
         }
-        statTable.addRow(result->getStatRow());
+    }
+
+    void runOneQuery(SearchEngineT &searchEngine, const std::string &smiles, const BenchmarkArgs &args,
+                     StatTable &statTable) {
+        TimingManager timingManager(args.timeLimit);
+        timingManager.start();
+        SearchQuery query(smiles, args.maxResults, timingManager.getStopFlag());
+        try {
+            auto result = searchEngine.search(query);
+            auto duration = timingManager.finish();
+            logOneQueryResult(duration, *result);
+            StatRow statRow = result->getStatRow();
+            statRow.addEntry("SMILES", smiles);
+            statRow.addEntry("FAIL", "No");
+            statTable.addRow(statRow);
+        } catch (const std::exception &e) {
+            LOG(ERROR) << "Query failed: " << e.what();
+            StatRow statRow;
+            statRow.addEntry("SMILES", smiles);
+            statRow.addEntry("FAIL", e.what());
+        }
+
         // TODO: collect per node statistics, write it to the file
 
         // TODO: collect statistics, write it down

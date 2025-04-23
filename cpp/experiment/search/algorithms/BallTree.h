@@ -160,23 +160,27 @@ private:
         if (nodeId == Tree::root() || Tree::isRightChild(nodeId)) {
             return false;
         }
-        auto par = Tree::parent(nodeId);
-        auto &parNode = this->node(par);
 
-        // check a split bit at internal nodes
-        size_t splitBit = parNode.getInternalData().splitBit;
-        bool centroidAtSplitBit = parNode.getInternalData().centroidAtSplitBit;
-        if (FrameworkT::getFingerprintBit(queryFingerprint, splitBit) > centroidAtSplitBit) {
-            stat.skipsAtInternalNodes++;
-            return true;
-        }
-
-        // check whole fingerprint at leaves
-        if (Tree::isLeaf(nodeId) && !FrameworkT::isSubFingerprint(queryFingerprint, getCentroid(nodeId))) {
-            stat.skipsAtLeafNodes++;
+        if (!FrameworkT::isSubFingerprint(queryFingerprint, getCentroid(nodeId))) {
             return true;
         }
         return false;
+//        auto par = Tree::parent(nodeId);
+//        auto &parNode = this->node(par);
+//        // check a split bit at internal nodes
+//        size_t splitBit = parNode.getInternalData().splitBit;
+//        bool centroidAtSplitBit = parNode.getInternalData().centroidAtSplitBit;
+//        if (FrameworkT::getFingerprintBit(queryFingerprint, splitBit) > centroidAtSplitBit) {
+//            stat.skipsAtInternalNodes++;
+//            return true;
+//        }
+//
+//        // check whole fingerprint at leaves
+//        if (Tree::isLeaf(nodeId) && !FrameworkT::isSubFingerprint(queryFingerprint, getCentroid(nodeId))) {
+//            stat.skipsAtLeafNodes++;
+//            return true;
+//        }
+//        return false;
     }
 
     static size_t calculateDepth(size_t datasetSize, size_t bucketSize) {
@@ -215,12 +219,10 @@ private:
         assert(!moleculeIndices.empty());
         for (size_t j = 0; j < FrameworkT::getFingerprintSize(); j++) {
             for (auto &idx: moleculeIndices) {
-                if (FrameworkT::getFingerprintBit(centroid, j)) {
-                    break;
-                }
                 auto &fingerprint = _dataset.fingerprint(idx);
                 if (FrameworkT::getFingerprintBit(fingerprint, j)) {
                     FrameworkT::setFingerprintBit(centroid, j, true);
+                    break;
                 }
             }
         }

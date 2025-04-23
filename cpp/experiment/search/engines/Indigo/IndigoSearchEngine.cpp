@@ -68,3 +68,8 @@ std::unique_ptr<SearchResult<IndigoSearchEngine::ResultT>> IndigoSearchEngine::s
 IndigoSearchEngine::~IndigoSearchEngine() {
     std::filesystem::remove_all(_dbFilePath);
 }
+
+StatRow IndigoSearchEngine::getStat() const {
+    // Statistics for IndigoSearchEngine is not collected
+    return StatRow();
+}

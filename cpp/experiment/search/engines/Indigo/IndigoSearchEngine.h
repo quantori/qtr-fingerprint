@@ -18,6 +18,8 @@ public:
     [[nodiscard]] std::unique_ptr<SearchResult<ResultT>> search(const SearchQuery &query) const;
 
     ~IndigoSearchEngine();
+
+    StatRow getStat() const;
 private:
 
     IndigoSearchEngine();
