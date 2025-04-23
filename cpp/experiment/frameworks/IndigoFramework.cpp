@@ -2,8 +2,6 @@
 #include "molecule/molecule_fingerprint.h"
 #include "indigo_internal.h"
 #include "IndigoSubstructureMatcher.h"
-#include "indigo.h"
-#include "IndigoSubstructureMatcher.h"
 #include "molecule/molecule_substructure_matcher.h"
 #include "base_cpp/scanner.h"
 #include "Profiling.h"
@@ -11,7 +9,25 @@
 namespace {
     const std::shared_ptr<indigo_cpp::IndigoSession> globalIndigoSession = indigo_cpp::IndigoSession::create();
 
-    const Indigo indigoInstance;
+    std::unique_ptr<IndigoFramework::FingerprintT>
+    tryBuildFingerprintFromMolecule(const IndigoFramework::MoleculeT &molecule) {
+        INDIGO_BEGIN
+                {
+                    indigo::Molecule &mol = self.getObject(molecule.id()).getMolecule();
+                    mol.aromatize(indigo::AromaticityOptions());
+                    assert(mol.isAromatized());
+                    indigo::MoleculeFingerprintBuilder fingerprintBuilder(mol, self.fp_params);
+                    fingerprintBuilder.parseFingerprintType("sub", false);
+                    fingerprintBuilder.process();
+                    auto result = std::make_unique<IndigoFramework::FingerprintT>();
+                    result->reserve(self.fp_params.fingerprintSize());
+                    result->copy(fingerprintBuilder.get(), self.fp_params.fingerprintSize());
+                    assert(result->size() * CHAR_BIT == IndigoFramework::getFingerprintSize());
+                    return result;
+                }
+        INDIGO_END(nullptr);
+    }
+
 }
 
 std::unique_ptr<IndigoFramework::MoleculeT> IndigoFramework::moleculeFromSmiles(const std::string &smiles) {
@@ -33,21 +49,9 @@ std::unique_ptr<IndigoFramework::QueryMoleculeT> IndigoFramework::queryMoleculeF
 
 std::unique_ptr<IndigoFramework::FingerprintT>
 IndigoFramework::fingerprintFromMolecule(const IndigoFramework::MoleculeT &molecule) {
-    
-    INDIGO_BEGIN
-            {
-                indigo::Molecule &mol = self.getObject(molecule.id()).getMolecule();
-//                mol.aromatize(indigo::AromaticityOptions());
-                assert(mol.isAromatized());
-                indigo::MoleculeFingerprintBuilder fingerprintBuilder(mol, indigoInstance.fp_params);
-                fingerprintBuilder.parseFingerprintType("sub", false);
-                fingerprintBuilder.process();
-                auto result = std::make_unique<FingerprintT>();
-                result->copy(fingerprintBuilder.get(), indigoInstance.fp_params.fingerprintSize());
-                assert(result->size() * CHAR_BIT == IndigoFramework::getFingerprintSize());
-                return result;
-            }
-    INDIGO_END(nullptr);
+    auto res = tryBuildFingerprintFromMolecule(molecule);
+    assert(res != nullptr);
+    return res;
 }
 
 std::unique_ptr<IndigoFramework::StorageMoleculeT>
@@ -72,14 +76,14 @@ size_t IndigoFramework::getFingerprintSize() {
 }
 
 bool IndigoFramework::getFingerprintBit(const IndigoFramework::FingerprintT &fingerprint, size_t idx) {
-    int byteIdx = int(idx >> CHAR_BIT);
+    int byteIdx = int(idx / CHAR_BIT);
     int bitIndex = int(idx % CHAR_BIT);
     unsigned char byte = fingerprint.at(byteIdx);
     return bool((byte >> bitIndex) & 1u);
 }
 
 void IndigoFramework::setFingerprintBit(IndigoFramework::FingerprintT &fingerprint, size_t idx, bool val) {
-    int byteIdx = int(idx >> CHAR_BIT);
+    int byteIdx = int(idx / CHAR_BIT);
     int bitIndex = int(idx % CHAR_BIT);
     unsigned char &byte = fingerprint[byteIdx];
 
@@ -109,7 +113,10 @@ std::shared_ptr<indigo_cpp::IndigoSession> IndigoFramework::getGlobalIndigoSessi
 
 IndigoFramework::FingerprintT IndigoFramework::getEmptyFingerprint() {
     FingerprintT fp;
-    fp.resize((int)getFingerprintSize() / CHAR_BIT);
+    int byteSize = (int) getFingerprintSize() / CHAR_BIT;
+    fp.reserve(byteSize);
+    fp.resize(byteSize);
+    fp.zerofill();
     return fp;
 }
 
