@@ -48,10 +48,7 @@ private:
             LOG(INFO) << "Start search [" << i << "]: " << smiles;
             runOneQuery(searchEngine, smiles, args, queriesStatTable);
         }
-        // Write statistics
-        auto csvTable = queriesStatTable.toCSVTable();
-        CSVWriter writer;
-        writer.writeToFile(args.queriesStatFile, csvTable);
+        writeStatistics(queriesStatTable, searchEngine, args);
     }
 
     void logOneQueryResult(double duration, const SearchResult<typename SearchEngineT::ResultT> &result) {
@@ -68,6 +65,19 @@ private:
                 }
             }
         }
+    }
+
+    void
+    writeStatistics(const StatTable &queriesStatTable, const SearchEngineT &searchEngine, const BenchmarkArgs &args) {
+        CSVWriter writer;
+
+        auto queriesCSVTable = queriesStatTable.toCSVTable();
+        writer.writeToFile(args.queriesStatFile, queriesCSVTable);
+
+        StatTable searchEngineStatTable;
+        searchEngineStatTable.addRow(searchEngine.getStat());
+        auto searchEngineCSVTable = searchEngineStatTable.toCSVTable();
+        writer.writeToFile(args.searchEngineStatFile, searchEngineCSVTable);
     }
 
     void runOneQuery(SearchEngineT &searchEngine, const std::string &smiles, const BenchmarkArgs &args,
