@@ -76,12 +76,13 @@ private:
         timingManager.start();
         SearchQuery query(smiles, args.maxResults, timingManager.getStopFlag());
         try {
-            auto result = searchEngine.search(query);
+            std::unique_ptr<SearchResult<typename SearchEngineT::ResultT>> result = searchEngine.search(query);
             auto duration = timingManager.finish();
             logOneQueryResult(duration, *result);
             StatRow statRow = result->getStatRow();
             statRow.addEntry("SMILES", smiles);
             statRow.addEntry("FAIL", "No");
+            statRow.addEntry("ANS_COUNT", result->size());
             statTable.addRow(statRow);
         } catch (const std::exception &e) {
             LOG(ERROR) << "Query failed: " << e.what();
