@@ -93,12 +93,14 @@ private:
             statRow.addEntry("SMILES", smiles);
             statRow.addEntry("FAIL", "No");
             statRow.addEntry("ANS_COUNT", result->size());
+            statRow.addEntry("DURATION", duration);
             statTable.addRow(statRow);
         } catch (const std::exception &e) {
             LOG(ERROR) << "Query failed: " << e.what();
             StatRow statRow;
             statRow.addEntry("SMILES", smiles);
             statRow.addEntry("FAIL", e.what());
+            statTable.addRow(statRow);
         }
 
         // TODO: collect per node statistics, write it to the file
