@@ -18,9 +18,6 @@ public:
     [[nodiscard]] std::unique_ptr<SearchResult<ResultT>> search(const SearchQuery &query) const;
 
     ~IndigoSearchEngine();
-
-    // TODO: rewrite framework using indigo instead of indigo_cpp? Use custom class to make Molecule copy constructible,
-    //      run code with all checks possible
 private:
 
     IndigoSearchEngine();

@@ -44,6 +44,7 @@ IndigoFramework::fingerprintFromMolecule(const IndigoFramework::MoleculeT &molec
                 fingerprintBuilder.process();
                 auto result = std::make_unique<FingerprintT>();
                 result->copy(fingerprintBuilder.get(), indigoInstance.fp_params.fingerprintSize());
+                assert(result->size() * CHAR_BIT == IndigoFramework::getFingerprintSize());
                 return result;
             }
     INDIGO_END(nullptr);
@@ -108,7 +109,7 @@ std::shared_ptr<indigo_cpp::IndigoSession> IndigoFramework::getGlobalIndigoSessi
 
 IndigoFramework::FingerprintT IndigoFramework::getEmptyFingerprint() {
     FingerprintT fp;
-    fp.resize((int)getFingerprintSize());
+    fp.resize((int)getFingerprintSize() / CHAR_BIT);
     return fp;
 }
 

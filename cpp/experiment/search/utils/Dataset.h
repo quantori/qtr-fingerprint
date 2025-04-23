@@ -24,9 +24,10 @@ public:
                 LOG(WARNING) << "Skip unparsed SMILES: " << s;
                 return;
             }
+            auto compressedMol = FrameworkT::compressMolecule(*mol);
             {
                 std::lock_guard<std::mutex> lockGuard(mutex);
-                _molecules.push_back(mol);
+                _molecules.push_back(compressedMol);
             }
         });
     }
