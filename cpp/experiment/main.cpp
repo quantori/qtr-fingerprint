@@ -22,8 +22,8 @@ int main(int argc, char *argv[]) {
                 .queries = querySmiles,
                 .maxResults = args.maxResults,
                 .timeLimit = args.timeLimit,
-                .queriesStatFile = args.statisticsFile,
-                .searchEngineStatFile = "TODO!"
+                .queriesStatFile = args.queriesStatisticFile,
+                .searchEngineStatFile = args.searchEngineStatisticFile
         };
 
         switch (args.searchEngineType) {

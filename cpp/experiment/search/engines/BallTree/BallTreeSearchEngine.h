@@ -6,7 +6,6 @@
 #include "frameworks/FrameworkInterface.h"
 #include "frameworks/RDKitFramework.h"
 #include "search/algorithms/BallTree.h"
-#include "search/utils/BallTreeSearchResult.h"
 
 template<typename FrameworkType> requires FrameworkInterface<FrameworkType>
 class BallTreeSearchEngine {

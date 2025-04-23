@@ -38,8 +38,14 @@ protected:
         return -1;
     }
 
-    [[nodiscard]] size_t lastInternalNodeId() {
+    [[nodiscard]] size_t lastInternalNodeId() const {
         return (1u << _depth) - 2;
+    }
+
+    [[nodiscard]] static size_t nodeDepth(size_t nodeId) {
+        int clz = __builtin_clzll(static_cast<unsigned long long>(nodeId) + 1ull);
+        assert(clz >= 0 && clz <= 63);
+        return 63 - clz;
     }
 
     [[nodiscard]] bool isLeaf(size_t nodeId) const {

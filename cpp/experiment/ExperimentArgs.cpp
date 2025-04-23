@@ -9,13 +9,10 @@
 namespace {
 
     const std::map<std::string, SearchEngineType> stringToSearchEngineType = {
-            {"BallTreeRDKit",    SearchEngineType::BallTreeRDKit},
-            {"BallTreeIndigo",   SearchEngineType::BallTreeIndigo},
-//            {"TrieRDKit",        SearchEngineType::TrieRDKit},
-//            {"TrieIndigo",       SearchEngineType::TrieIndigo},
-            {"RDKit",            SearchEngineType::RDKit},
-            {"Indigo",           SearchEngineType::Indigo},
-//            {"IndigoBruteForce", SearchEngineType::IndigoBruteForce},
+            {"BallTreeRDKit",  SearchEngineType::BallTreeRDKit},
+            {"BallTreeIndigo", SearchEngineType::BallTreeIndigo},
+            {"RDKit",          SearchEngineType::RDKit},
+            {"Indigo",         SearchEngineType::Indigo},
     };
 
     const std::string allSearchEngineTypes = [] {
@@ -47,9 +44,11 @@ ABSL_FLAG(std::string, QueriesFile, "",
 ABSL_FLAG(std::string, DatasetDir, "",
           "Specifies the directory containing the dataset. The dataset directory should consist of .csv files.");
 
-ABSL_FLAG(std::string, StatisticsFile, "",
+ABSL_FLAG(std::string, QueriesStatisticFile, "",
           "Specifies the file where experiment statistics will be written.");
 
+ABSL_FLAG(std::string, SearchEngineStatisticFile, "",
+          "Specified the file where search engine statistics will be written.");
 
 ExperimentArgs::ExperimentArgs(int argc, char **argv) {
     absl::ParseCommandLine(argc, argv);
@@ -89,9 +88,15 @@ ExperimentArgs::ExperimentArgs(int argc, char **argv) {
         exit(1);
     }
 
-    statisticsFile = absl::GetFlag(FLAGS_StatisticsFile);
-    if (statisticsFile.empty()) {
+    queriesStatisticFile = absl::GetFlag(FLAGS_QueriesStatisticFile);
+    if (queriesStatisticFile.empty()) {
         LOG(ERROR) << "StatisticsFile path cannot be empty.";
+        exit(1);
+    }
+
+    searchEngineStatisticFile = absl::GetFlag(FLAGS_SearchEngineStatisticFile);
+    if (queriesStatisticFile.empty()) {
+        LOG(ERROR) << "SearchEngineStatisticFile path cannot be empty.";
         exit(1);
     }
 }

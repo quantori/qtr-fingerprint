@@ -6,13 +6,13 @@
 #include "dataset/SmilesStorage.h"
 #include "benchmarking/TimingManager.h"
 #include "Profiling.h"
-#include "benchmarking/stats/QueryStats.h"
+#include "CSVWriter.h"
 
 struct BenchmarkArgs {
     SmilesStorage queries;
     int maxResults;
     double timeLimit;
-    std::filesystem::path queriesStatFile; // TODO: it is not used now
+    std::filesystem::path queriesStatFile;
     std::filesystem::path searchEngineStatFile; // TODO: it is not used now
 };
 
@@ -34,8 +34,6 @@ public:
     }
 
 private:
-//    QueryStats _queryStats; // todo
-
     SearchEngineT buildSearchEngine(SmilesStorage &&dataSmiles) {
         ProfileScope("Total search engine building time");
         return SearchEngineT(std::move(dataSmiles));
@@ -43,14 +41,21 @@ private:
 
     void runQueries(SearchEngineT &searchEngine, const BenchmarkArgs &args) {
         ProfileScope("Total querying running time");
+        StatTable queriesStatTable;
+
         for (size_t i = 0; i < args.queries.size(); i++) {
             auto &smiles = args.queries.smiles(i);
             LOG(INFO) << "Start search [" << i << "]: " << smiles;
-            runOneQuery(searchEngine, smiles, args);
+            runOneQuery(searchEngine, smiles, args, queriesStatTable);
         }
+        // Write statistics
+        auto csvTable = queriesStatTable.toCSVTable();
+        CSVWriter writer;
+        writer.writeToFile(args.queriesStatFile, csvTable);
     }
 
-    void runOneQuery(SearchEngineT &searchEngine, const std::string &smiles, const BenchmarkArgs &args) {
+    void runOneQuery(SearchEngineT &searchEngine, const std::string &smiles, const BenchmarkArgs &args,
+                     StatTable& statTable) {
         TimingManager timingManager(args.timeLimit);
         timingManager.start();
         SearchQuery query(smiles, args.maxResults, timingManager.getStopFlag());
@@ -69,16 +74,8 @@ private:
                 }
             }
         }
-        if (auto *btResult = dynamic_cast<BallTreeSearchResult<FrameworkT> *>(result.get())) {
-            LOG(INFO) << "\n\tLeaves visited: " << btResult->leavesVisited
-                      << "\n\tLeaves skipped: " << btResult->leavesSKipped
-                      << "\n\tInternal Nodes skipped: " << btResult->internalNodesSkipped;
-        }
-        // TODO: collect per query statistics, write it to the file
+        statTable.addRow(result->getStatRow());
         // TODO: collect per node statistics, write it to the file
-        // TODO: implement IndigoFramework
-        // TODO: implement IndigoSearchEngine
-        // TODO: make sure the number of answer is the same for original and BallTree version
 
         // TODO: collect statistics, write it down
     }

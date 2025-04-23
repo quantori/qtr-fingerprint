@@ -1,8 +1,11 @@
 #pragma once
 
+#include <utility>
 #include <vector>
+#include <sstream>
 
 #include "frameworks/FrameworkInterface.h"
+#include "StatTable.h"
 
 template<typename ResultT>
 class SearchResult {
@@ -21,8 +24,15 @@ public:
         return _results.size();
     }
 
-    virtual ~SearchResult() = default;
+    void setStatRow(StatRow &&statRow) {
+        _statRow = statRow;
+    }
 
-protected:
+    [[nodiscard]] const StatRow &getStatRow() const {
+        return _statRow;
+    }
+
+private:
     std::vector<ResultT> _results;
+    StatRow _statRow;
 };

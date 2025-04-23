@@ -11,7 +11,8 @@ struct ExperimentArgs {
     double timeLimit;
     std::filesystem::path queriesFile;
     std::filesystem::path datasetDir;
-    std::filesystem::path statisticsFile;
+    std::filesystem::path queriesStatisticFile;
+    std::filesystem::path searchEngineStatisticFile;
 
     ExperimentArgs(int argc, char *argv[]);
 };
