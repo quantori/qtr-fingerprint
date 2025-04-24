@@ -9,6 +9,7 @@
 #include "search/engines/Indigo/IndigoSearchEngine.h"
 #include "benchmarking/BenchmarkRunner.h"
 #include "frameworks/IndigoFramework.h"
+#include "molecule/query_molecule.h"
 
 int main(int argc, char *argv[]) {
     google::InitGoogleLogging(argv[0]);

@@ -13,9 +13,9 @@
 class IndigoFramework {
 public:
     using FingerprintT = indigo::Array<byte>;
-    using MoleculeT = int;
+    using MoleculeT = indigo::Molecule;
     using StorageMoleculeT = std::string;
-    using QueryMoleculeT = int;
+    using QueryMoleculeT = indigo::QueryMolecule;
 
     static std::unique_ptr<MoleculeT> moleculeFromSmiles(const std::string &smiles);
 

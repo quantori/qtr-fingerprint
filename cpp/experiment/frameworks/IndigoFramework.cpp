@@ -7,14 +7,16 @@
 #include "Profiling.h"
 #include "molecule/smiles_loader.h"
 #include "molecule/cmf_loader.h"
-#include "indigo_molecule.h"
+#include "molecule/query_molecule.h"
+#include "molecule/molecule.h"
 
 namespace {
     std::unique_ptr<IndigoFramework::FingerprintT>
     tryBuildFingerprintFromMolecule(const IndigoFramework::MoleculeT &molecule) {
         INDIGO_BEGIN
                 {
-                    indigo::Molecule &mol = self.getObject(molecule).getMolecule();
+//                    indigo::Molecule &mol = self.getObject(molecule).getMolecule();
+                    Molecule &mol = const_cast<Molecule &>(molecule);
                     MoleculeFingerprintParameters fp_params(self.fp_params);
                     fp_params.ext = false;
                     fp_params.tau_qwords = 0;
@@ -44,12 +46,10 @@ std::unique_ptr<IndigoFramework::MoleculeT> IndigoFramework::moleculeFromSmiles(
     loader.ignore_bad_valence = self.ignore_bad_valence;
     loader.ignore_no_chiral_flag = self.ignore_no_chiral_flag;
 
-    auto molptr = std::make_unique<IndigoMolecule>();
-    auto& molecule = molptr->mol;
-    loader.loadMolecule(molecule);
-    molecule.aromatize(self.arom_options);
-    int id = self.addObject(std::move(molptr));
-    return std::make_unique<IndigoFramework::MoleculeT>(id);
+    auto molecule = std::make_unique<Molecule>();
+    loader.loadMolecule(*molecule);
+    molecule->aromatize(self.arom_options);
+    return molecule;
 }
 
 std::string IndigoFramework::moleculeToSmiles(const IndigoFramework::MoleculeT &molecule) {
@@ -57,7 +57,8 @@ std::string IndigoFramework::moleculeToSmiles(const IndigoFramework::MoleculeT &
     StringOutput output(smiles);
     SmilesSaver saver(output);
     Indigo &self = indigoGetInstance();
-    Molecule& mol = self.getObject(molecule).getMolecule();
+//    Molecule &mol = self.getObject(molecule).getMolecule();
+    Molecule &mol = const_cast<Molecule &>(molecule);
     saver.saveMolecule(mol);
     return smiles;
 }
@@ -70,13 +71,12 @@ std::unique_ptr<IndigoFramework::QueryMoleculeT> IndigoFramework::queryMoleculeF
     loader.ignore_bad_valence = self.ignore_bad_valence;
     loader.ignore_no_chiral_flag = self.ignore_no_chiral_flag;
 
-    auto queryMolPtr = std::make_unique<IndigoQueryMolecule>();
-    auto& molecule = queryMolPtr->qmol;
-    loader.loadQueryMolecule(molecule);
-    molecule.aromatize(self.arom_options);
-
-    int id = self.addObject(std::move(queryMolPtr));
-    return std::make_unique<IndigoFramework::QueryMoleculeT>(id);
+    auto molecule = std::make_unique<QueryMolecule>();
+    loader.loadQueryMolecule(*molecule);
+    molecule->aromatize(self.arom_options);
+    return molecule;
+//    int id = self.addObject(std::move(queryMolPtr));
+//    return std::make_unique<IndigoFramework::QueryMoleculeT>(id);
 }
 
 std::unique_ptr<IndigoFramework::FingerprintT>
@@ -94,33 +94,32 @@ IndigoFramework::compressMolecule(const IndigoFramework::MoleculeT &molecule) {
     auto result = std::make_unique<IndigoFramework::StorageMoleculeT>();
     StringOutput output(*result);
     CmfSaver saver(output);
-    Molecule& mol = self.getObject(molecule).getMolecule();
-    saver.saveMolecule(mol);
+//    Molecule &mol = self.getObject(molecule);
+//    Molecule &mol = const_cast<Molecule &>(molecule);
+    Molecule &mutableMol = const_cast<Molecule &>(molecule);
+    saver.saveMolecule(mutableMol);
     return result;
 }
 
 std::unique_ptr<IndigoFramework::MoleculeT>
 IndigoFramework::decompressMolecule(const IndigoFramework::StorageMoleculeT &compressedMolecule) {
     ProfileScope("IndigoFramework::decompressMolecule");
-    Indigo &self = indigoGetInstance();
-    BufferScanner scanner(compressedMolecule.c_str(), (int)compressedMolecule.size(), false);
+    BufferScanner scanner(compressedMolecule.c_str(), compressedMolecule.size(), false);
     CmfLoader cmfLoader(scanner);
 
-    auto molPtr = std::make_unique<IndigoMolecule>();
-    Molecule& mol = molPtr->mol;
-    cmfLoader.loadMolecule(mol);
-    int id = self.addObject(std::move(molPtr));
-    return std::make_unique<IndigoFramework::MoleculeT>(id);
+    auto molecule = std::make_unique<IndigoFramework::MoleculeT>();
+    cmfLoader.loadMolecule(*molecule);
+    return molecule;
 }
 
 bool IndigoFramework::isSubstructure(const IndigoFramework::QueryMoleculeT &queryMolecule,
                                      const IndigoFramework::MoleculeT &molecule) {
     ProfileScope("IndigoFramework::isSubstructure");
     Indigo &self = indigoGetInstance();
-    Molecule& mol = self.getObject(molecule).getMolecule();
-    QueryMolecule& queryMol = self.getObject(queryMolecule).getQueryMolecule();
-    MoleculeSubstructureMatcher msm(mol);
-    msm.setQuery(queryMol);
+    auto &mutableMol = const_cast<IndigoFramework::MoleculeT &>(molecule);
+    auto &mutableQueryMol = const_cast<IndigoFramework::QueryMoleculeT &>(queryMolecule);
+    MoleculeSubstructureMatcher msm(mutableMol);
+    msm.setQuery(mutableQueryMol);
     bool res = msm.find();
     return res;
 }
