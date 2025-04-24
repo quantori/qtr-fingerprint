@@ -28,7 +28,6 @@ target_include_directories(${This}
         PUBLIC search/engines/Indigo
         PUBLIC dataset
         PUBLIC benchmarking
-        PUBLIC benchmarking
         PUBLIC stats
         PUBLIC ../third_party/Indigo/api/c/bingo-nosql/src/
 )

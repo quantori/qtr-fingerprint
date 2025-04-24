@@ -4,13 +4,13 @@
 
 #include "bingo-nosql.h"
 
-#include "frameworks/IndigoFramework.h"
+#include "frameworks/IndigoCppFramework.h"
 #include "search/engines/SearchEngineInterface.h"
 
 
 class IndigoSearchEngine {
 public:
-    using FrameworkT = IndigoFramework;
+    using FrameworkT = IndigoCppFramework;
     using ResultT = int;
 
     explicit IndigoSearchEngine(SmilesStorage &&dataset);

@@ -10,12 +10,12 @@
 #include "frameworks/FrameworkInterface.h"
 #include "molecule/molecule.h"
 
-class IndigoFramework {
+class IndigoCppFramework {
 public:
     using FingerprintT = indigo::Array<byte>;
-    using MoleculeT = int;
-    using StorageMoleculeT = std::string;
-    using QueryMoleculeT = int;
+    using MoleculeT = indigo_cpp::IndigoMolecule;
+    using StorageMoleculeT = indigo_cpp::IndigoMolecule;
+    using QueryMoleculeT = indigo_cpp::IndigoQueryMolecule;
 
     static std::unique_ptr<MoleculeT> moleculeFromSmiles(const std::string &smiles);
 
@@ -40,6 +40,8 @@ public:
     static bool isSubFingerprint(const FingerprintT &fingerprint1, const FingerprintT &fingerprint2);
 
     static FingerprintT getEmptyFingerprint();
+
+    static std::shared_ptr<indigo_cpp::IndigoSession> getGlobalIndigoSession();
 };
 
-static_assert(FrameworkInterface<IndigoFramework>, "IndigoFramework must satisfy FrameworkInterface");
+static_assert(FrameworkInterface<IndigoCppFramework>, "IndigoCppFramework must satisfy FrameworkInterface");
