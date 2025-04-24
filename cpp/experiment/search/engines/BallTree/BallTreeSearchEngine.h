@@ -13,9 +13,9 @@ public:
     using FrameworkT = FrameworkType;
     using CachedDatasetT = CachedDataset<FrameworkT>;
     using ExtendedSearchQueryT = ExtendedSearchQuery<FrameworkT>;
-    using ResultT = FrameworkT::MoleculeT;
+    using ResultT = BallTree<FrameworkT>::ResultT;
 
-    static inline const int BucketSize = 2;
+    static inline const int BucketSize = 3;
 
     BallTreeSearchEngine() = delete;
 
@@ -28,7 +28,7 @@ public:
         return res;
     }
 
-    StatRow getStat() const;
+    [[nodiscard]] StatRow getStat() const;
 
 private:
     BallTree<FrameworkT> _ballTree;

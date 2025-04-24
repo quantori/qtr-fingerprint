@@ -92,9 +92,10 @@ public:
     using NodeT = BallTreeNode<FrameworkT>;
     using Tree = FullBinaryTree<NodeT>;
     using ExtendedQueryT = ExtendedSearchQuery<FrameworkT>;
-    using ResultT = MoleculeT;
+    using ResultT = size_t;
 
     std::unique_ptr<SearchResult<ResultT>> search(const ExtendedQueryT &query) const {
+        ProfileScope("BallTree::search");
         auto result = std::make_unique<SearchResult<ResultT>>();
         BallTreeQueryStat stat(Tree::depth());
         size_t nodeId = Tree::root();
@@ -141,17 +142,22 @@ private:
 
     void searchInLeafNode(size_t nodeId, const ExtendedQueryT &query, SearchResult<ResultT> &result,
                           BallTreeQueryStat &stat) const {
-        ProfileScope("BallTree searchInLeafNode");
+        ProfileScope("BallTree::searchInLeafNode");
         stat.leafSearches++;
         assert(Tree::isLeaf(nodeId));
         auto &node = this->node(nodeId);
         auto &bucket = node.getLeafData().moleculeIndices;
 
         for (size_t molIdx: bucket) {
-            auto mol = _dataset.molecule(molIdx);
-            if (FrameworkT::isSubstructure(query.molecule(), *mol)) {
-                result.addResult(*mol);
+            auto &fp = _dataset.fingerprint(molIdx);
+            if (!FrameworkT::isSubFingerprint(query.fingerprint(), fp)) {
+                continue;
             }
+            auto mol = _dataset.molecule(molIdx);
+            if (!FrameworkT::isSubstructure(query.molecule(), *mol)) {
+                continue;
+            }
+            result.addResult(molIdx);
         }
     }
 
@@ -165,22 +171,6 @@ private:
             return true;
         }
         return false;
-//        auto par = Tree::parent(nodeId);
-//        auto &parNode = this->node(par);
-//        // check a split bit at internal nodes
-//        size_t splitBit = parNode.getInternalData().splitBit;
-//        bool centroidAtSplitBit = parNode.getInternalData().centroidAtSplitBit;
-//        if (FrameworkT::getFingerprintBit(queryFingerprint, splitBit) > centroidAtSplitBit) {
-//            stat.skipsAtInternalNodes++;
-//            return true;
-//        }
-//
-//        // check whole fingerprint at leaves
-//        if (Tree::isLeaf(nodeId) && !FrameworkT::isSubFingerprint(queryFingerprint, getCentroid(nodeId))) {
-//            stat.skipsAtLeafNodes++;
-//            return true;
-//        }
-//        return false;
     }
 
     static size_t calculateDepth(size_t datasetSize, size_t bucketSize) {

@@ -55,6 +55,7 @@ std::unique_ptr<IndigoFramework::QueryMoleculeT> IndigoFramework::queryMoleculeF
 
 std::unique_ptr<IndigoFramework::FingerprintT>
 IndigoFramework::fingerprintFromMolecule(const IndigoFramework::MoleculeT &molecule) {
+    ProfileScope("IndigoFramework::fingerprintFromMolecule");
     auto res = tryBuildFingerprintFromMolecule(molecule);
     assert(res != nullptr);
     return res;
@@ -62,11 +63,13 @@ IndigoFramework::fingerprintFromMolecule(const IndigoFramework::MoleculeT &molec
 
 std::unique_ptr<IndigoFramework::StorageMoleculeT>
 IndigoFramework::compressMolecule(const IndigoFramework::MoleculeT &molecule) {
+    ProfileScope("IndigoFramework::compressMolecule");
     return std::make_unique<StorageMoleculeT>(molecule);
 }
 
 std::unique_ptr<IndigoFramework::MoleculeT>
 IndigoFramework::decompressMolecule(const IndigoFramework::StorageMoleculeT &compressedMolecule) {
+    ProfileScope("IndigoFramework::decompressMolecule");
     return std::make_unique<MoleculeT>(compressedMolecule);
 }
 
@@ -82,6 +85,7 @@ size_t IndigoFramework::getFingerprintSize() {
 }
 
 bool IndigoFramework::getFingerprintBit(const IndigoFramework::FingerprintT &fingerprint, size_t idx) {
+    ProfileScope("IndigoFramework::getFingerprintBit");
     int byteIdx = int(idx / CHAR_BIT);
     int bitIndex = int(idx % CHAR_BIT);
     unsigned char byte = fingerprint.at(byteIdx);
