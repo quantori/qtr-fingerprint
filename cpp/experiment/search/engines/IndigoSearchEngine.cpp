@@ -69,7 +69,7 @@ IndigoSearchEngine::~IndigoSearchEngine() {
     std::filesystem::remove_all(_dbFilePath);
 }
 
-StatRow IndigoSearchEngine::getStat() const {
+StatTable IndigoSearchEngine::getStat() const {
     // Statistics for IndigoSearchEngine is not collected
-    return StatRow();
+    return StatTable();
 }

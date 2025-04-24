@@ -6,14 +6,23 @@
 
 class StatTable {
 public:
-    void addRow(const StatRow& row);
+    void addRow(const StatRow &row);
 
     CSVTable toCSVTable() const;
+
+    const StatRow &operator[](size_t i) const {
+        return _rows[i];
+    }
+
+    StatRow &operator[](size_t i) {
+        return _rows[i];
+    }
 
 private:
     std::vector<StatRow> _rows;
 
     [[nodiscard]] std::unordered_map<std::string, size_t> buildColumnNames() const;
 
-    std::vector<std::vector<std::string>> buildCSVData(const std::unordered_map<std::string, size_t> &columnNames) const;
+    std::vector<std::vector<std::string>>
+    buildCSVData(const std::unordered_map<std::string, size_t> &columnNames) const;
 };

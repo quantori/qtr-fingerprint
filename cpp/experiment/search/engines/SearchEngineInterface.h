@@ -26,5 +26,5 @@ concept SearchEngineInterface = requires(SearchEngineT searchEngine) {
 
     {
     searchEngine.getStat()
-    } -> std::same_as<StatRow>;
+    } -> std::same_as<StatTable>;
 };

@@ -13,7 +13,7 @@ struct BenchmarkArgs {
     int maxResults;
     double timeLimit;
     std::filesystem::path queriesStatFile;
-    std::filesystem::path searchEngineStatFile; // TODO: it is not used now
+    std::filesystem::path searchEngineStatFile;
 };
 
 template<typename SearchEngineT> requires SearchEngineInterface<SearchEngineT>
@@ -22,10 +22,6 @@ public:
     using FrameworkT = SearchEngineT::FrameworkT;
 
     BenchmarkRunner() = default;
-
-    ~BenchmarkRunner() {
-        // TODO: print quick summary on exit
-    }
 
     void run(SmilesStorage &&dataSmiles, BenchmarkArgs &args) {
         ProfileScope("Total benchmark running time");
@@ -74,8 +70,8 @@ private:
         auto queriesCSVTable = queriesStatTable.toCSVTable();
         writer.writeToFile(args.queriesStatFile, queriesCSVTable);
 
-        StatTable searchEngineStatTable;
-        searchEngineStatTable.addRow(searchEngine.getStat());
+
+        StatTable searchEngineStatTable = searchEngine.getStat();
         auto searchEngineCSVTable = searchEngineStatTable.toCSVTable();
         writer.writeToFile(args.searchEngineStatFile, searchEngineCSVTable);
     }

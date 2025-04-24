@@ -10,12 +10,13 @@
 #include "search/algorithms/FullBinaryTree.h"
 #include "frameworks/FrameworkInterface.h"
 #include "search/utils/ExtendedSearchQuery.h"
-#include "search/utils/utils.h"
+#include "search/utils/SearchUtils.h"
 #include "dataset/CachedDataset.h"
 #include "search/algorithms/BallTreeSplitter.h"
 #include "Profiling.h"
 #include "BallTreeQueryStat.h"
 #include "BallTreeFingerprintChecker.h"
+#include "BallTreeNodesStat.h"
 
 template<typename FrameworkT> requires FrameworkInterface<FrameworkT>
 class BallTreeNode {
@@ -69,6 +70,14 @@ public:
     using ExtendedQueryT = ExtendedSearchQuery<FrameworkT>;
     using ResultT = size_t;
 
+    using Tree::rightChild;
+    using Tree::leftChild;
+    using Tree::node;
+    using Tree::root;
+    using Tree::endNodeId;
+    using Tree::traverseToNextNode;
+    using Tree::isLeaf;
+
     std::unique_ptr<SearchResult<ResultT>> search(const ExtendedQueryT &query) const {
         ProfileScope("BallTree::search");
         auto result = std::make_unique<SearchResult<ResultT>>();
@@ -81,11 +90,14 @@ public:
             }
             bool skipSubtree = shouldSkipSubtree(nodeId, fpChecker, *result, stat);
             if (!skipSubtree) {
+                _nodesStat[nodeId].visits++;
                 stat.nodesVisitedPerDepth.at(Tree::nodeDepth(nodeId))++;
                 stat.subsetSizePerDepth.at(Tree::nodeDepth(nodeId)) += this->node(nodeId).subsetSize;
                 if (Tree::isLeaf(nodeId)) {
                     searchInLeafNode(nodeId, query, *result, stat);
                 }
+            } else {
+                _nodesStat[nodeId].skips++;
             }
             nodeId = Tree::traverseToNextNode(nodeId, skipSubtree);
         }
@@ -95,7 +107,7 @@ public:
 
     explicit BallTree(CachedDataset<FrameworkT> &&dataset, size_t bucketSize) :
             Tree(calculateDepth(dataset.size(), bucketSize)),
-            _dataset(std::move(dataset)) {
+            _dataset(std::move(dataset)), _nodesStat(Tree::nodeCount()) {
         BallTreeSplitter<FrameworkT> splitter(_dataset, Tree::root(), Tree::nodeCount());
         for (size_t nodeId = Tree::root(); nodeId < Tree::nodeCount(); nodeId++) {
             if (Tree::isLeaf(nodeId)) {
@@ -109,17 +121,22 @@ public:
         }
     }
 
+    StatTable getNodesStat() const {
+        return _nodesStat.toStatTable();
+    }
+
     const CachedDataset<FrameworkT> &dataset() const {
         return _dataset;
     }
 
 private:
     CachedDataset<FrameworkT> _dataset;
+    mutable BallTreeNodesStat _nodesStat;
 
     void searchInLeafNode(size_t nodeId, const ExtendedQueryT &query, SearchResult<ResultT> &result,
-                          BallTreeQueryStat &stat) const {
+                          BallTreeQueryStat &queryStat) const {
         ProfileScope("BallTree::searchInLeafNode");
-        stat.leafSearches++;
+        queryStat.leafSearches++;
         assert(Tree::isLeaf(nodeId));
         auto &node = this->node(nodeId);
         auto &bucket = node.getLeafData().moleculeIndices;

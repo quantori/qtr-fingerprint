@@ -4,8 +4,6 @@
 #include "Profiling.h"
 
 struct BallTreeQueryStat {
-    size_t skipsAtInternalNodes = 0;
-    size_t skipsAtLeafNodes = 0;
     size_t leafSearches = 0;
     std::vector<size_t> nodesVisitedPerDepth;
     std::vector<size_t> subsetSizePerDepth;
@@ -17,8 +15,6 @@ struct BallTreeQueryStat {
     [[nodiscard]] inline StatRow toStatRow() const {
         ProfileScope("BallTreeQueryStat::toStatRaw");
         StatRow row;
-        row.addEntry("skipsAtInternalNodes", skipsAtInternalNodes);
-        row.addEntry("skipsAtLeafNodes", skipsAtLeafNodes);
         row.addEntry("leafSearches", leafSearches);
         for (size_t i = 0; i < nodesVisitedPerDepth.size(); i++) {
             row.addEntry("nodesVisitedAtDepth" + std::to_string(i), nodesVisitedPerDepth[i]);

@@ -74,7 +74,7 @@ protected:
         }
     }
 
-    [[nodiscard]] size_t traverseToNextNode(size_t nodeId, bool skipSubtree) const {
+    [[nodiscard]] size_t traverseToNextNode(size_t nodeId, bool skipSubtree = false) const {
         if (skipSubtree) {
             return traverseUp(nodeId);
         } else {

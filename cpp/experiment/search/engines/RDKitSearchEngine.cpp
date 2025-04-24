@@ -6,7 +6,7 @@
 
 #include <glog/logging.h>
 
-#include "search/utils/utils.h"
+#include "search/utils/SearchUtils.h"
 
 namespace {
     void addMol(std::unique_ptr<RDKitFramework::MoleculeT> &&mol,
@@ -62,8 +62,8 @@ RDKitSearchEngine::RDKitSearchEngine(SmilesStorage &&dataset) {
     _substructLibrary = std::make_unique<RDKit::SubstructLibrary>(molHandler, fpHandler);
 }
 
-StatRow RDKitSearchEngine::getStat() const {
+StatTable RDKitSearchEngine::getStat() const {
     // Statistics for RDKitSearchEngine is not collected
-    return StatRow();
+    return StatTable();
 }
 

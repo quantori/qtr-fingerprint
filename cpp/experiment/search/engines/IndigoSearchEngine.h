@@ -19,7 +19,7 @@ public:
 
     ~IndigoSearchEngine();
 
-    StatRow getStat() const;
+    StatTable getStat() const;
 private:
 
     IndigoSearchEngine();
