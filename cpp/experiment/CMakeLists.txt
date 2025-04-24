@@ -23,9 +23,6 @@ target_include_directories(${This}
         PUBLIC io
         PUBLIC frameworks
         PUBLIC search/engines
-        PUBLIC search/engines/RDKit
-        PUBLIC search/engines/BallTree
-        PUBLIC search/engines/Indigo
         PUBLIC dataset
         PUBLIC benchmarking
         PUBLIC stats
