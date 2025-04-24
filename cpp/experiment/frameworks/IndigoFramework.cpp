@@ -14,14 +14,20 @@ namespace {
         INDIGO_BEGIN
                 {
                     indigo::Molecule &mol = self.getObject(molecule.id()).getMolecule();
-                    mol.aromatize(indigo::AromaticityOptions());
+                    MoleculeFingerprintParameters fp_params(self.fp_params);
+                    fp_params.ext = false;
+                    fp_params.tau_qwords = 0;
+//                    mol.aromatize(self.arom_options);
                     assert(mol.isAromatized());
-                    indigo::MoleculeFingerprintBuilder fingerprintBuilder(mol, self.fp_params);
+                    indigo::MoleculeFingerprintBuilder fingerprintBuilder(mol, fp_params);
                     fingerprintBuilder.parseFingerprintType("sub", false);
                     fingerprintBuilder.process();
-                    auto result = std::make_unique<IndigoFramework::FingerprintT>();
-                    result->reserve(self.fp_params.fingerprintSize());
-                    result->copy(fingerprintBuilder.get(), self.fp_params.fingerprintSize());
+                    auto fpSize = fp_params.fingerprintSize();
+                    assert(fpSize * CHAR_BIT == IndigoFramework::getFingerprintSize());
+
+                    auto result = std::make_unique<indigo::Array<byte>>();
+                    result->reserve(fpSize);
+                    result->copy(fingerprintBuilder.get(), fpSize);
                     assert(result->size() * CHAR_BIT == IndigoFramework::getFingerprintSize());
                     return result;
                 }
@@ -72,7 +78,7 @@ bool IndigoFramework::isSubstructure(const IndigoFramework::QueryMoleculeT &quer
 }
 
 size_t IndigoFramework::getFingerprintSize() {
-    return 3736;
+    return 3072;
 }
 
 bool IndigoFramework::getFingerprintBit(const IndigoFramework::FingerprintT &fingerprint, size_t idx) {
