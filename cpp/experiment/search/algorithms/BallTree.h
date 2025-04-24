@@ -14,6 +14,8 @@
 #include "dataset/CachedDataset.h"
 #include "search/algorithms/BallTreeSplitter.h"
 #include "Profiling.h"
+#include "BallTreeQueryStat.h"
+#include "BallTreeFingerprintChecker.h"
 
 template<typename FrameworkT> requires FrameworkInterface<FrameworkT>
 class BallTreeNode {
@@ -57,33 +59,6 @@ public:
             : centroid(std::move(centroid)) {}
 };
 
-struct BallTreeQueryStat {
-    size_t skipsAtInternalNodes = 0;
-    size_t skipsAtLeafNodes = 0;
-    size_t leafSearches = 0;
-    std::vector<size_t> nodesVisitedPerDepth;
-    std::vector<size_t> subsetSizePerDepth;
-
-    inline explicit BallTreeQueryStat(size_t treeDepth) : nodesVisitedPerDepth(treeDepth + 1, 0),
-                                                          subsetSizePerDepth(treeDepth + 1, 0) {
-    }
-
-    [[nodiscard]] inline StatRow toStatRow() const {
-        ProfileScope("BallTreeQueryStat::toStatRaw");
-        StatRow row;
-        row.addEntry("skipsAtInternalNodes", skipsAtInternalNodes);
-        row.addEntry("skipsAtLeafNodes", skipsAtLeafNodes);
-        row.addEntry("leafSearches", leafSearches);
-        for (size_t i = 0; i < nodesVisitedPerDepth.size(); i++) {
-            row.addEntry("nodesVisitedAtDepth" + std::to_string(i), nodesVisitedPerDepth[i]);
-        }
-        for (size_t i = 0; i < subsetSizePerDepth.size(); i++) {
-            row.addEntry("subsetSizeAtDepth" + std::to_string(i), subsetSizePerDepth[i]);
-        }
-        return row;
-    }
-};
-
 template<typename FrameworkT> requires FrameworkInterface<FrameworkT>
 class BallTree : public FullBinaryTree<BallTreeNode<FrameworkT>> {
 public:
@@ -97,13 +72,14 @@ public:
     std::unique_ptr<SearchResult<ResultT>> search(const ExtendedQueryT &query) const {
         ProfileScope("BallTree::search");
         auto result = std::make_unique<SearchResult<ResultT>>();
+        BallTreeFingerprintChecker<FrameworkT> fpChecker(query.fingerprint());
         BallTreeQueryStat stat(Tree::depth());
         size_t nodeId = Tree::root();
         while (nodeId != Tree::endNodeId()) {
             if (checkShouldStopSearch(query, *result)) {
                 break;
             }
-            bool skipSubtree = shouldSkipSubtree(nodeId, query.fingerprint(), *result, stat);
+            bool skipSubtree = shouldSkipSubtree(nodeId, fpChecker, *result, stat);
             if (!skipSubtree) {
                 stat.nodesVisitedPerDepth.at(Tree::nodeDepth(nodeId))++;
                 stat.subsetSizePerDepth.at(Tree::nodeDepth(nodeId)) += this->node(nodeId).subsetSize;
@@ -161,16 +137,12 @@ private:
         }
     }
 
-    bool shouldSkipSubtree(size_t nodeId, const FingerprintT &queryFingerprint,
+    bool shouldSkipSubtree(size_t nodeId, const BallTreeFingerprintChecker<FrameworkT> &fpChecker,
                            SearchResult<ResultT> &result, BallTreeQueryStat &stat) const {
         if (nodeId == Tree::root() || Tree::isRightChild(nodeId)) {
             return false;
         }
-
-        if (!FrameworkT::isSubFingerprint(queryFingerprint, getCentroid(nodeId))) {
-            return true;
-        }
-        return false;
+        return !fpChecker.check(getCentroid(nodeId));
     }
 
     static size_t calculateDepth(size_t datasetSize, size_t bucketSize) {

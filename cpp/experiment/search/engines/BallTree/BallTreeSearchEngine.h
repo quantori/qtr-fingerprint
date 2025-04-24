@@ -15,7 +15,7 @@ public:
     using ExtendedSearchQueryT = ExtendedSearchQuery<FrameworkT>;
     using ResultT = BallTree<FrameworkT>::ResultT;
 
-    static inline const int BucketSize = 3;
+    static inline const int BucketSize = 4;
 
     BallTreeSearchEngine() = delete;
 
