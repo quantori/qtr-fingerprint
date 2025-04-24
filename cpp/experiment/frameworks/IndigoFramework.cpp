@@ -76,8 +76,15 @@ IndigoFramework::decompressMolecule(const IndigoFramework::StorageMoleculeT &com
 bool IndigoFramework::isSubstructure(const IndigoFramework::QueryMoleculeT &queryMolecule,
                                      const IndigoFramework::MoleculeT &molecule) {
     ProfileScope("IndigoFramework::isSubstructure");
-    auto matcher = IndigoFramework::getGlobalIndigoSession()->substructureMatcher(molecule);
-    return matcher.match(queryMolecule);
+    Indigo& self = indigoGetInstance();
+    indigo::Molecule &mol = self.getObject(molecule.id()).getMolecule();
+    indigo::QueryMolecule &queryMol = self.getObject(queryMolecule.id()).getQueryMolecule();
+    MoleculeSubstructureMatcher msm(mol);
+    msm.setQuery(queryMol);
+    bool res = msm.find();
+    return res;
+//    auto matcher = IndigoFramework::getGlobalIndigoSession()->substructureMatcher(molecule);
+//    return matcher.match(queryMolecule);
 }
 
 size_t IndigoFramework::getFingerprintSize() {
