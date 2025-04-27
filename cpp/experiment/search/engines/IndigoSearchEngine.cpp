@@ -1,4 +1,5 @@
 #include "IndigoSearchEngine.h"
+#include <tbb/parallel_for.h>
 
 #include <random>
 #include <execution>
@@ -27,20 +28,21 @@ namespace {
 }
 
 IndigoSearchEngine::IndigoSearchEngine(SmilesStorage &&dataset) : IndigoSearchEngine() {
-    auto range = std::views::iota(size_t(0), dataset.size());
-    std::for_each(std::execution::par, range.begin(), range.end(), [&](size_t idx) {
-        const auto &smiles = dataset.smiles(idx);
-        try {
-            auto mol = FrameworkT::moleculeFromSmiles(smiles);
-            {
-                // no mutex as _db must be thread safe
+tbb::parallel_for(
+    tbb::blocked_range<size_t>(0, dataset.size()),
+    [&](const tbb::blocked_range<size_t>& r) {
+        for (size_t idx = r.begin(); idx != r.end(); ++idx) {
+            const auto &smiles = dataset.smiles(idx);
+            try {
+                auto mol = FrameworkT::moleculeFromSmiles(smiles);
                 _db.insertRecord(*mol);
             }
+            catch (const indigo_cpp::IndigoException &e) {
+                LOG(ERROR) << "Error processing smiles " << smiles << ": " << e.what();
+            }
         }
-        catch (const indigo_cpp::IndigoException &e) {
-            LOG(ERROR) << "Error processing smiles " << smiles << ": " << e.what();
-        }
-    });
+    }
+);
 }
 
 IndigoSearchEngine::IndigoSearchEngine() : _dbFilePath(generateDBPath()), _db(
