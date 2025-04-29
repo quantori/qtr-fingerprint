@@ -16,10 +16,9 @@ public:
     using FingerprintT = typename FrameworkT::FingerprintT;
 
     explicit CachedDataset(SmilesStorage &&smiles) {
-        auto range = std::views::iota(size_t(0), smiles.size());
         std::mutex mutex;
         tbb::parallel_for(
-            tbb::blocked_range<size_t>(range.begin(), range.end()),
+            tbb::blocked_range<size_t>(0, smiles.size()),
             [&](const tbb::blocked_range<size_t>& r) {
                 for (size_t idx = r.begin(); idx != r.end(); ++idx) {
                     auto& s = smiles.smiles(idx);
