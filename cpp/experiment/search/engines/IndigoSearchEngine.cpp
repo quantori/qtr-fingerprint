@@ -28,21 +28,21 @@ namespace {
 }
 
 IndigoSearchEngine::IndigoSearchEngine(SmilesStorage &&dataset) : IndigoSearchEngine() {
-tbb::parallel_for(
-    tbb::blocked_range<size_t>(0, dataset.size()),
-    [&](const tbb::blocked_range<size_t>& r) {
-        for (size_t idx = r.begin(); idx != r.end(); ++idx) {
-            const auto &smiles = dataset.smiles(idx);
-            try {
-                auto mol = FrameworkT::moleculeFromSmiles(smiles);
-                _db.insertRecord(*mol);
-            }
-            catch (const indigo_cpp::IndigoException &e) {
-                LOG(ERROR) << "Error processing smiles " << smiles << ": " << e.what();
+    tbb::parallel_for(
+        tbb::blocked_range<size_t>(0, dataset.size()),
+        [&](const tbb::blocked_range<size_t>& r) {
+            for (size_t idx = r.begin(); idx != r.end(); ++idx) {
+                const auto &smiles = dataset.smiles(idx);
+                try {
+                    auto mol = FrameworkT::moleculeFromSmiles(smiles);
+                    _db.insertRecord(*mol);
+                }
+                catch (const indigo_cpp::IndigoException &e) {
+                    LOG(ERROR) << "Error processing smiles " << smiles << ": " << e.what();
+                }
             }
         }
-    }
-);
+    );
 }
 
 IndigoSearchEngine::IndigoSearchEngine() : _dbFilePath(generateDBPath()), _db(
