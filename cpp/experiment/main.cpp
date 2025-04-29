@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
                 break;
             }
         }
-        qtr::ProfilingPool::showStatistics(std::cout);
+        ProfilingPool::showStatistics(std::cout);
     } catch (std::exception &e) {
         LOG(ERROR) << e.what();
         return -1;

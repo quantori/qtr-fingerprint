@@ -5,6 +5,8 @@ cpp/build/*
 cpp/dist/*
 cpp/cmake-build-debug
 cpp/cmake-build-release
+cpp/cmake-build-debug-profile
+cpp/cmake-build-release-profile
 cpp/third_party
 *.DS_Store
 data/*
