@@ -30,7 +30,6 @@ public:
     }
 
     [[nodiscard]] inline StatTable toStatTable() const {
-        assert(_finalized);
         StatTable table;
         for (size_t i = 0; i < _nodeStats.size(); i++) {
             auto row = _nodeStats[i].toStatRow();

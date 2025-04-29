@@ -17,21 +17,24 @@ public:
 
     explicit CachedDataset(SmilesStorage &&smiles) {
         std::mutex mutex;
-        tbb::parallel_for(
-            tbb::blocked_range<size_t>(0, smiles.size()),
-            [&](const tbb::blocked_range<size_t>& r) {
-                for (size_t idx = r.begin(); idx != r.end(); ++idx) {
-                    auto& s = smiles.smiles(idx);
-                    auto molecule = FrameworkT::moleculeFromSmiles(s);
-                    auto compressedMol = FrameworkT::compressMolecule(*molecule);
-                    auto fingerprint = FrameworkT::fingerprintFromMolecule(*molecule);
-                    {
-                        std::lock_guard<std::mutex> lockGuard(mutex);
-                        _fingerprints.push_back(std::move(fingerprint));
-                        _storedMolecules.push_back(std::move(compressedMol));
-                    }
+        for (size_t idx = 0; idx != smiles.size(); ++idx) {
+            auto &s = smiles.smiles(idx);
+            try {
+                auto molecule = FrameworkT::moleculeFromSmiles(s);
+                if (molecule == nullptr) {
+                    continue;
                 }
-        });
+                auto compressedMol = FrameworkT::compressMolecule(*molecule);
+                auto fingerprint = FrameworkT::fingerprintFromMolecule(*molecule);
+                {
+                    std::lock_guard<std::mutex> lockGuard(mutex);
+                    _fingerprints.push_back(std::move(fingerprint));
+                    _storedMolecules.push_back(std::move(compressedMol));
+                }
+            } catch (const std::exception &e) {
+                LOG(ERROR) << "Error processing smiles " << s << ": " << e.what();
+            }
+        }
     }
 
     [[nodiscard]] size_t size() const {

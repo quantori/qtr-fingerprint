@@ -35,7 +35,6 @@ public:
     }
 
     void finalizedNodesStat(StatTable& statTable) const {
-        assert(!_nodesStat.isFinalized());
         const auto& dataset = _ballTree.dataset();
         for (size_t nodeId = _ballTree.root();
              nodeId != _ballTree.endNodeId(); nodeId = _ballTree.traverseToNextNode(nodeId)) {
