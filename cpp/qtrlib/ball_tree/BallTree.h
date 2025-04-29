@@ -9,7 +9,7 @@ namespace qtr {
 
     class BallTree {
     public:
-        class Node;
+        struct Node;
 
     protected:
         explicit BallTree(std::vector<std::filesystem::path> dataDirectories, size_t fingerprintLength);

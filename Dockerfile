@@ -1,43 +1,48 @@
 FROM ubuntu:22.04
-LABEL Description="rdkit build environment"
 
-ENV HOME /root
+ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get -y install cmake && apt-get -y install build-essential
-RUN apt-get -y install libasio-dev
-RUN apt-get -y install libgflags-dev
-RUN apt-get install -y libfreetype-dev libfreetype6 libfreetype6-dev libfontconfig1-dev
-RUN apt-get -y install curl
-RUN apt-get -y install git
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    git \
+    wget \
+    python3 \
+    python3-pip \
+    libfreetype6-dev \
+    libfontconfig1-dev \
+    libasio-dev \
+    libgflags-dev \
+    libtbb-dev \
+    g++-9 \
+    catch2 \
+    libboost-all-dev \
+    && apt-get clean
 
-RUN curl -O https://repo.anaconda.com/archive/Anaconda3-2024.02-1-Linux-x86_64.sh
-RUN chmod +x Anaconda3-2024.02-1-Linux-x86_64.sh
-RUN ./Anaconda3-2024.02-1-Linux-x86_64.sh -b
+RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 100 \
+    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 100
 
-ENV PATH /root/anaconda3/bin:$PATH
+COPY ./ /qtr-fingerprint
+WORKDIR /qtr-fingerprint
 
-RUN conda update -y conda
-RUN conda update -y --all
+RUN cd cpp/third_party/rdkit  \
+    && mkdir build && cd build \
+    && cmake \
+      -DPy_ENABLE_SHARED=1 \
+      -DRDK_INSTALL_INTREE=ON \
+      -DRDK_INSTALL_STATIC_LIBS=OFF \
+      -DRDK_BUILD_CPP_TESTS=ON  \
+      -DRDK_BUILD_INCHI_SUPPORT=ON  \
+      -DRDKIT_RDINCHILIB_BUILD=ON  \
+      .. \
+    && make -j
 
-RUN conda create -y -n my-rdkit-env
-RUN conda init
+WORKDIR /qtr-fingerprint
 
-#RUN conda activate my-rdkit-env
-#RUN conda install -y numpy 
-#RUN conda install -y cmake cairo pillow eigen pkg-config
-#RUN conda install -y boost-cpp boost py-boost
-#RUN conda install -y -c conda-forge libstdcxx-ng ????
-#RUN conda install -c conda-forge libstdcxx-ng=12 - works
+RUN cd cpp \
+    && cmake -DCMAKE_BUILD_TYPE=Release -S ./ -B ./build \
+    && cmake --build ./cmake-build-release --target preprocessing -j
 
-ENV RDBASE /src/cpp/third_party/rdkit
+ENV PATH="/qtr-fingerprint/cpp/cmake-build-release/bin:${PATH}"
 
-WORKDIR /src/cpp/third_party/rdkit
-
-RUN conda install -y numpy 
-RUN conda install -y cmake cairo pillow eigen pkg-config
-RUN conda install -y boost-cpp boost py-boost
-RUN conda install -y -c conda-forge libstdcxx-ng 
-#COPY conda_shell.sh .
-#RUN ./conda_shell.sh
-
-SHELL ["/bin/bash", "-c"]
+CMD ["/bin/bash"]

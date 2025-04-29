@@ -13,7 +13,7 @@ using namespace indigo_cpp;
 
 namespace qtr {
     namespace {
-        void searchInRDKitDB(QueryData<CIDType> &queryData, uint64_t ansCount, BingoMolecule &db,
+        void searchInBingoDB(QueryData<CIDType> &queryData, uint64_t ansCount, BingoMolecule &db,
                              const IndigoQueryMolecule &query) {
             vector<CIDType> result;
             auto subMatcher = db.searchSub(query, "");
@@ -56,7 +56,7 @@ namespace qtr {
         }
 
         auto queryData = make_unique<QueryData<CIDType>>(ansCount, timeLimit, make_unique<AlwaysTrueFilter<CIDType>>());
-        queryData->addTask(std::async(launch::async, searchInRDKitDB, ref(*queryData), ansCount, std::ref(db),
+        queryData->addTask(std::async(launch::async, searchInBingoDB, ref(*queryData), ansCount, std::ref(db),
                                       std::move(*molecule)));
         return std::move(queryData);
     }

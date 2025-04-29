@@ -50,6 +50,7 @@ namespace {
         return builder.buildPtr();
     }
 
+
     shared_ptr<CFStorage> loadCFStorage(const filesystem::path &smilesTablePath) {
         LOG(INFO) << "Start CFStorage table loading";
         auto result = make_shared<CFStorage>();
