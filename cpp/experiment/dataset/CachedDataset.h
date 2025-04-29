@@ -17,16 +17,20 @@ public:
     explicit CachedDataset(SmilesStorage &&smiles) {
         auto range = std::views::iota(size_t(0), smiles.size());
         std::mutex mutex;
-        std::for_each(std::execution::par, range.begin(), range.end(), [&](size_t idx) {
-            auto& s = smiles.smiles(idx);
-            auto molecule = FrameworkT::moleculeFromSmiles(s);
-            auto compressedMol = FrameworkT::compressMolecule(*molecule);
-            auto fingerprint = FrameworkT::fingerprintFromMolecule(*molecule);
-            {
-                std::lock_guard<std::mutex> lockGuard(mutex);
-                _fingerprints.push_back(std::move(fingerprint));
-                _storedMolecules.push_back(std::move(compressedMol));
-            }
+        tbb::parallel_for(
+            tbb::blocked_range<size_t>(range.begin(), range.end()),
+            [&](const tbb::blocked_range<size_t>& r) {
+                for (size_t idx = r.begin(); idx != r.end(); ++idx) {
+                    auto& s = smiles.smiles(idx);
+                    auto molecule = FrameworkT::moleculeFromSmiles(s);
+                    auto compressedMol = FrameworkT::compressMolecule(*molecule);
+                    auto fingerprint = FrameworkT::fingerprintFromMolecule(*molecule);
+                    {
+                        std::lock_guard<std::mutex> lockGuard(mutex);
+                        _fingerprints.push_back(std::move(fingerprint));
+                        _storedMolecules.push_back(std::move(compressedMol));
+                    }
+                }
         });
     }
 
