@@ -6,8 +6,6 @@
 #include <algorithm>
 
 using namespace std;
-using namespace qtr;
-
 
 #define PROFILING_POOL_BEGIN \
     ProfilingPool &instance = getInstance();  \
