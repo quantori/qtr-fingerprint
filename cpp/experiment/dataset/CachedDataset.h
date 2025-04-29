@@ -2,6 +2,7 @@
 
 #include <ranges>
 #include <execution>
+#include <tbb/parallel_for.h>
 
 #include "dataset/DatasetInterface.h"
 #include "frameworks/FrameworkInterface.h"
