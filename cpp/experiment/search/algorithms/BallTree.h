@@ -94,8 +94,7 @@ public:
                 stat.nodesVisitedPerDepth.at(Tree::nodeDepth(nodeId))++;
                 stat.subsetSizePerDepth.at(Tree::nodeDepth(nodeId)) += this->node(nodeId).subsetSize;
                 if (Tree::isLeaf(nodeId)) {
-                    // TODO: use fpChecker here
-                    searchInLeafNode(nodeId, query, *result, stat);
+                    searchInLeafNode(nodeId, query, fpChecker, *result, stat);
                 }
             } else {
                 _nodesStat[nodeId].skips++;
@@ -134,7 +133,8 @@ private:
     CachedDataset<FrameworkT> _dataset;
     mutable BallTreeNodesStat _nodesStat;
 
-    void searchInLeafNode(size_t nodeId, const ExtendedQueryT &query, SearchResult<ResultT> &result,
+    void searchInLeafNode(size_t nodeId, const ExtendedQueryT &query,
+                          const BallTreeFingerprintChecker<FrameworkT> &fpChecker, SearchResult<ResultT> &result,
                           BallTreeQueryStat &queryStat) const {
         ProfileScope("BallTree::searchInLeafNode");
         queryStat.leafSearches++;
@@ -144,7 +144,7 @@ private:
 
         for (size_t molIdx: bucket) {
             auto &fp = _dataset.fingerprint(molIdx);
-            if (!FrameworkT::isSubFingerprint(query.fingerprint(), fp)) {
+            if (!fpChecker.check(fp)) {
                 continue;
             }
             auto mol = _dataset.molecule(molIdx);
