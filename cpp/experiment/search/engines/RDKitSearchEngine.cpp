@@ -45,7 +45,7 @@ std::unique_ptr<SearchResult<RDKitSearchEngine::ResultT>> RDKitSearchEngine::sea
     return result;
 }
 
-RDKitSearchEngine::RDKitSearchEngine(SmilesStorage &&dataset) {
+RDKitSearchEngine::RDKitSearchEngine(SmilesStorage &&dataset, const SearchEngineConfig& config) {
     auto molHandler = boost::make_shared<RDKit::CachedMolHolder>();
     auto fpHandler = boost::make_shared<RDKit::PatternHolder>();
     std::mutex mutex;

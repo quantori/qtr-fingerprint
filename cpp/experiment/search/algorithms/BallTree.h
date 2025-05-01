@@ -94,6 +94,7 @@ public:
                 stat.nodesVisitedPerDepth.at(Tree::nodeDepth(nodeId))++;
                 stat.subsetSizePerDepth.at(Tree::nodeDepth(nodeId)) += this->node(nodeId).subsetSize;
                 if (Tree::isLeaf(nodeId)) {
+                    // TODO: use fpChecker here
                     searchInLeafNode(nodeId, query, *result, stat);
                 }
             } else {
@@ -105,8 +106,8 @@ public:
         return result;
     }
 
-    explicit BallTree(CachedDataset<FrameworkT> &&dataset, size_t bucketSize) :
-            Tree(calculateDepth(dataset.size(), bucketSize)),
+    explicit BallTree(CachedDataset<FrameworkT> &&dataset, size_t bucketSize, int depth = -1) :
+            Tree(depth >= 0 ? depth : calculateDepth(dataset.size(), bucketSize)),
             _dataset(std::move(dataset)), _nodesStat(Tree::nodeCount()) {
         BallTreeSplitter<FrameworkT> splitter(_dataset, Tree::root(), Tree::nodeCount());
         for (size_t nodeId = Tree::root(); nodeId < Tree::nodeCount(); nodeId++) {

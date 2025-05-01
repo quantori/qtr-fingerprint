@@ -10,6 +10,7 @@
 #include "benchmarking/BenchmarkRunner.h"
 #include "frameworks/IndigoFramework.h"
 #include "molecule/query_molecule.h"
+#include "search/utils/SearchEngineConfig.h"
 
 int main(int argc, char *argv[]) {
     google::InitGoogleLogging(argv[0]);
@@ -20,12 +21,19 @@ int main(int argc, char *argv[]) {
         ExperimentArgs args(argc, argv);
         auto querySmiles = QueriesParser(args.queriesFile).parse();
         auto dataSmiles = SmilesDirParser(args.datasetDir).parse();
+        
+        SearchEngineConfig searchConfig;
+        if (args.ballTreeDepth >= 0) {
+            searchConfig.set("depth", std::to_string(args.ballTreeDepth));
+        }
+        
         BenchmarkArgs benchmarkArgs{
                 .queries = querySmiles,
                 .maxResults = args.maxResults,
                 .timeLimit = args.timeLimit,
                 .queriesStatFile = args.queriesStatisticFile,
-                .searchEngineStatFile = args.searchEngineStatisticFile
+                .searchEngineStatFile = args.searchEngineStatisticFile,
+                .searchEngineConfig = searchConfig
         };
 
         switch (args.searchEngineType) {

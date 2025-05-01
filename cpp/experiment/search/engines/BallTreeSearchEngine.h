@@ -6,6 +6,7 @@
 #include "frameworks/FrameworkInterface.h"
 #include "frameworks/RDKitFramework.h"
 #include "search/algorithms/BallTree.h"
+#include "search/utils/SearchEngineConfig.h"
 
 template<typename FrameworkType> requires FrameworkInterface<FrameworkType>
 class BallTreeSearchEngine {
@@ -19,7 +20,8 @@ public:
 
     BallTreeSearchEngine() = delete;
 
-    explicit BallTreeSearchEngine(SmilesStorage &&dataset) : _ballTree(CachedDatasetT(std::move(dataset)), BucketSize) {
+    explicit BallTreeSearchEngine(SmilesStorage &&dataset, const SearchEngineConfig& config)
+        : _ballTree(CachedDatasetT(std::move(dataset)), BucketSize, config.getInt("depth", -1)) {
     }
 
     [[nodiscard]] std::unique_ptr<SearchResult<ResultT>> search(SearchQuery query) const {

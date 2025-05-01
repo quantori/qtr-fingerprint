@@ -27,7 +27,7 @@ namespace {
     }
 }
 
-IndigoSearchEngine::IndigoSearchEngine(SmilesStorage &&dataset) : IndigoSearchEngine() {
+IndigoSearchEngine::IndigoSearchEngine(SmilesStorage &&dataset, const SearchEngineConfig& config) : IndigoSearchEngine() {
     tbb::parallel_for(
         tbb::blocked_range<size_t>(0, dataset.size()),
         [&](const tbb::blocked_range<size_t>& r) {

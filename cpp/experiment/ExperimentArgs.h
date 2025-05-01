@@ -13,6 +13,7 @@ struct ExperimentArgs {
     std::filesystem::path datasetDir;
     std::filesystem::path queriesStatisticFile;
     std::filesystem::path searchEngineStatisticFile;
+    int ballTreeDepth; // -1 means calculate depth automatically
 
     ExperimentArgs(int argc, char *argv[]);
 };

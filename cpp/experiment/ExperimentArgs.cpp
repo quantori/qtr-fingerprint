@@ -50,6 +50,9 @@ ABSL_FLAG(std::string, QueriesStatisticFile, "",
 ABSL_FLAG(std::string, SearchEngineStatisticFile, "",
           "Specified the file where search engine statistics will be written.");
 
+ABSL_FLAG(int, BallTreeDepth, -1,
+          "Specifies the depth of the BallTree. If not provided (or -1), it will be calculated automatically.");
+
 ExperimentArgs::ExperimentArgs(int argc, char **argv) {
     absl::ParseCommandLine(argc, argv);
 
@@ -97,6 +100,12 @@ ExperimentArgs::ExperimentArgs(int argc, char **argv) {
     searchEngineStatisticFile = absl::GetFlag(FLAGS_SearchEngineStatisticFile);
     if (queriesStatisticFile.empty()) {
         LOG(ERROR) << "SearchEngineStatisticFile path cannot be empty.";
+        exit(1);
+    }
+    
+    ballTreeDepth = absl::GetFlag(FLAGS_BallTreeDepth);
+    if (ballTreeDepth < 0 && ballTreeDepth != -1) {
+        LOG(ERROR) << "BallTreeDepth must be a positive integer or -1 (to calculate depth automatically).";
         exit(1);
     }
 }
