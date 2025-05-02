@@ -9,18 +9,19 @@ public:
     explicit ExtendedSearchQuery(SearchQuery query) : SearchQuery(query) {
         _queryMolecule = FrameworkT::queryMoleculeFromSmiles(_smiles);
         auto molecule = FrameworkT::moleculeFromSmiles(_smiles);
-        _queryFingerprint = FrameworkT::fingerprintFromMolecule(*molecule);
+        auto fingerprint = FrameworkT::fingerprintFromMolecule(*molecule);
+        _queryFingerprint = FrameworkT::queryFingerprintFromFingerprint(*fingerprint);
     }
 
     const typename FrameworkT::QueryMoleculeT &molecule() const {
         return *_queryMolecule;
     }
 
-    const typename FrameworkT::FingerprintT &fingerprint() const {
+    const typename FrameworkT::QueryFingerprintT &fingerprint() const {
         return *_queryFingerprint;
     }
 
 private:
     std::unique_ptr<typename FrameworkT::QueryMoleculeT> _queryMolecule;
-    std::unique_ptr<typename FrameworkT::FingerprintT> _queryFingerprint;
+    std::unique_ptr<typename FrameworkT::QueryFingerprintT> _queryFingerprint;
 };

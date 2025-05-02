@@ -15,7 +15,6 @@
 #include "search/algorithms/BallTreeSplitter.h"
 #include "Profiling.h"
 #include "BallTreeQueryStat.h"
-#include "BallTreeFingerprintChecker.h"
 #include "BallTreeNodesStat.h"
 
 template<typename FrameworkT> requires FrameworkInterface<FrameworkT>
@@ -65,6 +64,7 @@ class BallTree : public FullBinaryTree<BallTreeNode<FrameworkT>> {
 public:
     using MoleculeT = typename FrameworkT::MoleculeT;
     using FingerprintT = typename FrameworkT::FingerprintT;
+    using QueryFingerprintT = typename FrameworkT::QueryFingerprintT;
     using NodeT = BallTreeNode<FrameworkT>;
     using Tree = FullBinaryTree<NodeT>;
     using ExtendedQueryT = ExtendedSearchQuery<FrameworkT>;
@@ -81,20 +81,19 @@ public:
     std::unique_ptr<SearchResult<ResultT>> search(const ExtendedQueryT &query) const {
         ProfileScope("BallTree::search");
         auto result = std::make_unique<SearchResult<ResultT>>();
-        BallTreeFingerprintChecker<FrameworkT> fpChecker(query.fingerprint());
         BallTreeQueryStat stat(Tree::depth());
         size_t nodeId = Tree::root();
         while (nodeId != Tree::endNodeId()) {
             if (checkShouldStopSearch(query, *result)) {
                 break;
             }
-            bool skipSubtree = shouldSkipSubtree(nodeId, fpChecker, *result, stat);
+            bool skipSubtree = shouldSkipSubtree(nodeId, query.fingerprint(), *result, stat);
             if (!skipSubtree) {
                 _nodesStat[nodeId].visits++;
                 stat.nodesVisitedPerDepth.at(Tree::nodeDepth(nodeId))++;
                 stat.subsetSizePerDepth.at(Tree::nodeDepth(nodeId)) += this->node(nodeId).subsetSize;
                 if (Tree::isLeaf(nodeId)) {
-                    searchInLeafNode(nodeId, query, fpChecker, *result, stat);
+                    searchInLeafNode(nodeId, query, *result, stat);
                 }
             } else {
                 _nodesStat[nodeId].skips++;
@@ -133,8 +132,7 @@ private:
     CachedDataset<FrameworkT> _dataset;
     mutable BallTreeNodesStat _nodesStat;
 
-    void searchInLeafNode(size_t nodeId, const ExtendedQueryT &query,
-                          const BallTreeFingerprintChecker<FrameworkT> &fpChecker, SearchResult<ResultT> &result,
+    void searchInLeafNode(size_t nodeId, const ExtendedQueryT &query, SearchResult<ResultT> &result,
                           BallTreeQueryStat &queryStat) const {
         ProfileScope("BallTree::searchInLeafNode");
         queryStat.leafSearches++;
@@ -144,7 +142,7 @@ private:
 
         for (size_t molIdx: bucket) {
             auto &fp = _dataset.fingerprint(molIdx);
-            if (!fpChecker.check(fp)) {
+            if (!FrameworkT::isSubFingerprint(query.fingerprint(), fp)) {
                 continue;
             }
             auto mol = _dataset.molecule(molIdx);
@@ -155,12 +153,12 @@ private:
         }
     }
 
-    bool shouldSkipSubtree(size_t nodeId, const BallTreeFingerprintChecker<FrameworkT> &fpChecker,
+    bool shouldSkipSubtree(size_t nodeId, const QueryFingerprintT &queryFingerprint,
                            SearchResult<ResultT> &result, BallTreeQueryStat &stat) const {
         if (nodeId == Tree::root() || Tree::isRightChild(nodeId)) {
             return false;
         }
-        return !fpChecker.check(getCentroid(nodeId));
+        return !FrameworkT::isSubFingerprint(queryFingerprint, getCentroid(nodeId));
     }
 
     static size_t calculateDepth(size_t datasetSize, size_t bucketSize) {

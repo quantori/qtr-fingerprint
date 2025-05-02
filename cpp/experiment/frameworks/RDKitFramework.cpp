@@ -72,15 +72,10 @@ void RDKitFramework::setFingerprintBit(RDKitFramework::FingerprintT &fingerprint
     }
 }
 
-bool RDKitFramework::isSubFingerprint(const RDKitFramework::FingerprintT &fingerprint1,
+bool RDKitFramework::isSubFingerprint(const RDKitFramework::QueryFingerprintT &fingerprint1,
                                       const RDKitFramework::FingerprintT &fingerprint2) {
     ProfileScope("RDKitFramework::isSubFingerprint");
-    for (size_t i = 0; i < RDKitFramework::getFingerprintSize(); i++) {
-        if (RDKitFramework::getFingerprintBit(fingerprint1, i) > RDKitFramework::getFingerprintBit(fingerprint2, i)) {
-            return false;
-        }
-    }
-    return true;
+    return fingerprint1.isSubFingerprint(fingerprint2);
 }
 
 std::string RDKitFramework::moleculeToSmiles(const RDKitFramework::MoleculeT &molecule) {
@@ -88,6 +83,24 @@ std::string RDKitFramework::moleculeToSmiles(const RDKitFramework::MoleculeT &mo
 }
 
 RDKitFramework::FingerprintT RDKitFramework::getEmptyFingerprint() {
-    ExplicitBitVect fp((int)getFingerprintSize());
+    ExplicitBitVect fp((int) getFingerprintSize());
     return fp;
+}
+
+std::unique_ptr<RDKitFramework::QueryFingerprintT>
+RDKitFramework::queryFingerprintFromFingerprint(const RDKitFramework::FingerprintT &fingerprint) {
+    return std::make_unique<QueryFingerprintT>(fingerprint);
+}
+
+RDKitQueryFingerprint::RDKitQueryFingerprint(const ExplicitBitVect &fingerprint) {
+    fingerprint.getOnBits(_bits);
+}
+
+bool RDKitQueryFingerprint::isSubFingerprint(const ExplicitBitVect &fingerprint) const {
+    for (auto &i: _bits) {
+        if (!fingerprint.getBit(i)) {
+            return false;
+        }
+    }
+    return true;
 }

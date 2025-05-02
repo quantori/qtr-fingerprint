@@ -129,7 +129,7 @@ size_t IndigoFramework::getFingerprintSize() {
 }
 
 bool IndigoFramework::getFingerprintBit(const IndigoFramework::FingerprintT &fingerprint, size_t idx) {
-    ProfileScope("IndigoFramework::getFingerprintBit");
+//    ProfileScope("IndigoFramework::getFingerprintBit");
     int byteIdx = int(idx / CHAR_BIT);
     int bitIndex = int(idx % CHAR_BIT);
     unsigned char byte = fingerprint.at(byteIdx);
@@ -147,18 +147,10 @@ void IndigoFramework::setFingerprintBit(IndigoFramework::FingerprintT &fingerpri
         byte &= ~(1 << bitIndex);
 }
 
-bool IndigoFramework::isSubFingerprint(const IndigoFramework::FingerprintT &fingerprint1,
+bool IndigoFramework::isSubFingerprint(const IndigoFramework::QueryFingerprintT &fingerprint1,
                                        const IndigoFramework::FingerprintT &fingerprint2) {
-    assert(fingerprint1.size() == fingerprint2.size());
     ProfileScope("IndigoFramework::isSubFingerprint");
-    for (int i = 0; i < fingerprint1.size(); i++) {
-        unsigned char c1 = fingerprint1.at(i);
-        unsigned char c2 = fingerprint2.at(i);
-        if ((c1 & c2) != c1) {
-            return false;
-        }
-    }
-    return true;
+    return fingerprint1.isSubFingerprint(fingerprint2);
 }
 
 IndigoFramework::FingerprintT IndigoFramework::getEmptyFingerprint() {
@@ -168,4 +160,9 @@ IndigoFramework::FingerprintT IndigoFramework::getEmptyFingerprint() {
     fp.resize(byteSize);
     fp.zerofill();
     return fp;
+}
+
+std::unique_ptr<IndigoFramework::QueryFingerprintT>
+IndigoFramework::queryFingerprintFromFingerprint(const IndigoFramework::FingerprintT &fingerprint) {
+    return std::make_unique<IndigoFramework::QueryFingerprintT>(fingerprint);
 }

@@ -8,9 +8,11 @@
 template<typename FrameworkT>
 concept FrameworkInterface = requires {
     typename FrameworkT::MoleculeT;
-    typename FrameworkT::FingerprintT;
     typename FrameworkT::QueryMoleculeT;
     typename FrameworkT::StorageMoleculeT;
+
+    typename FrameworkT::FingerprintT;
+    typename FrameworkT::QueryFingerprintT;
 
 //    requires std::is_copy_constructible_v<typename FrameworkT::MoleculeT>;
 //    requires std::is_copy_constructible_v<typename FrameworkT::QueryMoleculeT>;
@@ -33,6 +35,10 @@ concept FrameworkInterface = requires {
     } -> std::same_as<std::unique_ptr<typename FrameworkT::FingerprintT>>;
 
     {
+    FrameworkT::queryFingerprintFromFingerprint(std::declval<const typename FrameworkT::FingerprintT &>())
+    } -> std::same_as<std::unique_ptr<typename FrameworkT::QueryFingerprintT>>;
+
+    {
     FrameworkT::getEmptyFingerprint()
     } -> std::same_as<typename FrameworkT::FingerprintT>;
 
@@ -50,7 +56,7 @@ concept FrameworkInterface = requires {
     } -> std::convertible_to<bool>;
 
     {
-    FrameworkT::isSubFingerprint(std::declval<const typename FrameworkT::FingerprintT &>(),
+    FrameworkT::isSubFingerprint(std::declval<const typename FrameworkT::QueryFingerprintT &>(),
                                  std::declval<const typename FrameworkT::FingerprintT &>())
     } -> std::convertible_to<bool>;
 

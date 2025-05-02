@@ -9,13 +9,16 @@
 
 #include "frameworks/FrameworkInterface.h"
 #include "molecule/molecule.h"
+#include "IndigoQueryFingerprint.h"
 
 class IndigoCppFramework {
 public:
-    using FingerprintT = indigo::Array<byte>;
     using MoleculeT = indigo_cpp::IndigoMolecule;
-    using StorageMoleculeT = indigo_cpp::IndigoMolecule;
     using QueryMoleculeT = indigo_cpp::IndigoQueryMolecule;
+    using StorageMoleculeT = indigo_cpp::IndigoMolecule;
+
+    using FingerprintT = indigo::Array<byte>;
+    using QueryFingerprintT = IndigoQueryFingerprint;
 
     static std::unique_ptr<MoleculeT> moleculeFromSmiles(const std::string &smiles);
 
@@ -24,6 +27,8 @@ public:
     static std::unique_ptr<QueryMoleculeT> queryMoleculeFromSmiles(const std::string &smiles);
 
     static std::unique_ptr<FingerprintT> fingerprintFromMolecule(const MoleculeT &molecule);
+
+    static std::unique_ptr<QueryFingerprintT> queryFingerprintFromFingerprint(const FingerprintT &fingerprint);
 
     static std::unique_ptr<StorageMoleculeT> compressMolecule(const MoleculeT &molecule);
 
@@ -37,7 +42,7 @@ public:
 
     static void setFingerprintBit(FingerprintT &fingerprint, size_t idx, bool val);
 
-    static bool isSubFingerprint(const FingerprintT &fingerprint1, const FingerprintT &fingerprint2);
+    static bool isSubFingerprint(const QueryFingerprintT &fingerprint1, const FingerprintT &fingerprint2);
 
     static FingerprintT getEmptyFingerprint();
 
