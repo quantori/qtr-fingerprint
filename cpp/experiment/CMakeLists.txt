@@ -29,5 +29,9 @@ target_include_directories(${This}
         PUBLIC ../third_party/Indigo/api/c/bingo-nosql/src/
 )
 
+if(QTR_PROFILING)
+    target_compile_definitions(${This} PRIVATE QTR_PROFILING=1)
+endif()
+
 include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/SetOutputDirectory.cmake)
 set_output_directory(${This})
