@@ -10,7 +10,6 @@
 #include "search/algorithms/FullBinaryTree.h"
 #include "frameworks/FrameworkInterface.h"
 #include "search/utils/ExtendedSearchQuery.h"
-#include "search/utils/SearchUtils.h"
 #include "dataset/CachedDataset.h"
 #include "search/algorithms/BallTreeSplitter.h"
 #include "Profiling.h"
@@ -83,15 +82,16 @@ public:
         auto result = std::make_unique<SearchResult<ResultT>>();
         BallTreeQueryStat stat(Tree::depth());
         size_t nodeId = Tree::root();
-        while (nodeId != Tree::endNodeId()) {
-            if (checkShouldStopSearch(query, *result)) {
-                break;
-            }
-            bool skipSubtree = shouldSkipSubtree(nodeId, query.fingerprint(), *result, stat);
+        const bool &stopFlag = query.stopFlag();
+        const auto &results = result->results();
+        auto maxResults = query.maxResults();
+        const auto& queryFingerprint = query.fingerprint();
+        while (nodeId != Tree::endNodeId() && !stopFlag && results.size() < maxResults) {
+            bool skipSubtree = shouldSkipSubtree(nodeId, queryFingerprint);
             if (!skipSubtree) {
-                _nodesStat[nodeId].visits++;
-                stat.nodesVisitedPerDepth.at(Tree::nodeDepth(nodeId))++;
-                stat.subsetSizePerDepth.at(Tree::nodeDepth(nodeId)) += this->node(nodeId).subsetSize;
+//                _nodesStat[nodeId].visits++;
+//                stat.nodesVisitedPerDepth.at(Tree::nodeDepth(nodeId))++;
+//                stat.subsetSizePerDepth.at(Tree::nodeDepth(nodeId)) += this->node(nodeId).subsetSize;
                 if (Tree::isLeaf(nodeId)) {
                     searchInLeafNode(nodeId, query, *result, stat);
                 }
@@ -153,8 +153,7 @@ private:
         }
     }
 
-    bool shouldSkipSubtree(size_t nodeId, const QueryFingerprintT &queryFingerprint,
-                           SearchResult<ResultT> &result, BallTreeQueryStat &stat) const {
+    bool shouldSkipSubtree(size_t nodeId, const QueryFingerprintT &queryFingerprint) const {
         if (nodeId == Tree::root() || Tree::isRightChild(nodeId)) {
             return false;
         }

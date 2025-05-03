@@ -23,3 +23,7 @@ size_t SearchQuery::maxResults() const {
     return _maxResults;
 }
 
+const bool &SearchQuery::stopFlag() const {
+    return _stopFlag;
+}
+

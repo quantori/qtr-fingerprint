@@ -6,8 +6,6 @@
 
 #include <glog/logging.h>
 
-#include "search/utils/SearchUtils.h"
-
 namespace {
     void addMol(std::unique_ptr<RDKitFramework::MoleculeT> &&mol,
                 const boost::shared_ptr<RDKit::CachedMolHolder> &molHandler,
@@ -31,11 +29,10 @@ std::unique_ptr<SearchResult<RDKitSearchEngine::ResultT>> RDKitSearchEngine::sea
     int maxResults = query.maxResults() == std::numeric_limits<size_t>::max() ? -1 : (int) query.maxResults();
     auto params = RDKitFramework::getSubstructMatchParameters();
     const unsigned int SearchBlockSize = 100000;
-
-    for (unsigned int block = 0; block < _substructLibrary->size(); block += SearchBlockSize) {
-        if (checkShouldStopSearch(query, *result)) {
-            break;
-        }
+    const bool &stopFlag = query.stopFlag();
+    const auto &results = result->results();
+    for (unsigned int block = 0;
+         block < _substructLibrary->size() && !stopFlag && results.size() < maxResults; block += SearchBlockSize) {
         auto matches = _substructLibrary->getMatches(*queryMol, block, block + SearchBlockSize, params, 1, maxResults);
         maxResults -= (int) matches.size();
         for (size_t matchIdx: matches) {
@@ -45,7 +42,7 @@ std::unique_ptr<SearchResult<RDKitSearchEngine::ResultT>> RDKitSearchEngine::sea
     return result;
 }
 
-RDKitSearchEngine::RDKitSearchEngine(SmilesStorage &&dataset, const SearchEngineConfig& config) {
+RDKitSearchEngine::RDKitSearchEngine(SmilesStorage &&dataset, const SearchEngineConfig &config) {
     auto molHandler = boost::make_shared<RDKit::CachedMolHolder>();
     auto fpHandler = boost::make_shared<RDKit::PatternHolder>();
     std::mutex mutex;

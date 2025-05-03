@@ -15,6 +15,8 @@ public:
 
     [[nodiscard]] bool checkStopFlag() const;
 
+    [[nodiscard]] const bool& stopFlag() const;
+
     void stop();
 
 protected:

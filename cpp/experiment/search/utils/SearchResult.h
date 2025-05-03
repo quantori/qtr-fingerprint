@@ -32,6 +32,10 @@ public:
         return _statRow;
     }
 
+    const std::vector<ResultT> &results() const {
+        return _results;
+    }
+
 private:
     std::vector<ResultT> _results;
     StatRow _statRow;
