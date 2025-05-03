@@ -12,7 +12,6 @@ TimingManager::TimingManager(double timeLimitSeconds)
           experimentFinished(false) {}
 
 void TimingManager::start() {
-    std::lock_guard<std::mutex> lock(mutex);
     stopFlag = false;
     experimentFinished.store(false, std::memory_order_release);
     startTime = std::chrono::high_resolution_clock::now();
@@ -20,21 +19,19 @@ void TimingManager::start() {
 }
 
 double TimingManager::finish() {
-    {
-        std::lock_guard<std::mutex> lock(mutex);
-        if (experimentFinished.load(std::memory_order_acquire)) {
-            return lastDuration;  // Already finished
-        }
-        auto now = std::chrono::high_resolution_clock::now();
-        lastDuration = std::chrono::duration<double>(now - startTime).count();
-        experimentFinished.store(true, std::memory_order_release);
+    if (experimentFinished.load(std::memory_order_acquire)) {
+        return lastDuration;
     }
+    auto now = std::chrono::high_resolution_clock::now();
+    double duration = std::chrono::duration<double>(now - startTime).count();
+    lastDuration.store(duration);
+    experimentFinished.store(true);
 
     if (timeoutThread.joinable()) {
         timeoutThread.join();
     }
 
-    return lastDuration;
+    return duration;
 }
 
 bool &TimingManager::getStopFlag() {
@@ -56,11 +53,9 @@ void TimingManager::timeoutWatcher() {
 }
 
 bool TimingManager::checkTimeout() {
-    std::lock_guard<std::mutex> lock(mutex);
     if (stopFlag) {
         return true;
     }
-
     auto now = std::chrono::high_resolution_clock::now();
     double elapsed = std::chrono::duration<double>(now - startTime).count();
     if (elapsed > timeLimit) {

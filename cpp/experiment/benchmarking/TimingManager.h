@@ -25,8 +25,7 @@ private:
     std::atomic<bool> experimentFinished;
     std::chrono::high_resolution_clock::time_point startTime;
     std::thread timeoutThread;
-    std::mutex mutex;
-    double lastDuration = 0.0;
+    std::atomic<double> lastDuration = 0.0;
 
     void timeoutWatcher();
 
