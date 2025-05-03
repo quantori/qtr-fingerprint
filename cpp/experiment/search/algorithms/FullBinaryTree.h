@@ -53,29 +53,38 @@ protected:
     }
 
     [[nodiscard]] size_t traverseUp(size_t nodeId) const {
-        while (true) {
-            if (nodeId == root()) {
-                return endNodeId();
-            }
-            size_t par = parent(nodeId);
-            if (nodeId == leftChild(par)) {
-                return rightChild(par);
-            } else {
-                nodeId = par;
-            }
+        int v = int(nodeId) + 1;
+        int deg = __builtin_ctz(~v);
+        if (deg == 0) {
+            return nodeId + 1;
         }
+        v >>= deg + 1;
+        v -= 1;
+        if (v == -1) {
+            return endNodeId();
+        } else {
+            return rightChild(v);
+        }
+//        while (true) {
+//            if (nodeId == root()) {
+//                return endNodeId();
+//            }
+//            size_t par = parent(nodeId);
+//            if (nodeId == leftChild(par)) {
+//                return rightChild(par);
+//            } else {
+//                nodeId = par;
+//            }
+//        }
     }
 
     [[nodiscard]] size_t traverseDown(size_t nodeId) const {
-        if (isLeaf(nodeId)) {
-            return traverseUp(nodeId);
-        } else {
-            return leftChild(nodeId);
-        }
+        assert(!isLeaf(nodeId));
+        return leftChild(nodeId);
     }
 
     [[nodiscard]] size_t traverseToNextNode(size_t nodeId, bool skipSubtree = false) const {
-        if (skipSubtree) {
+        if (skipSubtree || isLeaf(nodeId)) {
             return traverseUp(nodeId);
         } else {
             return traverseDown(nodeId);

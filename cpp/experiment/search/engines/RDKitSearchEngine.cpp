@@ -28,11 +28,11 @@ std::unique_ptr<SearchResult<RDKitSearchEngine::ResultT>> RDKitSearchEngine::sea
     auto result = std::make_unique<SearchResult<ResultT>>();
     int maxResults = query.maxResults() == std::numeric_limits<size_t>::max() ? -1 : (int) query.maxResults();
     auto params = RDKitFramework::getSubstructMatchParameters();
-    const unsigned int SearchBlockSize = 100000;
+    const unsigned int SearchBlockSize = 1000;
     const bool &stopFlag = query.stopFlag();
     const auto &results = result->results();
     for (unsigned int block = 0;
-         block < _substructLibrary->size() && !stopFlag && results.size() < maxResults; block += SearchBlockSize) {
+         block < _substructLibrary->size() && !stopFlag && maxResults > 0; block += SearchBlockSize) {
         auto matches = _substructLibrary->getMatches(*queryMol, block, block + SearchBlockSize, params, 1, maxResults);
         maxResults -= (int) matches.size();
         for (size_t matchIdx: matches) {

@@ -77,16 +77,14 @@ public:
     using Tree::traverseToNextNode;
     using Tree::isLeaf;
 
-    std::unique_ptr<SearchResult<ResultT>> search(const ExtendedQueryT &query) const {
+    std::unique_ptr<SearchResult<ResultT>> search(ExtendedQueryT &query) const {
         ProfileScope("BallTree::search");
         auto result = std::make_unique<SearchResult<ResultT>>();
         BallTreeQueryStat stat(Tree::depth());
         size_t nodeId = Tree::root();
         const bool &stopFlag = query.stopFlag();
-        const auto &results = result->results();
-        auto maxResults = query.maxResults();
         const auto& queryFingerprint = query.fingerprint();
-        while (nodeId != Tree::endNodeId() && !stopFlag && results.size() < maxResults) {
+        while (nodeId != Tree::endNodeId() && !stopFlag) {
             bool skipSubtree = shouldSkipSubtree(nodeId, queryFingerprint);
             if (!skipSubtree) {
 //                _nodesStat[nodeId].visits++;
@@ -132,7 +130,7 @@ private:
     CachedDataset<FrameworkT> _dataset;
     mutable BallTreeNodesStat _nodesStat;
 
-    void searchInLeafNode(size_t nodeId, const ExtendedQueryT &query, SearchResult<ResultT> &result,
+    void searchInLeafNode(size_t nodeId, ExtendedQueryT &query, SearchResult<ResultT> &result,
                           BallTreeQueryStat &queryStat) const {
         ProfileScope("BallTree::searchInLeafNode");
         queryStat.leafSearches++;
@@ -150,6 +148,9 @@ private:
                 continue;
             }
             result.addResult(molIdx);
+            if (result.size() >= query.maxResults()) {
+                query.stop();
+            }
         }
     }
 
