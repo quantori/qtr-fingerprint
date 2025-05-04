@@ -17,7 +17,7 @@ public:
     using QueryMoleculeT = indigo::QueryMolecule;
     using StorageMoleculeT = std::string;
 
-    using FingerprintInnerT = uint32_t;
+    using FingerprintInnerT = byte;
     using FingerprintT = indigo::Array<FingerprintInnerT>;
     using QueryFingerprintT = IndigoQueryFingerprint<FingerprintInnerT>;
 

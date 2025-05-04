@@ -34,9 +34,7 @@ namespace {
 
                     auto result = std::make_unique<indigo::Array<IndigoFramework::FingerprintInnerT>>();
                     result->reserve(fpSize);
-                    result->resize(fpSize);
-                    result->zerofill();
-                    result->copy(reinterpret_cast<const unsigned int *>(fingerprintBuilder.get()), fpSize);
+                    result->copy(reinterpret_cast<const IndigoFramework::FingerprintInnerT *>(fingerprintBuilder.get()), fpSize);
                     assert(result->size() * CHAR_BIT * sizeRate == IndigoFramework::getFingerprintSize());
                     return result;
                 }
