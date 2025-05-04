@@ -25,13 +25,24 @@ namespace {
                     indigo::MoleculeFingerprintBuilder fingerprintBuilder(mol, fp_params);
                     fingerprintBuilder.parseFingerprintType("sub", false);
                     fingerprintBuilder.process();
-                    auto fpSize = fp_params.fingerprintSize();
-                    assert(fpSize * CHAR_BIT == IndigoFramework::getFingerprintSize());
+                    auto fpSizeBytes = fp_params.fingerprintSize();
+                    assert(fpSizeBytes * CHAR_BIT == IndigoFramework::getFingerprintSize());
 
-                    auto result = std::make_unique<indigo::Array<byte>>();
-                    result->reserve(fpSize);
-                    result->copy(fingerprintBuilder.get(), fpSize);
-                    assert(result->size() * CHAR_BIT == IndigoFramework::getFingerprintSize());
+                    indigo::Array<byte> fingerprintBytes;
+                    fingerprintBytes.reserve(fpSizeBytes);
+                    fingerprintBytes.copy(fingerprintBuilder.get(), fpSizeBytes);
+                    assert(fingerprintBytes.size() * CHAR_BIT == IndigoFramework::getFingerprintSize());
+
+                    auto fpSizeUlls = (fpSizeBytes + 7) / 8;
+                    auto result = std::make_unique<indigo::Array<unsigned long long>>();
+                    result->reserve(fpSizeUlls);
+                    result->resize(fpSizeUlls);
+                    result->zerofill();
+                    for (int byteIdx = 0; byteIdx < fpSizeBytes; byteIdx++) {
+                        auto &item = result->at(byteIdx / 8);
+                        auto &byte = fingerprintBytes.at(byteIdx);
+                        item |= (static_cast<unsigned long long>(byte) << (8 * (byteIdx % 8)));
+                    }
                     return result;
                 }
         INDIGO_END(nullptr);
@@ -130,21 +141,21 @@ size_t IndigoFramework::getFingerprintSize() {
 
 bool IndigoFramework::getFingerprintBit(const IndigoFramework::FingerprintT &fingerprint, size_t idx) {
 //    ProfileScope("IndigoFramework::getFingerprintBit");
-    int byteIdx = int(idx / CHAR_BIT);
-    int bitIndex = int(idx % CHAR_BIT);
+    int byteIdx = int(idx / 64);
+    int bitIndex = int(idx % 64);
     unsigned char byte = fingerprint.at(byteIdx);
     return bool((byte >> bitIndex) & 1u);
 }
 
 void IndigoFramework::setFingerprintBit(IndigoFramework::FingerprintT &fingerprint, size_t idx, bool val) {
-    int byteIdx = int(idx / CHAR_BIT);
-    int bitIndex = int(idx % CHAR_BIT);
-    unsigned char &byte = fingerprint[byteIdx];
+    int byteIdx = int(idx / 64);
+    int bitIndex = int(idx % 64);
+    auto &item = fingerprint[byteIdx];
 
     if (val)
-        byte |= (1 << bitIndex);
+        item |= (1 << bitIndex);
     else
-        byte &= ~(1 << bitIndex);
+        item &= ~(1 << bitIndex);
 }
 
 bool IndigoFramework::isSubFingerprint(const IndigoFramework::QueryFingerprintT &fingerprint1,
@@ -155,9 +166,9 @@ bool IndigoFramework::isSubFingerprint(const IndigoFramework::QueryFingerprintT 
 
 IndigoFramework::FingerprintT IndigoFramework::getEmptyFingerprint() {
     FingerprintT fp;
-    int byteSize = (int) getFingerprintSize() / CHAR_BIT;
-    fp.reserve(byteSize);
-    fp.resize(byteSize);
+    int ullSize = (int) (getFingerprintSize() + 63) / 64;
+    fp.reserve(ullSize);
+    fp.resize(ullSize);
     fp.zerofill();
     return fp;
 }
