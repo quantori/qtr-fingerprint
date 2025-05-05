@@ -12,7 +12,9 @@ namespace {
                 const boost::shared_ptr<RDKit::PatternHolder> &fpHandler,
                 std::mutex &mutex
     ) {
-        auto fp = RDKitFramework::fingerprintFromMolecule(*mol);
+        auto fp = std::unique_ptr<ExplicitBitVect>(
+                RDKit::PatternFingerprintMol(*mol, 2048) // Cannot create custom fingerprints
+        );
         auto compressedMol = RDKitFramework::compressMolecule(*mol);
         {
             std::lock_guard<std::mutex> lockGuard(mutex);
@@ -24,13 +26,11 @@ namespace {
 
 std::unique_ptr<SearchResult<RDKitSearchEngine::ResultT>> RDKitSearchEngine::search(const SearchQuery &query) const {
     auto queryMol = FrameworkT::queryMoleculeFromSmiles(query.smiles());
-    auto fp = FrameworkT::fingerprintFromMolecule(*queryMol);
     auto result = std::make_unique<SearchResult<ResultT>>();
     int maxResults = query.maxResults() == std::numeric_limits<size_t>::max() ? -1 : (int) query.maxResults();
     auto params = RDKitFramework::getSubstructMatchParameters();
-    const unsigned int SearchBlockSize = 1000;
+    const unsigned int SearchBlockSize = 1000000;
     const bool &stopFlag = query.stopFlag();
-    const auto &results = result->results();
     for (unsigned int block = 0;
          block < _substructLibrary->size() && !stopFlag && maxResults > 0; block += SearchBlockSize) {
         auto matches = _substructLibrary->getMatches(*queryMol, block, block + SearchBlockSize, params, 1, maxResults);

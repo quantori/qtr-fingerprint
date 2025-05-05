@@ -21,9 +21,15 @@ std::unique_ptr<RDKitFramework::QueryMoleculeT> RDKitFramework::queryMoleculeFro
 
 std::unique_ptr<RDKitFramework::FingerprintT>
 RDKitFramework::fingerprintFromMolecule(const RDKitFramework::MoleculeT &molecule) {
-    return std::unique_ptr<RDKitFramework::FingerprintT>(
+    auto fp = std::unique_ptr<ExplicitBitVect>(
             RDKit::PatternFingerprintMol(molecule, RDKitFramework::getFingerprintSize())
     );
+    auto result = std::make_unique<RDKitFramework::FingerprintT>(RDKitFramework::getFingerprintSize());
+    assert (fp->size() == result->size());
+    for (size_t idx = 0; idx < result->size(); idx++) {
+        (*result)[idx] = (*fp)[idx];
+    }
+    return result;
 }
 
 std::unique_ptr<RDKitFramework::StorageMoleculeT>
@@ -57,7 +63,7 @@ RDKit::SubstructMatchParameters RDKitFramework::getSubstructMatchParameters() {
 }
 
 bool RDKitFramework::getFingerprintBit(const RDKitFramework::FingerprintT &fingerprint, size_t idx) {
-    return fingerprint.getBit(idx);
+    return fingerprint[idx];
 }
 
 size_t RDKitFramework::getFingerprintSize() {
@@ -65,11 +71,7 @@ size_t RDKitFramework::getFingerprintSize() {
 }
 
 void RDKitFramework::setFingerprintBit(RDKitFramework::FingerprintT &fingerprint, size_t idx, bool val) {
-    if (val) {
-        fingerprint.setBit(idx);
-    } else {
-        fingerprint.unsetBit(idx);
-    }
+    fingerprint[idx] = val;
 }
 
 bool RDKitFramework::isSubFingerprint(const RDKitFramework::QueryFingerprintT &fingerprint1,
@@ -83,24 +85,10 @@ std::string RDKitFramework::moleculeToSmiles(const RDKitFramework::MoleculeT &mo
 }
 
 RDKitFramework::FingerprintT RDKitFramework::getEmptyFingerprint() {
-    ExplicitBitVect fp((int) getFingerprintSize());
-    return fp;
+    return FingerprintT(getFingerprintSize());
 }
 
 std::unique_ptr<RDKitFramework::QueryFingerprintT>
 RDKitFramework::queryFingerprintFromFingerprint(const RDKitFramework::FingerprintT &fingerprint) {
     return std::make_unique<QueryFingerprintT>(fingerprint);
-}
-
-RDKitQueryFingerprint::RDKitQueryFingerprint(const ExplicitBitVect &fingerprint) {
-    fingerprint.getOnBits(_bits);
-}
-
-bool RDKitQueryFingerprint::isSubFingerprint(const ExplicitBitVect &fingerprint) const {
-    for (auto &i: _bits) {
-        if (!fingerprint.getBit(i)) {
-            return false;
-        }
-    }
-    return true;
 }

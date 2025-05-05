@@ -8,14 +8,33 @@
 #include "DataStructs/ExplicitBitVect.h"
 
 #include "frameworks/FrameworkInterface.h"
+#include "Bitset.h"
 
+template<typename T>
 class RDKitQueryFingerprint {
 public:
-    explicit RDKitQueryFingerprint(const ExplicitBitVect& fingerprint);
+    explicit RDKitQueryFingerprint(const Bitset<T> &fingerprint) {
+        const auto *data = fingerprint.data();
+        for (size_t i = 0; i < fingerprint.dataVectorSize(); i++) {
+            if (data[i] == 0) {
+                continue;
+            }
+            _items.emplace_back(i, data[i]);
+        }
+    }
 
-    bool isSubFingerprint(const ExplicitBitVect& fingerprint) const;
+    [[nodiscard]] bool isSubFingerprint(const Bitset<T> &fingerprint) const {
+        const auto *otherData = fingerprint.data();
+        for (auto& [i, data]: _items) {
+            if ((data & otherData[i]) != data) {
+                return false;
+            }
+        }
+        return true;
+    }
+
 private:
-    std::vector<int> _bits;
+    std::vector<std::pair<size_t, T>> _items;
 };
 
 class RDKitFramework {
@@ -24,8 +43,8 @@ public:
     using QueryMoleculeT = RDKit::ROMol;
     using StorageMoleculeT = std::string;
 
-    using FingerprintT = ExplicitBitVect;
-    using QueryFingerprintT = RDKitQueryFingerprint;
+    using FingerprintT = Bitset<unsigned long long>;
+    using QueryFingerprintT = RDKitQueryFingerprint<unsigned long long>;
 
     static std::unique_ptr<MoleculeT> moleculeFromSmiles(const std::string &smiles);
 
@@ -35,7 +54,7 @@ public:
 
     static std::unique_ptr<FingerprintT> fingerprintFromMolecule(const MoleculeT &molecule);
 
-    static std::unique_ptr<QueryFingerprintT> queryFingerprintFromFingerprint(const FingerprintT& fingerprint);
+    static std::unique_ptr<QueryFingerprintT> queryFingerprintFromFingerprint(const FingerprintT &fingerprint);
 
     static std::unique_ptr<StorageMoleculeT> compressMolecule(const MoleculeT &molecule);
 
