@@ -67,7 +67,7 @@ bool RDKitFramework::getFingerprintBit(const RDKitFramework::FingerprintT &finge
 }
 
 size_t RDKitFramework::getFingerprintSize() {
-    return 2048;
+    return 2048 * 8;
 }
 
 void RDKitFramework::setFingerprintBit(RDKitFramework::FingerprintT &fingerprint, size_t idx, bool val) {
