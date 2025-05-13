@@ -9,6 +9,7 @@
 #include "search/engines/IndigoSearchEngine.h"
 #include "benchmarking/BenchmarkRunner.h"
 #include "frameworks/IndigoFramework.h"
+#include "frameworks/HybridFramework.h"
 #include "molecule/query_molecule.h"
 #include "search/utils/SearchEngineConfig.h"
 
@@ -54,6 +55,11 @@ int main(int argc, char *argv[]) {
             }
             case SearchEngineType::BallTreeIndigo: {
                 auto runner = BenchmarkRunner<BallTreeSearchEngine<IndigoFramework>>();
+                runner.run(std::move(dataSmiles), benchmarkArgs);
+                break;
+            }
+            case SearchEngineType::BallTreeHybrid: {
+                auto runner = BenchmarkRunner<BallTreeSearchEngine<HybridFramework>>();
                 runner.run(std::move(dataSmiles), benchmarkArgs);
                 break;
             }

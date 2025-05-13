@@ -13,6 +13,7 @@ namespace {
             {"BallTreeIndigo", SearchEngineType::BallTreeIndigo},
             {"RDKit",          SearchEngineType::RDKit},
             {"Indigo",         SearchEngineType::Indigo},
+            {"BallTreeHybrid", SearchEngineType::BallTreeHybrid},
     };
 
     const std::string allSearchEngineTypes = [] {
