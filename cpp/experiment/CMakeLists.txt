@@ -33,5 +33,7 @@ if(QTR_PROFILING)
     target_compile_definitions(${This} PRIVATE QTR_PROFILING=1)
 endif()
 
+target_compile_options(experiment PRIVATE -mavx2 -mfma -mbmi2)
+
 include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/SetOutputDirectory.cmake)
 set_output_directory(${This})
