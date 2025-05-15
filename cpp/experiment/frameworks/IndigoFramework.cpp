@@ -18,15 +18,21 @@ namespace {
 //                    indigo::Molecule &mol = self.getObject(molecule).getMolecule();
                     auto &mol = const_cast<Molecule &>(molecule);
                     MoleculeFingerprintParameters fp_params(self.fp_params);
-                    fp_params.ext = false;
+                    fp_params.ext = true;
                     fp_params.tau_qwords = 0;
+                    fp_params.sim_qwords = 0;
+//                    fp_params.ord_qwords *= 5;
+//                    fp_params.any_qwords *= 5;
+
 //                    mol.aromatize(self.arom_options);
                     assert(mol.isAromatized());
                     indigo::MoleculeFingerprintBuilder fingerprintBuilder(mol, fp_params);
                     fingerprintBuilder.parseFingerprintType("sub", false);
                     fingerprintBuilder.process();
                     auto fpSizeBytes = fp_params.fingerprintSize();
-                    assert(fpSizeBytes * CHAR_BIT == IndigoFramework::getFingerprintSize());
+                    if (fpSizeBytes * CHAR_BIT != IndigoFramework::getFingerprintSize()) {
+                        throw std::runtime_error("Wrong Fingerprint was generated");
+                    }
 
                     int sizeRate = sizeof(IndigoFramework::FingerprintInnerT) / sizeof(byte);
                     auto fpSize = (fpSizeBytes + sizeRate - 1) / sizeRate;
@@ -119,7 +125,7 @@ IndigoFramework::decompressMolecule(const IndigoFramework::StorageMoleculeT &com
 bool IndigoFramework::isSubstructure(const IndigoFramework::QueryMoleculeT &queryMolecule,
                                      const IndigoFramework::MoleculeT &molecule) {
     ProfileScope("IndigoFramework::isSubstructure");
-    Indigo &self = indigoGetInstance();
+//    Indigo &self = indigoGetInstance();
     auto &mutableMol = const_cast<IndigoFramework::MoleculeT &>(molecule);
     auto &mutableQueryMol = const_cast<IndigoFramework::QueryMoleculeT &>(queryMolecule);
     MoleculeSubstructureMatcher msm(mutableMol);
@@ -129,7 +135,14 @@ bool IndigoFramework::isSubstructure(const IndigoFramework::QueryMoleculeT &quer
 }
 
 size_t IndigoFramework::getFingerprintSize() {
-    return 3072;
+//                     ext  tau  sim  ord   any
+//    return 3072;  //  -    -    +    +     +   (BingoNOSQL)
+//    return 3096;  //  +    -    +    +     +
+    return 2584;  //  +    -    -    +     +
+//    return 2560;  //  -    -    -    +     +
+//    return 3224;  //  +    +    -    +     +
+//    return 4184;  //  +    -    -    2x    +
+//    return 12824; //  +    -    -    5x    5x
 }
 
 bool IndigoFramework::getFingerprintBit(const IndigoFramework::FingerprintT &fingerprint, size_t idx) {
