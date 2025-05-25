@@ -19,10 +19,10 @@ namespace {
                     auto &mol = const_cast<Molecule &>(molecule);
                     MoleculeFingerprintParameters fp_params(self.fp_params);
                     fp_params.ext = true;
-                    fp_params.tau_qwords = 0;
-                    fp_params.sim_qwords = 0;
-                    fp_params.ord_qwords *= 8;
-                    fp_params.any_qwords = 0;
+                    fp_params.tau_qwords *= 0;
+                    fp_params.sim_qwords *= 1;
+                    fp_params.ord_qwords *= 1;
+                    fp_params.any_qwords *= 1;
 
 //                    mol.aromatize(self.arom_options);
                     assert(mol.isAromatized());
@@ -137,14 +137,14 @@ bool IndigoFramework::isSubstructure(const IndigoFramework::QueryMoleculeT &quer
 size_t IndigoFramework::getFingerprintSize() {
 //                     ext  tau  sim  ord   any
 //    return 3072;  //  -    -    +    +     +   (BingoNOSQL)
-//    return 3096;  //  +    -    +    +     +
+    return 3096;  //  +    -    +    +     +
 //    return 2584;  //  +    -    -    +     +
 //    return 2560;  //  -    -    -    +     +
 //    return 3224;  //  +    +    -    +     +
 //    return 4184;  //  +    -    -    2x    +
 //    return 12824; //  +    -    -    5x    5x
 //    return 8024;  //  +    -    -    5x    -
-    return 12824; //  +    -    -    8x    -
+//    return 12824; //  +    -    -    8x    -
 }
 
 bool IndigoFramework::getFingerprintBit(const IndigoFramework::FingerprintT &fingerprint, size_t idx) {
