@@ -46,6 +46,8 @@ public:
     using FingerprintT = Bitset<unsigned long long>;
     using QueryFingerprintT = RDKitQueryFingerprint<unsigned long long>;
 
+    explicit RDKitFramework(const Config& config);
+
     static std::unique_ptr<MoleculeT> moleculeFromSmiles(const std::string &smiles);
 
     static std::string moleculeToSmiles(const MoleculeT &molecule);

@@ -4,9 +4,9 @@
 #include <string>
 #include <stdexcept>
 
-class SearchEngineConfig {
+class Config {
 public:
-    SearchEngineConfig() = default;
+    Config() = default;
     
     inline void set(const std::string& key, const std::string& value) {
         _config[key] = value;

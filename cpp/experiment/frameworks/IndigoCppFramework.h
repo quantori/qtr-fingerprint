@@ -20,13 +20,15 @@ public:
     using FingerprintT = indigo::Array<byte>;
     using QueryFingerprintT = IndigoQueryFingerprint<byte>;
 
-    static std::unique_ptr<MoleculeT> moleculeFromSmiles(const std::string &smiles);
+    explicit IndigoCppFramework(const Config& config);
+
+    std::unique_ptr<MoleculeT> moleculeFromSmiles(const std::string &smiles);
 
     static std::string moleculeToSmiles(const MoleculeT &molecule);
 
-    static std::unique_ptr<QueryMoleculeT> queryMoleculeFromSmiles(const std::string &smiles);
+    std::unique_ptr<QueryMoleculeT> queryMoleculeFromSmiles(const std::string &smiles) const;
 
-    static std::unique_ptr<FingerprintT> fingerprintFromMolecule(const MoleculeT &molecule);
+    std::unique_ptr<FingerprintT> fingerprintFromMolecule(const MoleculeT &molecule);
 
     static std::unique_ptr<QueryFingerprintT> queryFingerprintFromFingerprint(const FingerprintT &fingerprint);
 
@@ -46,7 +48,13 @@ public:
 
     static FingerprintT getEmptyFingerprint();
 
-    static std::shared_ptr<indigo_cpp::IndigoSession> getGlobalIndigoSession();
+    std::shared_ptr<indigo_cpp::IndigoSession> getSession();
+
+private:
+    std::shared_ptr<indigo_cpp::IndigoSession> _session = indigo_cpp::IndigoSession::create();
+
+    static std::unique_ptr<IndigoCppFramework::FingerprintT>
+    tryBuildFingerprintFromMolecule(const IndigoCppFramework::MoleculeT &molecule);
 };
 
 static_assert(FrameworkInterface<IndigoCppFramework>, "IndigoCppFramework must satisfy FrameworkInterface");

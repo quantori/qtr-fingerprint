@@ -42,14 +42,15 @@ std::unique_ptr<SearchResult<RDKitSearchEngine::ResultT>> RDKitSearchEngine::sea
     return result;
 }
 
-RDKitSearchEngine::RDKitSearchEngine(SmilesStorage &&dataset, const SearchEngineConfig &config) {
+RDKitSearchEngine::RDKitSearchEngine(RDKitSearchEngine::FrameworkT framework, SmilesStorage &&dataset,
+                                     const Config &config) : _framework(framework) {
     auto molHandler = boost::make_shared<RDKit::CachedMolHolder>();
     auto fpHandler = boost::make_shared<RDKit::PatternHolder>();
     std::mutex mutex;
     auto range = std::views::iota(size_t(0), dataset.size());
     std::for_each(std::execution::par, range.begin(), range.end(), [&](size_t idx) {
         auto &s = dataset.smiles(idx);
-        auto mol = RDKitFramework::moleculeFromSmiles(s);
+        auto mol = _framework.moleculeFromSmiles(s);
         if (mol == nullptr) {
             LOG(WARNING) << "Can't parse smiles: " << s;
             return;
@@ -59,8 +60,8 @@ RDKitSearchEngine::RDKitSearchEngine(SmilesStorage &&dataset, const SearchEngine
     _substructLibrary = std::make_unique<RDKit::SubstructLibrary>(molHandler, fpHandler);
 }
 
-StatTable RDKitSearchEngine::getStat() const {
+StatTable RDKitSearchEngine::getStat() {
     // Statistics for RDKitSearchEngine is not collected
-    return StatTable();
+    return {};
 }
 

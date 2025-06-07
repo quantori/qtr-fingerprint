@@ -7,7 +7,7 @@
 
 #include "search/utils/SearchQuery.h"
 #include "search/utils/SearchResult.h"
-#include "search/utils/SearchEngineConfig.h"
+#include "utils/Config.h"
 #include "frameworks/FrameworkInterface.h"
 #include "dataset/SmilesStorage.h"
 #include "stats/StatRow.h"
@@ -19,7 +19,7 @@ concept SearchEngineInterface = requires(SearchEngineT searchEngine) {
 
     requires FrameworkInterface<typename SearchEngineT::FrameworkT>;
 
-    requires std::constructible_from<SearchEngineT, SmilesStorage &&, const SearchEngineConfig&>;
+    requires std::constructible_from<SearchEngineT, typename SearchEngineT::FrameworkT, SmilesStorage &&, const Config&>;
 
     {
     searchEngine.search(std::declval<SearchQuery>())

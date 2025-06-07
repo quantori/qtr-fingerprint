@@ -196,3 +196,7 @@ std::unique_ptr<IndigoFramework::QueryFingerprintT>
 IndigoFramework::queryFingerprintFromFingerprint(const IndigoFramework::FingerprintT &fingerprint) {
     return std::make_unique<IndigoFramework::QueryFingerprintT>(fingerprint);
 }
+
+IndigoFramework::IndigoFramework(const Config &config) {
+    // TODO: parse fingerprint configuration
+}

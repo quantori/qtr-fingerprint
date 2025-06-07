@@ -92,3 +92,7 @@ std::unique_ptr<RDKitFramework::QueryFingerprintT>
 RDKitFramework::queryFingerprintFromFingerprint(const RDKitFramework::FingerprintT &fingerprint) {
     return std::make_unique<QueryFingerprintT>(fingerprint);
 }
+
+RDKitFramework::RDKitFramework(const Config &config) {
+    // TODO: parse fingerprint len
+}

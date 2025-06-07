@@ -7,7 +7,7 @@
 #include "search/engines/SearchEngineInterface.h"
 #include "frameworks/RDKitFramework.h"
 #include "dataset/DatasetInterface.h"
-#include "search/utils/SearchEngineConfig.h"
+#include "utils/Config.h"
 
 class RDKitSearchEngine {
 public:
@@ -16,12 +16,14 @@ public:
 
     RDKitSearchEngine() = delete;
 
-    explicit RDKitSearchEngine(SmilesStorage &&dataset, const SearchEngineConfig& config);
+    explicit RDKitSearchEngine(FrameworkT framework, SmilesStorage &&dataset, const Config &config);
 
     [[nodiscard]] std::unique_ptr<SearchResult<ResultT>> search(const SearchQuery &query) const;
 
-    StatTable getStat() const;
+    static StatTable getStat() ;
+
 private:
+    FrameworkT _framework;
     std::unique_ptr<RDKit::SubstructLibrary> _substructLibrary;
 };
 

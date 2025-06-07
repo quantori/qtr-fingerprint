@@ -6,7 +6,7 @@
 #include "frameworks/FrameworkInterface.h"
 #include "frameworks/RDKitFramework.h"
 #include "search/algorithms/BallTree.h"
-#include "search/utils/SearchEngineConfig.h"
+#include "utils/Config.h"
 
 template<typename FrameworkType> requires FrameworkInterface<FrameworkType>
 class BallTreeSearchEngine {
@@ -20,8 +20,9 @@ public:
 
     BallTreeSearchEngine() = delete;
 
-    explicit BallTreeSearchEngine(SmilesStorage &&dataset, const SearchEngineConfig& config)
-        : _ballTree(CachedDatasetT(std::move(dataset)), BucketSize, config.getInt("depth", -1)) {
+    explicit BallTreeSearchEngine(FrameworkT framework, SmilesStorage &&dataset, const Config &config)
+            : _framework(framework),
+              _ballTree(CachedDatasetT(std::move(dataset)), BucketSize, config.getInt("depth", -1)) {
     }
 
     [[nodiscard]] std::unique_ptr<SearchResult<ResultT>> search(SearchQuery query) const {
@@ -36,12 +37,12 @@ public:
         return statTable;
     }
 
-    void finalizedNodesStat(StatTable& statTable) const {
-        const auto& dataset = _ballTree.dataset();
+    void finalizedNodesStat(StatTable &statTable) const {
+        const auto &dataset = _ballTree.dataset();
         for (size_t nodeId = _ballTree.root();
              nodeId != _ballTree.endNodeId(); nodeId = _ballTree.traverseToNextNode(nodeId)) {
 
-            const typename BallTree<FrameworkT>::NodeT& node = _ballTree.node(nodeId);
+            const typename BallTree<FrameworkT>::NodeT &node = _ballTree.node(nodeId);
             std::vector<const typename FrameworkT::FingerprintT *> fingerprints;
             if (_ballTree.isLeaf(nodeId)) {
                 for (auto &molIdx: node.getLeafData().moleculeIndices) {
@@ -78,6 +79,7 @@ public:
     }
 
 private:
+    FrameworkT _framework;
     BallTree<FrameworkT> _ballTree;
 };
 

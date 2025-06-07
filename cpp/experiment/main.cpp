@@ -11,7 +11,7 @@
 #include "frameworks/IndigoFramework.h"
 #include "frameworks/HybridFramework.h"
 #include "molecule/query_molecule.h"
-#include "search/utils/SearchEngineConfig.h"
+#include "utils/Config.h"
 
 int main(int argc, char *argv[]) {
     google::InitGoogleLogging(argv[0]);
@@ -22,19 +22,19 @@ int main(int argc, char *argv[]) {
         ExperimentArgs args(argc, argv);
         auto querySmiles = QueriesParser(args.queriesFile).parse();
         auto dataSmiles = SmilesDirParser(args.datasetDir).parse();
-        
-        SearchEngineConfig searchConfig;
+
+        Config searchConfig;
         if (args.ballTreeDepth >= 0) {
             searchConfig.set("depth", std::to_string(args.ballTreeDepth));
         }
-        
+
         BenchmarkArgs benchmarkArgs{
                 .queries = querySmiles,
                 .maxResults = args.maxResults,
                 .timeLimit = args.timeLimit,
                 .queriesStatFile = args.queriesStatisticFile,
                 .searchEngineStatFile = args.searchEngineStatisticFile,
-                .searchEngineConfig = searchConfig
+                .config = searchConfig
         };
 
         switch (args.searchEngineType) {
@@ -59,8 +59,9 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case SearchEngineType::BallTreeHybrid: {
-                auto runner = BenchmarkRunner<BallTreeSearchEngine<HybridFramework>>();
-                runner.run(std::move(dataSmiles), benchmarkArgs);
+                throw std::runtime_error("BallTreeHybrid is not implemented");
+//                auto runner = BenchmarkRunner<BallTreeSearchEngine<HybridFramework>>();
+//                runner.run(std::move(dataSmiles), benchmarkArgs);
                 break;
             }
         }

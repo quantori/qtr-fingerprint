@@ -5,6 +5,7 @@
 #include <execution>
 #include <ranges>
 #include <cassert>
+#include <utility>
 
 #include <glog/logging.h>
 
@@ -27,31 +28,33 @@ namespace {
     }
 }
 
-IndigoSearchEngine::IndigoSearchEngine(SmilesStorage &&dataset, const SearchEngineConfig& config) : IndigoSearchEngine() {
+IndigoSearchEngine::IndigoSearchEngine(IndigoSearchEngine::FrameworkT framework, SmilesStorage &&dataset,
+                                       const Config &config) : IndigoSearchEngine(std::move(framework)) {
     tbb::parallel_for(
-        tbb::blocked_range<size_t>(0, dataset.size()),
-        [&](const tbb::blocked_range<size_t>& r) {
-            for (size_t idx = r.begin(); idx != r.end(); ++idx) {
-                const auto &smiles = dataset.smiles(idx);
-                try {
-                    auto mol = FrameworkT::moleculeFromSmiles(smiles);
-                    _db.insertRecord(*mol);
-                }
-                catch (const indigo_cpp::IndigoException &e) {
-                    LOG(ERROR) << "Error processing smiles " << smiles << ": " << e.what();
+            tbb::blocked_range<size_t>(0, dataset.size()),
+            [&](const tbb::blocked_range<size_t> &r) {
+                for (size_t idx = r.begin(); idx != r.end(); ++idx) {
+                    const auto &smiles = dataset.smiles(idx);
+                    try {
+                        auto mol = _framework.moleculeFromSmiles(smiles);
+                        _db.insertRecord(*mol);
+                    }
+                    catch (const indigo_cpp::IndigoException &e) {
+                        LOG(ERROR) << "Error processing smiles " << smiles << ": " << e.what();
+                    }
                 }
             }
-        }
     );
 }
 
-IndigoSearchEngine::IndigoSearchEngine() : _dbFilePath(generateDBPath()), _db(
-        indigo_cpp::BingoMolecule::createDatabaseFile(FrameworkT::getGlobalIndigoSession(), _dbFilePath, "")) {
+IndigoSearchEngine::IndigoSearchEngine(IndigoSearchEngine::FrameworkT framework) : _framework(framework),
+                                                                                   _dbFilePath(generateDBPath()), _db(
+                indigo_cpp::BingoMolecule::createDatabaseFile(framework.getSession(), _dbFilePath, "")) {
 }
 
 std::unique_ptr<SearchResult<IndigoSearchEngine::ResultT>> IndigoSearchEngine::search(const SearchQuery &query) const {
     auto result = std::make_unique<SearchResult<ResultT>>();
-    auto queryMol = FrameworkT::queryMoleculeFromSmiles(query.smiles());
+    auto queryMol = _framework.queryMoleculeFromSmiles(query.smiles());
     auto subMatcher = _db.searchSub(*queryMol, "");
     for (auto &searchResult: subMatcher) {
         if (query.checkStopFlag()) {

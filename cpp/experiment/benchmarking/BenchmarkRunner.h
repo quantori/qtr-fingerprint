@@ -7,7 +7,7 @@
 #include "benchmarking/TimingManager.h"
 #include "Profiling.h"
 #include "CSVWriter.h"
-#include "search/utils/SearchEngineConfig.h"
+#include "utils/Config.h"
 
 struct BenchmarkArgs {
     SmilesStorage queries;
@@ -15,7 +15,7 @@ struct BenchmarkArgs {
     double timeLimit;
     std::filesystem::path queriesStatFile;
     std::filesystem::path searchEngineStatFile;
-    SearchEngineConfig searchEngineConfig;
+    Config config;
 };
 
 template<typename SearchEngineT> requires SearchEngineInterface<SearchEngineT>
@@ -27,14 +27,16 @@ public:
 
     void run(SmilesStorage &&dataSmiles, BenchmarkArgs &args) {
         ProfileScope("Total benchmark running time");
-        auto searchEngine = buildSearchEngine(std::move(dataSmiles), args.searchEngineConfig);
+        auto framework = FrameworkT(args.config);
+        auto searchEngine = buildSearchEngine(std::move(framework), std::move(dataSmiles), args.config);
         runQueries(searchEngine, args);
     }
 
 private:
-    SearchEngineT buildSearchEngine(SmilesStorage &&dataSmiles, const SearchEngineConfig& config) {
+    SearchEngineT
+    buildSearchEngine(FrameworkT framework, SmilesStorage &&dataSmiles, const Config &config) {
         ProfileScope("Total search engine building time");
-        return SearchEngineT(std::move(dataSmiles), config);
+        return SearchEngineT(std::move(framework), std::move(dataSmiles), config);
     }
 
     void runQueries(SearchEngineT &searchEngine, const BenchmarkArgs &args) {
