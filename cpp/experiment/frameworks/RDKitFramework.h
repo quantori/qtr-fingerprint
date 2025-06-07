@@ -10,31 +10,14 @@
 #include "frameworks/FrameworkInterface.h"
 #include "Bitset.h"
 
-template<typename T>
 class RDKitQueryFingerprint {
 public:
-    explicit RDKitQueryFingerprint(const Bitset<T> &fingerprint) {
-        const auto *data = fingerprint.data();
-        for (size_t i = 0; i < fingerprint.dataVectorSize(); i++) {
-            if (data[i] == 0) {
-                continue;
-            }
-            _items.emplace_back(i, data[i]);
-        }
-    }
+    explicit RDKitQueryFingerprint(const ExplicitBitVect &fingerprint);
 
-    [[nodiscard]] bool isSubFingerprint(const Bitset<T> &fingerprint) const {
-        const auto *otherData = fingerprint.data();
-        for (auto& [i, data]: _items) {
-            if ((data & otherData[i]) != data) {
-                return false;
-            }
-        }
-        return true;
-    }
+    bool isSubFingerprint(const ExplicitBitVect& fingerprint) const;
 
 private:
-    std::vector<std::pair<size_t, T>> _items;
+    std::vector<int> _bits;
 };
 
 class RDKitFramework {
@@ -43,8 +26,8 @@ public:
     using QueryMoleculeT = RDKit::ROMol;
     using StorageMoleculeT = std::string;
 
-    using FingerprintT = Bitset<unsigned long long>;
-    using QueryFingerprintT = RDKitQueryFingerprint<unsigned long long>;
+    using FingerprintT = ExplicitBitVect;
+    using QueryFingerprintT = RDKitQueryFingerprint;
 
     explicit RDKitFramework(const Config& config);
 

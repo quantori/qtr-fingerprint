@@ -21,15 +21,9 @@ std::unique_ptr<RDKitFramework::QueryMoleculeT> RDKitFramework::queryMoleculeFro
 
 std::unique_ptr<RDKitFramework::FingerprintT>
 RDKitFramework::fingerprintFromMolecule(const RDKitFramework::MoleculeT &molecule) {
-    auto fp = std::unique_ptr<ExplicitBitVect>(
+    return std::unique_ptr<ExplicitBitVect>(
             RDKit::PatternFingerprintMol(molecule, RDKitFramework::getFingerprintSize())
     );
-    auto result = std::make_unique<RDKitFramework::FingerprintT>(RDKitFramework::getFingerprintSize());
-    assert (fp->size() == result->size());
-    for (size_t idx = 0; idx < result->size(); idx++) {
-        (*result)[idx] = (*fp)[idx];
-    }
-    return result;
 }
 
 std::unique_ptr<RDKitFramework::StorageMoleculeT>
@@ -63,15 +57,19 @@ RDKit::SubstructMatchParameters RDKitFramework::getSubstructMatchParameters() {
 }
 
 bool RDKitFramework::getFingerprintBit(const RDKitFramework::FingerprintT &fingerprint, size_t idx) {
-    return fingerprint[idx];
+    return fingerprint.getBit(idx);
 }
 
 size_t RDKitFramework::getFingerprintSize() {
-    return 2048 * 2;
+    return 2048;
 }
 
 void RDKitFramework::setFingerprintBit(RDKitFramework::FingerprintT &fingerprint, size_t idx, bool val) {
-    fingerprint[idx] = val;
+    if (val) {
+        fingerprint.setBit(idx);
+    } else {
+        fingerprint.unsetBit(idx);
+    }
 }
 
 bool RDKitFramework::isSubFingerprint(const RDKitFramework::QueryFingerprintT &fingerprint1,
@@ -95,4 +93,17 @@ RDKitFramework::queryFingerprintFromFingerprint(const RDKitFramework::Fingerprin
 
 RDKitFramework::RDKitFramework(const Config &config) {
     // TODO: parse fingerprint len
+}
+
+RDKitQueryFingerprint::RDKitQueryFingerprint(const ExplicitBitVect &fingerprint) {
+    fingerprint.getOnBits(_bits);
+}
+
+bool RDKitQueryFingerprint::isSubFingerprint(const ExplicitBitVect &fingerprint) const {
+    for (auto &i: _bits) {
+        if (!fingerprint.getBit(i)) {
+            return false;
+        }
+    }
+    return true;
 }
