@@ -53,8 +53,6 @@ public:
     std::shared_ptr<indigo_cpp::IndigoSession> getSession();
 
 private:
-    std::shared_ptr<indigo_cpp::IndigoSession> _session = indigo_cpp::IndigoSession::create();
-
     static std::unique_ptr<IndigoCppFramework::FingerprintT>
     tryBuildFingerprintFromMolecule(const IndigoCppFramework::MoleculeT &molecule);
 };

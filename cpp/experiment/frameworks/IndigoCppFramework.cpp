@@ -8,8 +8,12 @@
 
 #include "glog/logging.h"
 
+namespace {
+    const auto globalIndigoSession = indigo_cpp::IndigoSession::create();
+}
+
 std::unique_ptr<IndigoCppFramework::MoleculeT> IndigoCppFramework::moleculeFromSmiles(const std::string &smiles) {
-    auto mol = std::make_unique<MoleculeT>(_session->loadMolecule(smiles));
+    auto mol = std::make_unique<MoleculeT>(globalIndigoSession->loadMolecule(smiles));
     mol->aromatize();
     return mol;
 }
@@ -20,7 +24,7 @@ std::string IndigoCppFramework::moleculeToSmiles(const IndigoCppFramework::Molec
 
 std::unique_ptr<IndigoCppFramework::QueryMoleculeT>
 IndigoCppFramework::queryMoleculeFromSmiles(const std::string &smiles) const {
-    auto mol = std::make_unique<QueryMoleculeT>(_session->loadQueryMolecule(smiles));
+    auto mol = std::make_unique<QueryMoleculeT>(globalIndigoSession->loadQueryMolecule(smiles));
     mol->aromatize();
     return mol;
 }
@@ -126,7 +130,7 @@ IndigoCppFramework::tryBuildFingerprintFromMolecule(const IndigoCppFramework::Mo
 }
 
 std::shared_ptr<indigo_cpp::IndigoSession> IndigoCppFramework::getSession() {
-    return _session;
+    return globalIndigoSession;
 }
 
 void IndigoCppFramework::init(const Config &config) {
