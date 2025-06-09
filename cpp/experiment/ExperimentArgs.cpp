@@ -54,6 +54,9 @@ ABSL_FLAG(std::string, SearchEngineStatisticFile, "",
 ABSL_FLAG(int, BallTreeDepth, -1,
           "Specifies the depth of the BallTree. If not provided (or -1), it will be calculated automatically.");
 
+ABSL_FLAG(double, FingerprintRatio, 1,
+          "Specifies the ration of the fingerprint length used in BallTree compared to default length.");
+
 ExperimentArgs::ExperimentArgs(int argc, char **argv) {
     absl::ParseCommandLine(argc, argv);
 
@@ -103,10 +106,16 @@ ExperimentArgs::ExperimentArgs(int argc, char **argv) {
         LOG(ERROR) << "SearchEngineStatisticFile path cannot be empty.";
         exit(1);
     }
-    
+
     ballTreeDepth = absl::GetFlag(FLAGS_BallTreeDepth);
     if (ballTreeDepth < 0 && ballTreeDepth != -1) {
         LOG(ERROR) << "BallTreeDepth must be a positive integer or -1 (to calculate depth automatically).";
+        exit(1);
+    }
+
+    fingerprintRatio = absl::GetFlag(FLAGS_FingerprintRatio);
+    if (fingerprintRatio <= 0) {
+        LOG(ERROR) << "FingerprintRatio mist be a positive float";
         exit(1);
     }
 }

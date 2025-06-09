@@ -29,7 +29,9 @@ public:
     using FingerprintT = ExplicitBitVect;
     using QueryFingerprintT = RDKitQueryFingerprint;
 
-    explicit RDKitFramework(const Config& config);
+    void init(const Config& config);
+
+    static RDKitFramework & getInstance();
 
     static std::unique_ptr<MoleculeT> moleculeFromSmiles(const std::string &smiles);
 
@@ -37,7 +39,7 @@ public:
 
     static std::unique_ptr<QueryMoleculeT> queryMoleculeFromSmiles(const std::string &smiles);
 
-    static std::unique_ptr<FingerprintT> fingerprintFromMolecule(const MoleculeT &molecule);
+    [[nodiscard]] std::unique_ptr<FingerprintT> fingerprintFromMolecule(const MoleculeT &molecule) const;
 
     static std::unique_ptr<QueryFingerprintT> queryFingerprintFromFingerprint(const FingerprintT &fingerprint);
 
@@ -51,13 +53,16 @@ public:
 
     static bool getFingerprintBit(const FingerprintT &fingerprint, size_t idx);
 
-    static size_t getFingerprintSize();
+    [[nodiscard]] size_t getFingerprintSize() const;
 
     static void setFingerprintBit(FingerprintT &fingerprint, size_t idx, bool val);
 
     static bool isSubFingerprint(const QueryFingerprintT &fingerprint1, const FingerprintT &fingerprint2);
 
-    static FingerprintT getEmptyFingerprint();
+    FingerprintT getEmptyFingerprint() const;
+
+private:
+    size_t _fingerprintLength = 2048;
 };
 
 static_assert(FrameworkInterface<RDKitFramework>, "RDKitFramework must satisfy FrameworkInterface");

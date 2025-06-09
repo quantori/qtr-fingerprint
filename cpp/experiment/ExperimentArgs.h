@@ -14,6 +14,7 @@ struct ExperimentArgs {
     std::filesystem::path queriesStatisticFile;
     std::filesystem::path searchEngineStatisticFile;
     int ballTreeDepth; // -1 means calculate depth automatically
+    double fingerprintRatio;
 
     ExperimentArgs(int argc, char *argv[]);
 };

@@ -27,6 +27,7 @@ int main(int argc, char *argv[]) {
         if (args.ballTreeDepth >= 0) {
             searchConfig.set("depth", std::to_string(args.ballTreeDepth));
         }
+        searchConfig.set("fpRatio", std::to_string(args.fingerprintRatio));
 
         BenchmarkArgs benchmarkArgs{
                 .queries = querySmiles,

@@ -6,7 +6,6 @@
 #include "IndigoSession.h"
 #include "indigo.h"
 #include "base_cpp/array.h"
-
 #include "frameworks/FrameworkInterface.h"
 #include "molecule/molecule.h"
 #include "IndigoQueryFingerprint.h"
@@ -21,7 +20,9 @@ public:
     using FingerprintT = indigo::Array<FingerprintInnerT>;
     using QueryFingerprintT = IndigoQueryFingerprint<FingerprintInnerT>;
 
-    explicit IndigoFramework(const Config& config);
+    void init(const Config &config);
+
+    static IndigoFramework &getInstance();
 
     static std::unique_ptr<MoleculeT> moleculeFromSmiles(const std::string &smiles);
 
@@ -31,7 +32,7 @@ public:
 
     static std::unique_ptr<FingerprintT> fingerprintFromMolecule(const MoleculeT &molecule);
 
-    static std::unique_ptr<QueryFingerprintT> queryFingerprintFromFingerprint(const FingerprintT& fingerprint);
+    static std::unique_ptr<QueryFingerprintT> queryFingerprintFromFingerprint(const FingerprintT &fingerprint);
 
     static std::unique_ptr<StorageMoleculeT> compressMolecule(const MoleculeT &molecule);
 

@@ -63,7 +63,8 @@ public:
     requires FrameworkInterface<FrameworkT>
     static size_t countDiffBits(std::vector<const typename FrameworkT::FingerprintT *> &fingerprints) {
         size_t result = 0;
-        for (size_t i = 0; i < FrameworkT::getFingerprintSize(); i++) {
+        auto &framework = FrameworkT::getInstance();
+        for (size_t i = 0; i < framework.getFingerprintSize(); i++) {
             bool hasZero = false;
             bool hasOne = false;
             for (size_t j = 0; j < fingerprints.size() && (!hasZero || !hasOne); j++) {

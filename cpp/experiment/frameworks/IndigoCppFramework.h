@@ -20,13 +20,15 @@ public:
     using FingerprintT = indigo::Array<byte>;
     using QueryFingerprintT = IndigoQueryFingerprint<byte>;
 
-    explicit IndigoCppFramework(const Config& config);
+    void init(const Config& config);
+
+    static IndigoCppFramework& getInstance();
 
     std::unique_ptr<MoleculeT> moleculeFromSmiles(const std::string &smiles);
 
     static std::string moleculeToSmiles(const MoleculeT &molecule);
 
-    std::unique_ptr<QueryMoleculeT> queryMoleculeFromSmiles(const std::string &smiles) const;
+    [[nodiscard]] std::unique_ptr<QueryMoleculeT> queryMoleculeFromSmiles(const std::string &smiles) const;
 
     std::unique_ptr<FingerprintT> fingerprintFromMolecule(const MoleculeT &molecule);
 

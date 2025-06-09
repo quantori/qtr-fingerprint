@@ -6,6 +6,8 @@
 #include "base_cpp/scanner.h"
 #include "Profiling.h"
 
+#include "glog/logging.h"
+
 std::unique_ptr<IndigoCppFramework::MoleculeT> IndigoCppFramework::moleculeFromSmiles(const std::string &smiles) {
     auto mol = std::make_unique<MoleculeT>(_session->loadMolecule(smiles));
     mol->aromatize();
@@ -127,7 +129,15 @@ std::shared_ptr<indigo_cpp::IndigoSession> IndigoCppFramework::getSession() {
     return _session;
 }
 
-IndigoCppFramework::IndigoCppFramework(const Config &config) {
+void IndigoCppFramework::init(const Config &config) {
+    if (!config.getString("fpRatio", "").empty()) {
+        LOG(WARNING) << "FingerprintRatio parameter is ignored";
+    }
+}
+
+IndigoCppFramework &IndigoCppFramework::getInstance() {
+    static IndigoCppFramework instance;
+    return instance;
 }
 
 

@@ -20,9 +20,9 @@ std::unique_ptr<RDKitFramework::QueryMoleculeT> RDKitFramework::queryMoleculeFro
 }
 
 std::unique_ptr<RDKitFramework::FingerprintT>
-RDKitFramework::fingerprintFromMolecule(const RDKitFramework::MoleculeT &molecule) {
+RDKitFramework::fingerprintFromMolecule(const MoleculeT &molecule) const {
     return std::unique_ptr<ExplicitBitVect>(
-            RDKit::PatternFingerprintMol(molecule, RDKitFramework::getFingerprintSize())
+            RDKit::PatternFingerprintMol(molecule, getFingerprintSize())
     );
 }
 
@@ -60,8 +60,8 @@ bool RDKitFramework::getFingerprintBit(const RDKitFramework::FingerprintT &finge
     return fingerprint.getBit(idx);
 }
 
-size_t RDKitFramework::getFingerprintSize() {
-    return 2048;
+size_t RDKitFramework::getFingerprintSize() const {
+    return _fingerprintLength;
 }
 
 void RDKitFramework::setFingerprintBit(RDKitFramework::FingerprintT &fingerprint, size_t idx, bool val) {
@@ -82,7 +82,7 @@ std::string RDKitFramework::moleculeToSmiles(const RDKitFramework::MoleculeT &mo
     return RDKit::MolToSmiles(molecule);
 }
 
-RDKitFramework::FingerprintT RDKitFramework::getEmptyFingerprint() {
+RDKitFramework::FingerprintT RDKitFramework::getEmptyFingerprint() const {
     return FingerprintT(getFingerprintSize());
 }
 
@@ -91,8 +91,13 @@ RDKitFramework::queryFingerprintFromFingerprint(const RDKitFramework::Fingerprin
     return std::make_unique<QueryFingerprintT>(fingerprint);
 }
 
-RDKitFramework::RDKitFramework(const Config &config) {
-    // TODO: parse fingerprint len
+void RDKitFramework::init(const Config &config) {
+    _fingerprintLength = size_t(ceil(2048 * config.getDouble("fpRatio", 1)));
+}
+
+RDKitFramework & RDKitFramework::getInstance() {
+    static RDKitFramework instance;
+    return instance;
 }
 
 RDKitQueryFingerprint::RDKitQueryFingerprint(const ExplicitBitVect &fingerprint) {

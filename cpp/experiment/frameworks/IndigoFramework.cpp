@@ -197,6 +197,11 @@ IndigoFramework::queryFingerprintFromFingerprint(const IndigoFramework::Fingerpr
     return std::make_unique<IndigoFramework::QueryFingerprintT>(fingerprint);
 }
 
-IndigoFramework::IndigoFramework(const Config &config) {
-    // TODO: parse fingerprint configuration
+void IndigoFramework::init(const Config &config) {
+    // TODO: parse fp length
+}
+
+IndigoFramework &IndigoFramework::getInstance() {
+    static IndigoFramework instance;
+    return instance;
 }

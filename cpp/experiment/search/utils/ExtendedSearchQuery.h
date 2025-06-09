@@ -7,10 +7,11 @@ template<typename FrameworkT> requires FrameworkInterface<FrameworkT>
 class ExtendedSearchQuery : public SearchQuery {
 public:
     explicit ExtendedSearchQuery(SearchQuery query) : SearchQuery(query) {
-        _queryMolecule = FrameworkT::queryMoleculeFromSmiles(_smiles);
-        auto molecule = FrameworkT::moleculeFromSmiles(_smiles);
-        auto fingerprint = FrameworkT::fingerprintFromMolecule(*molecule);
-        _queryFingerprint = FrameworkT::queryFingerprintFromFingerprint(*fingerprint);
+        auto &framework = FrameworkT::getInstance();
+        _queryMolecule = framework.queryMoleculeFromSmiles(_smiles);
+        auto molecule = framework.moleculeFromSmiles(_smiles);
+        auto fingerprint = framework.fingerprintFromMolecule(*molecule);
+        _queryFingerprint = framework.queryFingerprintFromFingerprint(*fingerprint);
     }
 
     const typename FrameworkT::QueryMoleculeT &molecule() const {

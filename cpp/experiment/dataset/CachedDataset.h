@@ -17,6 +17,7 @@ public:
 
     explicit CachedDataset(SmilesStorage &&smiles) {
         std::mutex mutex;
+        auto &framework = FrameworkT::getInstance();
         for (size_t idx = 0; idx != smiles.size(); ++idx) {
             auto &s = smiles.smiles(idx);
             try {
@@ -24,8 +25,8 @@ public:
                 if (molecule == nullptr) {
                     continue;
                 }
-                auto compressedMol = FrameworkT::compressMolecule(*molecule);
-                auto fingerprint = FrameworkT::fingerprintFromMolecule(*molecule);
+                auto compressedMol = framework.compressMolecule(*molecule);
+                auto fingerprint = framework.fingerprintFromMolecule(*molecule);
                 {
                     std::lock_guard<std::mutex> lockGuard(mutex);
                     _fingerprints.push_back(std::move(fingerprint));

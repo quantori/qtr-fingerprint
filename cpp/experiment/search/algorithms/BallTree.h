@@ -36,7 +36,7 @@ public:
     size_t subsetSize;
     std::optional<NodeData> data;
 
-    BallTreeNode() : centroid(FrameworkT::getEmptyFingerprint()) {}
+    BallTreeNode() : centroid(FrameworkT::getInstance().getEmptyFingerprint()) {}
 
     [[nodiscard]] bool isLeaf() const {
         return data && std::holds_alternative<LeafData>(*data);
@@ -83,7 +83,7 @@ public:
         BallTreeQueryStat stat(Tree::depth());
         size_t nodeId = Tree::root();
         const bool &stopFlag = query.stopFlag();
-        const auto& queryFingerprint = query.fingerprint();
+        const auto &queryFingerprint = query.fingerprint();
         while (nodeId != Tree::endNodeId() && !stopFlag) {
             bool skipSubtree = shouldSkipSubtree(nodeId, queryFingerprint);
             if (!skipSubtree) {
@@ -195,11 +195,12 @@ private:
 
     void calculateLeafCentroid(FingerprintT &centroid, const std::vector<size_t> &moleculeIndices) {
         assert(!moleculeIndices.empty());
-        for (size_t j = 0; j < FrameworkT::getFingerprintSize(); j++) {
+        auto &framework = FrameworkT::getInstance();
+        for (size_t j = 0; j < framework.getFingerprintSize(); j++) {
             for (auto &idx: moleculeIndices) {
                 auto &fingerprint = _dataset.fingerprint(idx);
-                if (FrameworkT::getFingerprintBit(fingerprint, j)) {
-                    FrameworkT::setFingerprintBit(centroid, j, true);
+                if (framework.getFingerprintBit(fingerprint, j)) {
+                    framework.setFingerprintBit(centroid, j, true);
                     break;
                 }
             }
@@ -213,7 +214,8 @@ private:
 
         auto &fpLeft = getCentroid(Tree::leftChild(nodeId));
         auto &fpRight = getCentroid(Tree::rightChild(nodeId));
-        for (size_t idx = 0; idx < FrameworkT::getFingerprintSize(); idx++) {
+        auto &framework = FrameworkT::getInstance();
+        for (size_t idx = 0; idx < framework.getFingerprintSize(); idx++) {
             if (FrameworkT::getFingerprintBit(fpLeft, idx) || FrameworkT::getFingerprintBit(fpRight, idx)) {
                 FrameworkT::setFingerprintBit(centroid, idx, true);
             }

@@ -19,7 +19,13 @@ concept FrameworkInterface = requires(FrameworkT framework) {
 //    requires std::is_copy_constructible_v<typename FrameworkT::QueryMoleculeT>;
 //    requires std::is_copy_constructible_v<typename FrameworkT::StorageMoleculeT>;
 
-    requires std::constructible_from<FrameworkT, const Config&>;
+    {
+    framework.init(std::declval<const Config &>())
+    } -> std::same_as<void>;
+
+    {
+    FrameworkT::getInstance()
+    } -> std::same_as<FrameworkT&>;
 
     {
     framework.moleculeFromSmiles(std::declval<const std::string &>())
@@ -55,23 +61,23 @@ concept FrameworkInterface = requires(FrameworkT framework) {
 
     {
     framework.isSubstructure(std::declval<const typename FrameworkT::QueryMoleculeT &>(),
-                               std::declval<const typename FrameworkT::MoleculeT &>())
+                             std::declval<const typename FrameworkT::MoleculeT &>())
     } -> std::convertible_to<bool>;
 
     {
     framework.isSubFingerprint(std::declval<const typename FrameworkT::QueryFingerprintT &>(),
-                                 std::declval<const typename FrameworkT::FingerprintT &>())
+                               std::declval<const typename FrameworkT::FingerprintT &>())
     } -> std::convertible_to<bool>;
 
     {
     framework.getFingerprintBit(std::declval<const typename FrameworkT::FingerprintT &>(),
-                                  std::declval<size_t>())
+                                std::declval<size_t>())
     } -> std::convertible_to<bool>;
 
     {
     framework.setFingerprintBit(std::declval<typename FrameworkT::FingerprintT &>(),
-                                  std::declval<size_t>(),
-                                  std::declval<bool>())
+                                std::declval<size_t>(),
+                                std::declval<bool>())
     } -> std::same_as<void>;
 
     {

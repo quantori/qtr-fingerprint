@@ -78,11 +78,12 @@ private:
     }
 
     std::vector<size_t> getPerBitHistogram(size_t nodeId) {
-        std::vector<size_t> hist(FrameworkT::getFingerprintSize());
+        auto &framework = FrameworkT::getInstance();
+        std::vector<size_t> hist(framework.getFingerprintSize());
         for (size_t idx: _nodeIndices.at(nodeId)) {
             const auto &fingerprint = _dataset.fingerprint(idx);
-            for (size_t j = 0; j < FrameworkT::getFingerprintSize(); j++) {
-                hist[j] += FrameworkT::getFingerprintBit(fingerprint, j);
+            for (size_t j = 0; j < framework.getFingerprintSize(); j++) {
+                hist[j] += framework.getFingerprintBit(fingerprint, j);
             }
         }
         return hist;

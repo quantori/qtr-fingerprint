@@ -27,7 +27,8 @@ public:
 
     void run(SmilesStorage &&dataSmiles, BenchmarkArgs &args) {
         ProfileScope("Total benchmark running time");
-        auto framework = FrameworkT(args.config);
+        auto &framework = FrameworkT::getInstance();
+        framework.init(args.config);
         auto searchEngine = buildSearchEngine(std::move(framework), std::move(dataSmiles), args.config);
         runQueries(searchEngine, args);
     }
