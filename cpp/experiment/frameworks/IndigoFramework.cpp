@@ -10,50 +10,43 @@
 #include "molecule/query_molecule.h"
 #include "molecule/molecule.h"
 
-namespace {
-
-    MoleculeFingerprintParameters getFingerprintParams() {
-        auto &self = indigoGetInstance();
-        MoleculeFingerprintParameters params(self.fp_params);
-        params.ext = true;
-        params.tau_qwords *= 0;
-        params.sim_qwords *= 0;
-        params.ord_qwords *= 2;
-        params.any_qwords *= 0;
-        return params;
-    }
-
-
-    std::unique_ptr<IndigoFramework::FingerprintT>
-    tryBuildFingerprintFromMolecule(const IndigoFramework::MoleculeT &molecule) {
-        INDIGO_BEGIN
-                {
-                    auto &mol = const_cast<Molecule &>(molecule);
-                    auto fpParams = getFingerprintParams();
-//                    mol.aromatize(self.arom_options);
-                    assert(mol.isAromatized());
-                    indigo::MoleculeFingerprintBuilder fingerprintBuilder(mol, fpParams);
-                    fingerprintBuilder.parseFingerprintType("sub", false);
-                    fingerprintBuilder.process();
-                    auto fpSizeBytes = fpParams.fingerprintSize();
-                    if (fpSizeBytes * CHAR_BIT != IndigoFramework::getFingerprintSize()) {
-                        throw std::runtime_error("Wrong Fingerprint was generated");
-                    }
-
-                    int sizeRate = sizeof(IndigoFramework::FingerprintInnerT) / sizeof(byte);
-                    auto fpSize = (fpSizeBytes + sizeRate - 1) / sizeRate;
-                    assert(fpSize % sizeRate == 0);
-
-                    auto result = std::make_unique<indigo::Array<IndigoFramework::FingerprintInnerT>>();
-                    result->reserve(fpSize);
-                    result->copy(reinterpret_cast<const IndigoFramework::FingerprintInnerT *>(fingerprintBuilder.get()),
-                                 fpSize);
-                    assert(result->size() * CHAR_BIT * sizeRate == IndigoFramework::getFingerprintSize());
-                    return result;
-                }
-        INDIGO_END(nullptr);
-    }
+MoleculeFingerprintParameters IndigoFramework::getFingerprintParams() const {
+    auto &self = indigoGetInstance();
+    MoleculeFingerprintParameters params(self.fp_params);
+    params.ext = true;
+    params.tau_qwords *= 0;
+    params.sim_qwords *= 0;
+    params.ord_qwords *= _fingerprintRatio;
+    params.any_qwords *= 0;
+    return params;
 }
+
+std::unique_ptr<IndigoFramework::FingerprintT>
+IndigoFramework::tryBuildFingerprintFromMolecule(const IndigoFramework::MoleculeT &molecule) const {
+    INDIGO_BEGIN
+            {
+                auto &mol = const_cast<Molecule &>(molecule);
+                auto fpParams = getFingerprintParams();
+//                    mol.aromatize(self.arom_options);
+                assert(mol.isAromatized());
+                indigo::MoleculeFingerprintBuilder fingerprintBuilder(mol, fpParams);
+                fingerprintBuilder.parseFingerprintType("sub", false);
+                fingerprintBuilder.process();
+                auto fpSizeBytes = fpParams.fingerprintSize();
+
+            int sizeRate = sizeof(IndigoFramework::FingerprintInnerT) / sizeof(byte);
+            auto fpSize = (fpSizeBytes + sizeRate - 1) / sizeRate;
+            assert(fpSize % sizeRate == 0);
+
+                auto result = std::make_unique<indigo::Array<IndigoFramework::FingerprintInnerT>>();
+                result->reserve(fpSize);
+                result->copy(reinterpret_cast<const IndigoFramework::FingerprintInnerT *>(fingerprintBuilder.get()),
+                                fpSize);
+                return result;
+            }
+    INDIGO_END(nullptr);
+}
+
 
 std::unique_ptr<IndigoFramework::MoleculeT> IndigoFramework::moleculeFromSmiles(const std::string &smiles) {
     Indigo &self = indigoGetInstance();
@@ -74,7 +67,6 @@ std::string IndigoFramework::moleculeToSmiles(const IndigoFramework::MoleculeT &
     StringOutput output(smiles);
     SmilesSaver saver(output);
     Indigo &self = indigoGetInstance();
-//    Molecule &mol = self.getObject(molecule).getMolecule();
     Molecule &mol = const_cast<Molecule &>(molecule);
     saver.saveMolecule(mol);
     return smiles;
@@ -92,12 +84,10 @@ std::unique_ptr<IndigoFramework::QueryMoleculeT> IndigoFramework::queryMoleculeF
     loader.loadQueryMolecule(*molecule);
     molecule->aromatize(self.arom_options);
     return molecule;
-//    int id = self.addObject(std::move(queryMolPtr));
-//    return std::make_unique<IndigoFramework::QueryMoleculeT>(id);
 }
 
 std::unique_ptr<IndigoFramework::FingerprintT>
-IndigoFramework::fingerprintFromMolecule(const IndigoFramework::MoleculeT &molecule) {
+IndigoFramework::fingerprintFromMolecule(const IndigoFramework::MoleculeT &molecule) const {
     ProfileScope("IndigoFramework::fingerprintFromMolecule");
     auto res = tryBuildFingerprintFromMolecule(molecule);
     assert(res != nullptr);
@@ -111,8 +101,6 @@ IndigoFramework::compressMolecule(const IndigoFramework::MoleculeT &molecule) {
     auto result = std::make_unique<IndigoFramework::StorageMoleculeT>();
     StringOutput output(*result);
     CmfSaver saver(output);
-//    Molecule &mol = self.getObject(molecule);
-//    Molecule &mol = const_cast<Molecule &>(molecule);
     Molecule &mutableMol = const_cast<Molecule &>(molecule);
     saver.saveMolecule(mutableMol);
     return result;
@@ -141,7 +129,7 @@ bool IndigoFramework::isSubstructure(const IndigoFramework::QueryMoleculeT &quer
     return res;
 }
 
-size_t IndigoFramework::getFingerprintSize() {
+size_t IndigoFramework::getFingerprintSize() const {
     return getFingerprintParams().fingerprintSize() * 8;
 //                     ext  tau  sim  ord   any
 //    return 3072;  //  -    -    +    +     +   (BingoNOSQL)
@@ -182,7 +170,7 @@ bool IndigoFramework::isSubFingerprint(const IndigoFramework::QueryFingerprintT 
     return fingerprint1.isSubFingerprint(fingerprint2);
 }
 
-IndigoFramework::FingerprintT IndigoFramework::getEmptyFingerprint() {
+IndigoFramework::FingerprintT IndigoFramework::getEmptyFingerprint() const {
     FingerprintT fp;
     constexpr int itemBitSize = sizeof(IndigoFramework::FingerprintInnerT) * 8;
     int fpSize = (int) (getFingerprintSize() + itemBitSize - 1) / itemBitSize;
@@ -198,7 +186,7 @@ IndigoFramework::queryFingerprintFromFingerprint(const IndigoFramework::Fingerpr
 }
 
 void IndigoFramework::init(const Config &config) {
-    // TODO: parse fp length
+    _fingerprintRatio = config.getDouble("fpRatio", 1.0);
 }
 
 IndigoFramework &IndigoFramework::getInstance() {

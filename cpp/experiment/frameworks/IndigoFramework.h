@@ -9,6 +9,7 @@
 #include "frameworks/FrameworkInterface.h"
 #include "molecule/molecule.h"
 #include "IndigoQueryFingerprint.h"
+#include "molecule/molecule_fingerprint.h"
 
 class IndigoFramework {
 public:
@@ -30,7 +31,7 @@ public:
 
     static std::unique_ptr<QueryMoleculeT> queryMoleculeFromSmiles(const std::string &smiles);
 
-    static std::unique_ptr<FingerprintT> fingerprintFromMolecule(const MoleculeT &molecule);
+    [[nodiscard]] std::unique_ptr<FingerprintT> fingerprintFromMolecule(const MoleculeT &molecule) const;
 
     static std::unique_ptr<QueryFingerprintT> queryFingerprintFromFingerprint(const FingerprintT &fingerprint);
 
@@ -42,13 +43,19 @@ public:
 
     static bool getFingerprintBit(const FingerprintT &fingerprint, size_t idx);
 
-    static size_t getFingerprintSize();
+    [[nodiscard]] size_t getFingerprintSize() const;
 
     static void setFingerprintBit(FingerprintT &fingerprint, size_t idx, bool val);
 
     static bool isSubFingerprint(const QueryFingerprintT &fingerprint1, const FingerprintT &fingerprint2);
 
-    static FingerprintT getEmptyFingerprint();
+    [[nodiscard]] FingerprintT getEmptyFingerprint() const;
+
+private:
+    double _fingerprintRatio = 1.0;
+
+    [[nodiscard]] indigo::MoleculeFingerprintParameters getFingerprintParams() const;
+    [[nodiscard]] std::unique_ptr<FingerprintT> tryBuildFingerprintFromMolecule(const MoleculeT &molecule) const;
 };
 
 static_assert(FrameworkInterface<IndigoFramework>, "IndigoFramework must satisfy FrameworkInterface");
