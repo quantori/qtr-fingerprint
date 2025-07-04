@@ -51,3 +51,4 @@ add_subdirectory(third_party/abseil-cpp)
 
 add_subdirectory(core)
 add_subdirectory(experiment)
+add_subdirectory(service)

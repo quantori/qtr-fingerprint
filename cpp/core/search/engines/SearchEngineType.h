@@ -5,5 +5,4 @@ enum class SearchEngineType {
     RDKit,
     Indigo,
     BallTreeIndigo,
-    BallTreeHybrid,
 };

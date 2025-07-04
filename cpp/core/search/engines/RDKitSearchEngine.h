@@ -12,7 +12,7 @@
 class RDKitSearchEngine {
 public:
     using FrameworkT = RDKitFramework;
-    using ResultT = FrameworkT::MoleculeT;
+    using ResultT = size_t;
 
     RDKitSearchEngine() = delete;
 
@@ -20,7 +20,9 @@ public:
 
     [[nodiscard]] std::unique_ptr<SearchResult<ResultT>> search(const SearchQuery &query) const;
 
-    static StatTable getStat() ;
+    static StatTable getStat();
+
+    [[nodiscard]] std::string resultToSmiles(const ResultT &result) const;
 
 private:
     FrameworkT _framework;

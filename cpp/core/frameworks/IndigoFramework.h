@@ -8,6 +8,7 @@
 #include "base_cpp/array.h"
 #include "frameworks/FrameworkInterface.h"
 #include "molecule/molecule.h"
+#include "molecule/query_molecule.h"
 #include "IndigoQueryFingerprint.h"
 #include "molecule/molecule_fingerprint.h"
 

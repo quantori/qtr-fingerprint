@@ -36,7 +36,7 @@ std::unique_ptr<SearchResult<RDKitSearchEngine::ResultT>> RDKitSearchEngine::sea
         auto matches = _substructLibrary->getMatches(*queryMol, block, block + SearchBlockSize, params, 1, maxResults);
         maxResults -= (int) matches.size();
         for (size_t matchIdx: matches) {
-            result->addResult(*_substructLibrary->getMol(matchIdx));
+            result->addResult(matchIdx);
         }
     }
     return result;
@@ -63,5 +63,11 @@ RDKitSearchEngine::RDKitSearchEngine(RDKitSearchEngine::FrameworkT framework, Sm
 StatTable RDKitSearchEngine::getStat() {
     // Statistics for RDKitSearchEngine is not collected
     return {};
+}
+
+std::string RDKitSearchEngine::resultToSmiles(const ResultT &result) const {
+    auto mol = _substructLibrary->getMol(result);
+    auto smiles = _framework.moleculeToSmiles(*mol);
+    return smiles;
 }
 

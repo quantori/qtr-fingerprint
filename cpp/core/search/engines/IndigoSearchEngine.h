@@ -12,7 +12,7 @@
 class IndigoSearchEngine {
 public:
     using FrameworkT = IndigoCppFramework;
-    using ResultT = int;
+    using ResultT = size_t;
 
     explicit IndigoSearchEngine(FrameworkT framework, SmilesStorage &&dataset, const Config &config);
 
@@ -21,6 +21,8 @@ public:
     ~IndigoSearchEngine();
 
     [[nodiscard]] StatTable getStat() const;
+
+    std::string resultToSmiles(const ResultT &result) const;
 
 private:
 

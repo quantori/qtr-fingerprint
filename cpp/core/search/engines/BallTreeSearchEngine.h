@@ -37,6 +37,13 @@ public:
         return statTable;
     }
 
+    [[nodiscard]] std::string resultToSmiles(const ResultT &result) const {
+        const auto &dataset = _ballTree.dataset();
+        auto mol = dataset.molecule(result);
+        auto smiles = _framework.moleculeToSmiles(*mol);
+        return smiles;
+    }
+
     void finalizedNodesStat(StatTable &statTable) const {
         const auto &dataset = _ballTree.dataset();
         for (size_t nodeId = _ballTree.root();

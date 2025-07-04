@@ -19,7 +19,7 @@ concept SearchEngineInterface = requires(SearchEngineT searchEngine) {
 
     requires FrameworkInterface<typename SearchEngineT::FrameworkT>;
 
-    requires std::constructible_from<SearchEngineT, typename SearchEngineT::FrameworkT, SmilesStorage &&, const Config&>;
+    requires std::constructible_from<SearchEngineT, typename SearchEngineT::FrameworkT, SmilesStorage &&, const Config &>;
 
     {
     searchEngine.search(std::declval<SearchQuery>())
@@ -28,4 +28,8 @@ concept SearchEngineInterface = requires(SearchEngineT searchEngine) {
     {
     searchEngine.getStat()
     } -> std::same_as<StatTable>;
+
+    {
+    searchEngine.resultToSmiles(std::declval<const typename SearchEngineT::ResultT &>())
+    } -> std::same_as<std::string>;
 };

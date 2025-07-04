@@ -62,7 +62,7 @@ std::unique_ptr<SearchResult<IndigoSearchEngine::ResultT>> IndigoSearchEngine::s
         }
         // TODO: fix abstract IDs once Bingo NoSQL is fixed: https://github.com/epam/Indigo/issues/2864
         //        result->addResult(mol.getTarget());
-        result->addResult(searchResult.getId());
+        result->addResult((size_t)searchResult.getId());
         if (result->size() >= query.maxResults()) {
             break;
         }
@@ -77,4 +77,9 @@ IndigoSearchEngine::~IndigoSearchEngine() {
 StatTable IndigoSearchEngine::getStat() const {
     // Statistics for IndigoSearchEngine is not collected
     return StatTable();
+}
+
+std::string IndigoSearchEngine::resultToSmiles(const ResultT &result) const {
+    throw std::runtime_error("IndigoSearchEngine::resultToSmiles is not implemented");
+    return std::string();
 }
