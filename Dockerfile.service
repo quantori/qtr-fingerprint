@@ -1,10 +1,8 @@
-# Multi-stage Docker build for QTR Fingerprint Service
-# Stage 1: Build environment
-FROM ubuntu:22.04 AS builder
+FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install build dependencies
+# Install all dependencies needed for build and runtime
 RUN apt-get update && apt-get install -y \
     build-essential \
     cmake \
@@ -16,81 +14,48 @@ RUN apt-get update && apt-get install -y \
     python3-numpy \
     libfreetype6-dev \
     libfontconfig1-dev \
+    libcairo2-dev \
+    libpango1.0-dev \
     libasio-dev \
     libgflags-dev \
     libtbb-dev \
-    g++-9 \
+    g++-12 \
+    gcc-12 \
     catch2 \
     libboost-all-dev \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    curl \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Set up compiler alternatives
-RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 100 \
-    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 100
+# Create non-root user
+RUN useradd -r -s /bin/false -m -d /app qtrservice
+
+# Set compiler to GCC/G++ 12 initially (for RDKit)
+RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 100 \
+    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100
 
 # Copy source code
-COPY . /qtr-fingerprint
-WORKDIR /qtr-fingerprint
+COPY ./cpp /code
+WORKDIR /code
 
 # Build RDKit
-RUN cd cpp/third_party/rdkit && \
+RUN cd /code/third_party/rdkit && \
     mkdir -p build && cd build && \
     cmake \
       -DPy_ENABLE_SHARED=1 \
       -DRDK_INSTALL_INTREE=ON \
       -DRDK_INSTALL_STATIC_LIBS=OFF \
-      -DRDK_BUILD_CPP_TESTS=OFF \
-      -DRDK_BUILD_INCHI_SUPPORT=ON \
-      -DRDKIT_RDINCHILIB_BUILD=ON \
-      -DCMAKE_BUILD_TYPE=Release \
+      -DRDK_BUILD_CPP_TESTS=ON  \
+      -DRDK_BUILD_INCHI_SUPPORT=ON  \
+      -DRDKIT_RDINCHILIB_BUILD=ON  \
       .. && \
-    make -j$(nproc)
+    make -j 4
 
 # Build QTR service
-RUN cd cpp && \
+RUN cd /code && \
     mkdir -p build && \
-    cmake -DCMAKE_BUILD_TYPE=Release -S . -B build && \
-    cmake --build build --target qtr-service -j$(nproc)
+    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=20 -S . -B build && \
+    cmake --build build --target qtr-service -j 4
 
-# Stage 2: Runtime environment
-FROM ubuntu:22.04 AS runtime
-
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Install runtime dependencies only
-RUN apt-get update && apt-get install -y \
-    libstdc++6 \
-    libfreetype6 \
-    libfontconfig1 \
-    libtbb12 \
-    libboost-filesystem1.74.0 \
-    libboost-system1.74.0 \
-    libboost-thread1.74.0 \
-    curl \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# Create non-root user for security
-RUN useradd -r -s /bin/false -m -d /app qtrservice
-
-# Copy built service and dependencies
-COPY --from=builder /qtr-fingerprint/cpp/build/service/qtr-service /app/qtr-service
-COPY --from=builder /qtr-fingerprint/cpp/third_party/rdkit/build/lib/ /usr/local/lib/
-
-# Copy sample CSV file for testing
-COPY --from=builder /qtr-fingerprint/sample_molecules.csv /app/sample_molecules.csv
-
-# Set up library path
-ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-
-# Set working directory and user
-WORKDIR /app
-RUN chown -R qtrservice:qtrservice /app
-USER qtrservice
-
-# Expose the service port
 EXPOSE 8080
 
-# Default command - start the service
-CMD ["/bin/sh", "-c", "/app/qtr-service --engine=${ENGINE:-RDKit} --port=${PORT:-8080}"]
+CMD ["/bin/sh", "-c", "/code/build/bin/qtr-service --engine=${ENGINE:-BallTreeRDKit} --port=${PORT:-8080} --fpRatio=${FPRATIO:-2}"]

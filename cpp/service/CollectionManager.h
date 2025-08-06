@@ -24,7 +24,7 @@ enum class CollectionStatus {
 
 struct Collection {
     std::string id;
-    std::vector<std::string> molecules;  // Temporary storage during building
+    std::vector<std::string> molecules;
     CollectionStatus status;
     std::string errorMessage;
     std::chrono::steady_clock::time_point createdAt;
