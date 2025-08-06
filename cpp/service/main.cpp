@@ -1,4 +1,4 @@
-#include <glog/logging.h>
+    #include <glog/logging.h>
 #include <absl/flags/flag.h>
 #include <absl/flags/parse.h>
 #include <csignal>
@@ -7,7 +7,6 @@
 
 #include "ServiceManager.h"
 #include "WebService.h"
-#include "io/SmilesDirParser.h"
 #include "search/engines/SearchEngineType.h"
 #include "search/engines/RDKitSearchEngine.h"
 #include "search/engines/IndigoSearchEngine.h"
@@ -18,7 +17,6 @@
 
 // Command line flags
 ABSL_FLAG(std::string, engine, "RDKit", "Search engine type (RDKit, Indigo, BallTreeRDKit, BallTreeIndigo)");
-ABSL_FLAG(std::string, dataset, "", "Path to dataset directory containing CSV files");
 ABSL_FLAG(int, port, 8080, "Port number for the web service");
 ABSL_FLAG(int, depth, -1, "Ball tree depth (for BallTree engines, -1 for auto)");
 ABSL_FLAG(double, fpRatio, 1.0, "Fingerprint ratio (for BallTree engines)");
@@ -41,20 +39,11 @@ SearchEngineType parseEngineType(const std::string& engineStr) {
 }
 
 template<typename SearchEngineT>
-void runService(Config config, const std::string& datasetPath, int port) {
-    // Create service manager
+void runService(Config config, int port) {
+    // Create service manager (no dataset loading required - collections will be managed via API)
     auto serviceManager = std::make_shared<ServiceManager<SearchEngineT>>(config);
     
-    // Load dataset
-    LOG(INFO) << "Loading dataset from: " << datasetPath;
-    SmilesDirParser parser(datasetPath);
-    auto dataset = parser.parse();
-    LOG(INFO) << "Loaded " << dataset.size() << " molecules";
-    
-    // Initialize search engine
-    LOG(INFO) << "Initializing search engine...";
-    serviceManager->initializeEngine(std::move(dataset));
-    LOG(INFO) << "Search engine ready";
+    LOG(INFO) << "Service manager initialized with collection support";
     
     // Create and configure web service
     auto webService = std::make_unique<WebService<SearchEngineT>>(serviceManager, port);
@@ -81,26 +70,9 @@ int main(int argc, char* argv[]) {
         absl::ParseCommandLine(argc, argv);
         
         auto engineStr = absl::GetFlag(FLAGS_engine);
-        auto datasetPath = absl::GetFlag(FLAGS_dataset);
         auto port = absl::GetFlag(FLAGS_port);
         auto depth = absl::GetFlag(FLAGS_depth);
         auto fpRatio = absl::GetFlag(FLAGS_fpRatio);
-        
-        // Validate required parameters
-        if (datasetPath.empty()) {
-            LOG(ERROR) << "Dataset path is required. Use --dataset flag.";
-            return 1;
-        }
-        
-        if (!std::filesystem::exists(datasetPath)) {
-            LOG(ERROR) << "Dataset path does not exist: " << datasetPath;
-            return 1;
-        }
-        
-        if (!std::filesystem::is_directory(datasetPath)) {
-            LOG(ERROR) << "Dataset path is not a directory: " << datasetPath;
-            return 1;
-        }
         
         // Parse engine type
         SearchEngineType engineType;
@@ -112,10 +84,10 @@ int main(int argc, char* argv[]) {
             return 1;
         }
         
-        LOG(INFO) << "Starting QTR Fingerprint Search Service";
+        LOG(INFO) << "Starting QTR Fingerprint Search Service with Collection Support";
         LOG(INFO) << "Engine: " << engineStr;
-        LOG(INFO) << "Dataset: " << datasetPath;
         LOG(INFO) << "Port: " << port;
+        LOG(INFO) << "Collections will be managed via REST API";
         
         // Setup configuration
         Config config;
@@ -127,16 +99,16 @@ int main(int argc, char* argv[]) {
         // Run service with appropriate template instantiation
         switch (engineType) {
             case SearchEngineType::RDKit:
-                runService<RDKitSearchEngine>(config, datasetPath, port);
+                runService<RDKitSearchEngine>(config, port);
                 break;
             case SearchEngineType::Indigo:
-                runService<IndigoSearchEngine>(config, datasetPath, port);
+                runService<IndigoSearchEngine>(config, port);
                 break;
             case SearchEngineType::BallTreeRDKit:
-                runService<BallTreeSearchEngine<RDKitFramework>>(config, datasetPath, port);
+                runService<BallTreeSearchEngine<RDKitFramework>>(config, port);
                 break;
             case SearchEngineType::BallTreeIndigo:
-                runService<BallTreeSearchEngine<IndigoFramework>>(config, datasetPath, port);
+                runService<BallTreeSearchEngine<IndigoFramework>>(config, port);
                 break;
             default:
                 LOG(ERROR) << "Unsupported search engine type";

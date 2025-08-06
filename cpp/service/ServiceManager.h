@@ -18,15 +18,17 @@
 #include "frameworks/IndigoFramework.h"
 #include "dataset/SmilesStorage.h"
 #include "utils/Config.h"
+#include "CollectionManager.h"
 
 struct TimedSearchResult {
     std::unique_ptr<SearchResult<size_t>> data;
     std::chrono::steady_clock::time_point createdAt;
     bool completed;
     std::string error;
+    std::string collectionId;
     
-    explicit TimedSearchResult(std::unique_ptr<SearchResult<size_t>> result = nullptr)
-        : data(std::move(result)), createdAt(std::chrono::steady_clock::now()), completed(false) {}
+    explicit TimedSearchResult(const std::string& collId = "", std::unique_ptr<SearchResult<size_t>> result = nullptr)
+        : data(std::move(result)), createdAt(std::chrono::steady_clock::now()), completed(false), collectionId(collId) {}
 };
 
 template<typename SearchEngineT>
@@ -35,86 +37,124 @@ class ServiceManager {
 public:
     explicit ServiceManager(Config config);
     
-    // Initialize search engine with dataset
-    void initializeEngine(SmilesStorage&& dataset);
+    // Collection management
+    std::string createCollection();
+    bool addMolecule(const std::string& collectionId, const std::string& smiles);
+    bool addMolecules(const std::string& collectionId, const std::vector<std::string>& smilesList);
+    bool buildIndex(const std::string& collectionId);
     
-    // Submit search query and return query ID
-    size_t submitSearch(const std::string& smiles, size_t maxResults, double timeLimit);
+    // Collection info
+    bool collectionExists(const std::string& collectionId) const;
+    CollectionStatus getCollectionStatus(const std::string& collectionId) const;
+    std::vector<std::string> getCollectionIds() const;
+    size_t getCollectionSize(const std::string& collectionId) const;
+    std::string getCollectionError(const std::string& collectionId) const;
+    
+    // Submit search query and return query ID (collection-specific)
+    size_t submitSearch(const std::string& collectionId, const std::string& smiles, size_t maxResults, double timeLimit);
     
     // Get search results by query ID
     std::shared_ptr<TimedSearchResult> getSearchResult(size_t queryId);
     
-    // Quick search - immediate response with limited results
-    std::unique_ptr<SearchResult<size_t>> quickSearch(const std::string& smiles, size_t limit);
+    // Quick search - immediate response with limited results (collection-specific)
+    std::unique_ptr<SearchResult<size_t>> quickSearch(const std::string& collectionId, const std::string& smiles, size_t limit);
     
-    // Check if engine is ready
-    bool isEngineReady() const;
+    // Check if collection is ready for search
+    bool isCollectionReady(const std::string& collectionId) const;
     
-    // Convert index to SMILES string
-    std::string indexToString(size_t index) const;
+    // Get SMILES string by molecule ID (collection-specific)
+    std::string getSmilesById(const std::string& collectionId, size_t moleculeId) const;
     
-    // Get SMILES string by molecule ID
-    std::string getSmilesById(size_t moleculeId) const;
-    
-    // Cleanup expired queries
+    // Cleanup expired queries and old collections
     void cleanupExpiredQueries();
+    void cleanupOldCollections();
 
 private:
     Config _config;
-    std::atomic<bool> _engineReady{false};
+    
+    // Collection management
+    std::unique_ptr<CollectionManager<SearchEngineT>> _collectionManager;
     
     // Query management
     std::mutex _queryMutex;
     std::unordered_map<size_t, std::shared_ptr<TimedSearchResult>> _activeQueries;
     std::atomic<size_t> _queryCounter{0};
     
-    // Single templated search engine
-    std::unique_ptr<SearchEngineT> _searchEngine;
-    
     // Helper method for executing search
     std::unique_ptr<SearchResult<size_t>> executeSearch(
-        const std::string& smiles, size_t maxResults, bool& stopFlag);
+        const std::string& collectionId, const std::string& smiles, size_t maxResults, bool& stopFlag);
 };
 
 // Template implementation
 template<typename SearchEngineT>
 requires SearchEngineInterface<SearchEngineT>
 ServiceManager<SearchEngineT>::ServiceManager(Config config)
-    : _config(std::move(config)) {
+    : _config(std::move(config)), _collectionManager(std::make_unique<CollectionManager<SearchEngineT>>(config)) {
 }
 
 template<typename SearchEngineT>
 requires SearchEngineInterface<SearchEngineT>
-void ServiceManager<SearchEngineT>::initializeEngine(SmilesStorage&& dataset) {
-    LOG(INFO) << "Initializing search engine";
-    
-    _engineReady = false;
-    _searchEngine.reset();
-    
-    try {
-        auto& framework = SearchEngineT::FrameworkT::getInstance();
-        framework.init(_config);
-        
-        _searchEngine = std::make_unique<SearchEngineT>(framework, std::move(dataset), _config);
-        
-        _engineReady = true;
-        LOG(INFO) << "Search engine initialized successfully";
-        
-    } catch (const std::exception& e) {
-        LOG(ERROR) << "Failed to initialize search engine: " << e.what();
-        throw;
-    }
+std::string ServiceManager<SearchEngineT>::createCollection() {
+    return _collectionManager->createCollection();
 }
 
 template<typename SearchEngineT>
 requires SearchEngineInterface<SearchEngineT>
-size_t ServiceManager<SearchEngineT>::submitSearch(const std::string& smiles, size_t maxResults, double timeLimit) {
-    if (!_engineReady) {
-        throw std::runtime_error("Search engine not ready");
+bool ServiceManager<SearchEngineT>::addMolecule(const std::string& collectionId, const std::string& smiles) {
+    return _collectionManager->addMolecule(collectionId, smiles);
+}
+
+template<typename SearchEngineT>
+requires SearchEngineInterface<SearchEngineT>
+bool ServiceManager<SearchEngineT>::addMolecules(const std::string& collectionId, const std::vector<std::string>& smilesList) {
+    return _collectionManager->addMolecules(collectionId, smilesList);
+}
+
+template<typename SearchEngineT>
+requires SearchEngineInterface<SearchEngineT>
+bool ServiceManager<SearchEngineT>::buildIndex(const std::string& collectionId) {
+    return _collectionManager->buildIndex(collectionId);
+}
+
+template<typename SearchEngineT>
+requires SearchEngineInterface<SearchEngineT>
+bool ServiceManager<SearchEngineT>::collectionExists(const std::string& collectionId) const {
+    return _collectionManager->collectionExists(collectionId);
+}
+
+template<typename SearchEngineT>
+requires SearchEngineInterface<SearchEngineT>
+CollectionStatus ServiceManager<SearchEngineT>::getCollectionStatus(const std::string& collectionId) const {
+    return _collectionManager->getCollectionStatus(collectionId);
+}
+
+template<typename SearchEngineT>
+requires SearchEngineInterface<SearchEngineT>
+std::vector<std::string> ServiceManager<SearchEngineT>::getCollectionIds() const {
+    return _collectionManager->getCollectionIds();
+}
+
+template<typename SearchEngineT>
+requires SearchEngineInterface<SearchEngineT>
+size_t ServiceManager<SearchEngineT>::getCollectionSize(const std::string& collectionId) const {
+    return _collectionManager->getCollectionSize(collectionId);
+}
+
+template<typename SearchEngineT>
+requires SearchEngineInterface<SearchEngineT>
+std::string ServiceManager<SearchEngineT>::getCollectionError(const std::string& collectionId) const {
+    return _collectionManager->getCollectionError(collectionId);
+}
+
+template<typename SearchEngineT>
+requires SearchEngineInterface<SearchEngineT>
+size_t ServiceManager<SearchEngineT>::submitSearch(const std::string& collectionId, const std::string& smiles, size_t maxResults, double timeLimit) {
+    if (!_collectionManager->isCollectionReady(collectionId)) {
+        throw std::runtime_error("Collection not ready: " + collectionId);
     }
     
     auto queryId = _queryCounter++;
-    auto timedResult = std::make_shared<TimedSearchResult>();
+    auto timedResult = std::make_shared<TimedSearchResult>(collectionId);
     
     {
         std::lock_guard<std::mutex> lock(_queryMutex);
@@ -122,10 +162,10 @@ size_t ServiceManager<SearchEngineT>::submitSearch(const std::string& smiles, si
     }
     
     // Execute search asynchronously
-    std::thread([this, queryId, smiles, maxResults, timeLimit, timedResult]() {
+    std::thread([this, queryId, collectionId, smiles, maxResults, timeLimit, timedResult]() {
         try {
             bool stopFlag = false;
-            auto result = executeSearch(smiles, maxResults, stopFlag);
+            auto result = executeSearch(collectionId, smiles, maxResults, stopFlag);
             
             {
                 std::lock_guard<std::mutex> lock(_queryMutex);
@@ -133,13 +173,13 @@ size_t ServiceManager<SearchEngineT>::submitSearch(const std::string& smiles, si
                 timedResult->completed = true;
             }
             
-            LOG(INFO) << "Search completed for query ID: " << queryId;
+            LOG(INFO) << "Search completed for query ID: " << queryId << " in collection: " << collectionId;
             
         } catch (const std::exception& e) {
             std::lock_guard<std::mutex> lock(_queryMutex);
             timedResult->error = e.what();
             timedResult->completed = true;
-            LOG(ERROR) << "Search failed for query ID " << queryId << ": " << e.what();
+            LOG(ERROR) << "Search failed for query ID " << queryId << " in collection " << collectionId << ": " << e.what();
         }
     }).detach();
     
@@ -159,42 +199,25 @@ std::shared_ptr<TimedSearchResult> ServiceManager<SearchEngineT>::getSearchResul
 
 template<typename SearchEngineT>
 requires SearchEngineInterface<SearchEngineT>
-std::unique_ptr<SearchResult<size_t>> ServiceManager<SearchEngineT>::quickSearch(const std::string& smiles, size_t limit) {
-    if (!_engineReady) {
-        throw std::runtime_error("Search engine not ready");
+std::unique_ptr<SearchResult<size_t>> ServiceManager<SearchEngineT>::quickSearch(const std::string& collectionId, const std::string& smiles, size_t limit) {
+    if (!_collectionManager->isCollectionReady(collectionId)) {
+        throw std::runtime_error("Collection not ready: " + collectionId);
     }
     
     bool stopFlag = false;
-    return executeSearch(smiles, limit, stopFlag);
+    return executeSearch(collectionId, smiles, limit, stopFlag);
 }
 
 template<typename SearchEngineT>
 requires SearchEngineInterface<SearchEngineT>
-bool ServiceManager<SearchEngineT>::isEngineReady() const {
-    return _engineReady;
+bool ServiceManager<SearchEngineT>::isCollectionReady(const std::string& collectionId) const {
+    return _collectionManager->isCollectionReady(collectionId);
 }
 
 template<typename SearchEngineT>
 requires SearchEngineInterface<SearchEngineT>
-std::string ServiceManager<SearchEngineT>::indexToString(size_t index) const {
-    // TODO: Implement actual index to SMILES conversion
-    return std::string();
-}
-
-template<typename SearchEngineT>
-requires SearchEngineInterface<SearchEngineT>
-std::string ServiceManager<SearchEngineT>::getSmilesById(size_t moleculeId) const {
-    if (!_engineReady || !_searchEngine) {
-        throw std::runtime_error("Search engine not ready");
-    }
-    
-    try {
-        // Use the search engine's resultToSmiles method to convert molecule ID to SMILES
-        return _searchEngine->resultToSmiles(moleculeId);
-    } catch (const std::exception& e) {
-        LOG(ERROR) << "Failed to get SMILES for molecule ID " << moleculeId << ": " << e.what();
-        return std::string(); // Return empty string if not found or error
-    }
+std::string ServiceManager<SearchEngineT>::getSmilesById(const std::string& collectionId, size_t moleculeId) const {
+    return _collectionManager->getSmilesById(collectionId, moleculeId);
 }
 
 template<typename SearchEngineT>
@@ -216,10 +239,22 @@ void ServiceManager<SearchEngineT>::cleanupExpiredQueries() {
 
 template<typename SearchEngineT>
 requires SearchEngineInterface<SearchEngineT>
+void ServiceManager<SearchEngineT>::cleanupOldCollections() {
+    _collectionManager->cleanupOldCollections();
+}
+
+template<typename SearchEngineT>
+requires SearchEngineInterface<SearchEngineT>
 std::unique_ptr<SearchResult<size_t>> ServiceManager<SearchEngineT>::executeSearch(
-    const std::string& smiles, size_t maxResults, bool& stopFlag) {
+    const std::string& collectionId, const std::string& smiles, size_t maxResults, bool& stopFlag) {
+    
+    // Get the search engine for the collection
+    auto* searchEngine = _collectionManager->getSearchEngine(collectionId);
+    if (!searchEngine) {
+        throw std::runtime_error("No search engine available for collection: " + collectionId);
+    }
     
     SearchQuery query(smiles, maxResults, stopFlag);
-    auto result = _searchEngine->search(query);
+    auto result = searchEngine->search(query);
     return std::move(result);
 } 

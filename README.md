@@ -2,6 +2,24 @@
 
 A molecular substructure search engine that provides fast searching capability for chemical compounds. The project includes both a benchmarking framework and a web service API for molecular searches.
 
+## Quick Start with Docker 
+
+```bash
+# Build and run the service
+docker-compose up -d
+```
+
+The service will be available at `http://localhost:8080`.
+
+## API Usage
+
+The service now supports **collection-based** molecular searches:
+
+1. **Create Collection**: `POST /collections`
+2. **Upload CSV**: `POST /collections/{id}/upload` 
+3. **Build Index**: `POST /collections/{id}/build`
+4. **Search**: `POST /fastquery` with `collectionId`
+
 ## Project Overview
 
 This project is a proof of concept implementation demonstrating the application of BallTree data structures to the problem of chemical fingerprint indexing, which enables efficient molecular substructure searching. The codebase focuses on benchmarking the performance of this approach against traditional search methods and provides a REST API service for real-time molecular searches.
@@ -32,124 +50,6 @@ The project supports multiple search engine types:
 * `BallTreeIndigo` - BallTree search engine using Indigo framework  
 * `RDKit` - Direct RDKit SubstructLibrary search
 * `Indigo` - Direct Indigo Bingo NoSQL search
-
-## Web Service API
-
-The `qtr-service` provides a REST API with the following endpoints:
-
-### Start the Service
-```bash
-./build/bin/qtr-service --dataset=<dataset_path> --engine=<engine_type> --port=<port>
-```
-
-**Parameters:**
-- `--dataset` - Path to directory containing CSV files with molecular data
-- `--engine` - Search engine type (RDKit, BallTreeRDKit, Indigo, BallTreeIndigo)
-- `--port` - Port number for the web service (default: 8080)
-
-### API Endpoints
-
-#### GET /status
-Returns the current status of the service.
-
-**Response:**
-```json
-{
-  "status": "running",
-  "engine_ready": true
-}
-```
-
-#### POST /query (Asynchronous Search)
-Submits a search query for asynchronous processing. Returns a query ID that can be used to retrieve results later.
-
-**Request Body:**
-```json
-{
-  "smiles": "CCO",
-  "maxResults": 1000,
-  "timeLimit": 60.0
-}
-```
-
-**Parameters:**
-- `smiles` - SMILES string of the query molecule (required)
-- `maxResults` - Maximum number of results to return (optional, default: 1000)
-- `timeLimit` - Query time limit in seconds (optional, default: 60.0)
-
-**Response:**
-id of a query
-
-#### GET /smiles
-Retrieves the SMILES string for a given molecule ID.
-
-**Parameters:**
-- `id` - Molecule ID from search results
-
-**Example:**
-```bash
-curl "http://localhost:8080/smiles?id=123"
-```
-
-**Response:**
-```json
-{
-  "id": 123,
-  "smiles": "CCO"
-}
-```
-
-#### GET /query (Retrieve Async Results)
-Retrieves results for a previously submitted asynchronous query.
-
-**Parameters:**
-- `searchId` - Query ID returned from POST /query (required)
-- `offset` - Starting index for pagination (optional, default: 0)
-- `limit` - Maximum number of results to return (optional, default: 100)
-
-
-**Response (Pending):**
-```json
-{
-  "status": "pending",
-  "searchId": 12345
-}
-```
-(HTTP 202 Accepted)
-
-**Response (Completed):**
-```json
-{
-  "status": "completed",
-  "searchId": 12345,
-  "total": 150,
-  "offset": 0,
-  "count": 50,
-  "results": [
-    {"smiles": 123, "index": 0},
-    {"smiles": 456, "index": 1}
-  ]
-}
-```
-
-**Response (Error):**
-```json
-{
-  "status": "error",
-  "error": "Error message"
-}
-```
-
-**Response (Not Found):**
-```json
-{
-  "error": "Query not found or expired"
-}
-```
-(HTTP 404)
-
-#### POST /fastquery (Synchronous Search)
-Performs immediate synchronous search with
 
 ## Experiment
 

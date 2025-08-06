@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  qtr-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+    container_name: qtr-fingerprint-service
+    ports:
+      - "8080:8080"
+    environment:
+      - ENGINE=BallTreeRDKit
+      - PORT=8080
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    networks:
+      - qtr-network
+
+networks:
+  qtr-network:
+    driver: bridge
